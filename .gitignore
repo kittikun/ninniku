@@ -1,0 +1,12 @@
+*.opendb
+*.db
+packages/
+*.user
+.vs/
+out/
+bin/
+*.hdr
+*.dds
+data/
+*.rdc
+external/renderdoc/

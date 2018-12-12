@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}</ProjectGuid>
+    <RootNamespace>cubemap</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(SolutionDir)out\$(Platform)\$(Configuration)\intermediate\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(SolutionDir)out\$(Platform)\$(Configuration)\intermediate\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(SolutionDir)external\cmft\include;$(SolutionDir)external\renderdoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>_DEBUG;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <FxCompile>
+      <ShaderType>Compute</ShaderType>
+    </FxCompile>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile>
+      <ObjectFileOutput>$(SolutionDir)data\%(Filename).cso</ObjectFileOutput>
+      <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
+    </FxCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(SolutionDir)external\cmft\include;$(SolutionDir)external\renderdoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <FxCompile>
+      <ShaderType>Compute</ShaderType>
+    </FxCompile>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile>
+      <ObjectFileOutput>$(SolutionDir)data\%(Filename).cso</ObjectFileOutput>
+      <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
+    </FxCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\dx11\DX11.cpp" />
+    <ClCompile Include="src\image.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\process.cpp" />
+    <ClCompile Include="src\utils\log.cpp" />
+    <ClCompile Include="src\utils\mathUtils.cpp" />
+    <ClCompile Include="src\utils\misc.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LICENSE" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\dx11\DX11.h" />
+    <ClInclude Include="src\dx11\DX11Types.h" />
+    <ClInclude Include="src\image.h" />
+    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\process.h" />
+    <ClInclude Include="src\shaders\cbuffers.h" />
+    <ClInclude Include="src\utils\log.h" />
+    <ClInclude Include="src\utils\mathUtils.h" />
+    <ClInclude Include="src\utils\misc.h" />
+    <ClInclude Include="src\utils\vectorSet.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+    <None Include="src\shaders\color20.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <FxCompile Include="src\shaders\colorFaces.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\shaders\colorMips.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dirToFaces.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\shaders\downsample.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="src\shaders\resize.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
+    </FxCompile>
+    <None Include="src\shaders\utility.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="external\cmft\cmft.vcxproj">
+      <Project>{0ab3d531-15b1-48cc-ad70-613b6535ae5a}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\directxtex_desktop_win10.2018.11.20.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('packages\directxtex_desktop_win10.2018.11.20.1\build\native\directxtex_desktop_win10.targets')" />
+    <Import Project="packages\directxmath.2018.7.23.2\build\native\directxmath.targets" Condition="Exists('packages\directxmath.2018.7.23.2\build\native\directxmath.targets')" />
+    <Import Project="packages\boost.1.68.0.0\build\boost.targets" Condition="Exists('packages\boost.1.68.0.0\build\boost.targets')" />
+    <Import Project="packages\boost_filesystem-vc141.1.68.0.0\build\boost_filesystem-vc141.targets" Condition="Exists('packages\boost_filesystem-vc141.1.68.0.0\build\boost_filesystem-vc141.targets')" />
+    <Import Project="packages\boost_system-vc141.1.68.0.0\build\boost_system-vc141.targets" Condition="Exists('packages\boost_system-vc141.1.68.0.0\build\boost_system-vc141.targets')" />
+    <Import Project="packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets" Condition="Exists('packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets')" />
+    <Import Project="packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets" Condition="Exists('packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets')" />
+    <Import Project="packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets" Condition="Exists('packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets')" />
+    <Import Project="packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets" Condition="Exists('packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets')" />
+    <Import Project="packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets" Condition="Exists('packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets')" />
+    <Import Project="packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets" Condition="Exists('packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets')" />
+    <Import Project="packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets" Condition="Exists('packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\directxtex_desktop_win10.2018.11.20.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtex_desktop_win10.2018.11.20.1\build\native\directxtex_desktop_win10.targets'))" />
+    <Error Condition="!Exists('packages\directxmath.2018.7.23.2\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxmath.2018.7.23.2\build\native\directxmath.targets'))" />
+    <Error Condition="!Exists('packages\boost.1.68.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.68.0.0\build\boost.targets'))" />
+    <Error Condition="!Exists('packages\boost_filesystem-vc141.1.68.0.0\build\boost_filesystem-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_filesystem-vc141.1.68.0.0\build\boost_filesystem-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_system-vc141.1.68.0.0\build\boost_system-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_system-vc141.1.68.0.0\build\boost_system-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets'))" />
+  </Target>
+</Project>
