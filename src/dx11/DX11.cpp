@@ -23,6 +23,7 @@
 
 #pragma comment(lib, "D3DCompiler.lib")
 
+#include "../image/image.h"
 #include "../utils/log.h"
 #include "../utils/misc.h"
 #include "../utils/VectorSet.h"
@@ -171,24 +172,22 @@ namespace ninniku {
         auto isUAV = (params.viewflags & TV_UAV) != 0;
         auto isCPURead = (params.viewflags & TV_CPU_READ) != 0;
 
-        // cmft load textures as RGBA32F
-        auto texFormat = DXGI_FORMAT_R32G32B32A32_FLOAT;
-
         D3D11_TEXTURE2D_DESC desc = {};
-        desc.Width = params.size;
-        desc.Height = params.size;
+
+        desc.Width = params.width;
+        desc.Height = params.height;
         desc.MipLevels = params.numMips;
         desc.ArraySize = params.arraySize;
-        desc.Format = texFormat;
+        desc.Format = static_cast<DXGI_FORMAT>(params.format);
         desc.SampleDesc.Count = 1;
 
         std::string usageStr;
 
-        if ((params.data != nullptr) && (!isUAV)) {
+        if ((params.imageDatas.size() > 0) && (!isUAV)) {
             // this for original data
             desc.Usage = D3D11_USAGE_IMMUTABLE;
             usageStr = "D3D11_USAGE_IMMUTABLE";
-        } else if ((params.data == nullptr) && (isCPURead)) {
+        } else if ((params.imageDatas.size() == 0) && (isCPURead)) {
             // only to read back data to the CPU
             desc.Usage = D3D11_USAGE_STAGING;
             usageStr = "D3D11_USAGE_STAGING";
@@ -197,7 +196,7 @@ namespace ninniku {
             usageStr = "D3D11_USAGE_DEFAULT";
         }
 
-        auto fmt = boost::format("Creating Texture2D: Size=%1%x%1%, Mips=%2%, Usage=%3%") % params.size % params.numMips % usageStr;
+        auto fmt = boost::format("Creating Texture2D: Size=%1%x%2%, Mips=%3%, Usage=%4%") % params.width % params.height % params.numMips % usageStr;
 
         LOGD << boost::str(fmt);
 
@@ -215,25 +214,22 @@ namespace ninniku {
             desc.BindFlags = flags;
         }
 
-        D3D11_SUBRESOURCE_DATA* initialData = nullptr;
+        auto numImages = params.imageDatas.size();
+        std::vector<D3D11_SUBRESOURCE_DATA> initialData(numImages);
 
-        if (params.data != nullptr) {
-            std::array< D3D11_SUBRESOURCE_DATA, CUBEMAP_NUM_FACES> subData;
+        for (auto i = 0; i < numImages; ++i) {
+            auto& subParam = params.imageDatas[i];
 
-            for (auto i = 0; i < subData.size(); ++i) {
-                subData[i].pSysMem = static_cast<void*>(static_cast<uint8_t*>(params.data) + params.faceOffsets[i]);
-                subData[i].SysMemPitch = params.pitch;
-                subData[i].SysMemSlicePitch = 0;
-            }
-
-            initialData = subData.data();
+            initialData[i].pSysMem = subParam.data;
+            initialData[i].SysMemPitch = subParam.rowPitch;
+            initialData[i].SysMemSlicePitch = subParam.depthPitch;
         }
 
         auto res = std::make_unique<TextureObject>();
 
         res->desc = params;
 
-        auto hr = _device->CreateTexture2D(&desc, initialData, res->texture.GetAddressOf());
+        auto hr = _device->CreateTexture2D(&desc, initialData.data(), res->texture.GetAddressOf());
         if (FAILED(hr)) {
             LOGE << "Failed to CreateTexture2D cube map";
             return std::unique_ptr<TextureObject>();
@@ -243,7 +239,7 @@ namespace ninniku {
             if (params.arraySize == CUBEMAP_NUM_FACES) {
                 // To sample texture as cubemap
                 D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                srvDesc.Format = texFormat;
+                srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
                 srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
                 srvDesc.TextureCube.MipLevels = params.numMips;
 
@@ -258,7 +254,7 @@ namespace ninniku {
 
                 for (uint32_t i = 0; i < params.numMips; ++i) {
                     srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-                    srvDesc.Format = texFormat;
+                    srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
                     srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
                     srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
                     srvDesc.Texture2DArray.MostDetailedMip = i;
@@ -280,7 +276,7 @@ namespace ninniku {
             // we have to create an UAV for each miplevel
             for (uint32_t i = 0; i < params.numMips; ++i) {
                 D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-                uavDesc.Format = texFormat;
+                uavDesc.Format = static_cast<DXGI_FORMAT>(params.format);
                 uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
                 uavDesc.Texture2DArray.MipSlice = i;
                 uavDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
@@ -499,7 +495,7 @@ namespace ninniku {
                 LOG_INDENT_START << boost::str(fmt);
 
                 ID3DBlob* blob = nullptr;
-                auto hr = D3DReadFileToBlob(ninniku::strToWStr(path).c_str(), &blob);
+                auto hr = D3DReadFileToBlob(strToWStr(path).c_str(), &blob);
 
                 if (FAILED(hr)) {
                     fmt = boost::format("Failed to D3DReadFileToBlob: %1%") % path;

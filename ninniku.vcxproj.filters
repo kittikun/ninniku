@@ -14,6 +14,9 @@
     <Filter Include="Source Files\dx11">
       <UniqueIdentifier>{fb74b349-6196-4459-a58e-0df91dd58475}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\image">
+      <UniqueIdentifier>{feba47c9-49bd-4007-8e17-4994971bae7d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -23,9 +26,6 @@
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="src\process.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\misc.cpp">
@@ -39,6 +39,12 @@
     </ClCompile>
     <ClCompile Include="src\pch.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\cmft.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\dds.cpp">
+      <Filter>Source Files\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,9 +68,6 @@
     <ClInclude Include="src\utils\mathUtils.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\image.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils\misc.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
@@ -82,6 +85,18 @@
     </ClInclude>
     <ClInclude Include="src\pch.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\cmft.h">
+      <Filter>Source Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\dds.h">
+      <Filter>Source Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\image.h">
+      <Filter>Source Files\image</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

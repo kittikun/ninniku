@@ -25,7 +25,17 @@
 #include "utils/log.h"
 #include "utils/mathUtils.h"
 #include "dx11/DX11.h"
-#include "image.h"
+#include "image/cmft.h"
+#include "image/dds.h"
+
+#include <renderdoc_app.h>
+
+#include <string>
+
+namespace {
+    uint32_t numSamples = 10000;
+    uint32_t numStepSamples = std::min(2000u, numSamples);
+}
 
 namespace ninniku {
     Processor::Processor(const std::shared_ptr<DX11>& dx)
@@ -42,8 +52,8 @@ namespace ninniku {
         LOG_INDENT_START << "Running ColorMips..";
 
         TextureParam param = {};
-        param.size = 512;
-        param.numMips = CountMips(param.size);
+        param.width = param.height = 512;
+        param.numMips = CountMips(std::min(param.width, param.height));
         param.arraySize = CUBEMAP_NUM_FACES;
         param.viewflags = TV_SRV | TV_UAV;
 
@@ -57,7 +67,8 @@ namespace ninniku {
                 cmd.cbufferStr = "CBGlobal";
 
                 static_assert((COLORMIPS_NUMTHREAD_X == COLORMIPS_NUMTHREAD_Y) && (COLORMIPS_NUMTHREAD_Z == 1));
-                cmd.dispatch[0] = cmd.dispatch[1] = std::max(1u, (param.size >> i) / COLORMIPS_NUMTHREAD_X);
+                cmd.dispatch[0] = std::max(1u, (param.width >> i) / COLORMIPS_NUMTHREAD_X);
+                cmd.dispatch[1] = std::max(1u, (param.height >> i) / COLORMIPS_NUMTHREAD_Y);
                 cmd.dispatch[2] = CUBEMAP_NUM_FACES / COLORMIPS_NUMTHREAD_Z;
 
                 cmd.uavBindings.insert(std::make_pair("dstTex", resTex->uav[i]));
@@ -73,7 +84,8 @@ namespace ninniku {
 
             // save output to dds
             auto tmp = ImageFromTextureObject(resTex);
-            tmp->SaveImage("colorMips");
+            //tmp->SaveImage("colorMips");
+            tmp->SaveImageFaceList("colorFace_original");
         }
 
         LOG_INDENT_END;
@@ -95,8 +107,9 @@ namespace ninniku {
 
         TextureParam param = {};
 
-        param.size = srcTex->desc.size;
-        param.numMips = CountMips(param.size);
+        param.width = srcTex->desc.width;
+        param.height = srcTex->desc.height;
+        param.numMips = CountMips(std::min(param.width, param.height));
         param.arraySize = CUBEMAP_NUM_FACES;
         param.viewflags = TV_SRV | TV_UAV;
 
@@ -130,7 +143,8 @@ namespace ninniku {
                     cmd.cbufferStr = "CBGlobal";
 
                     static_assert((DOWNSAMPLE_NUMTHREAD_X == DOWNSAMPLE_NUMTHREAD_Y) && (DOWNSAMPLE_NUMTHREAD_Z == 1));
-                    cmd.dispatch[0] = cmd.dispatch[1] = std::max(1u, (param.size >> srcMip) / DOWNSAMPLE_NUMTHREAD_X);
+                    cmd.dispatch[0] = std::max(1u, (param.width >> srcMip) / DOWNSAMPLE_NUMTHREAD_X);
+                    cmd.dispatch[1] = std::max(1u, (param.height >> srcMip) / DOWNSAMPLE_NUMTHREAD_Y);
                     cmd.dispatch[2] = CUBEMAP_NUM_FACES / DOWNSAMPLE_NUMTHREAD_Z;
 
                     cmd.srvBindings.insert(std::make_pair("srcMip", resTex->srvArray[srcMip]));
@@ -157,18 +171,20 @@ namespace ninniku {
         LOG_INDENT_END;
     }
 
-    std::unique_ptr<Image> Processor::ImageFromTextureObject(const std::unique_ptr<TextureObject>& srcTex)
+    std::unique_ptr<cmftImage> Processor::ImageFromTextureObject(const std::unique_ptr<TextureObject>& srcTex)
     {
         auto marker = _dx->CreateDebugMarker("ImageFromTextureObject");
         LOG_INDENT_START << "Making Image from TextureObject..";
 
-        auto res = std::make_unique<Image>(srcTex->desc.size, srcTex->desc.numMips);
+        auto res = std::make_unique<cmftImage>(srcTex->desc.width, srcTex->desc.height, srcTex->desc.numMips);
 
         // we have to copy each mip with a read back texture or the same size for each face
         for (uint32_t mip = 0; mip < srcTex->desc.numMips; ++mip) {
             TextureParam param = {};
 
-            param.size = srcTex->desc.size >> mip;
+            param.width = srcTex->desc.width >> mip;
+            param.height = srcTex->desc.height >> mip;
+            param.format = srcTex->desc.format;
             param.numMips = 1;
             param.arraySize = 1;
             param.viewflags = TV_CPU_READ;
@@ -197,22 +213,14 @@ namespace ninniku {
 
     bool Processor::ProcessImage(const boost::filesystem::path& path)
     {
-        auto image = std::make_unique<Image>();
+        auto image = std::make_unique<cmftImage>();
 
-        if (!image->LoadCubemap(path.string())) {
-            LOGE << "Failed to create ninniku::Image";
+        if (!image->Load(path.string())) {
+            LOGE << "Failed to create cmftImage";
             return false;
         }
 
-        TextureParam param = {};
-        param.size = image->GetFaceSize();
-        param.numMips = 1;
-        param.arraySize = CUBEMAP_NUM_FACES;
-        param.pitch = image->GetPitch();
-        param.data = image->GetData();
-        param.faceOffsets = image->GetFaceOffsets();
-        param.viewflags = TV_SRV;
-
+        auto param = image->CreateTextureParam(TV_SRV);
         auto original = _dx->CreateTexture(param);
 
         // check if we need to resize
@@ -225,19 +233,22 @@ namespace ninniku {
 
         ColorMips();
         GenerateMips(original);
-        TestCubemapDirToTexture2DArray();
+        TestCubemapDirToTexture2DArray(original);
+        TestDDS();
 
         return true;
     }
 
-    std::unique_ptr<TextureObject> Processor::ResizeImage(uint32_t newSize, const std::unique_ptr<TextureObject>& srcTex, std::unique_ptr<Image>& srcImg)
+    std::unique_ptr<TextureObject> Processor::ResizeImage(uint32_t newSize, const std::unique_ptr<TextureObject>& srcTex, std::unique_ptr<cmftImage>& srcImg)
     {
         auto marker = _dx->CreateDebugMarker("Resize");
         auto fmt = boost::format("Resizing to %1%x%1%..") % newSize;
         LOG_INDENT_START << boost::str(fmt);
 
         TextureParam param = {};
-        param.size = newSize;
+        param.width = newSize;
+        param.height = newSize;
+        param.format = srcTex->desc.format;
         param.numMips = 1;
         param.arraySize = CUBEMAP_NUM_FACES;
         param.viewflags = TV_SRV | TV_UAV;
@@ -270,13 +281,14 @@ namespace ninniku {
     /// 1: Create a new cube map with no mips and color each face
     /// 2: Create another cube map and bind the first as cube and sample it Texture2DArray style
     /// </summary>
-    void Processor::TestCubemapDirToTexture2DArray()
+    void Processor::TestCubemapDirToTexture2DArray(const std::unique_ptr<TextureObject>& original)
     {
         auto marker = _dx->CreateDebugMarker("TestCubemapDirToTexture2DArray");
         LOG_INDENT_START << "Running TestCubemapDirToTexture2DArray..";
 
         TextureParam param = {};
-        param.size = 512;
+        param.width = param.height = 512;
+        param.format = DXGI_FORMAT_R32G32B32A32_FLOAT;
         param.numMips = 1;
         param.arraySize = CUBEMAP_NUM_FACES;
         param.viewflags = TV_SRV | TV_UAV;
@@ -293,8 +305,9 @@ namespace ninniku {
             cmd.shader = "colorFaces";
 
             static_assert((COLORFACES_NUMTHREAD_X == COLORFACES_NUMTHREAD_Y) && (COLORFACES_NUMTHREAD_Z == 1));
-            cmd.dispatch[0] = cmd.dispatch[1] = param.size / COLORFACES_NUMTHREAD_X;
-            cmd.dispatch[2] = 1 / COLORFACES_NUMTHREAD_Z;
+            cmd.dispatch[0] = param.width / COLORFACES_NUMTHREAD_X;
+            cmd.dispatch[1] = param.height / COLORFACES_NUMTHREAD_Y;
+            cmd.dispatch[2] = CUBEMAP_NUM_FACES / COLORFACES_NUMTHREAD_Z;
 
             cmd.uavBindings.insert(std::make_pair("dstTex", srcTex->uav[0]));
 
@@ -308,45 +321,17 @@ namespace ninniku {
             // dispatch
             Command cmd = {};
             cmd.shader = "dirToFaces";
-            cmd.cbufferStr = "CBDirToFaces";
 
             static_assert((DIRTOFACE_NUMTHREAD_X == DIRTOFACE_NUMTHREAD_Y) && (DIRTOFACE_NUMTHREAD_Z == 1));
-            cmd.dispatch[0] = cmd.dispatch[1] = param.size / DIRTOFACE_NUMTHREAD_X;
-            cmd.dispatch[2] = 1 / DIRTOFACE_NUMTHREAD_Z;
+            cmd.dispatch[0] = param.width / DIRTOFACE_NUMTHREAD_X;
+            cmd.dispatch[1] = param.height / DIRTOFACE_NUMTHREAD_Y;
+            cmd.dispatch[2] = CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
+
             cmd.ssBindings.insert(std::make_pair("ssPoint", _dx->GetSampler(SS_Point)));
-            cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube));
+            cmd.srvBindings.insert(std::make_pair("srcTex", original->srvCube));
             cmd.uavBindings.insert(std::make_pair("dstTex", dstTex->uav[0]));
 
-            DirectX::XMVECTOR faceDir[CUBEMAP_NUM_FACES] = {
-                {1.f, 0.f, 0.f, 1.f},
-                {-1.f, 0.f, 0.f, 1.f},
-                {0.f, 1.f, 0.f, 1.f},
-                {0.f, -1.f, 0.f, 1.f},
-                {0.f, 0.f, 1.f, 1.f},
-                {0.f, 0.f, -1.f, 1.f}
-            };
-
-            DirectX::XMVECTOR faceUp[CUBEMAP_NUM_FACES] = {
-                {0.f, 1.f, 0.f, 1.f},
-                {0.f, 1.f, 0.f, 1.f},
-                {0.f, 0.f, -1.f, 1.f},
-                {0.f, 0.f, 1.f, 1.f},
-                {0.f, 1.f, 0.f, 1.f},
-                {0.f, 1.f, 0.f, 1.f}
-            };
-
-            CBDirToFaces cb = {};
-
-            for (uint32_t face = 0; face < CUBEMAP_NUM_FACES; ++face) {
-                auto viewMat = DirectX::XMMatrixLookAtLH(DirectX::XMVECTOR{}, faceDir[face], faceUp[face]);
-                auto projMat = DirectX::XMMatrixPerspectiveLH(512.f, 512.f, 1.f, 100.f);
-                DirectX::XMVECTOR temp;
-                cb.invProjMat = DirectX::XMMatrixInverse(&temp, projMat);
-                cb.invViewMat = DirectX::XMMatrixInverse(&temp, viewMat);
-                _dx->UpdateConstantBuffer(cmd.cbufferStr, &cb, sizeof(CBDirToFaces));
-
-                _dx->Dispatch(cmd);
-            }
+            _dx->Dispatch(cmd);
         }
 
         // save it on disk for reference
@@ -358,5 +343,20 @@ namespace ninniku {
         }
 
         LOG_INDENT_END;
+    }
+
+    void Processor::TestDDS()
+    {
+        auto image = std::make_unique<ddsImage>();
+
+        if (!image->Load("sampleTexture.dds")) {
+            LOGE << "Failed to create ddsImage";
+            return;
+        }
+
+        auto params = image->CreateTextureParam(TV_SRV);
+        auto original = _dx->CreateTexture(params);
+
+        int i = 0;
     }
 } // namespace ninniku

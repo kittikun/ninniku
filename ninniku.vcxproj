@@ -161,7 +161,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\dx11\DX11.cpp" />
-    <ClCompile Include="src\image.cpp" />
+    <ClCompile Include="src\image\cmft.cpp" />
+    <ClCompile Include="src\image\dds.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -179,10 +180,13 @@
   <ItemGroup>
     <ClInclude Include="src\dx11\DX11.h" />
     <ClInclude Include="src\dx11\DX11Types.h" />
-    <ClInclude Include="src\image.h" />
+    <ClInclude Include="src\image\cmft.h" />
+    <ClInclude Include="src\image\dds.h" />
+    <ClInclude Include="src\image\image.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\process.h" />
     <ClInclude Include="src\shaders\cbuffers.h" />
+    <ClInclude Include="src\types.h" />
     <ClInclude Include="src\utils\log.h" />
     <ClInclude Include="src\utils\mathUtils.h" />
     <ClInclude Include="src\utils\misc.h" />

@@ -20,34 +20,22 @@
 
 #pragma once
 
-#include <cmft/image.h>
+#include "image.h"
+
+#include <DirectXTex.h>
 
 namespace ninniku {
-class Image
-{
-public:
-    Image() = default;
-    Image(uint32_t size, uint32_t numMips);
+    class ddsImage : public Image
+    {
+    public:
+        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
+        bool Load(const std::string&) override;
 
-    ~Image();
+    protected:
+        std::vector<SubresourceParam> GetInitializationData() const override;
 
-    std::array<uint32_t, 6> GetFaceOffsets() const;
-    uint32_t GetFaceSize() const { return imageGetCubemapFaceSize(_image); }
-    void* GetData() const { return _image.m_data; }
-    uint32_t GetPitch() const;
-
-    std::tuple<bool, uint32_t> IsRequiringFix();
-
-    bool LoadCubemap(const std::string&);
-    void ResizeImage(uint32_t size);
-    void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch);
-
-    void SaveImage(const std::string&);
-
-private:
-    void AllocateMemory();
-
-private:
-    cmft::Image _image;
-};
+    private:
+        DirectX::TexMetadata _meta;
+        DirectX::ScratchImage _scratch;
+    };
 } // namespace ninniku

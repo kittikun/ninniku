@@ -20,31 +20,18 @@
 
 #pragma once
 
-#include "dx11/DX11Types.h"
+#include "../types.h"
 
 namespace ninniku {
-    class DX11;
-    class cmftImage;
-
-    class Processor
+    class Image
     {
     public:
-        Processor(const std::shared_ptr<DX11>&);
+        virtual ~Image() = default;
 
-        bool ProcessImage(const boost::filesystem::path&);
+        virtual bool Load(const std::string&) = 0;
+        virtual TextureParam CreateTextureParam(uint8_t viewFlags) const = 0;
 
-    private:
-        std::unique_ptr<cmftImage> ImageFromTextureObject(const std::unique_ptr<TextureObject>& srcTex);
-        std::unique_ptr<TextureObject> ResizeImage(uint32_t newSize, const std::unique_ptr<TextureObject>& srcTex, std::unique_ptr<cmftImage>& srcImg);
-
-        // programs
-        void ColorMips();
-        void GenerateMips(const std::unique_ptr<TextureObject>& srcTex);
-        void GeneratePreIntegratedCubemap(const std::unique_ptr<TextureObject>& srcTex3);
-        void TestCubemapDirToTexture2DArray(const std::unique_ptr<TextureObject>& original);
-        void TestDDS();
-
-    private:
-        std::shared_ptr<DX11> _dx;
+    protected:
+        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
     };
 } // namespace ninniku

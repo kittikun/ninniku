@@ -20,31 +20,37 @@
 
 #pragma once
 
-#include "dx11/DX11Types.h"
+#include "image.h"
+
+#include <cmft/image.h>
 
 namespace ninniku {
-    class DX11;
-    class cmftImage;
-
-    class Processor
+    class cmftImage : public Image
     {
     public:
-        Processor(const std::shared_ptr<DX11>&);
+        cmftImage() = default;
+        cmftImage(uint32_t width, uint32_t height, uint32_t numMips);
 
-        bool ProcessImage(const boost::filesystem::path&);
+        ~cmftImage();
+
+        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
+        bool Load(const std::string&) override;
+
+        std::tuple<bool, uint32_t> IsRequiringFix();
+
+        void ResizeImage(uint32_t size);
+        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch);
+
+        void SaveImage(const std::string&);
+        void SaveImageFaceList(const std::string&);
+
+    protected:
+        std::vector<SubresourceParam> GetInitializationData() const override;
 
     private:
-        std::unique_ptr<cmftImage> ImageFromTextureObject(const std::unique_ptr<TextureObject>& srcTex);
-        std::unique_ptr<TextureObject> ResizeImage(uint32_t newSize, const std::unique_ptr<TextureObject>& srcTex, std::unique_ptr<cmftImage>& srcImg);
-
-        // programs
-        void ColorMips();
-        void GenerateMips(const std::unique_ptr<TextureObject>& srcTex);
-        void GeneratePreIntegratedCubemap(const std::unique_ptr<TextureObject>& srcTex3);
-        void TestCubemapDirToTexture2DArray(const std::unique_ptr<TextureObject>& original);
-        void TestDDS();
+        void AllocateMemory();
 
     private:
-        std::shared_ptr<DX11> _dx;
+        cmft::Image _image;
     };
 } // namespace ninniku

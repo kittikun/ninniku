@@ -21,6 +21,6 @@
 #pragma once
 
 namespace ninniku {
-std::wstring strToWStr(const std::string&);
-std::string wstrToStr(const std::wstring&);
+    std::wstring strToWStr(const std::string&);
+    std::string wstrToStr(const std::wstring&);
 } // namespace ninniku
