@@ -28,8 +28,6 @@
 #include "image/cmft.h"
 #include "image/dds.h"
 
-#include <renderdoc_app.h>
-
 #include <string>
 
 namespace {
