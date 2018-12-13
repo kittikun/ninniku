@@ -29,7 +29,7 @@
 #include <iostream>
 #include <windows.h>
 
-#ifdef _USE_RENDERDOC
+#if defined(_USE_RENDERDOC)
 #include <renderdoc_app.h>
 #endif
 
@@ -43,7 +43,7 @@ enum CLIFlags
     CLI_RENDERDOC = 1 << 3  // renderdoc capture the processing
 };
 
-#ifdef _USE_RENDERDOC
+#if defined(_USE_RENDERDOC)
 RENDERDOC_API_1_1_2* renderDocApi = nullptr;
 #endif
 
@@ -118,7 +118,7 @@ int ParseCommandLine(int ac, char* av[], std::vector<std::string>& toProcess, st
     return res;
 }
 
-#ifdef _USE_RENDERDOC
+#if defined(_USE_RENDERDOC)
 void LoadRenderDoc()
 {
     LOG << "Loading RenderDoc..";
@@ -156,7 +156,7 @@ int main(int ac, char* av[])
 
     LOG << "ninniku HLSL compute shader framework";
 
-#ifdef _USE_RENDERDOC
+#if defined(_USE_RENDERDOC)
     if ((parsed & CLI_RENDERDOC) != 0)
         LoadRenderDoc();
 #endif
@@ -174,7 +174,7 @@ int main(int ac, char* av[])
             return 1;
         }
 
-#ifdef _USE_RENDERDOC
+#if defined(_USE_RENDERDOC)
         if (renderDocApi != nullptr) {
             renderDocApi->SetCaptureFilePathTemplate(renderDocCapturePath.c_str());
             renderDocApi->StartFrameCapture(NULL, NULL);
@@ -211,7 +211,7 @@ int main(int ac, char* av[])
         }
     }
 
-#ifdef _USE_RENDERDOC
+#if defined(_USE_RENDERDOC)
     if (renderDocApi != nullptr)
         renderDocApi->EndFrameCapture(NULL, NULL);
 #endif
