@@ -39,13 +39,13 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -163,12 +163,12 @@
     <ClCompile Include="src\dx11\DX11.cpp" />
     <ClCompile Include="src\image\cmft.cpp" />
     <ClCompile Include="src\image\dds.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <None Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\process.cpp" />
+    <None Include="src\process.cpp" />
     <ClCompile Include="src\utils\log.cpp" />
     <ClCompile Include="src\utils\mathUtils.cpp" />
     <ClCompile Include="src\utils\misc.cpp" />
@@ -184,7 +184,7 @@
     <ClInclude Include="src\image\dds.h" />
     <ClInclude Include="src\image\image.h" />
     <ClInclude Include="src\pch.h" />
-    <ClInclude Include="src\process.h" />
+    <None Include="src\process.h" />
     <ClInclude Include="src\shaders\cbuffers.h" />
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\utils\log.h" />
