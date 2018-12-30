@@ -19,12 +19,13 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "dds.h"
+#include "ninniku/image/dds.h"
 
 #include "../utils/log.h"
 #include "../utils/misc.h"
 
-namespace ninniku {
+namespace ninniku
+{
     TextureParam ddsImage::CreateTextureParam(uint8_t viewFlags) const
     {
         TextureParam res = {};

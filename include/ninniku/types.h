@@ -20,7 +20,8 @@
 
 #pragma once
 
-namespace ninniku {
+namespace ninniku
+{
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
     struct TextureObject;
@@ -64,7 +65,7 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     enum ETextureViews : uint8_t
     {
-        TV_None = 0,
+        TV_None = 0,            // Should not be used
         TV_SRV = 1 << 0,
         TV_UAV = 1 << 1,
         TV_CPU_READ = 1 << 2

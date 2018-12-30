@@ -83,8 +83,15 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)external\cmft\include;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\cmft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <FxCompile>
+      <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,16 +123,21 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)external\cmft\include;$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\cmft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <FxCompile>
+      <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="fixture.cpp" />
-    <ClCompile Include="tests\Test.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="tests\image.cpp" />
+    <ClCompile Include="tests\shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -136,7 +148,20 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="data\cbuffers.h" />
     <ClInclude Include="fixture.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="data\resize.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -150,6 +175,8 @@
     <Import Project="..\packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets" Condition="Exists('..\packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets')" />
     <Import Project="..\packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets" Condition="Exists('..\packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets')" />
     <Import Project="..\packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets" Condition="Exists('..\packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets')" />
+    <Import Project="..\packages\directxmath.2018.7.23.2\build\native\directxmath.targets" Condition="Exists('..\packages\directxmath.2018.7.23.2\build\native\directxmath.targets')" />
+    <Import Project="..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets" Condition="Exists('..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -165,5 +192,7 @@
     <Error Condition="!Exists('..\packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets'))" />
     <Error Condition="!Exists('..\packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets'))" />
     <Error Condition="!Exists('..\packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets'))" />
+    <Error Condition="!Exists('..\packages\directxmath.2018.7.23.2\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxmath.2018.7.23.2\build\native\directxmath.targets'))" />
+    <Error Condition="!Exists('..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets'))" />
   </Target>
 </Project>

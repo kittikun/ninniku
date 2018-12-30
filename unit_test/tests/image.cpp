@@ -18,11 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "fixture.h"
+#include <boost/test/unit_test.hpp>
 
-#include <ninniku/ninniku.h>
+#include "../fixture.h"
 
-SetupFixture::SetupFixture()
+#include <ninniku/dx11/DX11Types.h>
+#include <ninniku/image/cmft.h>
+#include <ninniku/types.h>
+#include <tuple>
+
+BOOST_AUTO_TEST_SUITE(Image)
+
+BOOST_AUTO_TEST_CASE(load_cmft)
 {
-    ninniku::Initialize(ninniku::RENDERER_DX11, "shaders", ninniku::LL_FULL);
+    SetupFixture f;
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 }
+
+BOOST_AUTO_TEST_CASE(cmft_need_resize)
+{
+    SetupFixture f;
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    BOOST_TEST(image->Load("data/Cathedral01.hdr"));
+
+    auto needFix = image->IsRequiringFix();
+
+    BOOST_TEST(std::get<0>(needFix));
+    BOOST_TEST(std::get<1>(needFix) == 512);
+}
+
+BOOST_AUTO_TEST_CASE(cmft_texture_parm)
+{
+    SetupFixture f;
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+
+    auto param = image->CreateTextureParam(ninniku::TV_SRV);
+
+    BOOST_TEST(param.viewflags);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

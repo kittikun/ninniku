@@ -9,3 +9,6 @@ Simple framework to run compute jobs with DX11
 - Can capture commands with [RenderDoc](https://renderdoc.org/).
   * Enable by copying renderdoc.dll and renderdoc_app.h to external\renderdoc
   * Add _USE_RENDERDOC to preprocessor definitions
+
+#### Usage:
+Shader must be compiled for SM 5.0 and define the "HLSL" preprocessor

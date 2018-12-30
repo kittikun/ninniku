@@ -21,6 +21,8 @@
 #include "pch.h"
 #include "log.h"
 
+#include "ninniku/ninniku.h"
+
 #include <boost/date_time.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
@@ -34,8 +36,10 @@ namespace keywords = boost::log::keywords;
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
 
-namespace ninniku {
-    namespace Log {
+namespace ninniku
+{
+    namespace Log
+    {
         BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", ELogLevel);
 
         //////////////////////////////////////////////////////////////////////////
@@ -59,6 +63,7 @@ namespace ninniku {
         };
 
         static std::unique_ptr<LogContext> sLogContext;
+        static bool sLogInitizalized;
 
         //////////////////////////////////////////////////////////////////////////
         /// Color console
@@ -68,7 +73,8 @@ namespace ninniku {
         public:
             static void consume(boost::log::record_view const& rec, string_type const& formatted_string)
             {
-                auto getColor = [](ELogLevel level) {
+                auto getColor = [](ELogLevel level)
+                {
                     // default is white
                     WORD res = 7;
 
@@ -104,8 +110,8 @@ namespace ninniku {
         std::ostream& operator<<(std::ostream& strm, ELogLevel level)
         {
             constexpr const char* strings[] = {
-                "core",
                 "dx11",
+                "core",
                 "warn",
                 "ERRO"
             };
@@ -118,15 +124,15 @@ namespace ninniku {
             return strm;
         }
 
-        void Initialize(bool verbose)
+        void Initialize(uint8_t level)
         {
+            if (sLogInitizalized)
+                return;
+
             sLogContext.reset(new LogContext());
             logging::add_common_attributes();
 
             auto colorSink = boost::make_shared<sinks::synchronous_sink<ColorConsoleSink>>();
-
-            if (!verbose)
-                colorSink->set_filter(severity > Log_DX);
 
             colorSink->set_formatter(expr::format("%1%: [%2%] %3%")
                                      % expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
@@ -144,8 +150,27 @@ namespace ninniku {
 
             auto core = logging::core::get();
 
+            switch (level) {
+                case LL_NONE:
+                    colorSink->set_filter(severity > Log_Error);
+                    debugSink->set_filter(severity > Log_Error);
+                    break;
+
+                case LL_NORMAL:
+                    colorSink->set_filter(severity > Log_DX);
+                    debugSink->set_filter(severity > Log_DX);
+                    break;
+
+                case LL_WARN_ERROR:
+                    colorSink->set_filter(severity > Log_Core);
+                    debugSink->set_filter(severity > Log_Core);
+                    break;
+            }
+
             core->add_sink(colorSink);
             core->add_sink(debugSink);
+
+            sLogInitizalized = true;
         }
 
         void StartIndent()

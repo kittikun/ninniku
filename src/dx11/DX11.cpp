@@ -19,18 +19,20 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "DX11.h"
+#include "ninniku/dx11/DX11.h"
 
 #pragma comment(lib, "D3DCompiler.lib")
 
-#include "../image/image.h"
+#include "ninniku/image/image.h"
 #include "../utils/log.h"
 #include "../utils/misc.h"
 #include "../utils/VectorSet.h"
 
+#include <comdef.h>
 #include <d3dcompiler.h>
 
-namespace ninniku {
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // DebugMarker
     //////////////////////////////////////////////////////////////////////////
@@ -137,7 +139,7 @@ namespace ninniku {
         D3D_FEATURE_LEVEL fl;
 
         auto hr = s_DynamicD3D11CreateDevice(pAdapter.Get(),
-                                             (pAdapter) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE,
+            (pAdapter) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE,
                                              nullptr, createDeviceFlags, featureLevels.data(), (uint32_t)featureLevels.size(),
                                              D3D11_SDK_VERSION, pDevice, &fl, nullptr);
 
@@ -231,7 +233,9 @@ namespace ninniku {
 
         auto hr = _device->CreateTexture2D(&desc, initialData.data(), res->texture.GetAddressOf());
         if (FAILED(hr)) {
-            LOGE << "Failed to CreateTexture2D cube map";
+            LOGE << "Failed to CreateTexture2D cube map with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
             return std::unique_ptr<TextureObject>();
         }
 
@@ -239,13 +243,16 @@ namespace ninniku {
             if (params.arraySize == CUBEMAP_NUM_FACES) {
                 // To sample texture as cubemap
                 D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
                 srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
-                srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
                 srvDesc.TextureCube.MipLevels = params.numMips;
+                srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
 
                 hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvCube.GetAddressOf());
                 if (FAILED(hr)) {
-                    LOGE << "Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBE";
+                    LOGE << "Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBE with:";
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
                     return std::unique_ptr<TextureObject>();
                 }
 
@@ -262,8 +269,80 @@ namespace ninniku {
 
                     hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvArray[i].GetAddressOf());
                     if (FAILED(hr)) {
-                        auto fmt = boost::format("Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURE2DARRAY for mip %1%") % i;
+                        auto fmt = boost::format("Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURE2DARRAY for mip %1% with:") % i;
                         LOGE << boost::str(fmt);
+                        _com_error err(hr);
+                        LOGE << err.ErrorMessage();
+
+                        return std::unique_ptr<TextureObject>();
+                    }
+                }
+
+                // one for array with all mips
+                srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
+                srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
+                srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
+                srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
+                srvDesc.Texture2DArray.MostDetailedMip = 0;
+                srvDesc.Texture2DArray.MipLevels = params.numMips;
+
+                hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvArrayWithMips.GetAddressOf());
+                if (FAILED(hr)) {
+                    auto fmt = boost::format("Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURE2DARRAY with all mips with:");
+                    LOGE << boost::str(fmt);
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
+                    return std::unique_ptr<TextureObject>();
+                }
+            } else {
+                D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+                srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
+
+                if (params.arraySize > 1) {
+                    // one for each miplevel
+                    res->srvArray.resize(params.numMips);
+
+                    for (uint32_t i = 0; i < params.numMips; ++i) {
+                        if (params.height == 1) {
+                            srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1DARRAY;
+                            srvDesc.Texture1DArray.ArraySize = params.arraySize;
+                            srvDesc.Texture1DArray.MostDetailedMip = i;
+                            srvDesc.Texture1DArray.MipLevels = 1;
+                        } else {
+                            srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
+                            srvDesc.Texture2DArray.ArraySize = params.arraySize;
+                            srvDesc.Texture2DArray.MostDetailedMip = i;
+                            srvDesc.Texture2DArray.MipLevels = 1;
+                        }
+
+                        hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvArray[i].GetAddressOf());
+                        if (FAILED(hr)) {
+                            auto fmt = boost::format("Failed to CreateShaderResourceView with D3D_SRV_DIMENSION for Mip=%1% with Height=%2% with:") % i % params.height;
+                            LOGE << boost::str(fmt);
+                            _com_error err(hr);
+                            LOGE << err.ErrorMessage();
+                            return std::unique_ptr<TextureObject>();
+                        }
+                    }
+                } else {
+                    if (params.depth > 1) {
+                        srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE3D;
+                        srvDesc.Texture3D.MipLevels = params.numMips;
+                    } else if (params.height == 1) {
+                        srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1D;
+                        srvDesc.Texture1D.MipLevels = params.numMips;
+                    } else {
+                        srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+                        srvDesc.Texture2D.MipLevels = params.numMips;
+                    }
+
+                    hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvDefault.GetAddressOf());
+                    if (FAILED(hr)) {
+                        auto fmt = boost::format("Failed to CreateShaderResourceView with: Height=%1%, Depth=%2% with:") % params.height % params.depth;
+                        LOGE << boost::str(fmt);
+                        _com_error err(hr);
+                        LOGE << err.ErrorMessage();
                         return std::unique_ptr<TextureObject>();
                     }
                 }
@@ -277,13 +356,21 @@ namespace ninniku {
             for (uint32_t i = 0; i < params.numMips; ++i) {
                 D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
                 uavDesc.Format = static_cast<DXGI_FORMAT>(params.format);
-                uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-                uavDesc.Texture2DArray.MipSlice = i;
-                uavDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
+
+                if (params.arraySize > 1) {
+                    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
+                    uavDesc.Texture2DArray.MipSlice = i;
+                    uavDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
+                } else {
+                    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+                    uavDesc.Texture2D.MipSlice = i;
+                }
 
                 hr = _device->CreateUnorderedAccessView(res->texture.Get(), &uavDesc, res->uav[i].GetAddressOf());
                 if (FAILED(hr)) {
-                    LOGE << "Failed to CreateUnorderedAccessView";
+                    LOGE << "Failed to CreateUnorderedAccessView with:";
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
                     return std::unique_ptr<TextureObject>();
                 }
             }
@@ -314,7 +401,8 @@ namespace ninniku {
         static VectorSet<uint32_t, ID3D11UnorderedAccessView*> vmUAV;
         static VectorSet<uint32_t, ID3D11SamplerState*> vmSS;
 
-        auto lambda = [&](auto kvp, auto & container) {
+        auto lambda = [&](auto kvp, auto & container)
+        {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -380,7 +468,7 @@ namespace ninniku {
         _context->CSSetUnorderedAccessViews(0, (uint32_t)vmUAV.size(), vmUAV.data(), nullptr);
         _context->CSSetShaderResources(0, vmSRV.size(), vmSRV.data());
         _context->Dispatch(cmd.dispatch[0], cmd.dispatch[1], cmd.dispatch[2]);
-
+        _context->Flush();
         return true;
     }
 
@@ -409,7 +497,7 @@ namespace ninniku {
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
-    bool DX11::Initialize()
+    bool DX11::Initialize(const std::string& shaderPath)
     {
         if (!CreateDevice(0, _device.GetAddressOf())) {
             LOGE << "Failed to create DX11 device";
@@ -423,7 +511,7 @@ namespace ninniku {
             return false;
         }
 
-        if (!LoadShaders()) {
+        if (!LoadShaders(shaderPath)) {
             LOGE << "Failed to load shaders.";
             return false;
         }
@@ -437,7 +525,9 @@ namespace ninniku {
 
         auto hr = _device->CreateSamplerState(&samplerDesc, _samplers[SS_Point].GetAddressOf());
         if (FAILED(hr)) {
-            LOGE << "Failed to CreateSamplerState for nearest";
+            LOGE << "Failed to CreateSamplerState for nearest with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
             return false;
         }
 
@@ -445,7 +535,9 @@ namespace ninniku {
 
         hr = _device->CreateSamplerState(&samplerDesc, _samplers[SS_Linear].GetAddressOf());
         if (FAILED(hr)) {
-            LOGE << "Failed to CreateSamplerState for linear";
+            LOGE << "Failed to CreateSamplerState for linear with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
             return false;
         }
 
@@ -459,7 +551,9 @@ namespace ninniku {
         auto hr = _context->Map(tObj->texture.Get(), 0, D3D11_MAP_READ, 0, res->Get());
 
         if (FAILED(hr)) {
-            LOGE << "Failed to map texture";
+            _com_error err(hr);
+            LOGE << "Failed to map texture with:";
+            LOGE << err.ErrorMessage();
             return std::unique_ptr<MappedResource>();
         }
 
@@ -469,24 +563,24 @@ namespace ninniku {
     /// <summary>
     /// Load all shaders in /data
     /// </summary>
-    bool DX11::LoadShaders()
+    bool DX11::LoadShaders(const std::string& shaderPath)
     {
-        std::string dir{ "data" };
         std::string ext{ ".cso" };
 
         // Count the number of .cso found
-        boost::filesystem::directory_iterator begin(dir), end;
+        boost::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const boost::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const boost::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 
         auto numFiles = std::count_if(begin, end, fileCounter);
-        auto fmt = boost::format("Found %1% compiled shaders in /%2%") % numFiles % dir;
+        auto fmt = boost::format("Found %1% compiled shaders in /%2%") % numFiles % shaderPath;
 
         LOGD << boost::str(fmt);
 
-        for (auto& iter : boost::filesystem::recursive_directory_iterator(dir)) {
+        for (auto& iter : boost::filesystem::recursive_directory_iterator(shaderPath)) {
             if (iter.path().extension() == ext) {
                 auto path = iter.path().string();
 
@@ -495,11 +589,13 @@ namespace ninniku {
                 LOG_INDENT_START << boost::str(fmt);
 
                 ID3DBlob* blob = nullptr;
-                auto hr = D3DReadFileToBlob(strToWStr(path).c_str(), &blob);
+                auto hr = D3DReadFileToBlob(ninniku::strToWStr(path).c_str(), &blob);
 
                 if (FAILED(hr)) {
-                    fmt = boost::format("Failed to D3DReadFileToBlob: %1%") % path;
+                    fmt = boost::format("Failed to D3DReadFileToBlob: %1% with:") % path;
                     LOGE << boost::str(fmt);
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
                     return false;
                 }
 
@@ -509,15 +605,19 @@ namespace ninniku {
 
                 hr = D3DReflect(blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&reflect));
                 if (FAILED(hr)) {
-                    fmt = boost::format("Failed to call D3DReflect on shader: %1%") % path;
+                    fmt = boost::format("Failed to call D3DReflect on shader: %1% with:") % path;
                     LOGE << boost::str(fmt);
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
                     return false;
                 }
 
                 hr = reflect->GetDesc(&desc);
                 if (FAILED(hr)) {
-                    fmt = boost::format("Failed to GetDesc from shader reflection on shader: %1%") % path;
+                    fmt = boost::format("Failed to GetDesc from shader reflection on shader: %1% with:") % path;
                     LOGE << boost::str(fmt);
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
                     return false;
                 }
 
@@ -529,8 +629,10 @@ namespace ninniku {
                 hr = _device->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader.GetAddressOf());
 
                 if (FAILED(hr)) {
-                    fmt = boost::format("Failed to CreateComputeShader: %1%") % path;
+                    fmt = boost::format("Failed to CreateComputeShader: %1% with:") % path;
                     LOGE << boost::str(fmt);
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
                     return false;
                 } else {
                     auto name = iter.path().stem().string();
@@ -615,8 +717,10 @@ namespace ninniku {
 
             auto hr = _device->CreateBuffer(&desc, &initialData, &_cBuffers[name]);
             if (FAILED(hr)) {
-                auto fmt = boost::format("Failed to CreateBuffer constant buffer \"%1%\"") % name;
+                auto fmt = boost::format("Failed to CreateBuffer constant buffer \"%1%\" with:") % name;
                 LOGE << boost::str(fmt);
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
                 return false;
             }
         } else {
@@ -627,8 +731,10 @@ namespace ninniku {
             auto hr = _context->Map(src, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 
             if (FAILED(hr)) {
-                auto fmt = boost::format("Failed to map constant buffer \"%1%\"") % name;
+                auto fmt = boost::format("Failed to map constant buffer \"%1%\" with:") % name;
                 LOGE << boost::str(fmt);
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
                 return false;
             }
 

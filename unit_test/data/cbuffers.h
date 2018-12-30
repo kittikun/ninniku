@@ -18,17 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#define BOOST_TEST_MODULE ninniku
-#include <boost/test/included/unit_test.hpp>
+#ifndef CBUFFER_H
+#define CBUFFER_H
 
-#include "../fixture.h"
+#ifdef HLSL
+#define CBUFFER cbuffer
+#else
+#include <DirectXMath.h>
 
-#include <image/cmft.h>
+#define CBUFFER struct alignas(16)
+#define float4x4 DirectX::XMMATRIX
+#endif
 
-BOOST_AUTO_TEST_CASE(load_cmft)
-{
-    SetupFixture f;
-    auto image = std::make_unique<ninniku::cmftImage>();
+CBUFFER CBGlobal{
+    int targetMip;
+};
 
-    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
-}
+// While we're here, also defines numthreads here
+
+#define RESIZE_NUMTHREAD_X 32
+#define RESIZE_NUMTHREAD_Y RESIZE_NUMTHREAD_X
+#define RESIZE_NUMTHREAD_Z 1
+
+#endif // CBUFFER_H

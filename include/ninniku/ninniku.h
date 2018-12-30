@@ -18,11 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "fixture.h"
+#pragma once
 
-#include <ninniku/ninniku.h>
+#include <stdint.h>
+#include <string>
 
-SetupFixture::SetupFixture()
+namespace ninniku
 {
-    ninniku::Initialize(ninniku::RENDERER_DX11, "shaders", ninniku::LL_FULL);
-}
+    class DX11;
+
+    enum ELogLevel : uint8_t
+    {
+        LL_NONE,
+        LL_WARN_ERROR,
+        LL_NORMAL,
+        LL_FULL
+    };
+
+    enum ERenderer : uint8_t
+    {
+        RENDERER_DX11
+    };
+
+    /// <summary>
+    /// Initialize niniku framework
+    /// shaderPath must point to compiled .cso folder
+    /// </summary>
+    bool Initialize(uint8_t renderer, const std::string& shaderPath, uint8_t logLevel = LL_WARN_ERROR);
+
+    std::unique_ptr<DX11>& GetRenderer();
+} // namespace ninniku

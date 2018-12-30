@@ -8,12 +8,21 @@
     <Filter Include="Source Files\tests">
       <UniqueIdentifier>{ee8e505f-3265-4e0f-8c94-b0f565deb247}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\data">
+      <UniqueIdentifier>{95317c23-655c-4d54-9b9e-937332ceb1fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tests\Test.cpp">
+    <ClCompile Include="fixture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\image.cpp">
       <Filter>Source Files\tests</Filter>
     </ClCompile>
-    <ClCompile Include="fixture.cpp">
+    <ClCompile Include="tests\shader.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -24,5 +33,13 @@
     <ClInclude Include="fixture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="data\cbuffers.h">
+      <Filter>Source Files\data</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="data\resize.hlsl">
+      <Filter>Source Files\data</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

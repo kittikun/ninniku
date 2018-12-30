@@ -18,20 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "pch.h"
+#include "ninniku/ninniku.h"
 
-#include "../types.h"
+#include "ninniku/dx11/DX11.h"
+#include "utils/log.h"
 
-namespace ninniku {
-    class Image
+namespace ninniku
+{
+    static std::unique_ptr<DX11> sRenderer;
+
+    std::unique_ptr<DX11>& GetRenderer()
     {
-    public:
-        virtual ~Image() = default;
+        return sRenderer;
+    }
 
-        virtual bool Load(const std::string&) = 0;
-        virtual TextureParam CreateTextureParam(uint8_t viewFlags) const = 0;
+    bool Initialize(uint8_t renderer, const std::string& shaderPath, uint8_t logLevel)
+    {
+        ninniku::Log::Initialize(logLevel);
 
-    protected:
-        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
-    };
-} // namespace ninniku
+        LOG << "ninniku HLSL compute shader framework";
+
+        if (renderer == RENDERER_DX11) {
+            sRenderer.reset(new ninniku::DX11());
+
+            if (!sRenderer->Initialize(shaderPath)) {
+                LOGE << "DX11App::Initialize failed";
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+}

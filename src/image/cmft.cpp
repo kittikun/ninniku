@@ -19,13 +19,14 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "cmft.h"
+#include "ninniku/image/cmft.h"
 
 #include "../utils/log.h"
 #include "../utils/misc.h"
 #include "../utils/mathUtils.h"
 
-namespace ninniku {
+namespace ninniku
+{
     cmftImage::cmftImage(uint32_t width, uint32_t height, uint32_t numMips)
     {
         // for now we want aspect of 1:1
@@ -69,13 +70,17 @@ namespace ninniku {
     {
         TextureParam res = {};
 
-        res.arraySize = CUBEMAP_NUM_FACES;
-        res.depth = 0;
-        res.format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
-        res.height = res.width = imageGetCubemapFaceSize(_image);
-        res.imageDatas = GetInitializationData();
-        res.numMips = 1;
-        res.viewflags = viewFlags;
+        if (viewFlags == TV_None) {
+            LOGE << "TextureParam view flags cannot be 0";
+        } else {
+            res.arraySize = CUBEMAP_NUM_FACES;
+            res.depth = 0;
+            res.format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
+            res.height = res.width = imageGetCubemapFaceSize(_image);
+            res.imageDatas = GetInitializationData();
+            res.numMips = 1;
+            res.viewflags = viewFlags;
+        }
 
         return res;
     }
@@ -83,7 +88,7 @@ namespace ninniku {
     bool cmftImage::Load(const std::string& path)
     {
         bool imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F)
-                           || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
+            || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
 
         if (!imageLoaded) {
             LOGE << "Failed to load file";
@@ -177,6 +182,11 @@ namespace ninniku {
         }
 
         return res;
+    }
+
+    std::tuple<uint8_t*, uint32_t> cmftImage::GetData() const
+    {
+        return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
     }
 
     /// <summary>

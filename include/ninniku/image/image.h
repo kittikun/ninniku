@@ -18,11 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "fixture.h"
+#pragma once
 
-#include <ninniku/ninniku.h>
+#include "../types.h"
 
-SetupFixture::SetupFixture()
+namespace ninniku
 {
-    ninniku::Initialize(ninniku::RENDERER_DX11, "shaders", ninniku::LL_FULL);
-}
+    class Image
+    {
+    public:
+        virtual ~Image() = default;
+
+        virtual bool Load(const std::string&) = 0;
+        virtual TextureParam CreateTextureParam(uint8_t viewFlags) const = 0;
+
+        virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+
+    protected:
+        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
+    };
+} // namespace ninniku

@@ -18,11 +18,5 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "fixture.h"
-
-#include <ninniku/ninniku.h>
-
-SetupFixture::SetupFixture()
-{
-    ninniku::Initialize(ninniku::RENDERER_DX11, "shaders", ninniku::LL_FULL);
-}
+#define BOOST_TEST_MODULE ninniku
+#include <boost/test/included/unit_test.hpp>
