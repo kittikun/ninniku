@@ -30,12 +30,14 @@
 
 #include <string>
 
-namespace {
+namespace
+{
     uint32_t numSamples = 10000;
     uint32_t numStepSamples = std::min(2000u, numSamples);
 }
 
-namespace ninniku {
+namespace ninniku
+{
     Processor::Processor(const std::shared_ptr<DX11>& dx)
         : _dx{ dx }
     {
@@ -237,43 +239,6 @@ namespace ninniku {
         return true;
     }
 
-    std::unique_ptr<TextureObject> Processor::ResizeImage(uint32_t newSize, const std::unique_ptr<TextureObject>& srcTex, std::unique_ptr<cmftImage>& srcImg)
-    {
-        auto marker = _dx->CreateDebugMarker("Resize");
-        auto fmt = boost::format("Resizing to %1%x%1%..") % newSize;
-        LOG_INDENT_START << boost::str(fmt);
-
-        TextureParam param = {};
-        param.width = newSize;
-        param.height = newSize;
-        param.format = srcTex->desc.format;
-        param.numMips = 1;
-        param.arraySize = CUBEMAP_NUM_FACES;
-        param.viewflags = TV_SRV | TV_UAV;
-
-        auto dst = _dx->CreateTexture(param);
-
-        // dispatch
-        Command cmd = {};
-        cmd.shader = "resize";
-        cmd.ssBindings.insert(std::make_pair("ssLinear", _dx->GetSampler(SS_Linear)));
-        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[0]));
-        cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
-
-        static_assert((RESIZE_NUMTHREAD_X == RESIZE_NUMTHREAD_Y) && (RESIZE_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = cmd.dispatch[1] = newSize / RESIZE_NUMTHREAD_X;
-        cmd.dispatch[2] = CUBEMAP_NUM_FACES / RESIZE_NUMTHREAD_Z;
-
-        _dx->Dispatch(cmd);
-
-        // overwrite srcImg too
-        srcImg = ImageFromTextureObject(dst);
-
-        LOG_INDENT_END;
-
-        return dst;
-    }
-
     /// <summary>
     /// Test if CubemapDirToTexture2DArray is working as expect
     /// 1: Create a new cube map with no mips and color each face
@@ -341,20 +306,5 @@ namespace ninniku {
         }
 
         LOG_INDENT_END;
-    }
-
-    void Processor::TestDDS()
-    {
-        auto image = std::make_unique<ddsImage>();
-
-        if (!image->Load("sampleTexture.dds")) {
-            LOGE << "Failed to create ddsImage";
-            return;
-        }
-
-        auto params = image->CreateTextureParam(TV_SRV);
-        auto original = _dx->CreateTexture(params);
-
-        int i = 0;
     }
 } // namespace ninniku

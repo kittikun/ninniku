@@ -20,7 +20,11 @@
 
 #pragma once
 
+#include <cstdint>
+
 struct SetupFixture
 {
     SetupFixture();
 };
+
+void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b);

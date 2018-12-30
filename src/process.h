@@ -22,7 +22,8 @@
 
 #include "dx11/DX11Types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11;
     class cmftImage;
 
@@ -35,14 +36,12 @@ namespace ninniku {
 
     private:
         std::unique_ptr<cmftImage> ImageFromTextureObject(const std::unique_ptr<TextureObject>& srcTex);
-        std::unique_ptr<TextureObject> ResizeImage(uint32_t newSize, const std::unique_ptr<TextureObject>& srcTex, std::unique_ptr<cmftImage>& srcImg);
 
         // programs
         void ColorMips();
         void GenerateMips(const std::unique_ptr<TextureObject>& srcTex);
         void GeneratePreIntegratedCubemap(const std::unique_ptr<TextureObject>& srcTex3);
         void TestCubemapDirToTexture2DArray(const std::unique_ptr<TextureObject>& original);
-        void TestDDS();
 
     private:
         std::shared_ptr<DX11> _dx;

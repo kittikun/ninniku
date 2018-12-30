@@ -31,17 +31,8 @@
 
 BOOST_AUTO_TEST_SUITE(Shader)
 
-BOOST_AUTO_TEST_CASE(dx11_copy)
+std::unique_ptr<ninniku::cmftImage> ImageFromTextureObject(std::unique_ptr<ninniku::DX11>& dx, const std::unique_ptr<ninniku::TextureObject>& srcTex)
 {
-    SetupFixture f;
-    auto image = std::make_unique<ninniku::cmftImage>();
-
-    image->Load("data/Cathedral01.hdr");
-
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
-    auto& dx = ninniku::GetRenderer();
-    auto srcTex = dx->CreateTexture(srcParam);
-
     auto res = std::make_unique<ninniku::cmftImage>(srcTex->desc.width, srcTex->desc.height, srcTex->desc.numMips);
 
     // we have to copy each mip with a read back texture or the same size for each face
@@ -72,51 +63,69 @@ BOOST_AUTO_TEST_CASE(dx11_copy)
         }
     }
 
-    auto data = image->GetData();
-
-    unsigned char* hash = MD5(std::get<0>(data), std::get<1>(data), nullptr);
-
-    std::array<uint64_t, 2> wanted = { 0x3da2a6a5fa290619, 0xd219e8a635672d15 };
-
-    BOOST_TEST(memcmp(hash, wanted.data(), wanted.size()) == 0);
+    return res;
 }
 
-//BOOST_AUTO_TEST_CASE(shader_resize)
-//{
-//    SetupFixture f;
-//    auto image = std::make_unique<ninniku::cmftImage>();
-//
-//    image->Load("data/Cathedral01.hdr");
-//
-//    auto needFix = image->IsRequiringFix();
-//    auto newSize = std::get<1>(needFix);
-//
-//    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
-//    auto& dx = ninniku::GetRenderer();
-//    auto srcTex = dx->CreateTexture(srcParam);
-//
-//    ninniku::TextureParam dstParam = {};
-//    dstParam.width = newSize;
-//    dstParam.height = newSize;
-//    dstParam.format = srcTex->desc.format;
-//    dstParam.numMips = 1;
-//    dstParam.arraySize = 6;
-//    dstParam.viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
-//
-//    auto dst = dx->CreateTexture(dstParam);
-//
-//    // dispatch
-//    ninniku::Command cmd = {};
-//    cmd.shader = "resize";
-//    cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::SS_Linear)));
-//    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[0]));
-//    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
-//
-//    static_assert((RESIZE_NUMTHREAD_X == RESIZE_NUMTHREAD_Y) && (RESIZE_NUMTHREAD_Z == 1));
-//    cmd.dispatch[0] = cmd.dispatch[1] = newSize / RESIZE_NUMTHREAD_X;
-//    cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / RESIZE_NUMTHREAD_Z;
-//
-//    dx->Dispatch(cmd);
-//}
+BOOST_AUTO_TEST_CASE(dx11_copy)
+{
+    SetupFixture f;
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    image->Load("data/Cathedral01.hdr");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+
+    auto res = ImageFromTextureObject(dx, srcTex);
+
+    auto data = res->GetData();
+
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
+}
+
+BOOST_AUTO_TEST_CASE(shader_resize)
+{
+    SetupFixture f;
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    image->Load("data/Cathedral01.hdr");
+
+    auto needFix = image->IsRequiringFix();
+    auto newSize = std::get<1>(needFix);
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+
+    ninniku::TextureParam dstParam = {};
+    dstParam.width = newSize;
+    dstParam.height = newSize;
+    dstParam.format = srcTex->desc.format;
+    dstParam.numMips = 1;
+    dstParam.arraySize = 6;
+    dstParam.viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+
+    auto dst = dx->CreateTexture(dstParam);
+
+    // dispatch
+    ninniku::Command cmd = {};
+    cmd.shader = "resize";
+    cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::SS_Linear)));
+    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[0]));
+    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+
+    static_assert((RESIZE_NUMTHREAD_X == RESIZE_NUMTHREAD_Y) && (RESIZE_NUMTHREAD_Z == 1));
+    cmd.dispatch[0] = cmd.dispatch[1] = newSize / RESIZE_NUMTHREAD_X;
+    cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / RESIZE_NUMTHREAD_Z;
+
+    dx->Dispatch(cmd);
+
+    auto res = ImageFromTextureObject(dx, dst);
+
+    auto data = res->GetData();
+
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0xbeed1b8656b34ae7, 0x934475762323813d);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

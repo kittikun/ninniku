@@ -20,9 +20,21 @@
 
 #include "fixture.h"
 
+#include <boost/test/unit_test.hpp>
 #include <ninniku/ninniku.h>
+#include <openssl/md5.h>
+#include <array>
 
 SetupFixture::SetupFixture()
 {
     ninniku::Initialize(ninniku::RENDERER_DX11, "shaders", ninniku::LL_FULL);
+}
+
+void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b)
+{
+    unsigned char* hash = MD5(data, size, nullptr);
+
+    std::array<uint64_t, 2> wanted = { a, b };
+
+    BOOST_TEST(memcmp(hash, wanted.data(), wanted.size()) == 0);
 }

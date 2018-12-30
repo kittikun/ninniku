@@ -42,6 +42,11 @@ namespace ninniku
         return res;
     }
 
+    std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
+    {
+        return std::make_tuple(_scratch.GetPixels(), static_cast<uint32_t>(_scratch.GetPixelsSize()));
+    }
+
     std::vector<SubresourceParam> ddsImage::GetInitializationData() const
     {
         if (_meta.IsVolumemap()) {

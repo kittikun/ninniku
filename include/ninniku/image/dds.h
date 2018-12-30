@@ -24,12 +24,14 @@
 
 #include <DirectXTex.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class ddsImage : public Image
     {
     public:
         TextureParam CreateTextureParam(uint8_t viewFlags) const override;
         bool Load(const std::string&) override;
+        std::tuple<uint8_t*, uint32_t> GetData() const override;
 
     protected:
         std::vector<SubresourceParam> GetInitializationData() const override;
