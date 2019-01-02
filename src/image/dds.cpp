@@ -172,8 +172,11 @@ namespace ninniku
         }
     }
 
-    void ddsImage::SaveImage(const std::string& path, std::unique_ptr<DX11>& dx, DXGI_FORMAT format)
+    bool ddsImage::SaveImage(const std::string& path, std::unique_ptr<DX11>& dx, DXGI_FORMAT format)
     {
+        auto fmt = boost::format("Saving DDS with ddsImage file \"%1%\"") % path;
+        LOG << boost::str(fmt);
+
         auto img = _scratch.GetImage(0, 0, 0);
         assert(img);
         size_t nimg = _scratch.GetImageCount();
@@ -182,7 +185,7 @@ namespace ninniku
 
         if (!resImage) {
             LOGE << "\nERROR: Memory allocation failed";
-            return;
+            return false;
         }
 
         bool bc6hbc7 = false;
@@ -200,20 +203,27 @@ namespace ninniku
         auto info = DirectX::TexMetadata(_meta);
 
         {
+            LOGD_INDENT_START << "DirectXTex GPU Compression";
+
             auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
             auto hr = DirectX::Compress(dx->_device.Get(), img, nimg, info, format, 0, 1.f, *resImage);
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";
-                return;
+                return false;
             }
+
+            LOGE_INDENT_END;
         }
 
         auto hr = DirectX::SaveToDDSFile(*resImage->GetImage(0, 0, 0), 0, ninniku::strToWStr(path).c_str());
 
         if (FAILED(hr)) {
             LOGE << "Failed to save compressed DDS";
+            return false;
         }
+
+        return true;
     }
 
     void ddsImage::UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch)

@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    image->SaveImage("cmft_saveImage");
+    BOOST_TEST(image->SaveImage("cmft_saveImage"));
 
     auto basePath(boost::filesystem::current_path());
     auto path = basePath / "cmft_saveImage.dds";
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    image->SaveImageFaceList("cmft_saveImageFace");
+    BOOST_TEST(image->SaveImageFaceList("cmft_saveImageFace"));
 
     std::array<std::string, ninniku::CUBEMAP_NUM_FACES> suffixes = { "negx", "negy", "negz", "posx", "posy", "posz" };
     std::array<uint64_t, ninniku::CUBEMAP_NUM_FACES * 2> hashes = {
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage)
     auto res = std::make_unique<ninniku::ddsImage>();
 
     res->InitializeFromTextureObject(dx, srcTex);
-    res->SaveImage("dds_saveImage.dds", dx, DXGI_FORMAT_BC6H_UF16);
+    BOOST_TEST(res->SaveImage("dds_saveImage.dds", dx, DXGI_FORMAT_BC6H_UF16));
 
     auto basePath(boost::filesystem::current_path());
     auto path = basePath / "dds_saveImage.dds";

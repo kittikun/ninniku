@@ -48,10 +48,10 @@ namespace ninniku
         void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        void SaveImage(const std::string&);
+        bool SaveImage(const std::string&);
 
         // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        void SaveImageFaceList(const std::string&);
+        bool SaveImageFaceList(const std::string&);
 
     protected:
         std::vector<SubresourceParam> GetInitializationData() const override;

@@ -119,8 +119,8 @@ namespace ninniku
         std::ostream& operator<<(std::ostream& strm, ELogLevel level)
         {
             constexpr const char* strings[] = {
-                "core",
                 "dx11",
+                "core",
                 "warn",
                 "ERRO"
             };

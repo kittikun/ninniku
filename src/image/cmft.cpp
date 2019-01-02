@@ -226,14 +226,20 @@ namespace ninniku
         return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
     }
 
-    void cmftImage::SaveImage(const std::string& path)
+    bool cmftImage::SaveImage(const std::string& path)
     {
-        cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, cmft::OutputType::Enum::Cubemap, cmft::TextureFormat::Enum::RGBA32F, true);
+        auto fmt = boost::format("Saving DDS with cmftImage file \"%1%\"") % path;
+        LOG << boost::str(fmt);
+
+        return cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, cmft::OutputType::Enum::Cubemap, cmft::TextureFormat::Enum::RGBA32F, true);
     }
 
-    void cmftImage::SaveImageFaceList(const std::string& path)
+    bool cmftImage::SaveImageFaceList(const std::string& path)
     {
-        cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, cmft::OutputType::Enum::FaceList, cmft::TextureFormat::Enum::RGBA32F, true);
+        auto fmt = boost::format("Saving DDS face list with cmftImage files \"%1%\"") % path;
+        LOG << boost::str(fmt);
+
+        return cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, cmft::OutputType::Enum::FaceList, cmft::TextureFormat::Enum::RGBA32F, true);
     }
 
     void cmftImage::UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch)
