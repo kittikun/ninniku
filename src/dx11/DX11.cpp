@@ -473,7 +473,7 @@ namespace ninniku
         _context->CSSetUnorderedAccessViews(0, (uint32_t)vmUAV.size(), vmUAV.data(), nullptr);
         _context->CSSetShaderResources(0, vmSRV.size(), vmSRV.data());
         _context->Dispatch(cmd.dispatch[0], cmd.dispatch[1], cmd.dispatch[2]);
-        _context->Flush();
+        //_context->Flush();
         return true;
     }
 

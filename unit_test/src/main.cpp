@@ -20,22 +20,7 @@
 
 #include "fixture.h"
 
-#include <boost/test/unit_test.hpp>
-#include <ninniku/ninniku.h>
-#include <openssl/md5.h>
-#include <array>
+#define BOOST_TEST_MODULE ninniku
+#include <boost/test/included/unit_test.hpp>
 
-SetupFixture::SetupFixture()
-{
-    // because unit test run on CI, always use WARP
-    ninniku::Initialize(ninniku::RENDERER_WARP, "shaders", ninniku::LL_FULL);
-}
-
-void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b)
-{
-    unsigned char* hash = MD5(data, size, nullptr);
-
-    std::array<uint64_t, 2> wanted = { a, b };
-
-    BOOST_TEST(memcmp(hash, wanted.data(), wanted.size()) == 0);
-}
+BOOST_GLOBAL_FIXTURE(SetupFixture);

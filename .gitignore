@@ -6,5 +6,5 @@ packages/
 out/
 bin/
 *.rdc
-external/renderdoc/
 *.cso
+unit_test/*.dds

@@ -33,7 +33,7 @@ void main(uint3 GID : SV_GroupID, uint3 GTI : SV_GroupThreadID)
     srcMip.GetDimensions(targetMip, size, dummy1, dummy2, dummy3);
 
     uint2 samplePos = mad(GID.xy, DOWNSAMPLE_NUMTHREAD_X << 1, GTI.xy << 1); // on srcMip, x2 because we sample 2x2 with gather
-    float3 startPosUV = float3(rcp((float2)size) * float2(samplePos), GID.z);
+    float3 startPosUV = float3(rcp((float2)size) * float2(samplePos + (float2)0.5), GID.z);
 
     // srcMip -> dstMipSlice0
     if (all(samplePos < (uint2)size)) {

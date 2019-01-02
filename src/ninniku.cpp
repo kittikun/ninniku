@@ -23,10 +23,43 @@
 
 #include "ninniku/dx11/DX11.h"
 #include "utils/log.h"
+#include "utils/misc.h"
+
+#if defined(_USE_RENDERDOC)
+#include <renderdoc_app.h>
+#endif
 
 namespace ninniku
 {
     static std::unique_ptr<DX11> sRenderer;
+
+#if defined(_USE_RENDERDOC)
+    RENDERDOC_API_1_1_2* gRenderDocApi = nullptr;
+#endif
+
+#if defined(_USE_RENDERDOC)
+    void LoadRenderDoc()
+    {
+        LOG << "Loading RenderDoc..";
+
+        std::string path = "renderdoc.dll";
+        auto hInst = LoadLibrary(ninniku::strToWStr(path).c_str());
+
+        if (hInst == nullptr) {
+            auto fmt = boost::format("Failed to load %1%") % path;
+            LOGE << boost::str(fmt);
+
+            return;
+        } else {
+            pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(hInst, "RENDERDOC_GetAPI");
+            int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&gRenderDocApi);
+
+            if (ret != 1) {
+                LOGE << "Failed to get function pointer to RenderDoc API";
+            }
+        }
+    }
+#endif
 
     std::unique_ptr<DX11>& GetRenderer()
     {
@@ -39,6 +72,10 @@ namespace ninniku
 
         LOG << "ninniku HLSL compute shader framework";
 
+#if defined(_USE_RENDERDOC)
+        LoadRenderDoc();
+#endif
+
         if ((renderer == RENDERER_DX11) || (renderer == RENDERER_WARP)) {
             sRenderer.reset(new ninniku::DX11());
 
@@ -48,9 +85,24 @@ namespace ninniku
                 return false;
             }
 
+#if defined(_USE_RENDERDOC)
+            if (gRenderDocApi != nullptr) {
+                gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
+                gRenderDocApi->StartFrameCapture(NULL, NULL);
+            }
+#endif
+
             return true;
         }
 
         return false;
+    }
+
+    void Terminate()
+    {
+#if defined(_USE_RENDERDOC)
+        if (gRenderDocApi != nullptr)
+            gRenderDocApi->EndFrameCapture(NULL, NULL);
+#endif
     }
 }

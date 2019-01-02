@@ -13,32 +13,50 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="fixture.cpp">
+    <ClCompile Include="src\fixture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tests\image.cpp">
-      <Filter>Source Files\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\shader.cpp">
-      <Filter>Source Files\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\check.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\image.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\shader.cpp">
+      <Filter>Source Files\tests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="fixture.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="data\cbuffers.h">
       <Filter>Source Files\data</Filter>
+    </ClInclude>
+    <ClInclude Include="src\check.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\fixture.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\resize.hlsl">
+      <Filter>Source Files\data</Filter>
+    </FxCompile>
+    <FxCompile Include="data\colorMips.hlsl">
+      <Filter>Source Files\data</Filter>
+    </FxCompile>
+    <FxCompile Include="data\color20.hlsl">
+      <Filter>Source Files\data</Filter>
+    </FxCompile>
+    <FxCompile Include="data\colorFaces.hlsl">
+      <Filter>Source Files\data</Filter>
+    </FxCompile>
+    <FxCompile Include="data\downsample.hlsl">
       <Filter>Source Files\data</Filter>
     </FxCompile>
   </ItemGroup>

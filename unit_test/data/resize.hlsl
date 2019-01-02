@@ -31,7 +31,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
 
     dstTex.GetDimensions(w, dummy1, dummy2);
 
-    float2 uv = (float2)rcp(w) * float2(DTI.xy);
+    float2 uv = (float2)rcp(w) * (float2(DTI.xy) + (float2)0.5);
 
     dstTex[DTI] = srcTex.SampleLevel(ssLinear, float3(uv, DTI.z), 0);
 }

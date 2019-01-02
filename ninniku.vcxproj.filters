@@ -34,9 +34,6 @@
     <ClCompile Include="src\utils\misc.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\mathUtils.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\dx11\DX11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
@@ -52,13 +49,13 @@
     <ClCompile Include="src\ninniku.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\mathUtils.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="src\shaders\utility.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="src\shaders\color20.hlsl">
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="LICENSE" />
@@ -73,9 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\utils\log.h">
-      <Filter>Source Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\mathUtils.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\misc.h">
@@ -111,17 +105,14 @@
     <ClInclude Include="include\ninniku\ninniku.h">
       <Filter>Include</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\mathUtils.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\utils.h">
+      <Filter>Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\shaders\colorMips.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\downsample.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\colorFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
     <FxCompile Include="src\shaders\dirToFaces.hlsl">
       <Filter>Source Files\shaders</Filter>
     </FxCompile>

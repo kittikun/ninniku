@@ -18,5 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#define BOOST_TEST_MODULE ninniku
-#include <boost/test/included/unit_test.hpp>
+#pragma once
+
+namespace ninniku
+{
+    bool IsPow2(uint32_t x);
+    uint32_t CountMips(uint32_t faceSize);
+    int NearestPow2Floor(int x);
+} // namespace ninniku

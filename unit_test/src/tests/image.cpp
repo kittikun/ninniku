@@ -18,22 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../check.h"
+
 #include <boost/test/unit_test.hpp>
-
-#include "../fixture.h"
-
-#include <boost/filesystem.hpp>
 #include <ninniku/dx11/DX11Types.h>
 #include <ninniku/image/cmft.h>
 #include <ninniku/image/dds.h>
 #include <ninniku/types.h>
-#include <iostream>
 
 BOOST_AUTO_TEST_SUITE(Image)
 
 BOOST_AUTO_TEST_CASE(load_cmft)
 {
-    SetupFixture f;
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
@@ -45,7 +41,6 @@ BOOST_AUTO_TEST_CASE(load_cmft)
 
 BOOST_AUTO_TEST_CASE(cmft_need_resize)
 {
-    SetupFixture f;
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_TEST(image->Load("data/Cathedral01.hdr"));
@@ -58,7 +53,6 @@ BOOST_AUTO_TEST_CASE(cmft_need_resize)
 
 BOOST_AUTO_TEST_CASE(cmft_texture_parm)
 {
-    SetupFixture f;
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
@@ -90,6 +84,35 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage)
     ifs.read(reinterpret_cast<char*>(result.data()), pos);
 
     CheckMD5(result.data(), static_cast<uint32_t>(result.size()), 0x62a804a10dedbe15, 0xdcf18df4c67beda7);
+}
+
+BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
+{
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+
+    image->SaveImageFaceList("cmft_saveImageFace");
+
+    std::array<std::string, ninniku::CUBEMAP_NUM_FACES> suffixes = { "negx", "negy", "negz", "posx", "posy", "posz" };
+    std::array<uint64_t, ninniku::CUBEMAP_NUM_FACES * 2> hashes = {
+        0xf7013ee5b23c35ec, 0x2306cbcf87ed72fa,
+        0x24954fe70382d69d, 0x057fa4a570e5d4e6,
+        0x6e160948a9b88224, 0x47b58686fa530e9c,
+        0x76b52949fc7534b8, 0xc7d97ddf7931834f,
+        0x491744857fbacde7, 0x196987a132477a4c,
+        0xd4d16960ed5c53ef, 0x4efd2157bdf514d6
+    };
+
+    auto basePath(boost::filesystem::current_path());
+
+    for (auto i = 0; i < suffixes.size(); ++i) {
+        auto fileName = "cmft_saveImageFace_" + suffixes[i] + ".dds";
+        auto path = basePath / fileName;
+
+        BOOST_TEST(boost::filesystem::exists(path));
+        CheckFileMD5(path, hashes[i * 2], hashes[i * 2 + 1]);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(dds_load)

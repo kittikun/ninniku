@@ -20,38 +20,8 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <string>
+#include <boost/filesystem.hpp>
+#include <cstdint>
 
-namespace ninniku
-{
-    class DX11;
-
-    enum ELogLevel : uint8_t
-    {
-        LL_NONE,
-        LL_WARN_ERROR,
-        LL_NORMAL,
-        LL_FULL
-    };
-
-    enum ERenderer : uint8_t
-    {
-        RENDERER_DX11,
-        RENDERER_WARP
-    };
-
-    /// <summary>
-    /// Initialize ninniku framework
-    /// shaderPath must point to compiled .cso folder
-    /// </summary>
-    bool Initialize(uint8_t renderer, const std::string& shaderPath, uint8_t logLevel = LL_WARN_ERROR);
-
-    /// <summary>
-    /// Cleanup resources used by ninniku
-    /// If Renderdoc capture mode is enabled, finalize file capture
-    /// </summary>
-    void Terminate();
-
-    std::unique_ptr<DX11>& GetRenderer();
-} // namespace ninniku
+void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b);
+void CheckFileMD5(boost::filesystem::path path, uint64_t a, uint64_t b);

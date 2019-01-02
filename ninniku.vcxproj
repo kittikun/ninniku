@@ -95,7 +95,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\renderdoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_DEBUG;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_USE_RENDERDOC;_DEBUG;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -112,6 +112,9 @@
       <ObjectFileOutput>$(SolutionDir)data\%(Filename).cso</ObjectFileOutput>
       <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
+    <PostBuildEvent>
+      <Command>copy $(SolutionDir)external\renderdoc\renderdoc.dll $(SolutionDir)bin\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -176,7 +179,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ninniku\dx11\DX11.h" />
@@ -186,6 +191,7 @@
     <ClInclude Include="include\ninniku\image\image.h" />
     <ClInclude Include="include\ninniku\ninniku.h" />
     <ClInclude Include="include\ninniku\types.h" />
+    <ClInclude Include="include\ninniku\utils.h" />
     <ClInclude Include="src\pch.h" />
     <None Include="src\process.h" />
     <ClInclude Include="src\shaders\cbuffers.h" />
@@ -196,40 +202,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-    <None Include="src\shaders\color20.hlsl">
-      <FileType>Document</FileType>
-    </None>
-    <FxCompile Include="src\shaders\colorFaces.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="src\shaders\colorMips.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
     <FxCompile Include="src\shaders\dirToFaces.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="src\shaders\downsample.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
@@ -268,7 +241,6 @@
     <Import Project="packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets" Condition="Exists('packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets')" />
     <Import Project="packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets" Condition="Exists('packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets')" />
     <Import Project="packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets" Condition="Exists('packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets')" />
-    <Import Project="packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets" Condition="Exists('packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets')" />
     <Import Project="packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets" Condition="Exists('packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets')" />
     <Import Project="packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets" Condition="Exists('packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets')" />
     <Import Project="packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets" Condition="Exists('packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets')" />
@@ -285,7 +257,6 @@
     <Error Condition="!Exists('packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log-vc141.1.68.0.0\build\boost_log-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_date_time-vc141.1.68.0.0\build\boost_date_time-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc141.1.68.0.0\build\boost_thread-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_program_options-vc141.1.68.0.0\build\boost_program_options-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log_setup-vc141.1.68.0.0\build\boost_log_setup-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_chrono-vc141.1.68.0.0\build\boost_chrono-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_atomic-vc141.1.68.0.0\build\boost_atomic-vc141.targets'))" />
