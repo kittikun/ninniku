@@ -47,6 +47,7 @@ namespace ninniku
         //////////////////////////////////////////////////////////////////////////
         class LogContext
         {
+            // no copy of any kind allowed
             LogContext(const LogContext&) = delete;
             LogContext& operator=(const LogContext&) = delete;
             LogContext(LogContext&&) = delete;
@@ -70,7 +71,15 @@ namespace ninniku
         //////////////////////////////////////////////////////////////////////////
         class ColorConsoleSink : public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::synchronized_feeding>
         {
+            // no copy of any kind allowed
+            ColorConsoleSink(const ColorConsoleSink&) = delete;
+            ColorConsoleSink& operator=(const ColorConsoleSink&) = delete;
+            ColorConsoleSink(ColorConsoleSink&&) = delete;
+            ColorConsoleSink& operator=(ColorConsoleSink&&) = delete;
+
         public:
+            ColorConsoleSink() = default;
+
             static void consume(boost::log::record_view const& rec, string_type const& formatted_string)
             {
                 auto getColor = [](ELogLevel level)

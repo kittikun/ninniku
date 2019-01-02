@@ -22,69 +22,14 @@
 #include "../check.h"
 
 #include <boost/test/unit_test.hpp>
-#include <ninniku/ninniku.h>
 #include <ninniku/dx11/DX11.h>
 #include <ninniku/image/cmft.h>
 #include <ninniku/image/dds.h>
+#include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 #include <ninniku/utils.h>
-#include <openssl/md5.h>
 
 BOOST_AUTO_TEST_SUITE(Shader)
-
-std::unique_ptr<ninniku::cmftImage> ImageFromTextureObject(std::unique_ptr<ninniku::DX11>& dx, const std::unique_ptr<ninniku::TextureObject>& srcTex)
-{
-    auto marker = dx->CreateDebugMarker("ImageFromTextureObject");
-
-    auto res = std::make_unique<ninniku::cmftImage>(srcTex->desc.width, srcTex->desc.height, srcTex->desc.numMips);
-
-    // we have to copy each mip with a read back texture or the same size for each face
-    for (uint32_t mip = 0; mip < srcTex->desc.numMips; ++mip) {
-        ninniku::TextureParam param = {};
-
-        param.width = srcTex->desc.width >> mip;
-        param.height = srcTex->desc.height >> mip;
-        param.format = srcTex->desc.format;
-        param.numMips = 1;
-        param.arraySize = 1;
-        param.viewflags = ninniku::TV_CPU_READ;
-
-        auto readBack = dx->CreateTexture(param);
-
-        ninniku::CopySubresourceParam params = {};
-        params.src = srcTex.get();
-        params.srcMip = mip;
-        params.dst = readBack.get();
-
-        for (uint32_t face = 0; face < ninniku::CUBEMAP_NUM_FACES; ++face) {
-            params.srcFace = face;
-
-            auto indexes = dx->CopySubresource(params);
-            auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
-
-            res->UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
-        }
-    }
-
-    return res;
-}
-
-BOOST_AUTO_TEST_CASE(dx11_copy)
-{
-    auto image = std::make_unique<ninniku::cmftImage>();
-
-    image->Load("data/Cathedral01.hdr");
-
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
-    auto& dx = ninniku::GetRenderer();
-    auto srcTex = dx->CreateTexture(srcParam);
-
-    auto res = ImageFromTextureObject(dx, srcTex);
-
-    auto data = res->GetData();
-
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
-}
 
 BOOST_AUTO_TEST_CASE(shader_colorMips)
 {
@@ -121,7 +66,10 @@ BOOST_AUTO_TEST_CASE(shader_colorMips)
         dx->Dispatch(cmd);
     }
 
-    auto res = ImageFromTextureObject(dx, resTex);
+    auto res = std::make_unique<ninniku::cmftImage>();
+
+    res->InitializeFromTextureObject(dx, resTex);
+
     auto data = res->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x91086088d369be49, 0x74d54476510012cc);
@@ -180,10 +128,16 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         dx->Dispatch(cmd);
     }
 
-    auto srcImg = ImageFromTextureObject(dx, srcTex);
+    auto srcImg = std::make_unique<ninniku::ddsImage>();
+
+    srcImg->InitializeFromTextureObject(dx, srcTex);
+
     auto srcData = srcImg->GetData();
     auto srcHash = GetMD5(std::get<0>(srcData), std::get<1>(srcData));
-    auto dstImg = ImageFromTextureObject(dx, dstTex);
+    auto dstImg = std::make_unique<ninniku::ddsImage>();
+
+    dstImg->InitializeFromTextureObject(dx, srcTex);
+
     auto dstData = dstImg->GetData();
     auto dstHash = GetMD5(std::get<0>(dstData), std::get<1>(dstData));
 
@@ -258,7 +212,10 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
         }
     }
 
-    auto res = ImageFromTextureObject(dx, resTex);
+    auto res = std::make_unique<ninniku::cmftImage>();
+
+    res->InitializeFromTextureObject(dx, resTex);
+
     auto data = res->GetData();
 
     // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
@@ -302,7 +259,10 @@ BOOST_AUTO_TEST_CASE(shader_resize)
 
     dx->Dispatch(cmd);
 
-    auto res = ImageFromTextureObject(dx, dst);
+    auto res = std::make_unique<ninniku::cmftImage>();
+
+    res->InitializeFromTextureObject(dx, dst);
+
     auto data = res->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x0a8789456200fe0c, 0x0801bef40235cedb);

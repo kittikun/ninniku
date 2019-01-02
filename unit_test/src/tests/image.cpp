@@ -21,14 +21,15 @@
 #include "../check.h"
 
 #include <boost/test/unit_test.hpp>
-#include <ninniku/dx11/DX11Types.h>
+#include <ninniku/dx11/DX11.h>
 #include <ninniku/image/cmft.h>
 #include <ninniku/image/dds.h>
+#include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 
 BOOST_AUTO_TEST_SUITE(Image)
 
-BOOST_AUTO_TEST_CASE(load_cmft)
+BOOST_AUTO_TEST_CASE(cmft_load)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -37,6 +38,24 @@ BOOST_AUTO_TEST_CASE(load_cmft)
     auto data = image->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xd39b5bad561c83d3, 0x585a996223bd1765);
+}
+
+BOOST_AUTO_TEST_CASE(cmft_from_texture_object)
+{
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    image->Load("data/Cathedral01.hdr");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+    auto res = std::make_unique<ninniku::cmftImage>();
+
+    res->InitializeFromTextureObject(dx, srcTex);
+
+    auto data = res->GetData();
+
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_need_resize)
@@ -75,15 +94,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage)
 
     BOOST_TEST(boost::filesystem::exists(path));
 
-    std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
-    std::ifstream::pos_type pos = ifs.tellg();
-
-    std::vector<uint8_t> result(pos);
-
-    ifs.seekg(0, std::ios::beg);
-    ifs.read(reinterpret_cast<char*>(result.data()), pos);
-
-    CheckMD5(result.data(), static_cast<uint32_t>(result.size()), 0x62a804a10dedbe15, 0xdcf18df4c67beda7);
+    CheckFileMD5(path, 0x62a804a10dedbe15, 0xdcf18df4c67beda7);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
@@ -124,6 +135,24 @@ BOOST_AUTO_TEST_CASE(dds_load)
     auto data = image->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x48e0c9680b2cbcc9, 0xea5f523bdad5cec4);
+}
+
+BOOST_AUTO_TEST_CASE(dds_from_texture_object)
+{
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    image->Load("data/Cathedral01.hdr");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+    auto res = std::make_unique<ninniku::ddsImage>();
+
+    res->InitializeFromTextureObject(dx, srcTex);
+
+    auto data = res->GetData();
+
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

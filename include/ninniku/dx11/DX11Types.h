@@ -20,6 +20,12 @@ namespace ninniku
 
     struct Command
     {
+        // no copy of any kind allowed
+        Command(const Command&) = delete;
+        Command& operator=(Command&) = delete;
+        Command(Command&&) = delete;
+        Command& operator=(Command&&) = delete;
+
         std::string shader;
         std::string cbufferStr;
         std::unordered_map<std::string, DX11SRV> srvBindings;
@@ -28,14 +34,18 @@ namespace ninniku
         std::array<uint32_t, 3> dispatch;
     };
 
-    struct TextureObject;
-
     //////////////////////////////////////////////////////////////////////////
     // Shader
     //////////////////////////////////////////////////////////////////////////
 
     struct ComputeShader
     {
+        // only allows rvalue construction (to std::pair)
+        ComputeShader(ComputeShader&&) = default;
+        ComputeShader(const ComputeShader&) = delete;
+        ComputeShader& operator=(ComputeShader&) = delete;
+        ComputeShader& operator=(ComputeShader&&) = delete;
+
         DX11CS shader;
         std::unordered_map<std::string, uint32_t> bindSlots;
     };
@@ -46,6 +56,14 @@ namespace ninniku
 
     struct TextureObject
     {
+        // no copy of any kind allowed
+        TextureObject(const TextureObject&) = delete;
+        TextureObject& operator=(TextureObject&) = delete;
+        TextureObject(TextureObject&&) = delete;
+        TextureObject& operator=(TextureObject&&) = delete;
+
+        TextureObject() = default;
+
         DX11Tex2D texture;
 
         DX11SRV srvDefault;

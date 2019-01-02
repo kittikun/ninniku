@@ -39,14 +39,14 @@ namespace ninniku
     DX11::DebugMarker::DebugMarker(const DX11Marker& marker, const std::string& name)
         : _marker{ marker }
     {
-#ifdef _DEBUG
+#ifdef _USE_RENDERDOC
         _marker->BeginEvent(strToWStr(name).c_str());
 #endif
     }
 
     DX11::DebugMarker::~DebugMarker()
     {
-#ifdef _DEBUG
+#ifdef _USE_RENDERDOC
         _marker->EndEvent();
 #endif
     }
@@ -85,7 +85,7 @@ namespace ninniku
     std::unique_ptr<DX11::DebugMarker> DX11::CreateDebugMarker(const std::string& name) const
     {
         DX11Marker marker;
-#ifdef _DEBUG
+#ifdef _USE_RENDERDOC
         _context->QueryInterface(IID_PPV_ARGS(marker.GetAddressOf()));
 
 #endif

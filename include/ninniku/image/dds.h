@@ -26,15 +26,29 @@
 
 namespace ninniku
 {
-    class ddsImage : public Image
+    class ddsImage final : public Image
     {
+        // no copy of any kind allowed
+        ddsImage(const ddsImage&) = delete;
+        ddsImage& operator=(ddsImage&) = delete;
+        ddsImage(ddsImage&&) = delete;
+        ddsImage& operator=(ddsImage&&) = delete;
+
     public:
+        ddsImage() = default;
+
         TextureParam CreateTextureParam(uint8_t viewFlags) const override;
         bool Load(const std::string&) override;
         std::tuple<uint8_t*, uint32_t> GetData() const override;
 
+        // Used when transfering data back from the GPU
+        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+
+        void SaveImage(const std::string&, DXGI_FORMAT format);
+
     protected:
         std::vector<SubresourceParam> GetInitializationData() const override;
+        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch) override;
 
     private:
         DirectX::TexMetadata _meta;

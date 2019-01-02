@@ -20,53 +20,63 @@
 
 #pragma once
 
-namespace ninniku {
-template<typename KeyType, typename ValueType>
-class VectorSet
+namespace ninniku
 {
-public:
-    using KVP = std::tuple<KeyType, ValueType>;
-
-    void beginInsert()
+    template<typename KeyType, typename ValueType>
+    class VectorSet
     {
-        _map.clear();
-    }
+        // no copy of any kind allowed
+        VectorSet(const VectorSet&) = delete;
+        VectorSet& operator=(const VectorSet&) = delete;
+        VectorSet(VectorSet&&) = delete;
+        VectorSet& operator=(VectorSet&&) = delete;
 
-    const ValueType* data() const { return _list.data(); }
+    public:
+        using KVP = std::tuple<KeyType, ValueType>;
 
-    void endInsert()
-    {
-        if (_map.size() > 1) {
-            auto lamda = [](const KVP & lhs, const KVP & rhs) {
-                return std::get<0>(lhs) < std::get<0>(rhs);
-            };
+        VectorSet() = default;
 
-            std::sort(_map.begin(), _map.end(), lamda);
+        void beginInsert() noexcept
+        {
+            _map.clear();
         }
 
-        // copy sorted item to list
-        auto size = _map.size();
+        const ValueType* data() const noexcept { return _list.data(); }
 
-        _list.clear();
-        _list.resize(size);
+        void endInsert()
+        {
+            if (_map.size() > 1) {
+                auto lamda = [](const KVP & lhs, const KVP & rhs)
+                {
+                    return std::get<0>(lhs) < std::get<0>(rhs);
+                };
 
-        for (int i = 0; i < size; ++i) {
-            _list[i] = std::get<1>(_map[i]);
+                std::sort(_map.begin(), _map.end(), lamda);
+            }
+
+            // copy sorted item to list
+            auto size = _map.size();
+
+            _list.clear();
+            _list.resize(size);
+
+            for (int i = 0; i < size; ++i) {
+                _list[i] = std::get<1>(_map[i]);
+            }
         }
-    }
 
-    void insert(const KeyType& key, const ValueType& value)
-    {
-        _map.push_back(std::make_tuple(key, value));
-    }
+        void insert(const KeyType& key, const ValueType& value)
+        {
+            _map.push_back(std::make_tuple(key, value));
+        }
 
-    uint32_t size() const
-    {
-        return (uint32_t)_list.size();
-    }
+        uint32_t size() const noexcept
+        {
+            return (uint32_t)_list.size();
+        }
 
-private:
-    std::vector<std::tuple<KeyType, ValueType>> _map;
-    std::vector<ValueType> _list;
-};
+    private:
+        std::vector<std::tuple<KeyType, ValueType>> _map;
+        std::vector<ValueType> _list;
+    };
 } // namespace ninniku

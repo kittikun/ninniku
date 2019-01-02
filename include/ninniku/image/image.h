@@ -24,9 +24,19 @@
 
 namespace ninniku
 {
+    class DX11;
+    struct TextureObject;
+
     class Image
     {
+        // no copy of any kind allowed
+        Image(const Image&) = delete;
+        Image& operator=(Image&) = delete;
+        Image(Image&&) = delete;
+        Image& operator=(Image&&) = delete;
+
     public:
+        Image() = default;
         virtual ~Image() = default;
 
         virtual bool Load(const std::string&) = 0;
@@ -34,7 +44,11 @@ namespace ninniku
 
         virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
+        // Used when transfering data back from the GPU
+        virtual void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) = 0;
+
     protected:
         virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
+        virtual void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch) = 0;
     };
 } // namespace ninniku

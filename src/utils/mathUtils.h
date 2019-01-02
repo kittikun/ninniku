@@ -22,7 +22,7 @@
 
 namespace ninniku
 {
-    bool IsPow2(uint32_t x);
-    uint32_t CountMips(uint32_t faceSize);
+    bool IsPow2(uint32_t x) noexcept;
+    uint32_t CountMips(uint32_t faceSize) noexcept;
     int NearestPow2Floor(int x);
 } // namespace ninniku

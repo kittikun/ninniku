@@ -31,6 +31,12 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct CopySubresourceParam
     {
+        // no copy of any kind allowed
+        CopySubresourceParam(const CopySubresourceParam&) = delete;
+        CopySubresourceParam& operator=(CopySubresourceParam&) = delete;
+        CopySubresourceParam(CopySubresourceParam&&) = delete;
+        CopySubresourceParam& operator=(CopySubresourceParam&&) = delete;
+
         const TextureObject* src;
         uint32_t srcFace;
         uint32_t srcMip;

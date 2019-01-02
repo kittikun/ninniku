@@ -26,12 +26,16 @@
 
 namespace ninniku
 {
-    class cmftImage : public Image
+    class cmftImage final : public Image
     {
+        // no copy of any kind allowed
+        cmftImage(const cmftImage&) = delete;
+        cmftImage& operator=(cmftImage&) = delete;
+        cmftImage(cmftImage&&) = delete;
+        cmftImage& operator=(cmftImage&&) = delete;
+
     public:
         cmftImage() = default;
-        cmftImage(uint32_t width, uint32_t height, uint32_t numMips);
-
         ~cmftImage();
 
         TextureParam CreateTextureParam(uint8_t viewFlags) const override;
@@ -40,14 +44,18 @@ namespace ninniku
 
         std::tuple<bool, uint32_t> IsRequiringFix();
 
-        void ResizeImage(uint32_t size);
-        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch);
+        // Used when transfering data back from the GPU
+        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
+        // Save Image as DDS R32G32B32A32_FLOAT
         void SaveImage(const std::string&);
+
+        // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
         void SaveImageFaceList(const std::string&);
 
     protected:
         std::vector<SubresourceParam> GetInitializationData() const override;
+        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch) override;
 
     private:
         void AllocateMemory();

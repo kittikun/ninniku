@@ -21,8 +21,13 @@
 #include "pch.h"
 #include "ninniku/image/dds.h"
 
+#include "ninniku/dx11/DX11.h"
+#include "ninniku/dx11/DX11Types.h"
+
 #include "../utils/log.h"
 #include "../utils/misc.h"
+
+#include <comdef.h>
 
 namespace ninniku
 {
@@ -50,7 +55,7 @@ namespace ninniku
     std::vector<SubresourceParam> ddsImage::GetInitializationData() const
     {
         if (_meta.IsVolumemap()) {
-            LOGE << "Texture3D are now supported for now";
+            LOGE << "Texture3D are not supported for now";
 
             return std::vector<SubresourceParam>();
         }
@@ -62,7 +67,7 @@ namespace ninniku
 
         for (size_t item = 0; item < _meta.arraySize; ++item) {
             for (size_t level = 0; level < _meta.mipLevels; ++level) {
-                size_t index = _meta.ComputeIndex(level, item, 0);
+                auto index = _meta.ComputeIndex(level, item, 0);
                 auto& img = _scratch.GetImages()[index];
 
                 res[idx].data = img.pixels;
@@ -103,5 +108,81 @@ namespace ninniku
         }
 
         return true;
+    }
+
+    void ddsImage::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    {
+        // DirectXTex
+        _meta.width = srcTex->desc.width;
+        _meta.height = srcTex->desc.height;
+        _meta.depth = srcTex->desc.depth;
+        _meta.arraySize = srcTex->desc.arraySize;
+        _meta.mipLevels = srcTex->desc.numMips;
+
+        _meta.format = static_cast<DXGI_FORMAT>(srcTex->desc.format);
+
+        // assume that an arraysize of 6 == cubemap
+        if (_meta.depth > 1) {
+            _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;
+        } else if (_meta.height > 1) {
+            _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE2D;
+        } else {
+            _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE1D;
+        }
+
+        auto hr = _scratch.Initialize(_meta);
+
+        if (FAILED(hr)) {
+            auto fmt = boost::format("Failed to create DDS with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5% with:") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
+            LOGE << boost::str(fmt);
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+
+            return;
+        }
+
+        auto marker = dx->CreateDebugMarker("ddsFromTextureObject");
+
+        // we have to copy each mip with a read back texture or the same size for each face
+        for (uint32_t mip = 0; mip < srcTex->desc.numMips; ++mip) {
+            ninniku::TextureParam param = {};
+
+            param.width = srcTex->desc.width >> mip;
+            param.height = srcTex->desc.height >> mip;
+            param.format = srcTex->desc.format;
+            param.numMips = 1;
+            param.arraySize = 1;
+            param.viewflags = ninniku::TV_CPU_READ;
+
+            auto readBack = dx->CreateTexture(param);
+
+            ninniku::CopySubresourceParam params = {};
+            params.src = srcTex.get();
+            params.srcMip = mip;
+            params.dst = readBack.get();
+
+            for (uint32_t face = 0; face < ninniku::CUBEMAP_NUM_FACES; ++face) {
+                params.srcFace = face;
+
+                auto indexes = dx->CopySubresource(params);
+                auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
+
+                UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
+            }
+        }
+    }
+
+    void ddsImage::SaveImage(const std::string&, DXGI_FORMAT format)
+    {
+    }
+
+    void ddsImage::UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch)
+    {
+        auto index = _meta.ComputeIndex(dstMip, dstFace, 0);
+        auto& img = _scratch.GetImages()[index];
+
+        assert(img.rowPitch == newRowPitch);
+
+        memcpy_s(img.pixels, img.height * img.rowPitch, newData, newRowPitch * img.height);
     }
 } // namespace ninniku

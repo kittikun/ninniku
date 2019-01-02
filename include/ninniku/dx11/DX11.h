@@ -28,9 +28,21 @@ namespace ninniku
 {
     class DX11
     {
+        // no copy of any kind allowed
+        DX11(const DX11&) = delete;
+        DX11& operator=(DX11&) = delete;
+        DX11(DX11&&) = delete;
+        DX11& operator=(DX11&&) = delete;
+
     public:
         class DebugMarker
         {
+            // no copy of any kind allowed
+            DebugMarker(const DebugMarker&) = delete;
+            DebugMarker& operator=(DebugMarker&) = delete;
+            DebugMarker(DebugMarker&&) = delete;
+            DebugMarker& operator=(DebugMarker&&) = delete;
+
         public:
             DebugMarker(const DX11Marker& marker, const std::string& name);
             ~DebugMarker();
@@ -41,18 +53,18 @@ namespace ninniku
 
         class MappedResource
         {
+            // no copy of any kind allowed
+            MappedResource(const MappedResource&) = delete;
+            MappedResource& operator=(MappedResource&) = delete;
+            MappedResource(MappedResource&&) = delete;
+            MappedResource& operator=(MappedResource&&) = delete;
+
         public:
             MappedResource(const DX11Context& context, const std::unique_ptr<TextureObject>& texObj, uint32_t index);
             ~MappedResource();
 
-            D3D11_MAPPED_SUBRESOURCE* Get()
-            {
-                return &_mapped;
-            }
-            void* GetData() const
-            {
-                return _mapped.pData;
-            }
+            D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
+            void* GetData() const { return _mapped.pData; }
             uint32_t GetRowPitch() const;
 
         private:
@@ -61,6 +73,8 @@ namespace ninniku
             uint32_t _index;
             D3D11_MAPPED_SUBRESOURCE _mapped;
         };
+
+        DX11() = default;
 
         std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
         std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
