@@ -8,9 +8,6 @@
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{5e90b6a1-b7c6-4c83-a38c-a930c87619ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\shaders">
-      <UniqueIdentifier>{12721acf-0dd3-4026-a52a-49b1915306c1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\dx11">
       <UniqueIdentifier>{fb74b349-6196-4459-a58e-0df91dd58475}</UniqueIdentifier>
     </Filter>
@@ -55,14 +52,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="src\shaders\utility.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="src\process.cpp">
       <Filter>Source Files</Filter>
     </None>
@@ -74,9 +65,6 @@
     </ClInclude>
     <ClInclude Include="src\utils\misc.h">
       <Filter>Source Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\shaders\cbuffers.h">
-      <Filter>Source Files\shaders</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\vectorSet.h">
       <Filter>Source Files\utils</Filter>
@@ -111,10 +99,5 @@
     <ClInclude Include="include\ninniku\utils.h">
       <Filter>Include</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="src\shaders\dirToFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

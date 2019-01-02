@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../../data/cbuffers.h"
+#include "../shaders/cbuffers.h"
 #include "../check.h"
 
 #include <boost/test/unit_test.hpp>
@@ -125,6 +125,69 @@ BOOST_AUTO_TEST_CASE(shader_colorMips)
     auto data = res->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x91086088d369be49, 0x74d54476510012cc);
+}
+
+BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
+{
+    auto& dx = ninniku::GetRenderer();
+    auto marker = dx->CreateDebugMarker("CubemapDirToArray");
+
+    ninniku::TextureParam param = {};
+    param.width = param.height = 512;
+    param.format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    param.numMips = 1;
+    param.arraySize = ninniku::CUBEMAP_NUM_FACES;
+    param.viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+
+    auto srcTex = dx->CreateTexture(param);
+    auto dstTex = dx->CreateTexture(param);
+
+    // generate source texture
+    {
+        auto subMarker = dx->CreateDebugMarker("Source Texture");
+
+        // dispatch
+        ninniku::Command cmd = {};
+        cmd.shader = "colorFaces";
+
+        static_assert((COLORFACES_NUMTHREAD_X == COLORFACES_NUMTHREAD_Y) && (COLORFACES_NUMTHREAD_Z == 1));
+        cmd.dispatch[0] = param.width / COLORFACES_NUMTHREAD_X;
+        cmd.dispatch[1] = param.height / COLORFACES_NUMTHREAD_Y;
+        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORFACES_NUMTHREAD_Z;
+
+        cmd.uavBindings.insert(std::make_pair("dstTex", srcTex->uav[0]));
+
+        dx->Dispatch(cmd);
+    }
+
+    // generate destination texture by sampling source using direction vectors
+    {
+        auto subMarker = dx->CreateDebugMarker("Destination Texture");
+
+        // dispatch
+        ninniku::Command cmd = {};
+        cmd.shader = "dirToFaces";
+
+        static_assert((DIRTOFACE_NUMTHREAD_X == DIRTOFACE_NUMTHREAD_Y) && (DIRTOFACE_NUMTHREAD_Z == 1));
+        cmd.dispatch[0] = param.width / DIRTOFACE_NUMTHREAD_X;
+        cmd.dispatch[1] = param.height / DIRTOFACE_NUMTHREAD_Y;
+        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
+
+        cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::SS_Point)));
+        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube));
+        cmd.uavBindings.insert(std::make_pair("dstTex", dstTex->uav[0]));
+
+        dx->Dispatch(cmd);
+    }
+
+    auto srcImg = ImageFromTextureObject(dx, srcTex);
+    auto srcData = srcImg->GetData();
+    auto srcHash = GetMD5(std::get<0>(srcData), std::get<1>(srcData));
+    auto dstImg = ImageFromTextureObject(dx, dstTex);
+    auto dstData = dstImg->GetData();
+    auto dstHash = GetMD5(std::get<0>(dstData), std::get<1>(dstData));
+
+    BOOST_TEST(memcmp(srcHash, dstHash, sizeof(uint64_t) * 2) == 0);
 }
 
 BOOST_AUTO_TEST_CASE(shader_genMips)

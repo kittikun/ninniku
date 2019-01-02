@@ -25,9 +25,14 @@
 #include <array>
 #include <iostream>
 
+unsigned char* GetMD5(uint8_t* data, uint32_t size)
+{
+    return MD5(data, size, nullptr);
+}
+
 void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b)
 {
-    unsigned char* hash = MD5(data, size, nullptr);
+    unsigned char* hash = GetMD5(data, size);
 
     std::array<uint64_t, 2> wanted = { a, b };
 

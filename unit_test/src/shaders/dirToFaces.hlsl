@@ -18,43 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-float max3(float3 value)
+#include "cbuffers.h"
+#include "utility.hlsl"
+
+TextureCube srcTex;
+RWTexture2DArray<float4> dstTex;
+SamplerState ssPoint;
+
+[numthreads(DIRTOFACE_NUMTHREAD_X, DIRTOFACE_NUMTHREAD_Y, DIRTOFACE_NUMTHREAD_Z)]
+void main(int3 DTI : SV_DispatchThreadID)
 {
-    return max(max(value.x, value.y), value.z);
-}
+    float w, dummy1, dummy2;
 
-// Get the uv to fetch a cubemap as Texture2DArray
-// https://github.com/TheRealMJP/MSAAFilter/blob/master/SampleFramework11/v1.01/Graphics/Textures.h
-float3 CubemapDirToTexture2DArray(float3 dir)
-{
-    float maxComponent = max3(abs(dir));
+    dstTex.GetDimensions(w, dummy1, dummy2);
 
-    uint face = 0;
-    float2 uv = dir.yz;
+    float2 uv = (float2(DTI.xy) + (float2)0.5f) * rcp(w);
+    float3 dir = uvToVec(float3(uv, DTI.z));
 
-    if (dir.x == maxComponent) {
-        face = 0;
-        uv = float2(-dir.z, -dir.y) / dir.x;
-    } else if (-dir.x == maxComponent) {
-        face = 1;
-        uv = float2(dir.z, -dir.y) / -dir.x;
-    } else if (dir.y == maxComponent) {
-        face = 2;
-        uv = float2(dir.x, dir.z) / dir.y;
-    } else if (-dir.y == maxComponent) {
-        face = 3;
-        uv = float2(dir.x, -dir.z) / -dir.y;
-    } else if (dir.z == maxComponent) {
-        face = 4;
-        uv = float2(dir.x, -dir.y) / dir.z;
-    } else if (-dir.z == maxComponent) {
-        face = 5;
-        uv = float2(-dir.x, -dir.y) / -dir.z;
-    }
+    float3 uv3 = vecToUv(dir);
+    uint3 pos = uint3(uv3.xy * w, uv3.z);
 
-    const float2 centerUV = float2(0.5f, 0.5f);
-
-    uv = mad(uv, centerUV, centerUV);
-
-    return float3(uv, face);
+    dstTex[pos] = srcTex.SampleLevel(ssPoint, dir.xyz, 0);
 }

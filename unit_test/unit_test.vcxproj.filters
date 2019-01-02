@@ -8,7 +8,7 @@
     <Filter Include="Source Files\tests">
       <UniqueIdentifier>{ee8e505f-3265-4e0f-8c94-b0f565deb247}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\data">
+    <Filter Include="Source Files\shaders">
       <UniqueIdentifier>{95317c23-655c-4d54-9b9e-937332ceb1fc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -31,33 +31,39 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="src\shaders\color20.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\utility.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="data\cbuffers.h">
-      <Filter>Source Files\data</Filter>
-    </ClInclude>
     <ClInclude Include="src\check.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\fixture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\shaders\cbuffers.h">
+      <Filter>Source Files\shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="data\resize.hlsl">
-      <Filter>Source Files\data</Filter>
+    <FxCompile Include="src\shaders\colorFaces.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\colorMips.hlsl">
-      <Filter>Source Files\data</Filter>
+    <FxCompile Include="src\shaders\colorMips.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\color20.hlsl">
-      <Filter>Source Files\data</Filter>
+    <FxCompile Include="src\shaders\dirToFaces.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\colorFaces.hlsl">
-      <Filter>Source Files\data</Filter>
+    <FxCompile Include="src\shaders\downsample.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="data\downsample.hlsl">
-      <Filter>Source Files\data</Filter>
+    <FxCompile Include="src\shaders\resize.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
