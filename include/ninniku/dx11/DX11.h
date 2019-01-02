@@ -98,5 +98,7 @@ namespace ninniku
         std::unordered_map<std::string, ComputeShader> _shaders;
         std::unordered_map<std::string, DX11Buffer> _cBuffers;
         std::array<DX11SamplerState, SS_Count> _samplers;
+
+        friend class ddsImage;
     };
 } // namespace ninniku

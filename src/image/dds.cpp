@@ -172,8 +172,48 @@ namespace ninniku
         }
     }
 
-    void ddsImage::SaveImage(const std::string&, DXGI_FORMAT format)
+    void ddsImage::SaveImage(const std::string& path, std::unique_ptr<DX11>& dx, DXGI_FORMAT format)
     {
+        auto img = _scratch.GetImage(0, 0, 0);
+        assert(img);
+        size_t nimg = _scratch.GetImageCount();
+
+        std::unique_ptr<DirectX::ScratchImage> resImage(new (std::nothrow) DirectX::ScratchImage);
+
+        if (!resImage) {
+            LOGE << "\nERROR: Memory allocation failed";
+            return;
+        }
+
+        bool bc6hbc7 = false;
+
+        switch (format) {
+            case DXGI_FORMAT_BC6H_TYPELESS:
+            case DXGI_FORMAT_BC6H_UF16:
+            case DXGI_FORMAT_BC6H_SF16:
+            case DXGI_FORMAT_BC7_TYPELESS:
+            case DXGI_FORMAT_BC7_UNORM:
+            case DXGI_FORMAT_BC7_UNORM_SRGB:
+                bc6hbc7 = true;
+        }
+
+        auto info = DirectX::TexMetadata(_meta);
+
+        {
+            auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
+            auto hr = DirectX::Compress(dx->_device.Get(), img, nimg, info, format, 0, 1.f, *resImage);
+
+            if (FAILED(hr)) {
+                LOGE << "Failed to compress DDS";
+                return;
+            }
+        }
+
+        auto hr = DirectX::SaveToDDSFile(*resImage->GetImage(0, 0, 0), 0, ninniku::strToWStr(path).c_str());
+
+        if (FAILED(hr)) {
+            LOGE << "Failed to save compressed DDS";
+        }
     }
 
     void ddsImage::UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch)

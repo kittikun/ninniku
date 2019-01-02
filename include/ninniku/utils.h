@@ -25,4 +25,7 @@ namespace ninniku
     bool IsPow2(uint32_t x);
     uint32_t CountMips(uint32_t faceSize);
     int NearestPow2Floor(int x);
+
+    std::wstring strToWStr(const std::string&);
+    std::string wstrToStr(const std::wstring&);
 } // namespace ninniku

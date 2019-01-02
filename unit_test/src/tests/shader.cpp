@@ -83,6 +83,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
     ninniku::TextureParam param = {};
     param.width = param.height = 512;
     param.format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    param.depth = 1;
     param.numMips = 1;
     param.arraySize = ninniku::CUBEMAP_NUM_FACES;
     param.viewflags = ninniku::TV_SRV | ninniku::TV_UAV;

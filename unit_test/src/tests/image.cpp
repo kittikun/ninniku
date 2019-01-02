@@ -155,4 +155,27 @@ BOOST_AUTO_TEST_CASE(dds_from_texture_object)
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
 }
 
+BOOST_AUTO_TEST_CASE(dds_saveImage)
+{
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+
+    auto res = std::make_unique<ninniku::ddsImage>();
+
+    res->InitializeFromTextureObject(dx, srcTex);
+    res->SaveImage("dds_saveImage.dds", dx, DXGI_FORMAT_BC6H_UF16);
+
+    auto basePath(boost::filesystem::current_path());
+    auto path = basePath / "dds_saveImage.dds";
+
+    BOOST_TEST(boost::filesystem::exists(path));
+
+    CheckFileMD5(path, 0xd4ef2a9c831bcd8a, 0x560220baae6d6775);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
