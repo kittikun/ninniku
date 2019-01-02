@@ -18,20 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "check.h"
 
-#include "../types.h"
+#include <boost/test/unit_test.hpp>
+#include <openssl/md5.h>
+#include <array>
+#include <iostream>
 
-namespace ninniku {
-    class Image
-    {
-    public:
-        virtual ~Image() = default;
+unsigned char* GetMD5(uint8_t* data, uint32_t size)
+{
+    return MD5(data, size, nullptr);
+}
 
-        virtual bool Load(const std::string&) = 0;
-        virtual TextureParam CreateTextureParam(uint8_t viewFlags) const = 0;
+void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b)
+{
+    unsigned char* hash = GetMD5(data, size);
 
-    protected:
-        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
-    };
-} // namespace ninniku
+    std::array<uint64_t, 2> wanted = { a, b };
+
+    BOOST_TEST(memcmp(hash, wanted.data(), wanted.size()) == 0);
+}
+
+void CheckFileMD5(boost::filesystem::path path, uint64_t a, uint64_t b)
+{
+    std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
+    std::ifstream::pos_type pos = ifs.tellg();
+
+    std::vector<uint8_t> result(pos);
+
+    ifs.seekg(0, std::ios::beg);
+    ifs.read(reinterpret_cast<char*>(result.data()), pos);
+
+    CheckMD5(result.data(), static_cast<uint32_t>(result.size()), a, b);
+}

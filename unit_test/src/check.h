@@ -18,43 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-float max3(float3 value)
-{
-    return max(max(value.x, value.y), value.z);
-}
+#pragma once
 
-// Get the uv to fetch a cubemap as Texture2DArray
-// https://github.com/TheRealMJP/MSAAFilter/blob/master/SampleFramework11/v1.01/Graphics/Textures.h
-float3 CubemapDirToTexture2DArray(float3 dir)
-{
-    float maxComponent = max3(abs(dir));
+#include <boost/filesystem.hpp>
+#include <cstdint>
 
-    uint face = 0;
-    float2 uv = dir.yz;
-
-    if (dir.x == maxComponent) {
-        face = 0;
-        uv = float2(-dir.z, -dir.y) / dir.x;
-    } else if (-dir.x == maxComponent) {
-        face = 1;
-        uv = float2(dir.z, -dir.y) / -dir.x;
-    } else if (dir.y == maxComponent) {
-        face = 2;
-        uv = float2(dir.x, dir.z) / dir.y;
-    } else if (-dir.y == maxComponent) {
-        face = 3;
-        uv = float2(dir.x, -dir.z) / -dir.y;
-    } else if (dir.z == maxComponent) {
-        face = 4;
-        uv = float2(dir.x, -dir.y) / dir.z;
-    } else if (-dir.z == maxComponent) {
-        face = 5;
-        uv = float2(-dir.x, -dir.y) / -dir.z;
-    }
-
-    const float2 centerUV = float2(0.5f, 0.5f);
-
-    uv = mad(uv, centerUV, centerUV);
-
-    return float3(uv, face);
-}
+unsigned char* GetMD5(uint8_t* data, uint32_t size);
+void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b);
+void CheckFileMD5(boost::filesystem::path path, uint64_t a, uint64_t b);

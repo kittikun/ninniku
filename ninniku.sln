@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmft", "external\cmft\cmft.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ninniku", "ninniku.vcxproj", "{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_test", "unit_test\unit_test.vcxproj", "{A4B19748-8979-4001-AFA3-8810C54A3140}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Debug|x64.Build.0 = Debug|x64
 		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Release|x64.ActiveCfg = Release|x64
 		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Release|x64.Build.0 = Release|x64
+		{A4B19748-8979-4001-AFA3-8810C54A3140}.Debug|x64.ActiveCfg = Debug|x64
+		{A4B19748-8979-4001-AFA3-8810C54A3140}.Debug|x64.Build.0 = Debug|x64
+		{A4B19748-8979-4001-AFA3-8810C54A3140}.Release|x64.ActiveCfg = Release|x64
+		{A4B19748-8979-4001-AFA3-8810C54A3140}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

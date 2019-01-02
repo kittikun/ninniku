@@ -8,30 +8,27 @@
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{5e90b6a1-b7c6-4c83-a38c-a930c87619ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\shaders">
-      <UniqueIdentifier>{12721acf-0dd3-4026-a52a-49b1915306c1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\dx11">
       <UniqueIdentifier>{fb74b349-6196-4459-a58e-0df91dd58475}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\image">
       <UniqueIdentifier>{feba47c9-49bd-4007-8e17-4994971bae7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{479c4862-4492-44e3-8eee-a0c2f4e475c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\dx11">
+      <UniqueIdentifier>{0f23edd4-eeb9-4d4b-8113-970874989451}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\image">
+      <UniqueIdentifier>{e74f9545-12b0-4417-83e3-a0dd6eae7d1f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\log.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\process.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\misc.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\mathUtils.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="src\dx11\DX11.cpp">
@@ -46,39 +43,28 @@
     <ClCompile Include="src\image\dds.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
+    <ClCompile Include="src\ninniku.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\mathUtils.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="src\shaders\utility.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="src\shaders\color20.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="LICENSE" />
     <None Include="README.md" />
+    <None Include="src\process.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="src\process.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\utils\log.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\process.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\mathUtils.h">
-      <Filter>Source Files\utils</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils\misc.h">
       <Filter>Source Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\dx11\DX11.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="src\dx11\DX11Types.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="src\shaders\cbuffers.h">
-      <Filter>Source Files\shaders</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\vectorSet.h">
       <Filter>Source Files\utils</Filter>
@@ -86,34 +72,32 @@
     <ClInclude Include="src\pch.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\types.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="include\ninniku\types.h">
+      <Filter>Include</Filter>
     </ClInclude>
-    <ClInclude Include="src\image\cmft.h">
-      <Filter>Source Files\image</Filter>
+    <ClInclude Include="include\ninniku\dx11\DX11.h">
+      <Filter>Include\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="src\image\dds.h">
-      <Filter>Source Files\image</Filter>
+    <ClInclude Include="include\ninniku\dx11\DX11Types.h">
+      <Filter>Include\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="src\image\image.h">
-      <Filter>Source Files\image</Filter>
+    <ClInclude Include="include\ninniku\image\cmft.h">
+      <Filter>Include\image</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="src\shaders\resize.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\colorMips.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\downsample.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\colorFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\dirToFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
+    <ClInclude Include="include\ninniku\image\dds.h">
+      <Filter>Include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\image\image.h">
+      <Filter>Include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\ninniku.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\mathUtils.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\utils.h">
+      <Filter>Include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

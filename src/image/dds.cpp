@@ -19,12 +19,13 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "dds.h"
+#include "ninniku/image/dds.h"
 
 #include "../utils/log.h"
 #include "../utils/misc.h"
 
-namespace ninniku {
+namespace ninniku
+{
     TextureParam ddsImage::CreateTextureParam(uint8_t viewFlags) const
     {
         TextureParam res = {};
@@ -39,6 +40,11 @@ namespace ninniku {
         res.viewflags = viewFlags;
 
         return res;
+    }
+
+    std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
+    {
+        return std::make_tuple(_scratch.GetPixels(), static_cast<uint32_t>(_scratch.GetPixelsSize()));
     }
 
     std::vector<SubresourceParam> ddsImage::GetInitializationData() const

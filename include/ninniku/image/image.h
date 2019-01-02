@@ -20,9 +20,21 @@
 
 #pragma once
 
+#include "../types.h"
+
 namespace ninniku
 {
-    bool IsPow2(uint32_t x);
-    uint32_t CountMips(uint32_t faceSize);
-    int NearestPow2Floor(int x);
+    class Image
+    {
+    public:
+        virtual ~Image() = default;
+
+        virtual bool Load(const std::string&) = 0;
+        virtual TextureParam CreateTextureParam(uint8_t viewFlags) const = 0;
+
+        virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+
+    protected:
+        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
+    };
 } // namespace ninniku

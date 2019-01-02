@@ -5,8 +5,6 @@ packages/
 .vs/
 out/
 bin/
-*.hdr
-*.dds
-data/
 *.rdc
-external/renderdoc/
+*.cso
+unit_test/*.dds

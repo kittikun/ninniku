@@ -20,22 +20,38 @@
 
 #pragma once
 
-#include "image.h"
+#include <stdint.h>
+#include <string>
 
-#include <DirectXTex.h>
+namespace ninniku
+{
+    class DX11;
 
-namespace ninniku {
-    class ddsImage : public Image
+    enum ELogLevel : uint8_t
     {
-    public:
-        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
-        bool Load(const std::string&) override;
-
-    protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
-
-    private:
-        DirectX::TexMetadata _meta;
-        DirectX::ScratchImage _scratch;
+        LL_NONE,
+        LL_WARN_ERROR,
+        LL_NORMAL,
+        LL_FULL
     };
+
+    enum ERenderer : uint8_t
+    {
+        RENDERER_DX11,
+        RENDERER_WARP
+    };
+
+    /// <summary>
+    /// Initialize ninniku framework
+    /// shaderPath must point to compiled .cso folder
+    /// </summary>
+    bool Initialize(uint8_t renderer, const std::string& shaderPath, uint8_t logLevel = LL_WARN_ERROR);
+
+    /// <summary>
+    /// Cleanup resources used by ninniku
+    /// If Renderdoc capture mode is enabled, finalize file capture
+    /// </summary>
+    void Terminate();
+
+    std::unique_ptr<DX11>& GetRenderer();
 } // namespace ninniku

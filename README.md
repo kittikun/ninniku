@@ -6,6 +6,10 @@
 
 Simple framework to run compute jobs with DX11
 - Can load cubemaps with [cmft](https://github.com/dariomanesku/cmft).
+- Can load DDS with [DirectXTex](https://github.com/Microsoft/DirectXTex)
 - Can capture commands with [RenderDoc](https://renderdoc.org/).
-  * Enable by copying renderdoc.dll and renderdoc_app.h to external\renderdoc
-  * Add _USE_RENDERDOC to preprocessor definitions
+  * Compile using Debug configuration
+  * Captures will be called ninniku_frame0.rdc
+
+#### Usage:
+Shader must be compiled for SM 5.0 and define the "HLSL" preprocessor

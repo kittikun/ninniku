@@ -24,7 +24,8 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11
     {
     public:
@@ -65,7 +66,7 @@ namespace ninniku {
         std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
         std::unique_ptr<TextureObject> CreateTexture(const TextureParam& param);
         bool Dispatch(const Command& cmd) const;
-        bool Initialize();
+        bool Initialize(const std::string& shaderPath, bool isWarp);
         std::unique_ptr<MappedResource> MapTexture(const std::unique_ptr<TextureObject>& tObj, uint32_t index);
         bool UpdateConstantBuffer(const std::string& name, void* data, uint32_t size);
 
@@ -74,7 +75,7 @@ namespace ninniku {
     private:
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
         bool GetDXGIFactory(IDXGIFactory1** pFactory);
-        bool LoadShaders();
+        bool LoadShaders(const std::string& shaderPath);
         std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
 
     private:

@@ -18,11 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "cbuffers.h"
+#include "utility.hlsl"
 
-namespace ninniku
+TextureCube srcTex;
+RWTexture2DArray<float4> dstTex;
+SamplerState ssPoint;
+
+[numthreads(DIRTOFACE_NUMTHREAD_X, DIRTOFACE_NUMTHREAD_Y, DIRTOFACE_NUMTHREAD_Z)]
+void main(int3 DTI : SV_DispatchThreadID)
 {
-    bool IsPow2(uint32_t x);
-    uint32_t CountMips(uint32_t faceSize);
-    int NearestPow2Floor(int x);
-} // namespace ninniku
+    float w, dummy1, dummy2;
+
+    dstTex.GetDimensions(w, dummy1, dummy2);
+
+    float2 uv = (float2(DTI.xy) + (float2)0.5f) * rcp(w);
+    float3 dir = uvToVec(float3(uv, DTI.z));
+
+    float3 uv3 = vecToUv(dir);
+    uint3 pos = uint3(uv3.xy * w, uv3.z);
+
+    dstTex[pos] = srcTex.SampleLevel(ssPoint, dir.xyz, 0);
+}

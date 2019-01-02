@@ -30,21 +30,16 @@
 #define float4x4 DirectX::XMMATRIX
 #endif
 
-CBUFFER CBDirToFaces{
-    float4x4 invViewMat;
-    float4x4 invProjMat;
-};
-
 CBUFFER CBGlobal{
     int targetMip;
 };
 
 // While we're here, also defines numthreads here
-#define COLORFACES_NUMTHREAD_X 32
+#define COLORFACES_NUMTHREAD_X 16
 #define COLORFACES_NUMTHREAD_Y COLORFACES_NUMTHREAD_X
 #define COLORFACES_NUMTHREAD_Z 1
 
-#define COLORMIPS_NUMTHREAD_X 32
+#define COLORMIPS_NUMTHREAD_X 16
 #define COLORMIPS_NUMTHREAD_Y COLORMIPS_NUMTHREAD_X
 #define COLORMIPS_NUMTHREAD_Z 1
 

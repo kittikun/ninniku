@@ -37,8 +37,10 @@
 #define LOGD_INDENT_END LOGD << "..done"; ninniku::Log::EndIndent()
 #define LOGE_INDENT_END LOGE << "..done"; ninniku::Log::EndIndent()
 
-namespace ninniku {
-    namespace Log {
+namespace ninniku
+{
+    namespace Log
+    {
         enum ELogLevel
         {
             Log_DX,
@@ -50,7 +52,7 @@ namespace ninniku {
 
         BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(boost_log, boost::log::sources::severity_logger_mt<ELogLevel>);
 
-        void Initialize(bool verbose);
+        void Initialize(uint8_t level);
         void StartIndent();
         void EndIndent();
         std::string GetIndent();

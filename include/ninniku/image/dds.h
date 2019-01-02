@@ -20,9 +20,24 @@
 
 #pragma once
 
+#include "image.h"
+
+#include <DirectXTex.h>
+
 namespace ninniku
 {
-    bool IsPow2(uint32_t x);
-    uint32_t CountMips(uint32_t faceSize);
-    int NearestPow2Floor(int x);
+    class ddsImage : public Image
+    {
+    public:
+        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
+        bool Load(const std::string&) override;
+        std::tuple<uint8_t*, uint32_t> GetData() const override;
+
+    protected:
+        std::vector<SubresourceParam> GetInitializationData() const override;
+
+    private:
+        DirectX::TexMetadata _meta;
+        DirectX::ScratchImage _scratch;
+    };
 } // namespace ninniku

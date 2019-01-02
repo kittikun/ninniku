@@ -20,37 +20,9 @@
 
 #pragma once
 
-#include "image.h"
-
-#include <cmft/image.h>
-
-namespace ninniku {
-    class cmftImage : public Image
-    {
-    public:
-        cmftImage() = default;
-        cmftImage(uint32_t width, uint32_t height, uint32_t numMips);
-
-        ~cmftImage();
-
-        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
-        bool Load(const std::string&) override;
-
-        std::tuple<bool, uint32_t> IsRequiringFix();
-
-        void ResizeImage(uint32_t size);
-        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch);
-
-        void SaveImage(const std::string&);
-        void SaveImageFaceList(const std::string&);
-
-    protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
-
-    private:
-        void AllocateMemory();
-
-    private:
-        cmft::Image _image;
-    };
+namespace ninniku
+{
+    bool IsPow2(uint32_t x);
+    uint32_t CountMips(uint32_t faceSize);
+    int NearestPow2Floor(int x);
 } // namespace ninniku

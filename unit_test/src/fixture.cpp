@@ -18,11 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "fixture.h"
 
-namespace ninniku
+#include <ninniku/ninniku.h>
+
+SetupFixture::SetupFixture()
 {
-    bool IsPow2(uint32_t x);
-    uint32_t CountMips(uint32_t faceSize);
-    int NearestPow2Floor(int x);
-} // namespace ninniku
+    // because unit test run on CI, always use WARP
+    ninniku::Initialize(ninniku::RENDERER_WARP, "shaders", ninniku::LL_FULL);
+}
+
+SetupFixture::~SetupFixture()
+{
+    ninniku::Terminate();
+}

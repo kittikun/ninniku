@@ -18,20 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "cbuffers.h"
+#include "fixture.h"
 
-Texture2DArray<float4> srcTex;
-RWTexture2DArray<float4> dstTex;
-SamplerState ssLinear;
+#define BOOST_TEST_MODULE ninniku
+#include <boost/test/included/unit_test.hpp>
 
-[numthreads(RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_Z)]
-void main(uint3 DTI : SV_DispatchThreadID)
-{
-    float w, dummy1, dummy2;
-
-    dstTex.GetDimensions(w, dummy1, dummy2);
-
-    float2 uv = (float2)rcp(w) * float2(DTI.xy);
-
-    dstTex[DTI] = srcTex.SampleLevel(ssLinear, float3(uv, DTI.z), 0);
-}
+BOOST_GLOBAL_FIXTURE(SetupFixture);
