@@ -39,10 +39,11 @@ namespace ninniku
 
         LOG << "ninniku HLSL compute shader framework";
 
-        if (renderer == RENDERER_DX11) {
+        if ((renderer == RENDERER_DX11) || (renderer == RENDERER_WARP)) {
             sRenderer.reset(new ninniku::DX11());
 
-            if (!sRenderer->Initialize(shaderPath)) {
+            // since CI is running test, we must use warp driver
+            if (!sRenderer->Initialize(shaderPath, (renderer == RENDERER_WARP) ? true : false)) {
                 LOGE << "DX11App::Initialize failed";
                 return false;
             }

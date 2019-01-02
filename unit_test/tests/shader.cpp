@@ -122,10 +122,9 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     dx->Dispatch(cmd);
 
     auto res = ImageFromTextureObject(dx, dst);
-
     auto data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xbeed1b8656b34ae7, 0x934475762323813d);
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x82d256aed76d1e52, 0xe944e7a6e4a198f3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

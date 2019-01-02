@@ -121,6 +121,7 @@ namespace ninniku
 #endif
 
         Microsoft::WRL::ComPtr<IDXGIAdapter> pAdapter;
+        D3D_DRIVER_TYPE driverType;
 
         if (adapter >= 0) {
             Microsoft::WRL::ComPtr<IDXGIFactory1> dxgiFactory;
@@ -132,6 +133,10 @@ namespace ninniku
                     return false;
                 }
             }
+
+            driverType = (pAdapter) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
+        } else {
+            driverType = D3D_DRIVER_TYPE_WARP;
         }
 
         std::array<D3D_FEATURE_LEVEL, 1> featureLevels = { D3D_FEATURE_LEVEL_11_1 };
@@ -139,7 +144,7 @@ namespace ninniku
         D3D_FEATURE_LEVEL fl;
 
         auto hr = s_DynamicD3D11CreateDevice(pAdapter.Get(),
-            (pAdapter) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE,
+                                             driverType,
                                              nullptr, createDeviceFlags, featureLevels.data(), (uint32_t)featureLevels.size(),
                                              D3D11_SDK_VERSION, pDevice, &fl, nullptr);
 
@@ -497,9 +502,14 @@ namespace ninniku
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
-    bool DX11::Initialize(const std::string& shaderPath)
+    bool DX11::Initialize(const std::string& shaderPath, bool isWarp)
     {
-        if (!CreateDevice(0, _device.GetAddressOf())) {
+        auto adapter = 0;
+
+        if (isWarp)
+            adapter = -1;
+
+        if (!CreateDevice(adapter, _device.GetAddressOf())) {
             LOGE << "Failed to create DX11 device";
             return false;
         }

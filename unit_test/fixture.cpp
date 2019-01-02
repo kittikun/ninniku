@@ -27,7 +27,8 @@
 
 SetupFixture::SetupFixture()
 {
-    ninniku::Initialize(ninniku::RENDERER_DX11, "shaders", ninniku::LL_FULL);
+    // because unit test run on CI, always use WARP
+    ninniku::Initialize(ninniku::RENDERER_WARP, "shaders", ninniku::LL_FULL);
 }
 
 void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b)

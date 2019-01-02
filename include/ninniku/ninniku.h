@@ -37,7 +37,8 @@ namespace ninniku
 
     enum ERenderer : uint8_t
     {
-        RENDERER_DX11
+        RENDERER_DX11,
+        RENDERER_WARP
     };
 
     /// <summary>

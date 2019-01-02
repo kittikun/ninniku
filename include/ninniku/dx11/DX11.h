@@ -66,7 +66,7 @@ namespace ninniku
         std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
         std::unique_ptr<TextureObject> CreateTexture(const TextureParam& param);
         bool Dispatch(const Command& cmd) const;
-        bool Initialize(const std::string& shaderPath);
+        bool Initialize(const std::string& shaderPath, bool isWarp);
         std::unique_ptr<MappedResource> MapTexture(const std::unique_ptr<TextureObject>& tObj, uint32_t index);
         bool UpdateConstantBuffer(const std::string& name, void* data, uint32_t size);
 
