@@ -29,8 +29,7 @@
 
 #include <comdef.h>
 
-namespace ninniku
-{
+namespace ninniku {
     TextureParam ddsImage::CreateTextureParam(uint8_t viewFlags) const
     {
         TextureParam res = {};
@@ -82,11 +81,14 @@ namespace ninniku
 
     bool ddsImage::Load(const std::string& path)
     {
+        auto fmt = boost::format("ddsImage::Load, Path=\"%1%\"") % path;
+        LOG << boost::str(fmt);
+
         auto wPath = strToWStr(path);
 
         HRESULT hr = GetMetadataFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, _meta);
         if (FAILED(hr)) {
-            auto fmt = boost::format("Could not load metadata for DDS file %1%") % path;
+            fmt = boost::format("Could not load metadata for DDS file %1%") % path;
             LOGE << boost::str(fmt);
             return false;
         }
@@ -102,7 +104,7 @@ namespace ninniku
 
         hr = LoadFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, &_meta, _scratch);
         if (FAILED(hr)) {
-            auto fmt = boost::format("Failed to load DDS file %1%") % path;
+            fmt = boost::format("Failed to load DDS file %1%") % path;
             LOGE << boost::str(fmt);
             return false;
         }
@@ -118,8 +120,10 @@ namespace ninniku
         _meta.depth = srcTex->desc.depth;
         _meta.arraySize = srcTex->desc.arraySize;
         _meta.mipLevels = srcTex->desc.numMips;
-
         _meta.format = static_cast<DXGI_FORMAT>(srcTex->desc.format);
+
+        auto fmt = boost::format("ddsImage::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
+        LOG << boost::str(fmt);
 
         // assume that an arraysize of 6 == cubemap
         if (_meta.depth > 1) {
@@ -129,6 +133,9 @@ namespace ninniku
         } else {
             _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE1D;
         }
+
+        if ((_meta.arraySize == CUBEMAP_NUM_FACES) && (_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE2D))
+            _meta.miscFlags |= DirectX::TEX_MISC_TEXTURECUBE;
 
         auto hr = _scratch.Initialize(_meta);
 
@@ -177,6 +184,11 @@ namespace ninniku
         auto fmt = boost::format("Saving DDS with ddsImage file \"%1%\"") % path;
         LOG << boost::str(fmt);
 
+        if (!DirectX::IsCompressed(format)) {
+            LOGE << "Only compressed format are supported for now";
+            return false;
+        }
+
         auto img = _scratch.GetImage(0, 0, 0);
         assert(img);
         size_t nimg = _scratch.GetImageCount();
@@ -188,35 +200,35 @@ namespace ninniku
             return false;
         }
 
-        bool bc6hbc7 = false;
+        DWORD flags = DirectX::TEX_COMPRESS_DEFAULT;
 
+        // use best compression for BC7
         switch (format) {
-            case DXGI_FORMAT_BC6H_TYPELESS:
-            case DXGI_FORMAT_BC6H_UF16:
-            case DXGI_FORMAT_BC6H_SF16:
             case DXGI_FORMAT_BC7_TYPELESS:
             case DXGI_FORMAT_BC7_UNORM:
             case DXGI_FORMAT_BC7_UNORM_SRGB:
-                bc6hbc7 = true;
-        }
-
-        auto info = DirectX::TexMetadata(_meta);
+                flags |= DirectX::TEX_COMPRESS_BC7_USE_3SUBSETS;
+        };
 
         {
             LOGD_INDENT_START << "DirectXTex GPU Compression";
-
             auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
-            auto hr = DirectX::Compress(dx->_device.Get(), img, nimg, info, format, 0, 1.f, *resImage);
+
+            auto hr = DirectX::Compress(dx->_device.Get(), img, nimg, _meta, format, flags, 1.f, *resImage);
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";
                 return false;
             }
 
-            LOGE_INDENT_END;
+            LOGD_INDENT_END;
         }
 
-        auto hr = DirectX::SaveToDDSFile(*resImage->GetImage(0, 0, 0), 0, ninniku::strToWStr(path).c_str());
+        auto resMeta = DirectX::TexMetadata(_meta);
+
+        resMeta.format = format;
+
+        auto hr = DirectX::SaveToDDSFile(resImage->GetImage(0, 0, 0), nimg, resMeta, DirectX::DDS_FLAGS_FORCE_DX10_EXT, ninniku::strToWStr(path).c_str());
 
         if (FAILED(hr)) {
             LOGE << "Failed to save compressed DDS";

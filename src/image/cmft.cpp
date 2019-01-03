@@ -28,8 +28,7 @@
 #include "../utils/misc.h"
 #include "../utils/mathUtils.h"
 
-namespace ninniku
-{
+namespace ninniku {
     cmftImage::~cmftImage()
     {
         if (_image.m_data != nullptr)
@@ -79,8 +78,11 @@ namespace ninniku
 
     bool cmftImage::Load(const std::string& path)
     {
+        auto fmt = boost::format("cmftImage::Load, Path=\"%1%\"") % path;
+        LOG << boost::str(fmt);
+
         bool imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F)
-            || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
+                           || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
 
         if (!imageLoaded) {
             LOGE << "Failed to load file";
@@ -132,6 +134,9 @@ namespace ninniku
         _image.m_format = cmft::TextureFormat::RGBA32F;
         _image.m_numFaces = CUBEMAP_NUM_FACES;
         _image.m_numMips = srcTex->desc.numMips;
+
+        auto fmt = boost::format("cmftImage::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % _image.m_width % _image.m_height % (int)_image.m_numFaces % (int)_image.m_numMips;
+        LOG << boost::str(fmt);
 
         AllocateMemory();
 

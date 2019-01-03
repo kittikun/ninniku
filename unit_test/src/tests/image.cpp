@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage)
 
     BOOST_TEST(boost::filesystem::exists(path));
 
-    CheckFileMD5(path, 0xd4ef2a9c831bcd8a, 0x560220baae6d6775);
+    CheckFileMD5(path, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
