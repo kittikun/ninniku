@@ -18,34 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "pch.h"
-#include "ninniku/Image/png.h"
+#pragma once
 
-#include "png_impl.h"
+#include "ninniku/image/image.h"
 
 namespace ninniku {
-    pngImage::pngImage()
-        : _impl{ new pngImageImpl() }
+    class ImageImpl : public Image
     {
-    }
+        // no copy of any kind allowed
+        ImageImpl(const ImageImpl&) = delete;
+        ImageImpl& operator=(ImageImpl&) = delete;
+        ImageImpl(ImageImpl&&) = delete;
+        ImageImpl& operator=(ImageImpl&&) = delete;
 
-    TextureParam pngImage::CreateTextureParam(const ETextureViews viewFlags) const
-    {
-        return _impl->CreateTextureParam(viewFlags);
-    }
+    public:
+        ImageImpl() = default;
+        virtual ~ImageImpl() = default;
 
-    bool pngImage::Load(const std::string& path)
-    {
-        return _impl->Load(path);
-    }
+        virtual bool Load(const std::string&) = 0;
+        virtual TextureParam CreateTextureParam(const ETextureViews viewFlags) const = 0;
 
-    std::tuple<uint8_t*, uint32_t> pngImage::GetData() const
-    {
-        return _impl->GetData();
-    }
+        virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
-    void pngImage::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
-    {
-        return _impl->InitializeFromTextureObject(dx, srcTex);
-    }
+        // Used when transfering data back from the GPU
+        virtual void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) = 0;
+
+    protected:
+        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
+        virtual void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) = 0;
+    };
 } // namespace ninniku

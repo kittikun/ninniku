@@ -18,14 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
+#include "../export.h"
 #include "DX11Types.h"
 
 #include <d3d11shader.h>
 
-namespace ninniku
-{
+namespace ninniku {
+#ifdef NINNIKU_EXPORT
+    class DX11Impl;
+#endif
+
     class DX11
     {
         // no copy of any kind allowed
@@ -35,70 +37,23 @@ namespace ninniku
         DX11& operator=(DX11&&) = delete;
 
     public:
-        class DebugMarker
-        {
-            // no copy of any kind allowed
-            DebugMarker(const DebugMarker&) = delete;
-            DebugMarker& operator=(DebugMarker&) = delete;
-            DebugMarker(DebugMarker&&) = delete;
-            DebugMarker& operator=(DebugMarker&&) = delete;
+        NINNIKU_API DX11();
 
-        public:
-            DebugMarker(const DX11Marker& marker, const std::string& name);
-            ~DebugMarker();
+        NINNIKU_API std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
+        NINNIKU_API std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
+        NINNIKU_API std::unique_ptr<TextureObject> CreateTexture(const TextureParam& param);
+        NINNIKU_API bool Dispatch(const Command& cmd) const;
+        NINNIKU_API bool Initialize(const std::string& shaderPath, const bool isWarp);
+        NINNIKU_API std::unique_ptr<MappedResource> MapTexture(const std::unique_ptr<TextureObject>& tObj, const uint32_t index);
+        NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
-        private:
-            DX11Marker _marker;
-        };
+        NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;
 
-        class MappedResource
-        {
-            // no copy of any kind allowed
-            MappedResource(const MappedResource&) = delete;
-            MappedResource& operator=(MappedResource&) = delete;
-            MappedResource(MappedResource&&) = delete;
-            MappedResource& operator=(MappedResource&&) = delete;
-
-        public:
-            MappedResource(const DX11Context& context, const std::unique_ptr<TextureObject>& texObj, uint32_t index);
-            ~MappedResource();
-
-            D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
-            void* GetData() const { return _mapped.pData; }
-            uint32_t GetRowPitch() const;
-
-        private:
-            const DX11Context& _context;
-            const std::unique_ptr<TextureObject>& _texObj;
-            uint32_t _index;
-            D3D11_MAPPED_SUBRESOURCE _mapped;
-        };
-
-        DX11() = default;
-
-        std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
-        std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
-        std::unique_ptr<TextureObject> CreateTexture(const TextureParam& param);
-        bool Dispatch(const Command& cmd) const;
-        bool Initialize(const std::string& shaderPath, bool isWarp);
-        std::unique_ptr<MappedResource> MapTexture(const std::unique_ptr<TextureObject>& tObj, uint32_t index);
-        bool UpdateConstantBuffer(const std::string& name, void* data, uint32_t size);
-
-        const DX11SamplerState& GetSampler(ESamplerState sampler) const { return _samplers[sampler]; }
+#ifdef NINNIKU_EXPORT
+        DX11Impl* GetImpl() { return _impl.get(); }
 
     private:
-        bool CreateDevice(int adapter, ID3D11Device** pDevice);
-        bool GetDXGIFactory(IDXGIFactory1** pFactory);
-        bool LoadShaders(const std::string& shaderPath);
-        std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
-
-    private:
-        DX11Device _device;
-        DX11Context _context;
-        std::unordered_map<std::string, ComputeShader> _shaders;
-        std::unordered_map<std::string, DX11Buffer> _cBuffers;
-        std::array<DX11SamplerState, SS_Count> _samplers;
-
-        friend class ddsImage;
+        std::unique_ptr<DX11Impl> _impl;
+#endif
     };
 } // namespace ninniku

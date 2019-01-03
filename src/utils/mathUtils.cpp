@@ -23,20 +23,20 @@
 
 #include <cassert>
 
-namespace ninniku
-{
-    bool IsPow2(uint32_t x) noexcept
+namespace ninniku {
+    const bool IsPow2(const uint32_t x) noexcept
     {
         return ((x != 0) && !(x & (x - 1)));
     }
 
-    uint32_t CountMips(uint32_t faceSize) noexcept
+    const uint32_t CountMips(const uint32_t faceSize) noexcept
     {
         uint32_t mipLevels = 1;
+        auto face = faceSize;
 
-        while (faceSize > 1) {
-            if (faceSize > 1)
-                faceSize >>= 1;
+        while (face > 1) {
+            if (face > 1)
+                face >>= 1;
 
             ++mipLevels;
         }
@@ -44,7 +44,7 @@ namespace ninniku
         return mipLevels;
     }
 
-    int NearestPow2Floor(int x)
+    const int NearestPow2Floor(const int x)
     {
         int res = 1;
 

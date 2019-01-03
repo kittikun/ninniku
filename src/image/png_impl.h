@@ -20,43 +20,39 @@
 
 #pragma once
 
-#include "image.h"
+#include "image_Impl.h"
 
 namespace ninniku {
-#ifdef NINNIKU_EXPORT
-    class cmftImageImpl;
-#endif
-
-    class cmftImage final : public Image
+    class pngImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
-        cmftImage(const cmftImage&) = delete;
-        cmftImage& operator=(cmftImage&) = delete;
-        cmftImage(cmftImage&&) = delete;
-        cmftImage& operator=(cmftImage&&) = delete;
+        pngImageImpl(const pngImageImpl&) = delete;
+        pngImageImpl& operator=(pngImageImpl&) = delete;
+        pngImageImpl(pngImageImpl&&) = delete;
+        pngImageImpl& operator=(pngImageImpl&&) = delete;
 
     public:
-        NINNIKU_API cmftImage();
-        NINNIKU_API ~cmftImage() = default;
+        pngImageImpl() = default;
+        ~pngImageImpl();
 
-        NINNIKU_API TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
-        NINNIKU_API bool Load(const std::string&) override;
-        NINNIKU_API std::tuple<uint8_t*, uint32_t> GetData() const override;
-
-        NINNIKU_API std::tuple<bool, uint32_t> IsRequiringFix();
+        TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        bool Load(const std::string&) override;
+        std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        NINNIKU_API bool SaveImage(const std::string&);
+        bool SaveImage(const std::string&);
 
-        // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        NINNIKU_API bool SaveImageFaceList(const std::string&);
+    protected:
+        std::vector<SubresourceParam> GetInitializationData() const override;
+        void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
 
     private:
-#ifdef NINNIKU_EXPORT
-        std::unique_ptr<cmftImageImpl> _impl;
-#endif
+        uint32_t _width;
+        uint32_t _height;
+        uint32_t _bpp;
+        uint8_t* _data;
     };
 } // namespace ninniku

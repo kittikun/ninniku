@@ -24,6 +24,8 @@
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 
+#include "ninniku/ninniku.h"
+
 #define LOG BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Core) << ninniku::Log::GetIndent()
 #define LOGD BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_DX) << ninniku::Log::GetIndent()
 #define LOGE BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Error) << ninniku::Log::GetIndent()
@@ -37,11 +39,9 @@
 #define LOGD_INDENT_END LOGD << "..done"; ninniku::Log::EndIndent()
 #define LOGE_INDENT_END LOGE << "..done"; ninniku::Log::EndIndent()
 
-namespace ninniku
-{
-    namespace Log
-    {
-        enum ELogLevel
+namespace ninniku {
+    namespace Log {
+        enum BoostLogLevel
         {
             Log_DX,
             Log_Core,
@@ -50,9 +50,9 @@ namespace ninniku
             Log_Level_Count
         };
 
-        BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(boost_log, boost::log::sources::severity_logger_mt<ELogLevel>);
+        BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(boost_log, boost::log::sources::severity_logger_mt<BoostLogLevel>);
 
-        void Initialize(uint8_t level);
+        void Initialize(const ELogLevel level);
         void StartIndent();
         void EndIndent();
         std::string GetIndent();

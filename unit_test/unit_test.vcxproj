@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\check.cpp" />
+    <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\fixture.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\tests\image.cpp" />
@@ -154,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\check.h" />
+    <ClInclude Include="src\common.h" />
     <ClInclude Include="src\fixture.h" />
     <ClInclude Include="src\shaders\cbuffers.h" />
   </ItemGroup>

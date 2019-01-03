@@ -1,13 +1,18 @@
 #pragma once
 
+#pragma warning(push)
+#pragma warning (disable : 4251)
+
+#include "../export.h"
 #include "../types.h"
 
 #include <wrl/client.h>
 #include <d3d11_1.h>
+#include <array>
 #include <unordered_map>
+#include <vector>
 
-namespace ninniku
-{
+namespace ninniku {
     using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
@@ -32,6 +37,53 @@ namespace ninniku
         std::unordered_map<std::string, DX11UAV> uavBindings;
         std::unordered_map<std::string, DX11SamplerState> ssBindings;
         std::array<uint32_t, 3> dispatch;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // GPU to CPU readback
+    //////////////////////////////////////////////////////////////////////////
+
+    class MappedResource
+    {
+        // no copy of any kind allowed
+        MappedResource(const MappedResource&) = delete;
+        MappedResource& operator=(MappedResource&) = delete;
+        MappedResource(MappedResource&&) = delete;
+        MappedResource& operator=(MappedResource&&) = delete;
+
+    public:
+        MappedResource(const DX11Context& context, const std::unique_ptr<TextureObject>& texObj, const uint32_t index);
+        ~MappedResource();
+
+        D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
+        void* GetData() const { return _mapped.pData; }
+        const uint32_t GetRowPitch() const;
+
+    private:
+        const DX11Context& _context;
+        const std::unique_ptr<TextureObject>& _texObj;
+        const uint32_t _index;
+        D3D11_MAPPED_SUBRESOURCE _mapped;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // Debug
+    //////////////////////////////////////////////////////////////////////////
+
+    class NINNIKU_API DebugMarker
+    {
+        // no copy of any kind allowed
+        DebugMarker(const DebugMarker&) = delete;
+        DebugMarker& operator=(DebugMarker&) = delete;
+        DebugMarker(DebugMarker&&) = delete;
+        DebugMarker& operator=(DebugMarker&&) = delete;
+
+    public:
+        DebugMarker(const DX11Marker& marker, const std::string& name);
+        ~DebugMarker();
+
+    private:
+        DX11Marker _marker;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -83,3 +135,5 @@ namespace ninniku
         TextureParam desc;
     };
 } // namespace ninniku
+
+#pragma warning(pop)

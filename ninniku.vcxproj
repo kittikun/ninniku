@@ -39,13 +39,13 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -72,10 +72,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(SolutionDir)out\$(Platform)\$(Configuration)\intermediate\$(ProjectName)\</IntDir>
+    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(SolutionDir)out\$(Platform)\$(Configuration)\intermediate\$(ProjectName)\</IntDir>
+    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -95,7 +97,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\cmft\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_USE_RENDERDOC;_DEBUG;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;_USE_RENDERDOC;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -143,7 +145,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\cmft\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -164,10 +166,18 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\dx11\DX11.cpp" />
+    <ClCompile Include="src\dx11\DX11.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\dx11\DX11_impl.cpp" />
     <ClCompile Include="src\image\cmft.cpp" />
+    <ClCompile Include="src\image\cmft_impl.cpp" />
     <ClCompile Include="src\image\dds.cpp" />
+    <ClCompile Include="src\image\dds_impl.cpp" />
+    <ClCompile Include="src\image\image.cpp" />
     <ClCompile Include="src\image\png.cpp" />
+    <ClCompile Include="src\image\png_impl.cpp" />
     <ClCompile Include="src\ninniku.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -186,6 +196,7 @@
   <ItemGroup>
     <ClInclude Include="include\ninniku\dx11\DX11.h" />
     <ClInclude Include="include\ninniku\dx11\DX11Types.h" />
+    <ClInclude Include="include\ninniku\export.h" />
     <ClInclude Include="include\ninniku\image\cmft.h" />
     <ClInclude Include="include\ninniku\image\dds.h" />
     <ClInclude Include="include\ninniku\image\image.h" />
@@ -193,6 +204,11 @@
     <ClInclude Include="include\ninniku\ninniku.h" />
     <ClInclude Include="include\ninniku\types.h" />
     <ClInclude Include="include\ninniku\utils.h" />
+    <ClInclude Include="src\dx11\DX11_impl.h" />
+    <ClInclude Include="src\image\cmft_impl.h" />
+    <ClInclude Include="src\image\dds_impl.h" />
+    <ClInclude Include="src\image\image_impl.h" />
+    <ClInclude Include="src\image\png_impl.h" />
     <ClInclude Include="src\pch.h" />
     <None Include="src\process.h" />
     <ClInclude Include="src\utils\log.h" />

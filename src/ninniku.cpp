@@ -22,6 +22,7 @@
 #include "ninniku/ninniku.h"
 
 #include "ninniku/dx11/DX11.h"
+#include "dx11/DX11_impl.h"
 #include "utils/log.h"
 #include "utils/misc.h"
 
@@ -65,7 +66,7 @@ namespace ninniku {
         return sRenderer;
     }
 
-    bool Initialize(uint8_t renderer, const std::string& shaderPath, uint8_t logLevel)
+    bool Initialize(const ERenderer renderer, const std::string& shaderPath, const ELogLevel logLevel)
     {
         ninniku::Log::Initialize(logLevel);
 
@@ -75,11 +76,11 @@ namespace ninniku {
         LoadRenderDoc();
 #endif
 
-        if ((renderer == RENDERER_DX11) || (renderer == RENDERER_WARP)) {
+        if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
             sRenderer.reset(new ninniku::DX11());
 
             // since CI is running test, we must use warp driver
-            if (!sRenderer->Initialize(shaderPath, (renderer == RENDERER_WARP) ? true : false)) {
+            if (!sRenderer->Initialize(shaderPath, (renderer == ERenderer::RENDERER_WARP) ? true : false)) {
                 LOGE << "DX11App::Initialize failed";
                 return false;
             }

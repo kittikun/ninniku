@@ -20,30 +20,37 @@
 
 #pragma once
 
-#include "dx11/DX11Types.h"
+#include "image_Impl.h"
 
-namespace ninniku
-{
-    class DX11;
-    class cmftImageImpl;
+#include <DirectXTex.h>
 
-    class Processor
+namespace ninniku {
+    class ddsImageImpl final : public ImageImpl
     {
+        // no copy of any kind allowed
+        ddsImageImpl(const ddsImageImpl&) = delete;
+        ddsImageImpl& operator=(ddsImageImpl&) = delete;
+        ddsImageImpl(ddsImageImpl&&) = delete;
+        ddsImageImpl& operator=(ddsImageImpl&&) = delete;
+
     public:
-        Processor(const std::shared_ptr<DX11>&);
+        ddsImageImpl() = default;
 
-        bool ProcessImageImpl(const boost::filesystem::path&);
+        TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        bool Load(const std::string&) override;
+        std::tuple<uint8_t*, uint32_t> GetData() const override;
+
+        // Used when transfering data back from the GPU
+        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+
+        bool SaveImage(const std::string&, std::unique_ptr<DX11>& dx, DXGI_FORMAT format);
+
+    protected:
+        std::vector<SubresourceParam> GetInitializationData() const override;
+        void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
 
     private:
-        std::unique_ptr<cmftImageImpl> ImageImplFromTextureObject(const std::unique_ptr<TextureObject>& srcTex);
-
-        // programs
-        void ColorMips();
-        void GenerateMips(const std::unique_ptr<TextureObject>& srcTex);
-        void GeneratePreIntegratedCubemap(const std::unique_ptr<TextureObject>& srcTex3);
-        void TestCubemapDirToTexture2DArray(const std::unique_ptr<TextureObject>& original);
-
-    private:
-        std::shared_ptr<DX11> _dx;
+        DirectX::TexMetadata _meta;
+        DirectX::ScratchImage _scratch;
     };
 } // namespace ninniku

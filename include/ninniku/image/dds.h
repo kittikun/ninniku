@@ -22,10 +22,11 @@
 
 #include "image.h"
 
-#include <DirectXTex.h>
+namespace ninniku {
+#ifdef NINNIKU_EXPORT
+    class ddsImageImpl;
+#endif
 
-namespace ninniku
-{
     class ddsImage final : public Image
     {
         // no copy of any kind allowed
@@ -35,23 +36,20 @@ namespace ninniku
         ddsImage& operator=(ddsImage&&) = delete;
 
     public:
-        ddsImage() = default;
+        NINNIKU_API ddsImage();
 
-        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
-        bool Load(const std::string&) override;
-        std::tuple<uint8_t*, uint32_t> GetData() const override;
+        NINNIKU_API TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        NINNIKU_API bool Load(const std::string&) override;
+        NINNIKU_API std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
-        bool SaveImage(const std::string&, std::unique_ptr<DX11>& dx, DXGI_FORMAT format);
-
-    protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
-        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch) override;
+        NINNIKU_API bool SaveImage(const std::string&, std::unique_ptr<DX11>& dx, DXGI_FORMAT format);
 
     private:
-        DirectX::TexMetadata _meta;
-        DirectX::ScratchImage _scratch;
+#ifdef NINNIKU_EXPORT
+        std::unique_ptr<ddsImageImpl> _impl;
+#endif
     };
 } // namespace ninniku

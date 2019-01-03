@@ -20,14 +20,15 @@
 
 #pragma once
 
+#include "export.h"
+
 #include <stdint.h>
 #include <string>
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11;
 
-    enum ELogLevel : uint8_t
+    enum class ELogLevel : uint8_t
     {
         LL_NONE,
         LL_WARN_ERROR,
@@ -35,7 +36,7 @@ namespace ninniku
         LL_FULL
     };
 
-    enum ERenderer : uint8_t
+    enum class ERenderer : uint8_t
     {
         RENDERER_DX11,
         RENDERER_WARP
@@ -45,13 +46,13 @@ namespace ninniku
     /// Initialize ninniku framework
     /// shaderPath must point to compiled .cso folder
     /// </summary>
-    bool Initialize(uint8_t renderer, const std::string& shaderPath, uint8_t logLevel = LL_WARN_ERROR);
+    NINNIKU_API bool Initialize(const ERenderer renderer, const std::string& shaderPath, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Cleanup resources used by ninniku
     /// If Renderdoc capture mode is enabled, finalize file capture
     /// </summary>
-    void Terminate();
+    NINNIKU_API void Terminate();
 
-    std::unique_ptr<DX11>& GetRenderer();
+    NINNIKU_API std::unique_ptr<DX11>& GetRenderer();
 } // namespace ninniku

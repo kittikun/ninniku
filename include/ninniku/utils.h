@@ -20,11 +20,10 @@
 
 #pragma once
 
-namespace ninniku
-{
-    bool IsPow2(uint32_t x);
-    uint32_t CountMips(uint32_t faceSize);
-    int NearestPow2Floor(int x);
+namespace ninniku {
+    const bool IsPow2(const uint32_t x);
+    const uint32_t CountMips(const uint32_t faceSize);
+    const int NearestPow2Floor(const int x);
 
     std::wstring strToWStr(const std::string&);
     std::string wstrToStr(const std::wstring&);

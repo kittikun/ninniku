@@ -20,10 +20,10 @@
 
 #pragma once
 
+#include "../export.h"
 #include "../types.h"
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11;
     struct TextureObject;
 
@@ -40,15 +40,11 @@ namespace ninniku
         virtual ~Image() = default;
 
         virtual bool Load(const std::string&) = 0;
-        virtual TextureParam CreateTextureParam(uint8_t viewFlags) const = 0;
+        virtual TextureParam CreateTextureParam(const ETextureViews viewFlags) const = 0;
 
         virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
         // Used when transfering data back from the GPU
         virtual void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) = 0;
-
-    protected:
-        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
-        virtual void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch) = 0;
     };
 } // namespace ninniku

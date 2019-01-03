@@ -23,6 +23,10 @@
 #include "image.h"
 
 namespace ninniku {
+#ifdef NINNIKU_EXPORT
+    class pngImageImpl;
+#endif
+
     class pngImage final : public Image
     {
         // no copy of any kind allowed
@@ -32,30 +36,18 @@ namespace ninniku {
         pngImage& operator=(pngImage&&) = delete;
 
     public:
-        pngImage() = default;
-        ~pngImage();
+        NINNIKU_API pngImage();
 
-        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
-        bool Load(const std::string&) override;
-        std::tuple<uint8_t*, uint32_t> GetData() const override;
+        NINNIKU_API TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        NINNIKU_API bool Load(const std::string&) override;
+        NINNIKU_API std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
-
-        // Save Image as DDS R32G32B32A32_FLOAT
-        bool SaveImage(const std::string&);
-
-        // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        bool SaveImageFaceList(const std::string&);
-
-    protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
-        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch) override;
+        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
     private:
-        uint32_t _width;
-        uint32_t _height;
-        uint32_t _bpp;
-        uint8_t* _data;
+#ifdef NINNIKU_EXPORT
+        std::unique_ptr<pngImageImpl> _impl;
+#endif
     };
 } // namespace ninniku

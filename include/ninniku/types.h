@@ -20,8 +20,10 @@
 
 #pragma once
 
-namespace ninniku
-{
+#include <cstdint>
+#include <vector>
+
+namespace ninniku {
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
     struct TextureObject;
@@ -59,7 +61,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Shader
     //////////////////////////////////////////////////////////////////////////
-    enum ESamplerState : uint8_t
+    enum class ESamplerState : uint8_t
     {
         SS_Point,
         SS_Linear,

@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         cmd.dispatch[1] = param.height / DIRTOFACE_NUMTHREAD_Y;
         cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
 
-        cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::SS_Point)));
+        cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
         cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube));
         cmd.uavBindings.insert(std::make_pair("dstTex", dstTex->uav[0]));
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
 
             cmd.srvBindings.insert(std::make_pair("srcMip", resTex->srvArray[srcMip]));
             cmd.uavBindings.insert(std::make_pair("dstMipSlice", resTex->uav[srcMip + 1]));
-            cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::SS_Point)));
+            cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
 
             // constant buffer
             CBGlobal cb = {};
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     // dispatch
     ninniku::Command cmd = {};
     cmd.shader = "resize";
-    cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::SS_Linear)));
+    cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::ESamplerState::SS_Linear)));
     cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[0]));
     cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
 
