@@ -113,7 +113,7 @@
       <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
     <PostBuildEvent>
-      <Command>robocopy $(SolutionDir)external\renderdoc $(SolutionDir)bin renderdoc.dll /njh /njs /ndl /nc /ns</Command>
+      <Command>(robocopy $(SolutionDir)external\renderdoc $(SolutionDir)bin renderdoc.dll /njh /njs /ndl /nc /ns) ^&amp; IF %ERRORLEVEL% LEQ 1 exit 0</Command>
       <Message>Copying RenderDoc DLL..</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
