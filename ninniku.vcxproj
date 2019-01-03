@@ -210,7 +210,6 @@
     <ClInclude Include="src\image\image_impl.h" />
     <ClInclude Include="src\image\png_impl.h" />
     <ClInclude Include="src\pch.h" />
-    <None Include="src\process.h" />
     <ClInclude Include="src\utils\log.h" />
     <ClInclude Include="src\utils\mathUtils.h" />
     <ClInclude Include="src\utils\misc.h" />

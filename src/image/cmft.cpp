@@ -23,12 +23,8 @@
 
 #include "cmft_impl.h"
 
-namespace ninniku {
-    cmftImage::cmftImage()
-        : _impl{ new cmftImageImpl() }
-    {
-    }
-
+namespace ninniku
+{
     TextureParam cmftImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
@@ -49,7 +45,7 @@ namespace ninniku {
         return _impl->IsRequiringFix();
     }
 
-    void cmftImage::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void cmftImage::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }

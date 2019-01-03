@@ -21,11 +21,13 @@
 #pragma once
 
 #include "export.h"
+#include "types.h"
 
 #include <stdint.h>
 #include <string>
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11;
 
     enum class ELogLevel : uint8_t
@@ -54,5 +56,5 @@ namespace ninniku {
     /// </summary>
     NINNIKU_API void Terminate();
 
-    NINNIKU_API std::unique_ptr<DX11>& GetRenderer();
+    NINNIKU_API std::unique_ptr<DX11, DX11Deleter>& GetRenderer();
 } // namespace ninniku

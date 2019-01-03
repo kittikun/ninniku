@@ -72,7 +72,6 @@
     <None Include="packages.config" />
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="src\process.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\utils\log.h">

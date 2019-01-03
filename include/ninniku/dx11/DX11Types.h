@@ -1,8 +1,5 @@
 #pragma once
 
-#pragma warning(push)
-#pragma warning (disable : 4251)
-
 #include "../export.h"
 #include "../types.h"
 
@@ -12,7 +9,18 @@
 #include <unordered_map>
 #include <vector>
 
-namespace ninniku {
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Buffer>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Device>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture2D>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
+
+namespace ninniku
+{
     using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
@@ -135,5 +143,3 @@ namespace ninniku {
         TextureParam desc;
     };
 } // namespace ninniku
-
-#pragma warning(pop)

@@ -41,9 +41,9 @@ namespace ninniku {
         std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
-        bool SaveImage(const std::string&, std::unique_ptr<DX11>& dx, DXGI_FORMAT format);
+        bool SaveImage(const std::string&, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format);
 
     protected:
         std::vector<SubresourceParam> GetInitializationData() const override;

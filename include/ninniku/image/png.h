@@ -22,10 +22,9 @@
 
 #include "image.h"
 
-namespace ninniku {
-#ifdef NINNIKU_EXPORT
+namespace ninniku
+{
     class pngImageImpl;
-#endif
 
     class pngImage final : public Image
     {
@@ -37,17 +36,16 @@ namespace ninniku {
 
     public:
         NINNIKU_API pngImage();
+        NINNIKU_API ~pngImage();
 
         NINNIKU_API TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
         NINNIKU_API std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
     private:
-#ifdef NINNIKU_EXPORT
         std::unique_ptr<pngImageImpl> _impl;
-#endif
     };
 } // namespace ninniku

@@ -30,12 +30,20 @@
 #include <renderdoc/renderdoc_app.h>
 #endif
 
-namespace ninniku {
-    static std::unique_ptr<DX11> sRenderer;
-
+namespace ninniku
+{
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_1_2* gRenderDocApi = nullptr;
 #endif
+
+    void DX11Deleter::operator()(DX11* value)
+    {
+        Terminate();
+
+        delete value;
+    }
+
+    static std::unique_ptr<DX11, DX11Deleter> sRenderer;
 
 #if defined(_USE_RENDERDOC)
     void LoadRenderDoc()
@@ -61,7 +69,7 @@ namespace ninniku {
     }
 #endif
 
-    std::unique_ptr<DX11>& GetRenderer()
+    std::unique_ptr<DX11, DX11Deleter>& GetRenderer()
     {
         return sRenderer;
     }
@@ -101,8 +109,10 @@ namespace ninniku {
     void Terminate()
     {
 #if defined(_USE_RENDERDOC)
-        if (gRenderDocApi != nullptr)
+        if (gRenderDocApi != nullptr) {
             gRenderDocApi->EndFrameCapture(NULL, NULL);
+            gRenderDocApi->Shutdown();
+        }
 #endif
     }
 }

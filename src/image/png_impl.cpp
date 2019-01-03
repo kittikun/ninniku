@@ -21,12 +21,22 @@
 #include "pch.h"
 #include "png_impl.h"
 
+#include "ninniku/image/png.h"
+
 #include "../utils/log.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-namespace ninniku {
+namespace ninniku
+{
+    pngImage::pngImage()
+        : _impl{ new pngImageImpl() }
+    {
+    }
+
+    pngImage::~pngImage() = default;
+
     pngImageImpl::~pngImageImpl()
     {
         if (_data != nullptr)
@@ -90,7 +100,7 @@ namespace ninniku {
         return res;
     }
 
-    void pngImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void pngImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
     {
         throw std::exception("not implemented");
     }

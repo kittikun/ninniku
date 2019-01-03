@@ -23,12 +23,8 @@
 
 #include "DX11_impl.h"
 
-namespace ninniku {
-    DX11::DX11()
-        : _impl{ new DX11Impl() }
-    {
-    }
-
+namespace ninniku
+{
     std::tuple<uint32_t, uint32_t> DX11::CopySubresource(const CopySubresourceParam& params) const
     {
         return _impl->CopySubresource(params);

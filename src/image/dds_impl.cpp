@@ -23,6 +23,7 @@
 
 #include "ninniku/dx11/DX11.h"
 #include "ninniku/dx11/DX11Types.h"
+#include "ninniku/image/dds.h"
 
 #include "../dx11/DX11_impl.h"
 #include "../utils/log.h"
@@ -30,7 +31,15 @@
 
 #include <comdef.h>
 
-namespace ninniku {
+namespace ninniku
+{
+    ddsImage::ddsImage()
+        : _impl{ new ddsImageImpl() }
+    {
+    }
+
+    ddsImage::~ddsImage() = default;
+
     TextureParam ddsImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
     {
         TextureParam res = {};
@@ -113,7 +122,7 @@ namespace ninniku {
         return true;
     }
 
-    void ddsImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void ddsImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
     {
         // DirectXTex
         _meta.width = srcTex->desc.width;
@@ -180,7 +189,7 @@ namespace ninniku {
         }
     }
 
-    bool ddsImageImpl::SaveImage(const std::string& path, std::unique_ptr<DX11>& dx, DXGI_FORMAT format)
+    bool ddsImageImpl::SaveImage(const std::string& path, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format)
     {
         auto fmt = boost::format("Saving DDS with ddsImageImpl file \"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -244,8 +253,6 @@ namespace ninniku {
         auto index = _meta.ComputeIndex(dstMip, dstFace, 0);
         auto& img = _scratch.GetImages()[index];
 
-        assert(img.rowPitch == newRowPitch);
-
-        memcpy_s(img.pixels, img.height * img.rowPitch, newData, newRowPitch * img.height);
+        memcpy_s(img.pixels, img.height * img.rowPitch, newData, img.height * std::min(newRowPitch, static_cast<uint32_t>(img.rowPitch)));
     }
 } // namespace ninniku

@@ -23,10 +23,9 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku {
-#ifdef NINNIKU_EXPORT
+namespace ninniku
+{
     class DX11Impl;
-#endif
 
     class DX11
     {
@@ -38,6 +37,7 @@ namespace ninniku {
 
     public:
         NINNIKU_API DX11();
+        NINNIKU_API ~DX11();
 
         NINNIKU_API std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
         NINNIKU_API std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
@@ -51,9 +51,9 @@ namespace ninniku {
 
 #ifdef NINNIKU_EXPORT
         DX11Impl* GetImpl() { return _impl.get(); }
+#endif
 
     private:
         std::unique_ptr<DX11Impl> _impl;
-#endif
     };
 } // namespace ninniku

@@ -22,10 +22,9 @@
 
 #include "image.h"
 
-namespace ninniku {
-#ifdef NINNIKU_EXPORT
+namespace ninniku
+{
     class ddsImageImpl;
-#endif
 
     class ddsImage final : public Image
     {
@@ -37,19 +36,18 @@ namespace ninniku {
 
     public:
         NINNIKU_API ddsImage();
+        NINNIKU_API ~ddsImage();
 
         NINNIKU_API TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
         NINNIKU_API std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
-        NINNIKU_API bool SaveImage(const std::string&, std::unique_ptr<DX11>& dx, DXGI_FORMAT format);
+        NINNIKU_API bool SaveImage(const std::string&, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format);
 
     private:
-#ifdef NINNIKU_EXPORT
         std::unique_ptr<ddsImageImpl> _impl;
-#endif
     };
 } // namespace ninniku

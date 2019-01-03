@@ -23,10 +23,19 @@
 #include <cstdint>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
     struct TextureObject;
+
+    // TODO: move those somewhere else
+    class DX11;
+
+    struct DX11Deleter
+    {
+        void operator()(DX11* value);
+    };
 
     //////////////////////////////////////////////////////////////////////////
     // Resources

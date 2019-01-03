@@ -44,7 +44,7 @@ namespace ninniku {
         std::tuple<bool, uint32_t> IsRequiringFix();
 
         // Used when transfering data back from the GPU
-        void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
         bool SaveImage(const std::string&);

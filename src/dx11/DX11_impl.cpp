@@ -23,6 +23,8 @@
 
 #pragma comment(lib, "D3DCompiler.lib")
 
+#include "ninniku/dx11/DX11.h"
+
 #include "../utils/log.h"
 #include "../utils/misc.h"
 #include "../utils/VectorSet.h"
@@ -30,7 +32,15 @@
 #include <comdef.h>
 #include <d3dcompiler.h>
 
-namespace ninniku {
+namespace ninniku
+{
+    DX11::DX11()
+        : _impl{ new DX11Impl() }
+    {
+    }
+
+    DX11::~DX11() = default;
+
     //////////////////////////////////////////////////////////////////////////
     // DebugMarker
     //////////////////////////////////////////////////////////////////////////
@@ -404,7 +414,8 @@ namespace ninniku {
         static VectorSet<uint32_t, ID3D11UnorderedAccessView*> vmUAV;
         static VectorSet<uint32_t, ID3D11SamplerState*> vmSS;
 
-        auto lambda = [&](auto kvp, auto & container) {
+        auto lambda = [&](auto kvp, auto & container)
+        {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -577,7 +588,8 @@ namespace ninniku {
         // Count the number of .cso found
         boost::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const boost::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const boost::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 

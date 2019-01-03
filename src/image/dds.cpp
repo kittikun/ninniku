@@ -23,12 +23,8 @@
 
 #include "dds_impl.h"
 
-namespace ninniku {
-    ddsImage::ddsImage()
-        : _impl{ new ddsImageImpl() }
-    {
-    }
-
+namespace ninniku
+{
     TextureParam ddsImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
@@ -44,12 +40,12 @@ namespace ninniku {
         return _impl->GetData();
     }
 
-    void ddsImage::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void ddsImage::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }
 
-    bool ddsImage::SaveImage(const std::string& path, std::unique_ptr<DX11>& dx, DXGI_FORMAT format)
+    bool ddsImage::SaveImage(const std::string& path, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format)
     {
         return _impl->SaveImage(path, dx, format);
     }

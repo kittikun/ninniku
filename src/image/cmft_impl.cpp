@@ -23,12 +23,21 @@
 
 #include "ninniku/dx11/DX11.h"
 #include "ninniku/dx11/DX11Types.h"
+#include "ninniku/image/cmft.h"
 
 #include "../utils/log.h"
 #include "../utils/misc.h"
 #include "../utils/mathUtils.h"
 
-namespace ninniku {
+namespace ninniku
+{
+    cmftImage::cmftImage()
+        : _impl{ new cmftImageImpl() }
+    {
+    }
+
+    cmftImage::~cmftImage() = default;
+
     cmftImageImpl::~cmftImageImpl()
     {
         if (_image.m_data != nullptr)
@@ -122,7 +131,7 @@ namespace ninniku {
         return true;
     }
 
-    void cmftImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void cmftImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
     {
         // we want to enforce 1:1 for now
         assert(srcTex->desc.width == srcTex->desc.height);

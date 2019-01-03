@@ -23,12 +23,8 @@
 
 #include "png_impl.h"
 
-namespace ninniku {
-    pngImage::pngImage()
-        : _impl{ new pngImageImpl() }
-    {
-    }
-
+namespace ninniku
+{
     TextureParam pngImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
@@ -44,7 +40,7 @@ namespace ninniku {
         return _impl->GetData();
     }
 
-    void pngImage::InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void pngImage::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }

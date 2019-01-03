@@ -41,7 +41,7 @@ namespace ninniku {
         virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
         // Used when transfering data back from the GPU
-        virtual void InitializeFromTextureObject(std::unique_ptr<DX11>& dx, const std::unique_ptr<TextureObject>& srcTex) = 0;
+        virtual void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) = 0;
 
     protected:
         virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
