@@ -24,6 +24,7 @@
 #include <ninniku/dx11/DX11.h>
 #include <ninniku/image/cmft.h>
 #include <ninniku/image/dds.h>
+#include <ninniku/image/png.h>
 #include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 
@@ -176,6 +177,17 @@ BOOST_AUTO_TEST_CASE(dds_saveImage)
     BOOST_TEST(boost::filesystem::exists(path));
 
     CheckFileMD5(path, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
+}
+
+BOOST_AUTO_TEST_CASE(png_load)
+{
+    auto image = std::make_unique<ninniku::pngImage>();
+
+    BOOST_TEST(image->Load("data/banner.png"));
+
+    auto data = image->GetData();
+
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x5c284747dea82181, 0xcdc216b5cbc13d95);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

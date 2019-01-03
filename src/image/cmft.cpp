@@ -81,8 +81,7 @@ namespace ninniku {
         auto fmt = boost::format("cmftImage::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
 
-        bool imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F)
-                           || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
+        bool imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
 
         if (!imageLoaded) {
             LOGE << "Failed to load file";

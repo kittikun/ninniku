@@ -26,11 +26,10 @@
 #include "utils/misc.h"
 
 #if defined(_USE_RENDERDOC)
-#include <renderdoc_app.h>
+#include <renderdoc/renderdoc_app.h>
 #endif
 
-namespace ninniku
-{
+namespace ninniku {
     static std::unique_ptr<DX11> sRenderer;
 
 #if defined(_USE_RENDERDOC)
