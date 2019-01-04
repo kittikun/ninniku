@@ -39,13 +39,11 @@ namespace ninniku
         NINNIKU_API DX11();
         NINNIKU_API ~DX11();
 
-        NINNIKU_API std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
-        NINNIKU_API std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
-        NINNIKU_API std::unique_ptr<TextureObject> CreateTexture(const TextureParam& param);
-        NINNIKU_API bool Dispatch(const Command& cmd) const;
-        NINNIKU_API bool Initialize(const std::string& shaderPath, const bool isWarp);
-        NINNIKU_API std::unique_ptr<MappedResource> MapTexture(const std::unique_ptr<TextureObject>& tObj, const uint32_t index);
-        NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
+        NINNIKU_API const std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
+        NINNIKU_API const DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
+        NINNIKU_API const TextureHandle CreateTexture(const TextureParam& param);
+        NINNIKU_API const bool Dispatch(const Command& cmd) const;
+        NINNIKU_API const bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
         NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;
 
@@ -56,4 +54,6 @@ namespace ninniku
     private:
         std::unique_ptr<DX11Impl> _impl;
     };
+
+    NINNIKU_API DX11Handle& GetRenderer();
 } // namespace ninniku

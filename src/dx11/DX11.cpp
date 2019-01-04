@@ -25,37 +25,27 @@
 
 namespace ninniku
 {
-    std::tuple<uint32_t, uint32_t> DX11::CopySubresource(const CopySubresourceParam& params) const
+    const std::tuple<uint32_t, uint32_t> DX11::CopySubresource(const CopySubresourceParam& params) const
     {
         return _impl->CopySubresource(params);
     }
 
-    std::unique_ptr<DebugMarker> DX11::CreateDebugMarker(const std::string& name) const
+    const DebugMarkerHandle DX11::CreateDebugMarker(const std::string& name) const
     {
         return _impl->CreateDebugMarker(name);
     }
 
-    std::unique_ptr<TextureObject> DX11::CreateTexture(const TextureParam& param)
+    const TextureHandle DX11::CreateTexture(const TextureParam& param)
     {
         return _impl->CreateTexture(param);
     }
 
-    bool DX11::Dispatch(const Command& cmd) const
+    const bool DX11::Dispatch(const Command& cmd) const
     {
         return _impl->Dispatch(cmd);
     }
 
-    bool DX11::Initialize(const std::string& shaderPath, const bool isWarp)
-    {
-        return _impl->Initialize(shaderPath, isWarp);
-    }
-
-    std::unique_ptr<MappedResource> DX11::MapTexture(const std::unique_ptr<TextureObject>& tObj, const uint32_t index)
-    {
-        return _impl->MapTexture(tObj, index);
-    }
-
-    bool DX11::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
+    const bool DX11::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
     {
         return _impl->UpdateConstantBuffer(name, data, size);
     }

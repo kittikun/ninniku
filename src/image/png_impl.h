@@ -22,7 +22,8 @@
 
 #include "image_Impl.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class pngImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -35,18 +36,20 @@ namespace ninniku {
         pngImageImpl() = default;
         ~pngImageImpl();
 
-        TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
-        bool Load(const std::string&) override;
-        std::tuple<uint8_t*, uint32_t> GetData() const override;
+        const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        const bool Load(const std::string&) override;
+        const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
         bool SaveImage(const std::string&);
 
     protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
+        const uint32_t GetHeight() const override { return _height; }
+        const std::vector<SubresourceParam> GetInitializationData() const override;
+        const uint32_t GetWidth() const override { return _width; }
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
 
     private:

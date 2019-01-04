@@ -24,7 +24,8 @@
 
 #include <DirectXTex.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class ddsImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -36,17 +37,19 @@ namespace ninniku {
     public:
         ddsImageImpl() = default;
 
-        TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
-        bool Load(const std::string&) override;
-        std::tuple<uint8_t*, uint32_t> GetData() const override;
+        const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        const bool Load(const std::string&) override;
+        const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
-        bool SaveImage(const std::string&, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format);
+        bool SaveImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
 
     protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
+        const uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
+        const std::vector<SubresourceParam> GetInitializationData() const override;
+        const uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
 
     private:

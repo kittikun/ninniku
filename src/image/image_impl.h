@@ -22,7 +22,8 @@
 
 #include "ninniku/image/image.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class ImageImpl : public Image
     {
         // no copy of any kind allowed
@@ -35,16 +36,19 @@ namespace ninniku {
         ImageImpl() = default;
         virtual ~ImageImpl() = default;
 
-        virtual bool Load(const std::string&) = 0;
-        virtual TextureParam CreateTextureParam(const ETextureViews viewFlags) const = 0;
+        virtual const bool Load(const std::string&) = 0;
+        virtual const TextureParam CreateTextureParam(const ETextureViews viewFlags) const = 0;
 
-        virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
-        // Used when transfering data back from the GPU
-        virtual void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) = 0;
+        virtual void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) = 0;
+
+        const SizeFixResult IsRequiringFix() const override;
 
     protected:
-        virtual std::vector<SubresourceParam> GetInitializationData() const = 0;
+        virtual const std::vector<SubresourceParam> GetInitializationData() const = 0;
         virtual void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) = 0;
+        virtual const uint32_t GetWidth() const = 0;
+        virtual const uint32_t GetHeight() const = 0;
     };
 } // namespace ninniku

@@ -25,23 +25,28 @@
 
 namespace ninniku
 {
-    TextureParam pngImage::CreateTextureParam(const ETextureViews viewFlags) const
+    const TextureParam pngImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    bool pngImage::Load(const std::string& path)
+    const bool pngImage::Load(const std::string& path)
     {
         return _impl->Load(path);
     }
 
-    std::tuple<uint8_t*, uint32_t> pngImage::GetData() const
+    const std::tuple<uint8_t*, uint32_t> pngImage::GetData() const
     {
         return _impl->GetData();
     }
 
-    void pngImage::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void pngImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
+    }
+
+    const SizeFixResult pngImage::IsRequiringFix() const
+    {
+        return _impl->IsRequiringFix();
     }
 } // namespace ninniku

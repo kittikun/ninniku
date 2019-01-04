@@ -23,15 +23,15 @@
 #include "shaders/cbuffers.h"
 
 #include <ninniku/dx11/DX11.h>
-#include <ninniku/types.h>
 
-std::unique_ptr<ninniku::TextureObject>&& ResizeImageImpl(std::unique_ptr<ninniku::DX11>& dx, const std::unique_ptr<ninniku::TextureObject>& srcTex, const uint32_t width, const uint32_t height)
+ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes)
 {
     auto subMarker = dx->CreateDebugMarker("CommonResizeImageImpl");
 
     ninniku::TextureParam dstParam = {};
-    dstParam.width = width;
-    dstParam.height = height;
+    dstParam.width = std::get<1>(fixRes);
+    dstParam.height = std::get<2>(fixRes);
+    dstParam.depth = srcTex->desc.depth;
     dstParam.format = srcTex->desc.format;
     dstParam.numMips = srcTex->desc.numMips;
     dstParam.arraySize = srcTex->desc.arraySize;
@@ -44,12 +44,17 @@ std::unique_ptr<ninniku::TextureObject>&& ResizeImageImpl(std::unique_ptr<ninnik
         ninniku::Command cmd = {};
         cmd.shader = "resize";
         cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::ESamplerState::SS_Linear)));
-        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[mip]));
+
+        if (dstParam.arraySize > 1)
+            cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[mip]));
+        else
+            cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
+
         cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[mip]));
 
         static_assert((RESIZE_NUMTHREAD_X == RESIZE_NUMTHREAD_Y) && (RESIZE_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = width / RESIZE_NUMTHREAD_X;
-        cmd.dispatch[1] = height / RESIZE_NUMTHREAD_Y;
+        cmd.dispatch[0] = dstParam.width / RESIZE_NUMTHREAD_X;
+        cmd.dispatch[1] = dstParam.height / RESIZE_NUMTHREAD_Y;
         cmd.dispatch[2] = dstParam.arraySize / RESIZE_NUMTHREAD_Z;
 
         dx->Dispatch(cmd);

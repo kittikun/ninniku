@@ -25,27 +25,32 @@
 
 namespace ninniku
 {
-    TextureParam ddsImage::CreateTextureParam(const ETextureViews viewFlags) const
+    const TextureParam ddsImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    bool ddsImage::Load(const std::string& path)
+    const bool ddsImage::Load(const std::string& path)
     {
         return _impl->Load(path);
     }
 
-    std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
+    const std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
     {
         return _impl->GetData();
     }
 
-    void ddsImage::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void ddsImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }
 
-    bool ddsImage::SaveImage(const std::string& path, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format)
+    const SizeFixResult ddsImage::IsRequiringFix() const
+    {
+        return _impl->IsRequiringFix();
+    }
+
+    bool ddsImage::SaveImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
     {
         return _impl->SaveImage(path, dx, format);
     }

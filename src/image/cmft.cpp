@@ -25,29 +25,29 @@
 
 namespace ninniku
 {
-    TextureParam cmftImage::CreateTextureParam(const ETextureViews viewFlags) const
+    const TextureParam cmftImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    bool cmftImage::Load(const std::string& path)
+    const bool cmftImage::Load(const std::string& path)
     {
         return _impl->Load(path);
     }
 
-    std::tuple<uint8_t*, uint32_t> cmftImage::GetData() const
+    const std::tuple<uint8_t*, uint32_t> cmftImage::GetData() const
     {
         return _impl->GetData();
     }
 
-    std::tuple<bool, uint32_t> cmftImage::IsRequiringFix()
-    {
-        return _impl->IsRequiringFix();
-    }
-
-    void cmftImage::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void cmftImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
+    }
+
+    const SizeFixResult cmftImage::IsRequiringFix() const
+    {
+        return _impl->IsRequiringFix();
     }
 
     bool cmftImage::SaveImage(const std::string& path)

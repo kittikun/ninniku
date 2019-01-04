@@ -62,7 +62,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // MappedResource
     //////////////////////////////////////////////////////////////////////////
-    MappedResource::MappedResource(const DX11Context& context, const std::unique_ptr<TextureObject>& texObj, const uint32_t index)
+    MappedResource::MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
         : _context{ context }
         , _texObj{ texObj }
         , _index{ index }
@@ -80,7 +80,7 @@ namespace ninniku
     }
 
     //////////////////////////////////////////////////////////////////////////
-    std::tuple<uint32_t, uint32_t> DX11Impl::CopySubresource(const CopySubresourceParam& params) const
+    const std::tuple<uint32_t, uint32_t> DX11Impl::CopySubresource(const CopySubresourceParam& params) const
     {
         uint32_t dstSub = D3D11CalcSubresource(params.dstMip, params.dstFace, params.dst->desc.numMips);
         uint32_t srcSub = D3D11CalcSubresource(params.srcMip, params.srcFace, params.src->desc.numMips);
@@ -90,7 +90,7 @@ namespace ninniku
         return std::make_tuple(srcSub, dstSub);
     }
 
-    std::unique_ptr<DebugMarker> DX11Impl::CreateDebugMarker(const std::string& name) const
+    const DebugMarkerHandle DX11Impl::CreateDebugMarker(const std::string& name) const
     {
         DX11Marker marker;
 #ifdef _USE_RENDERDOC
@@ -101,7 +101,7 @@ namespace ninniku
         return std::make_unique<DebugMarker>(marker, name);
     }
 
-    bool DX11Impl::CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
+    const bool DX11Impl::CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
     {
         LOGD << "Creating ID3D11Device..";
 
@@ -153,7 +153,7 @@ namespace ninniku
 
         auto hr = s_DynamicD3D11CreateDevice(pAdapter.Get(),
                                              driverType,
-                                             nullptr, createDeviceFlags, featureLevels.data(), (uint32_t)featureLevels.size(),
+                                             nullptr, createDeviceFlags, featureLevels.data(), static_cast<uint32_t>(featureLevels.size()),
                                              D3D11_SDK_VERSION, pDevice, &fl, nullptr);
 
         if (SUCCEEDED(hr)) {
@@ -181,7 +181,7 @@ namespace ninniku
             return false;
     }
 
-    std::unique_ptr<TextureObject> DX11Impl::CreateTexture(const TextureParam& params)
+    const TextureHandle DX11Impl::CreateTexture(const TextureParam& params)
     {
         auto isSRV = (params.viewflags & ETextureViews::TV_SRV) != 0;
         auto isUAV = (params.viewflags & ETextureViews::TV_UAV) != 0;
@@ -249,7 +249,7 @@ namespace ninniku
             LOGE << "Failed to CreateTexture2D cube map with:";
             _com_error err(hr);
             LOGE << err.ErrorMessage();
-            return std::unique_ptr<TextureObject>();
+            return TextureHandle();
         }
 
         if (isSRV) {
@@ -266,7 +266,7 @@ namespace ninniku
                     LOGE << "Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBE with:";
                     _com_error err(hr);
                     LOGE << err.ErrorMessage();
-                    return std::unique_ptr<TextureObject>();
+                    return TextureHandle();
                 }
 
                 // To sample texture as array, one for each miplevel
@@ -287,7 +287,7 @@ namespace ninniku
                         _com_error err(hr);
                         LOGE << err.ErrorMessage();
 
-                        return std::unique_ptr<TextureObject>();
+                        return TextureHandle();
                     }
                 }
 
@@ -305,7 +305,7 @@ namespace ninniku
                     LOGE << boost::str(fmt);
                     _com_error err(hr);
                     LOGE << err.ErrorMessage();
-                    return std::unique_ptr<TextureObject>();
+                    return TextureHandle();
                 }
             } else {
                 D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -335,7 +335,7 @@ namespace ninniku
                             LOGE << boost::str(fmt);
                             _com_error err(hr);
                             LOGE << err.ErrorMessage();
-                            return std::unique_ptr<TextureObject>();
+                            return TextureHandle();
                         }
                     }
                 } else {
@@ -356,7 +356,7 @@ namespace ninniku
                         LOGE << boost::str(fmt);
                         _com_error err(hr);
                         LOGE << err.ErrorMessage();
-                        return std::unique_ptr<TextureObject>();
+                        return TextureHandle();
                     }
                 }
             }
@@ -384,7 +384,7 @@ namespace ninniku
                     LOGE << "Failed to CreateUnorderedAccessView with:";
                     _com_error err(hr);
                     LOGE << err.ErrorMessage();
-                    return std::unique_ptr<TextureObject>();
+                    return TextureHandle();
                 }
             }
         }
@@ -392,7 +392,7 @@ namespace ninniku
         return res;
     }
 
-    bool DX11Impl::Dispatch(const Command& cmd) const
+    const bool DX11Impl::Dispatch(const Command& cmd) const
     {
         auto found = _shaders.find(cmd.shader);
 
@@ -477,15 +477,15 @@ namespace ninniku
             _context->CSSetConstantBuffers(0, 1, cbs.data());
         }
 
-        _context->CSSetSamplers(0, (uint32_t)vmSS.size(), vmSS.data());
-        _context->CSSetUnorderedAccessViews(0, (uint32_t)vmUAV.size(), vmUAV.data(), nullptr);
+        _context->CSSetSamplers(0, vmSS.size(), vmSS.data());
+        _context->CSSetUnorderedAccessViews(0, vmUAV.size(), vmUAV.data(), nullptr);
         _context->CSSetShaderResources(0, vmSRV.size(), vmSRV.data());
         _context->Dispatch(cmd.dispatch[0], cmd.dispatch[1], cmd.dispatch[2]);
         //_context->Flush();
         return true;
     }
 
-    bool DX11Impl::GetDXGIFactory(IDXGIFactory1** pFactory)
+    const bool DX11Impl::GetDXGIFactory(IDXGIFactory1** pFactory)
     {
         if (!pFactory)
             return false;
@@ -510,7 +510,7 @@ namespace ninniku
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
-    bool DX11Impl::Initialize(const std::string& shaderPath, const bool isWarp)
+    const bool DX11Impl::Initialize(const std::string& shaderPath, const bool isWarp)
     {
         auto adapter = 0;
 
@@ -562,7 +562,7 @@ namespace ninniku
         return true;
     }
 
-    std::unique_ptr<MappedResource> DX11Impl::MapTexture(const std::unique_ptr<TextureObject>& tObj, const uint32_t index)
+    const MappedResourceHandle DX11Impl::MapTexture(const TextureHandle& tObj, const uint32_t index)
     {
         auto res = std::make_unique<MappedResource>(_context, tObj, index);
 
@@ -581,7 +581,7 @@ namespace ninniku
     /// <summary>
     /// Load all shaders in /data
     /// </summary>
-    bool DX11Impl::LoadShaders(const std::string& shaderPath)
+    const bool DX11Impl::LoadShaders(const std::string& shaderPath)
     {
         std::string ext{ ".cso" };
 
@@ -668,7 +668,7 @@ namespace ninniku
         return true;
     }
 
-    std::unordered_map<std::string, uint32_t> DX11Impl::ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection)
+    const std::unordered_map<std::string, uint32_t> DX11Impl::ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection)
     {
         std::unordered_map<std::string, uint32_t> resMap;
 
@@ -712,7 +712,7 @@ namespace ninniku
         return resMap;
     }
 
-    bool DX11Impl::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
+    const bool DX11Impl::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
     {
         auto found = _cBuffers.find(name);
 

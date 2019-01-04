@@ -29,14 +29,6 @@ namespace ninniku
 
     struct TextureObject;
 
-    // TODO: move those somewhere else
-    class DX11;
-
-    struct DX11Deleter
-    {
-        void operator()(DX11* value);
-    };
-
     //////////////////////////////////////////////////////////////////////////
     // Resources
     //////////////////////////////////////////////////////////////////////////

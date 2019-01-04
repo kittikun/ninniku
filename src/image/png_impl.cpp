@@ -43,7 +43,7 @@ namespace ninniku
             stbi_image_free(_data);
     }
 
-    TextureParam pngImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    const TextureParam pngImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
     {
         TextureParam res = {};
 
@@ -54,6 +54,10 @@ namespace ninniku
 
             case 3:
                 res.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+                break;
+
+            case 1:
+                res.format = DXGI_FORMAT_R8_UNORM;
                 break;
 
             default:
@@ -72,7 +76,7 @@ namespace ninniku
         return res;
     }
 
-    bool pngImageImpl::Load(const std::string& path)
+    const bool pngImageImpl::Load(const std::string& path)
     {
         auto fmt = boost::format("pngImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -82,14 +86,14 @@ namespace ninniku
         return true;
     }
 
-    std::tuple<uint8_t*, uint32_t> pngImageImpl::GetData() const
+    const std::tuple<uint8_t*, uint32_t> pngImageImpl::GetData() const
     {
         uint32_t size = _width * _height * _bpp;
 
         return std::make_tuple(_data, size);
     }
 
-    std::vector<SubresourceParam> pngImageImpl::GetInitializationData() const
+    const std::vector<SubresourceParam> pngImageImpl::GetInitializationData() const
     {
         std::vector<SubresourceParam> res(1);
 
@@ -100,7 +104,7 @@ namespace ninniku
         return res;
     }
 
-    void pngImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void pngImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         throw std::exception("not implemented");
     }

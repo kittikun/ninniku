@@ -20,7 +20,8 @@
 
 #pragma once
 
-namespace ninniku {
+namespace ninniku
+{
     template<typename KeyType, typename ValueType>
     class VectorSet
     {
@@ -45,7 +46,8 @@ namespace ninniku {
         void endInsert()
         {
             if (_map.size() > 1) {
-                auto lamda = [](const KVP & lhs, const KVP & rhs) {
+                auto lamda = [](const KVP & lhs, const KVP & rhs)
+                {
                     return std::get<0>(lhs) < std::get<0>(rhs);
                 };
 
@@ -70,7 +72,7 @@ namespace ninniku {
 
         const uint32_t size() const noexcept
         {
-            return (uint32_t)_list.size();
+            return static_cast<uint32_t>(_list.size());
         }
 
     private:

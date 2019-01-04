@@ -20,13 +20,12 @@
 
 #pragma once
 
-#include "../export.h"
 #include "../types.h"
+#include "../dx11/DX11Types.h"
 
 namespace ninniku
 {
-    class DX11;
-    struct TextureObject;
+    using SizeFixResult = std::tuple<bool, uint32_t, uint32_t>;
 
     class Image
     {
@@ -40,12 +39,20 @@ namespace ninniku
         Image() = default;
         virtual ~Image() = default;
 
-        virtual bool Load(const std::string&) = 0;
-        virtual TextureParam CreateTextureParam(const ETextureViews viewFlags) const = 0;
+        virtual const bool Load(const std::string&) = 0;
+        virtual const TextureParam CreateTextureParam(const ETextureViews viewFlags) const = 0;
 
-        virtual std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
         // Used when transfering data back from the GPU
-        virtual void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) = 0;
+        virtual void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) = 0;
+
+        /// <summary>
+        /// Check if a image is a power of 2 and return a 2 item tuple
+        /// 0 bool: need fix
+        /// 1 uint32: new width
+        /// 2 uint32: new height
+        /// </summary>
+        virtual const SizeFixResult IsRequiringFix() const = 0;
     };
 } // namespace ninniku

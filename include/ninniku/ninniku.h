@@ -21,7 +21,6 @@
 #pragma once
 
 #include "export.h"
-#include "types.h"
 
 #include <stdint.h>
 #include <string>
@@ -55,6 +54,4 @@ namespace ninniku
     /// If Renderdoc capture mode is enabled, finalize file capture
     /// </summary>
     NINNIKU_API void Terminate();
-
-    NINNIKU_API std::unique_ptr<DX11, DX11Deleter>& GetRenderer();
 } // namespace ninniku

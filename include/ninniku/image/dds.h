@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "../export.h"
 #include "image.h"
 
 namespace ninniku
@@ -38,14 +39,16 @@ namespace ninniku
         NINNIKU_API ddsImage();
         NINNIKU_API ~ddsImage();
 
-        NINNIKU_API TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
-        NINNIKU_API bool Load(const std::string&) override;
-        NINNIKU_API std::tuple<uint8_t*, uint32_t> GetData() const override;
+        NINNIKU_API const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        NINNIKU_API const bool Load(const std::string&) override;
+        NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex) override;
+        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
-        NINNIKU_API bool SaveImage(const std::string&, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format);
+        NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
+
+        NINNIKU_API bool SaveImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
 
     private:
         std::unique_ptr<ddsImageImpl> _impl;

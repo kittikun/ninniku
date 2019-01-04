@@ -19,3 +19,7 @@
 // SOFTWARE.
 
 #include "pch.h"
+
+namespace ninniku
+{
+} // namespace ninniku

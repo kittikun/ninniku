@@ -43,7 +43,7 @@ namespace ninniku
         delete value;
     }
 
-    static std::unique_ptr<DX11, DX11Deleter> sRenderer;
+    static DX11Handle sRenderer;
 
 #if defined(_USE_RENDERDOC)
     void LoadRenderDoc()
@@ -69,7 +69,7 @@ namespace ninniku
     }
 #endif
 
-    std::unique_ptr<DX11, DX11Deleter>& GetRenderer()
+    DX11Handle& GetRenderer()
     {
         return sRenderer;
     }
@@ -88,7 +88,7 @@ namespace ninniku
             sRenderer.reset(new ninniku::DX11());
 
             // since CI is running test, we must use warp driver
-            if (!sRenderer->Initialize(shaderPath, (renderer == ERenderer::RENDERER_WARP) ? true : false)) {
+            if (!sRenderer->GetImpl()->Initialize(shaderPath, (renderer == ERenderer::RENDERER_WARP) ? true : false)) {
                 LOGE << "DX11App::Initialize failed";
                 return false;
             }
@@ -96,7 +96,7 @@ namespace ninniku
 #if defined(_USE_RENDERDOC)
             if (gRenderDocApi != nullptr) {
                 gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
-                gRenderDocApi->StartFrameCapture(NULL, NULL);
+                gRenderDocApi->StartFrameCapture(nullptr, nullptr);
             }
 #endif
 
@@ -110,8 +110,7 @@ namespace ninniku
     {
 #if defined(_USE_RENDERDOC)
         if (gRenderDocApi != nullptr) {
-            gRenderDocApi->EndFrameCapture(NULL, NULL);
-            gRenderDocApi->Shutdown();
+            gRenderDocApi->EndFrameCapture(nullptr, nullptr);
         }
 #endif
     }

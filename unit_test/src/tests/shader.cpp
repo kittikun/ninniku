@@ -20,6 +20,7 @@
 
 #include "../shaders/cbuffers.h"
 #include "../check.h"
+#include "../common.h"
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/dx11/DX11.h>
@@ -154,7 +155,7 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
 
     image->Load("data/Cathedral01.dds");
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    const auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
 
     ninniku::TextureParam param = {};
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     auto needFix = image->IsRequiringFix();
     auto newSize = std::get<1>(needFix);
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    const auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("Resize");
     auto srcTex = dx->CreateTexture(srcParam);
@@ -245,20 +246,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     dstParam.arraySize = 6;
     dstParam.viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
 
-    auto dst = dx->CreateTexture(dstParam);
-
-    // dispatch
-    ninniku::Command cmd = {};
-    cmd.shader = "resize";
-    cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::ESamplerState::SS_Linear)));
-    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[0]));
-    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
-
-    static_assert((RESIZE_NUMTHREAD_X == RESIZE_NUMTHREAD_Y) && (RESIZE_NUMTHREAD_Z == 1));
-    cmd.dispatch[0] = cmd.dispatch[1] = newSize / RESIZE_NUMTHREAD_X;
-    cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / RESIZE_NUMTHREAD_Z;
-
-    dx->Dispatch(cmd);
+    auto dst = ResizeImage(dx, srcTex, needFix);
 
     auto res = std::make_unique<ninniku::cmftImage>();
 

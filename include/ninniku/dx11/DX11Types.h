@@ -31,6 +31,19 @@ namespace ninniku
     using DX11SRV = Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
     using DX11UAV = Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
+    class DX11;
+
+    struct DX11Deleter
+    {
+        void operator()(DX11* value);
+    };
+
+    using DX11Handle = std::unique_ptr<DX11, DX11Deleter>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Commands
+    //////////////////////////////////////////////////////////////////////////
+
     struct Command
     {
         // no copy of any kind allowed
@@ -45,33 +58,6 @@ namespace ninniku
         std::unordered_map<std::string, DX11UAV> uavBindings;
         std::unordered_map<std::string, DX11SamplerState> ssBindings;
         std::array<uint32_t, 3> dispatch;
-    };
-
-    //////////////////////////////////////////////////////////////////////////
-    // GPU to CPU readback
-    //////////////////////////////////////////////////////////////////////////
-
-    class MappedResource
-    {
-        // no copy of any kind allowed
-        MappedResource(const MappedResource&) = delete;
-        MappedResource& operator=(MappedResource&) = delete;
-        MappedResource(MappedResource&&) = delete;
-        MappedResource& operator=(MappedResource&&) = delete;
-
-    public:
-        MappedResource(const DX11Context& context, const std::unique_ptr<TextureObject>& texObj, const uint32_t index);
-        ~MappedResource();
-
-        D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
-        void* GetData() const { return _mapped.pData; }
-        const uint32_t GetRowPitch() const;
-
-    private:
-        const DX11Context& _context;
-        const std::unique_ptr<TextureObject>& _texObj;
-        const uint32_t _index;
-        D3D11_MAPPED_SUBRESOURCE _mapped;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -94,6 +80,8 @@ namespace ninniku
         DX11Marker _marker;
     };
 
+    using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
+
     //////////////////////////////////////////////////////////////////////////
     // Shader
     //////////////////////////////////////////////////////////////////////////
@@ -113,7 +101,6 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
-
     struct TextureObject
     {
         // no copy of any kind allowed
@@ -142,4 +129,35 @@ namespace ninniku
         // Desc that was used to create those resources
         TextureParam desc;
     };
+
+    using TextureHandle = std::unique_ptr<const TextureObject>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // GPU to CPU readback
+    //////////////////////////////////////////////////////////////////////////
+
+    class MappedResource
+    {
+        // no copy of any kind allowed
+        MappedResource(const MappedResource&) = delete;
+        MappedResource& operator=(MappedResource&) = delete;
+        MappedResource(MappedResource&&) = delete;
+        MappedResource& operator=(MappedResource&&) = delete;
+
+    public:
+        MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);
+        ~MappedResource();
+
+        D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
+        void* GetData() const { return _mapped.pData; }
+        const uint32_t GetRowPitch() const;
+
+    private:
+        const DX11Context& _context;
+        const TextureHandle& _texObj;
+        const uint32_t _index;
+        D3D11_MAPPED_SUBRESOURCE _mapped;
+    };
+
+    using MappedResourceHandle = std::unique_ptr<const MappedResource>;
 } // namespace ninniku

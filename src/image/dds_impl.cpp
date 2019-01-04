@@ -40,7 +40,7 @@ namespace ninniku
 
     ddsImage::~ddsImage() = default;
 
-    TextureParam ddsImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    const TextureParam ddsImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
     {
         TextureParam res = {};
 
@@ -56,12 +56,12 @@ namespace ninniku
         return res;
     }
 
-    std::tuple<uint8_t*, uint32_t> ddsImageImpl::GetData() const
+    const std::tuple<uint8_t*, uint32_t> ddsImageImpl::GetData() const
     {
         return std::make_tuple(_scratch.GetPixels(), static_cast<uint32_t>(_scratch.GetPixelsSize()));
     }
 
-    std::vector<SubresourceParam> ddsImageImpl::GetInitializationData() const
+    const std::vector<SubresourceParam> ddsImageImpl::GetInitializationData() const
     {
         if (_meta.IsVolumemap()) {
             LOGE << "Texture3D are not supported for now";
@@ -89,7 +89,7 @@ namespace ninniku
         return res;
     }
 
-    bool ddsImageImpl::Load(const std::string& path)
+    const bool ddsImageImpl::Load(const std::string& path)
     {
         auto fmt = boost::format("ddsImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -101,10 +101,6 @@ namespace ninniku
             fmt = boost::format("Could not load metadata for DDS file %1%") % path;
             LOGE << boost::str(fmt);
             return false;
-        }
-
-        if (_meta.miscFlags & DirectX::TEX_MISC_TEXTURECUBE) {
-            LOGW << "Loading cubemap from DDS, if you want to process it, please use cmft";
         }
 
         if ((_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE3D) && (_meta.arraySize > 1)) {
@@ -122,7 +118,7 @@ namespace ninniku
         return true;
     }
 
-    void ddsImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void ddsImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         // DirectXTex
         _meta.width = srcTex->desc.width;
@@ -135,7 +131,6 @@ namespace ninniku
         auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
         LOG << boost::str(fmt);
 
-        // assume that an arraysize of 6 == cubemap
         if (_meta.depth > 1) {
             _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;
         } else if (_meta.height > 1) {
@@ -144,6 +139,7 @@ namespace ninniku
             _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE1D;
         }
 
+        // assume that an arraysize of 6 == cubemap
         if ((_meta.arraySize == CUBEMAP_NUM_FACES) && (_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE2D))
             _meta.miscFlags |= DirectX::TEX_MISC_TEXTURECUBE;
 
@@ -161,7 +157,7 @@ namespace ninniku
         auto marker = dx->CreateDebugMarker("ddsFromTextureObject");
 
         // we have to copy each mip with a read back texture or the same size for each face
-        for (uint32_t mip = 0; mip < srcTex->desc.numMips; ++mip) {
+        for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
             ninniku::TextureParam param = {};
 
             param.width = srcTex->desc.width >> mip;
@@ -178,18 +174,18 @@ namespace ninniku
             params.srcMip = mip;
             params.dst = readBack.get();
 
-            for (uint32_t face = 0; face < ninniku::CUBEMAP_NUM_FACES; ++face) {
+            for (uint32_t face = 0; face < _meta.arraySize; ++face) {
                 params.srcFace = face;
 
                 auto indexes = dx->CopySubresource(params);
-                auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
+                auto mapped = dx->GetImpl()->MapTexture(readBack, std::get<1>(indexes));
 
                 UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
             }
         }
     }
 
-    bool ddsImageImpl::SaveImage(const std::string& path, std::unique_ptr<DX11, DX11Deleter>& dx, DXGI_FORMAT format)
+    bool ddsImageImpl::SaveImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
     {
         auto fmt = boost::format("Saving DDS with ddsImageImpl file \"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -211,6 +207,7 @@ namespace ninniku
         }
 
         DWORD flags = DirectX::TEX_COMPRESS_DEFAULT;
+        auto bc6hbc7 = false;
 
         // use best compression for BC7
         switch (format) {
@@ -218,13 +215,32 @@ namespace ninniku
             case DXGI_FORMAT_BC7_UNORM:
             case DXGI_FORMAT_BC7_UNORM_SRGB:
                 flags |= DirectX::TEX_COMPRESS_BC7_USE_3SUBSETS;
+                bc6hbc7 = true;
+                break;
+
+            case DXGI_FORMAT_BC6H_TYPELESS:
+            case DXGI_FORMAT_BC6H_UF16:
+            case DXGI_FORMAT_BC6H_SF16:
+                bc6hbc7 = true;
+                break;
         };
 
-        {
+        if (bc6hbc7) {
             LOGD_INDENT_START << "DirectXTex GPU Compression";
             auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
 
             auto hr = DirectX::Compress(dx->GetImpl()->_device.Get(), img, nimg, _meta, format, flags, 1.f, *resImageImpl);
+
+            if (FAILED(hr)) {
+                LOGE << "Failed to compress DDS";
+                return false;
+            }
+
+            LOGD_INDENT_END;
+        } else {
+            LOGD_INDENT_START << "DirectXTex CPU Compression";
+
+            auto hr = DirectX::Compress(img, nimg, _meta, format, flags, DirectX::TEX_THRESHOLD_DEFAULT, *resImageImpl);
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";

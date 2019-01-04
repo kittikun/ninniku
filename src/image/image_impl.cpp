@@ -18,8 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "pch.h"
+#include "image_impl.h"
 
-#include <ninniku/image/image.h>
+#include "../utils/mathUtils.h"
+#include "../utils/log.h"
 
-ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes);
+namespace ninniku
+{
+    const SizeFixResult ImageImpl::IsRequiringFix() const
+    {
+        auto tx = GetWidth();
+        auto ty = GetHeight();
+        auto res = false;
+
+        if (!IsPow2(tx)) {
+            auto fmt = boost::format("Width %1% is not a power of 2") % tx;
+            LOGW << boost::str(fmt);
+
+            tx = NearestPow2Floor(tx);
+            res = true;
+        }
+
+        if (!IsPow2(ty)) {
+            auto fmt = boost::format("Height %1% is not a power of 2") % ty;
+            LOGW << boost::str(fmt);
+
+            ty = NearestPow2Floor(ty);
+            res = true;
+        }
+
+        return std::make_tuple(res, tx, ty);
+    }
+} // namespace ninniku

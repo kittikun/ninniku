@@ -25,9 +25,8 @@
 #include "ninniku/dx11/DX11Types.h"
 #include "ninniku/image/cmft.h"
 
+#include "../dx11/DX11_impl.h"
 #include "../utils/log.h"
-#include "../utils/misc.h"
-#include "../utils/mathUtils.h"
 
 namespace ninniku
 {
@@ -66,7 +65,7 @@ namespace ninniku
         _image.m_dataSize = dstDataSize;
     }
 
-    TextureParam cmftImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    const TextureParam cmftImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
     {
         TextureParam res = {};
 
@@ -85,7 +84,7 @@ namespace ninniku
         return res;
     }
 
-    bool cmftImageImpl::Load(const std::string& path)
+    const bool cmftImageImpl::Load(const std::string& path)
     {
         auto fmt = boost::format("cmftImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -131,7 +130,7 @@ namespace ninniku
         return true;
     }
 
-    void cmftImageImpl::InitializeFromTextureObject(std::unique_ptr<DX11, DX11Deleter>& dx, const std::unique_ptr<TextureObject>& srcTex)
+    void cmftImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         // we want to enforce 1:1 for now
         assert(srcTex->desc.width == srcTex->desc.height);
@@ -172,51 +171,14 @@ namespace ninniku
                 params.srcFace = face;
 
                 auto indexes = dx->CopySubresource(params);
-                auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
+                auto mapped = dx->GetImpl()->MapTexture(readBack, std::get<1>(indexes));
 
                 UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
             }
         }
     }
 
-    /// <summary>
-    /// Check if a cubemap is a power of 2 and return a 2 item tuple
-    /// 0 bool: need fix
-    /// 1 uint32: new face size
-    /// </summary>
-    std::tuple<bool, uint32_t> cmftImageImpl::IsRequiringFix()
-    {
-        auto faceSize = imageGetCubemapFaceSize(_image);
-        auto tx = _image.m_width;
-        auto ty = _image.m_height;
-        auto res = false;
-
-        if (tx != faceSize) {
-            auto fmt = boost::format("Width of %1% does not match face size of %2%, will resize accordingly") % tx % faceSize;
-            LOGW << boost::str(fmt);
-            res = true;
-        }
-
-        if (ty != faceSize) {
-            auto fmt = boost::format("Height of %1% does not match face size of %2%, will resize accordingly") % ty % faceSize;
-            LOGW << boost::str(fmt);
-            res = true;
-        }
-
-        auto isPow2 = IsPow2(faceSize);
-
-        if (!isPow2) {
-            auto fmt = boost::format("Face size %1%x%1% is not a power of 2") % faceSize;
-            LOGW << boost::str(fmt);
-
-            faceSize = NearestPow2Floor(faceSize);
-            res = true;
-        }
-
-        return std::make_tuple(res, faceSize);
-    }
-
-    std::vector<SubresourceParam> cmftImageImpl::GetInitializationData() const
+    const std::vector<SubresourceParam> cmftImageImpl::GetInitializationData() const
     {
         std::array<uint32_t, CUBEMAP_NUM_FACES> offsets;
 
@@ -234,7 +196,7 @@ namespace ninniku
         return res;
     }
 
-    std::tuple<uint8_t*, uint32_t> cmftImageImpl::GetData() const
+    const std::tuple<uint8_t*, uint32_t> cmftImageImpl::GetData() const
     {
         return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
     }
