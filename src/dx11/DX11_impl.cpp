@@ -32,8 +32,7 @@
 #include <comdef.h>
 #include <d3dcompiler.h>
 
-namespace ninniku
-{
+namespace ninniku {
     DX11::DX11()
         : _impl{ new DX11Impl() }
     {
@@ -82,8 +81,8 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     const std::tuple<uint32_t, uint32_t> DX11Impl::CopySubresource(const CopySubresourceParam& params) const
     {
-        uint32_t dstSub = D3D11CalcSubresource(params.dstMip, params.dstFace, params.dst->desc.numMips);
-        uint32_t srcSub = D3D11CalcSubresource(params.srcMip, params.srcFace, params.src->desc.numMips);
+        uint32_t dstSub = D3D11CalcSubresource(params.dstMip, params.dstFace, params.dst->desc->numMips);
+        uint32_t srcSub = D3D11CalcSubresource(params.srcMip, params.srcFace, params.src->desc->numMips);
 
         _context->CopySubresourceRegion(params.dst->texture.Get(), dstSub, 0, 0, 0, params.src->texture.Get(), srcSub, nullptr);
 
@@ -181,28 +180,28 @@ namespace ninniku
             return false;
     }
 
-    const TextureHandle DX11Impl::CreateTexture(const TextureParam& params)
+    TextureHandle DX11Impl::CreateTexture(const TextureParamHandle& params)
     {
-        auto isSRV = (params.viewflags & ETextureViews::TV_SRV) != 0;
-        auto isUAV = (params.viewflags & ETextureViews::TV_UAV) != 0;
-        auto isCPURead = (params.viewflags & ETextureViews::TV_CPU_READ) != 0;
+        auto isSRV = (params->viewflags & ETextureViews::TV_SRV) != 0;
+        auto isUAV = (params->viewflags & ETextureViews::TV_UAV) != 0;
+        auto isCPURead = (params->viewflags & ETextureViews::TV_CPU_READ) != 0;
 
         D3D11_TEXTURE2D_DESC desc = {};
 
-        desc.Width = params.width;
-        desc.Height = params.height;
-        desc.MipLevels = params.numMips;
-        desc.ArraySize = params.arraySize;
-        desc.Format = static_cast<DXGI_FORMAT>(params.format);
+        desc.Width = params->width;
+        desc.Height = params->height;
+        desc.MipLevels = params->numMips;
+        desc.ArraySize = params->arraySize;
+        desc.Format = static_cast<DXGI_FORMAT>(params->format);
         desc.SampleDesc.Count = 1;
 
         std::string usageStr;
 
-        if ((params.imageDatas.size() > 0) && (!isUAV)) {
+        if ((params->imageDatas.size() > 0) && (!isUAV)) {
             // this for original data
             desc.Usage = D3D11_USAGE_IMMUTABLE;
             usageStr = "D3D11_USAGE_IMMUTABLE";
-        } else if ((params.imageDatas.size() == 0) && (isCPURead)) {
+        } else if ((params->imageDatas.size() == 0) && (isCPURead)) {
             // only to read back data to the CPU
             desc.Usage = D3D11_USAGE_STAGING;
             usageStr = "D3D11_USAGE_STAGING";
@@ -211,11 +210,11 @@ namespace ninniku
             usageStr = "D3D11_USAGE_DEFAULT";
         }
 
-        auto fmt = boost::format("Creating Texture2D: Size=%1%x%2%, Mips=%3%, Usage=%4%") % params.width % params.height % params.numMips % usageStr;
+        auto fmt = boost::format("Creating Texture2D: Size=%1%x%2%, Mips=%3%, Usage=%4%") % params->width % params->height % params->numMips % usageStr;
 
         LOGD << boost::str(fmt);
 
-        if (params.arraySize == CUBEMAP_NUM_FACES)
+        if (params->arraySize == CUBEMAP_NUM_FACES)
             desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
         if (isCPURead)
@@ -229,11 +228,11 @@ namespace ninniku
             desc.BindFlags = flags;
         }
 
-        auto numImageImpls = params.imageDatas.size();
+        auto numImageImpls = params->imageDatas.size();
         std::vector<D3D11_SUBRESOURCE_DATA> initialData(numImageImpls);
 
         for (auto i = 0; i < numImageImpls; ++i) {
-            auto& subParam = params.imageDatas[i];
+            auto& subParam = params->imageDatas[i];
 
             initialData[i].pSysMem = subParam.data;
             initialData[i].SysMemPitch = subParam.rowPitch;
@@ -253,12 +252,12 @@ namespace ninniku
         }
 
         if (isSRV) {
-            if (params.arraySize == CUBEMAP_NUM_FACES) {
+            if (params->arraySize == CUBEMAP_NUM_FACES) {
                 // To sample texture as cubemap
                 D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-                srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
-                srvDesc.TextureCube.MipLevels = params.numMips;
+                srvDesc.Format = static_cast<DXGI_FORMAT>(params->format);
+                srvDesc.TextureCube.MipLevels = params->numMips;
                 srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
 
                 hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvCube.GetAddressOf());
@@ -270,11 +269,11 @@ namespace ninniku
                 }
 
                 // To sample texture as array, one for each miplevel
-                res->srvArray.resize(params.numMips);
+                res->srvArray.resize(params->numMips);
 
-                for (uint32_t i = 0; i < params.numMips; ++i) {
+                for (uint32_t i = 0; i < params->numMips; ++i) {
                     srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-                    srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
+                    srvDesc.Format = static_cast<DXGI_FORMAT>(params->format);
                     srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
                     srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
                     srvDesc.Texture2DArray.MostDetailedMip = i;
@@ -293,11 +292,11 @@ namespace ninniku
 
                 // one for array with all mips
                 srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-                srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
+                srvDesc.Format = static_cast<DXGI_FORMAT>(params->format);
                 srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
                 srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
                 srvDesc.Texture2DArray.MostDetailedMip = 0;
-                srvDesc.Texture2DArray.MipLevels = params.numMips;
+                srvDesc.Texture2DArray.MipLevels = params->numMips;
 
                 hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvArrayWithMips.GetAddressOf());
                 if (FAILED(hr)) {
@@ -310,28 +309,28 @@ namespace ninniku
             } else {
                 D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-                srvDesc.Format = static_cast<DXGI_FORMAT>(params.format);
+                srvDesc.Format = static_cast<DXGI_FORMAT>(params->format);
 
-                if (params.arraySize > 1) {
+                if (params->arraySize > 1) {
                     // one for each miplevel
-                    res->srvArray.resize(params.numMips);
+                    res->srvArray.resize(params->numMips);
 
-                    for (uint32_t i = 0; i < params.numMips; ++i) {
-                        if (params.height == 1) {
+                    for (uint32_t i = 0; i < params->numMips; ++i) {
+                        if (params->height == 1) {
                             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1DARRAY;
-                            srvDesc.Texture1DArray.ArraySize = params.arraySize;
+                            srvDesc.Texture1DArray.ArraySize = params->arraySize;
                             srvDesc.Texture1DArray.MostDetailedMip = i;
                             srvDesc.Texture1DArray.MipLevels = 1;
                         } else {
                             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
-                            srvDesc.Texture2DArray.ArraySize = params.arraySize;
+                            srvDesc.Texture2DArray.ArraySize = params->arraySize;
                             srvDesc.Texture2DArray.MostDetailedMip = i;
                             srvDesc.Texture2DArray.MipLevels = 1;
                         }
 
                         hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvArray[i].GetAddressOf());
                         if (FAILED(hr)) {
-                            auto fmt = boost::format("Failed to CreateShaderResourceView with D3D_SRV_DIMENSION for Mip=%1% with Height=%2% with:") % i % params.height;
+                            auto fmt = boost::format("Failed to CreateShaderResourceView with D3D_SRV_DIMENSION for Mip=%1% with Height=%2% with:") % i % params->height;
                             LOGE << boost::str(fmt);
                             _com_error err(hr);
                             LOGE << err.ErrorMessage();
@@ -339,20 +338,20 @@ namespace ninniku
                         }
                     }
                 } else {
-                    if (params.depth > 1) {
+                    if (params->depth > 1) {
                         srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE3D;
-                        srvDesc.Texture3D.MipLevels = params.numMips;
-                    } else if (params.height == 1) {
+                        srvDesc.Texture3D.MipLevels = params->numMips;
+                    } else if (params->height == 1) {
                         srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1D;
-                        srvDesc.Texture1D.MipLevels = params.numMips;
+                        srvDesc.Texture1D.MipLevels = params->numMips;
                     } else {
                         srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
-                        srvDesc.Texture2D.MipLevels = params.numMips;
+                        srvDesc.Texture2D.MipLevels = params->numMips;
                     }
 
                     hr = _device->CreateShaderResourceView(res->texture.Get(), &srvDesc, res->srvDefault.GetAddressOf());
                     if (FAILED(hr)) {
-                        auto fmt = boost::format("Failed to CreateShaderResourceView with: Height=%1%, Depth=%2% with:") % params.height % params.depth;
+                        auto fmt = boost::format("Failed to CreateShaderResourceView with: Height=%1%, Depth=%2% with:") % params->height % params->depth;
                         LOGE << boost::str(fmt);
                         _com_error err(hr);
                         LOGE << err.ErrorMessage();
@@ -363,14 +362,14 @@ namespace ninniku
         }
 
         if (isUAV) {
-            res->uav.resize(params.numMips);
+            res->uav.resize(params->numMips);
 
             // we have to create an UAV for each miplevel
-            for (uint32_t i = 0; i < params.numMips; ++i) {
+            for (uint32_t i = 0; i < params->numMips; ++i) {
                 D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-                uavDesc.Format = static_cast<DXGI_FORMAT>(params.format);
+                uavDesc.Format = static_cast<DXGI_FORMAT>(params->format);
 
-                if (params.arraySize > 1) {
+                if (params->arraySize > 1) {
                     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
                     uavDesc.Texture2DArray.MipSlice = i;
                     uavDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
@@ -414,8 +413,7 @@ namespace ninniku
         static VectorSet<uint32_t, ID3D11UnorderedAccessView*> vmUAV;
         static VectorSet<uint32_t, ID3D11SamplerState*> vmSS;
 
-        auto lambda = [&](auto kvp, auto & container)
-        {
+        auto lambda = [&](auto kvp, auto & container) {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -588,8 +586,7 @@ namespace ninniku
         // Count the number of .cso found
         boost::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const boost::filesystem::directory_entry & d)
-        {
+        auto fileCounter = [&](const boost::filesystem::directory_entry & d) {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 

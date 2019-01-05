@@ -19,8 +19,7 @@ template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
-namespace ninniku
-{
+namespace ninniku {
     using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
@@ -127,7 +126,7 @@ namespace ninniku
         std::vector<DX11UAV> uav;
 
         // Desc that was used to create those resources
-        TextureParam desc;
+        std::shared_ptr<TextureParam> desc;
     };
 
     using TextureHandle = std::unique_ptr<const TextureObject>;

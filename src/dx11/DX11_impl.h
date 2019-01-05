@@ -24,8 +24,7 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11Impl
     {
         // no copy of any kind allowed
@@ -39,7 +38,7 @@ namespace ninniku
 
         const std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
         const DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
-        const TextureHandle CreateTexture(const TextureParam& param);
+        TextureHandle CreateTexture(const TextureParamHandle& param);
         const bool Dispatch(const Command& cmd) const;
         const bool Initialize(const std::string& shaderPath, const bool isWarp);
         const MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);

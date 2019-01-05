@@ -22,8 +22,7 @@
 
 #include "image_Impl.h"
 
-namespace ninniku
-{
+namespace ninniku {
     class pngImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -36,7 +35,7 @@ namespace ninniku
         pngImageImpl() = default;
         ~pngImageImpl();
 
-        const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const override;
         const bool Load(const std::string&) override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
@@ -53,9 +52,12 @@ namespace ninniku
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
 
     private:
+        void ConvertToR11G11B10();
+    private:
         uint32_t _width;
         uint32_t _height;
         uint32_t _bpp;
         uint8_t* _data;
+        std::vector<uint32_t> _convertedData;
     };
 } // namespace ninniku

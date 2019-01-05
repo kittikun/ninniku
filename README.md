@@ -16,6 +16,4 @@ Simple framework to run compute jobs with DX11
   * Captures will be called ninniku_frame0.rdc
 
 #### Usage:
-Shader must be compiled for SM 5.0 and define the "HLSL" preprocessor
-
-Plenty of samples are provided in the form of unit tests
+Look at project simple or there is plenty of samples provided as unit tests

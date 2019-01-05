@@ -79,15 +79,15 @@ BOOST_AUTO_TEST_CASE(cmft_texture_param)
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
-    const auto param = image->CreateTextureParam(ninniku::TV_SRV);
+    auto param = image->CreateTextureParam(ninniku::TV_SRV);
 
-    BOOST_TEST(param.arraySize == 6);
-    BOOST_TEST(param.depth == 1);
-    BOOST_TEST(param.format == DXGI_FORMAT_R32G32B32A32_FLOAT);
-    BOOST_TEST(param.height == 512);
-    BOOST_TEST(param.numMips == 1);
-    BOOST_TEST(param.viewflags == ninniku::TV_SRV);
-    BOOST_TEST(param.width == 512);
+    BOOST_TEST(param->arraySize == 6);
+    BOOST_TEST(param->depth == 1);
+    BOOST_TEST(param->format == DXGI_FORMAT_R32G32B32A32_FLOAT);
+    BOOST_TEST(param->height == 512);
+    BOOST_TEST(param->numMips == 1);
+    BOOST_TEST(param->viewflags == ninniku::TV_SRV);
+    BOOST_TEST(param->width == 512);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_saveImage)
@@ -165,15 +165,15 @@ BOOST_AUTO_TEST_CASE(dds_texture_param)
 
     BOOST_TEST(image->Load("data/Cathedral01.dds"));
 
-    const auto param = image->CreateTextureParam(ninniku::TV_SRV);
+    auto param = image->CreateTextureParam(ninniku::TV_SRV);
 
-    BOOST_TEST(param.arraySize == 6);
-    BOOST_TEST(param.depth == 1);
-    BOOST_TEST(param.format == DXGI_FORMAT_R32G32B32A32_FLOAT);
-    BOOST_TEST(param.height == 512);
-    BOOST_TEST(param.numMips == 1);
-    BOOST_TEST(param.viewflags == ninniku::TV_SRV);
-    BOOST_TEST(param.width == 512);
+    BOOST_TEST(param->arraySize == 6);
+    BOOST_TEST(param->depth == 1);
+    BOOST_TEST(param->format == DXGI_FORMAT_R32G32B32A32_FLOAT);
+    BOOST_TEST(param->height == 512);
+    BOOST_TEST(param->numMips == 1);
+    BOOST_TEST(param->viewflags == ninniku::TV_SRV);
+    BOOST_TEST(param->width == 512);
 }
 
 BOOST_AUTO_TEST_CASE(dds_from_texture_object)
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)
 
     BOOST_TEST(image->Load("data/banner.png"));
 
-    const auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc3)
 
     BOOST_TEST(image->Load("data/Rainbow_to_alpha_gradient.png"));
 
-    const auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
 
     BOOST_TEST(image->Load("data/toshi-1072059-unsplash.png"));
 
-    const auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc6h)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    const auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::ddsImage>();
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc7)
 
     BOOST_TEST(image->Load("data/banner.png"));
 
-    const auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();

@@ -21,10 +21,10 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
-namespace ninniku
-{
+namespace ninniku {
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
     struct TextureObject;
@@ -93,4 +93,6 @@ namespace ninniku
         // one per face/mip/array etc..
         std::vector<SubresourceParam> imageDatas;
     };
+
+    using TextureParamHandle = std::shared_ptr<TextureParam>;
 } // namespace ninniku

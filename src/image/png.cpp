@@ -23,9 +23,8 @@
 
 #include "png_impl.h"
 
-namespace ninniku
-{
-    const TextureParam pngImage::CreateTextureParam(const ETextureViews viewFlags) const
+namespace ninniku {
+    TextureParamHandle pngImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }
