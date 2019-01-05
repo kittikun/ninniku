@@ -37,9 +37,6 @@
     <ClCompile Include="src\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\image\cmft.cpp">
-      <Filter>Source Files\image</Filter>
-    </ClCompile>
     <ClCompile Include="src\image\dds.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
@@ -49,15 +46,35 @@
     <ClCompile Include="src\utils\mathUtils.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\image\png.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\image.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\cmft_impl.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\cmft.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\dds_impl.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\png_impl.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dx11\DX11_impl.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\image_impl.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="src\process.cpp">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="src\process.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\utils\log.h">
@@ -97,6 +114,27 @@
       <Filter>Source Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="include\ninniku\utils.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\image\png.h">
+      <Filter>Include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\cmft_impl.h">
+      <Filter>Source Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\dds_impl.h">
+      <Filter>Source Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\png_impl.h">
+      <Filter>Source Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dx11\DX11_impl.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\image_impl.h">
+      <Filter>Source Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\export.h">
       <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>

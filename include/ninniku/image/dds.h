@@ -20,24 +20,37 @@
 
 #pragma once
 
+#include "../export.h"
 #include "image.h"
-
-#include <DirectXTex.h>
 
 namespace ninniku
 {
-    class ddsImage : public Image
-    {
-    public:
-        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
-        bool Load(const std::string&) override;
-        std::tuple<uint8_t*, uint32_t> GetData() const override;
+    class ddsImageImpl;
 
-    protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
+    class ddsImage final : public Image
+    {
+        // no copy of any kind allowed
+        ddsImage(const ddsImage&) = delete;
+        ddsImage& operator=(ddsImage&) = delete;
+        ddsImage(ddsImage&&) = delete;
+        ddsImage& operator=(ddsImage&&) = delete;
+
+    public:
+        NINNIKU_API ddsImage();
+        NINNIKU_API ~ddsImage();
+
+        NINNIKU_API const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        NINNIKU_API const bool Load(const std::string&) override;
+        NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
+
+        // Used when transfering data back from the GPU
+        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
+
+        NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
+
+        NINNIKU_API bool SaveImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
 
     private:
-        DirectX::TexMetadata _meta;
-        DirectX::ScratchImage _scratch;
+        std::unique_ptr<ddsImageImpl> _impl;
     };
 } // namespace ninniku

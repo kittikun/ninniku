@@ -23,32 +23,33 @@
 
 #include <windows.h>
 
-namespace ninniku {
-std::string wstrToStr(const std::wstring& wstr)
+namespace ninniku
 {
-    std::string res;
+    const std::string wstrToStr(const std::wstring& wstr)
+    {
+        std::string res;
 
-    if (!wstr.empty()) {
-        int needed = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
-        res.resize(needed, 0);
+        if (!wstr.empty()) {
+            int needed = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+            res.resize(needed, 0);
 
-        WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), &res[0], needed, nullptr, nullptr);
+            WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), &res[0], needed, nullptr, nullptr);
+        }
+
+        return res;
     }
 
-    return res;
-}
+    const std::wstring strToWStr(const std::string& str)
+    {
+        std::wstring res;
 
-std::wstring strToWStr(const std::string& str)
-{
-    std::wstring res;
+        if (!str.empty()) {
+            int needed = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), nullptr, 0);
+            res.resize(needed, 0);
 
-    if (!str.empty()) {
-        int needed = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), nullptr, 0);
-        res.resize(needed, 0);
+            MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), &res[0], needed);
+        }
 
-        MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), &res[0], needed);
+        return res;
     }
-
-    return res;
-}
 } // namespace ninniku

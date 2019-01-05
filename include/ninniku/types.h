@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
 namespace ninniku
 {
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
@@ -31,6 +34,12 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct CopySubresourceParam
     {
+        // no copy of any kind allowed
+        CopySubresourceParam(const CopySubresourceParam&) = delete;
+        CopySubresourceParam& operator=(CopySubresourceParam&) = delete;
+        CopySubresourceParam(CopySubresourceParam&&) = delete;
+        CopySubresourceParam& operator=(CopySubresourceParam&&) = delete;
+
         const TextureObject* src;
         uint32_t srcFace;
         uint32_t srcMip;
@@ -53,7 +62,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Shader
     //////////////////////////////////////////////////////////////////////////
-    enum ESamplerState : uint8_t
+    enum class ESamplerState : uint8_t
     {
         SS_Point,
         SS_Linear,

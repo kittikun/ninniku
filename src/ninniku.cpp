@@ -22,20 +22,28 @@
 #include "ninniku/ninniku.h"
 
 #include "ninniku/dx11/DX11.h"
+#include "dx11/DX11_impl.h"
 #include "utils/log.h"
 #include "utils/misc.h"
 
 #if defined(_USE_RENDERDOC)
-#include <renderdoc_app.h>
+#include <renderdoc/renderdoc_app.h>
 #endif
 
 namespace ninniku
 {
-    static std::unique_ptr<DX11> sRenderer;
-
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_1_2* gRenderDocApi = nullptr;
 #endif
+
+    void DX11Deleter::operator()(DX11* value)
+    {
+        Terminate();
+
+        delete value;
+    }
+
+    static DX11Handle sRenderer;
 
 #if defined(_USE_RENDERDOC)
     void LoadRenderDoc()
@@ -61,12 +69,12 @@ namespace ninniku
     }
 #endif
 
-    std::unique_ptr<DX11>& GetRenderer()
+    DX11Handle& GetRenderer()
     {
         return sRenderer;
     }
 
-    bool Initialize(uint8_t renderer, const std::string& shaderPath, uint8_t logLevel)
+    bool Initialize(const ERenderer renderer, const std::string& shaderPath, const ELogLevel logLevel)
     {
         ninniku::Log::Initialize(logLevel);
 
@@ -76,11 +84,11 @@ namespace ninniku
         LoadRenderDoc();
 #endif
 
-        if ((renderer == RENDERER_DX11) || (renderer == RENDERER_WARP)) {
+        if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
             sRenderer.reset(new ninniku::DX11());
 
             // since CI is running test, we must use warp driver
-            if (!sRenderer->Initialize(shaderPath, (renderer == RENDERER_WARP) ? true : false)) {
+            if (!sRenderer->GetImpl()->Initialize(shaderPath, (renderer == ERenderer::RENDERER_WARP) ? true : false)) {
                 LOGE << "DX11App::Initialize failed";
                 return false;
             }
@@ -88,7 +96,7 @@ namespace ninniku
 #if defined(_USE_RENDERDOC)
             if (gRenderDocApi != nullptr) {
                 gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
-                gRenderDocApi->StartFrameCapture(NULL, NULL);
+                gRenderDocApi->StartFrameCapture(nullptr, nullptr);
             }
 #endif
 
@@ -101,8 +109,9 @@ namespace ninniku
     void Terminate()
     {
 #if defined(_USE_RENDERDOC)
-        if (gRenderDocApi != nullptr)
-            gRenderDocApi->EndFrameCapture(NULL, NULL);
+        if (gRenderDocApi != nullptr) {
+            gRenderDocApi->EndFrameCapture(nullptr, nullptr);
+        }
 #endif
     }
 }

@@ -22,7 +22,10 @@
 
 namespace ninniku
 {
-    bool IsPow2(uint32_t x);
-    uint32_t CountMips(uint32_t faceSize);
-    int NearestPow2Floor(int x);
+    const bool IsPow2(const uint32_t x);
+    const uint32_t CountMips(const uint32_t faceSize);
+    const int NearestPow2Floor(const int x);
+
+    const std::wstring strToWStr(const std::string&);
+    const std::string wstrToStr(const std::wstring&);
 } // namespace ninniku

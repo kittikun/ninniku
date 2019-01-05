@@ -18,71 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
+#include "../export.h"
 #include "DX11Types.h"
 
 #include <d3d11shader.h>
 
 namespace ninniku
 {
+    class DX11Impl;
+
     class DX11
     {
+        // no copy of any kind allowed
+        DX11(const DX11&) = delete;
+        DX11& operator=(DX11&) = delete;
+        DX11(DX11&&) = delete;
+        DX11& operator=(DX11&&) = delete;
+
     public:
-        class DebugMarker
-        {
-        public:
-            DebugMarker(const DX11Marker& marker, const std::string& name);
-            ~DebugMarker();
+        NINNIKU_API DX11();
+        NINNIKU_API ~DX11();
 
-        private:
-            DX11Marker _marker;
-        };
+        NINNIKU_API const std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
+        NINNIKU_API const DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
+        NINNIKU_API const TextureHandle CreateTexture(const TextureParam& param);
+        NINNIKU_API const bool Dispatch(const Command& cmd) const;
+        NINNIKU_API const bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
-        class MappedResource
-        {
-        public:
-            MappedResource(const DX11Context& context, const std::unique_ptr<TextureObject>& texObj, uint32_t index);
-            ~MappedResource();
+        NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;
 
-            D3D11_MAPPED_SUBRESOURCE* Get()
-            {
-                return &_mapped;
-            }
-            void* GetData() const
-            {
-                return _mapped.pData;
-            }
-            uint32_t GetRowPitch() const;
-
-        private:
-            const DX11Context& _context;
-            const std::unique_ptr<TextureObject>& _texObj;
-            uint32_t _index;
-            D3D11_MAPPED_SUBRESOURCE _mapped;
-        };
-
-        std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
-        std::unique_ptr<DebugMarker> CreateDebugMarker(const std::string& name) const;
-        std::unique_ptr<TextureObject> CreateTexture(const TextureParam& param);
-        bool Dispatch(const Command& cmd) const;
-        bool Initialize(const std::string& shaderPath, bool isWarp);
-        std::unique_ptr<MappedResource> MapTexture(const std::unique_ptr<TextureObject>& tObj, uint32_t index);
-        bool UpdateConstantBuffer(const std::string& name, void* data, uint32_t size);
-
-        const DX11SamplerState& GetSampler(ESamplerState sampler) const { return _samplers[sampler]; }
+#ifdef NINNIKU_EXPORT
+        DX11Impl* GetImpl() { return _impl.get(); }
+#endif
 
     private:
-        bool CreateDevice(int adapter, ID3D11Device** pDevice);
-        bool GetDXGIFactory(IDXGIFactory1** pFactory);
-        bool LoadShaders(const std::string& shaderPath);
-        std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
-
-    private:
-        DX11Device _device;
-        DX11Context _context;
-        std::unordered_map<std::string, ComputeShader> _shaders;
-        std::unordered_map<std::string, DX11Buffer> _cBuffers;
-        std::array<DX11SamplerState, SS_Count> _samplers;
+        std::unique_ptr<DX11Impl> _impl;
     };
+
+    NINNIKU_API DX11Handle& GetRenderer();
 } // namespace ninniku

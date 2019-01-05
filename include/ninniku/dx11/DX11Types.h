@@ -1,10 +1,23 @@
 #pragma once
 
+#include "../export.h"
 #include "../types.h"
 
 #include <wrl/client.h>
 #include <d3d11_1.h>
+#include <array>
 #include <unordered_map>
+#include <vector>
+
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Buffer>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Device>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture2D>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
 namespace ninniku
 {
@@ -18,8 +31,27 @@ namespace ninniku
     using DX11SRV = Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
     using DX11UAV = Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
+    class DX11;
+
+    struct DX11Deleter
+    {
+        void operator()(DX11* value);
+    };
+
+    using DX11Handle = std::unique_ptr<DX11, DX11Deleter>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Commands
+    //////////////////////////////////////////////////////////////////////////
+
     struct Command
     {
+        // no copy of any kind allowed
+        Command(const Command&) = delete;
+        Command& operator=(Command&) = delete;
+        Command(Command&&) = delete;
+        Command& operator=(Command&&) = delete;
+
         std::string shader;
         std::string cbufferStr;
         std::unordered_map<std::string, DX11SRV> srvBindings;
@@ -28,7 +60,27 @@ namespace ninniku
         std::array<uint32_t, 3> dispatch;
     };
 
-    struct TextureObject;
+    //////////////////////////////////////////////////////////////////////////
+    // Debug
+    //////////////////////////////////////////////////////////////////////////
+
+    class NINNIKU_API DebugMarker
+    {
+        // no copy of any kind allowed
+        DebugMarker(const DebugMarker&) = delete;
+        DebugMarker& operator=(DebugMarker&) = delete;
+        DebugMarker(DebugMarker&&) = delete;
+        DebugMarker& operator=(DebugMarker&&) = delete;
+
+    public:
+        DebugMarker(const DX11Marker& marker, const std::string& name);
+        ~DebugMarker();
+
+    private:
+        DX11Marker _marker;
+    };
+
+    using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
 
     //////////////////////////////////////////////////////////////////////////
     // Shader
@@ -36,6 +88,12 @@ namespace ninniku
 
     struct ComputeShader
     {
+        // only allows rvalue construction (to std::pair)
+        ComputeShader(ComputeShader&&) = default;
+        ComputeShader(const ComputeShader&) = delete;
+        ComputeShader& operator=(ComputeShader&) = delete;
+        ComputeShader& operator=(ComputeShader&&) = delete;
+
         DX11CS shader;
         std::unordered_map<std::string, uint32_t> bindSlots;
     };
@@ -43,9 +101,16 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
-
     struct TextureObject
     {
+        // no copy of any kind allowed
+        TextureObject(const TextureObject&) = delete;
+        TextureObject& operator=(TextureObject&) = delete;
+        TextureObject(TextureObject&&) = delete;
+        TextureObject& operator=(TextureObject&&) = delete;
+
+        TextureObject() = default;
+
         DX11Tex2D texture;
 
         DX11SRV srvDefault;
@@ -64,4 +129,35 @@ namespace ninniku
         // Desc that was used to create those resources
         TextureParam desc;
     };
+
+    using TextureHandle = std::unique_ptr<const TextureObject>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // GPU to CPU readback
+    //////////////////////////////////////////////////////////////////////////
+
+    class MappedResource
+    {
+        // no copy of any kind allowed
+        MappedResource(const MappedResource&) = delete;
+        MappedResource& operator=(MappedResource&) = delete;
+        MappedResource(MappedResource&&) = delete;
+        MappedResource& operator=(MappedResource&&) = delete;
+
+    public:
+        MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);
+        ~MappedResource();
+
+        D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
+        void* GetData() const { return _mapped.pData; }
+        const uint32_t GetRowPitch() const;
+
+    private:
+        const DX11Context& _context;
+        const TextureHandle& _texObj;
+        const uint32_t _index;
+        D3D11_MAPPED_SUBRESOURCE _mapped;
+    };
+
+    using MappedResourceHandle = std::unique_ptr<const MappedResource>;
 } // namespace ninniku

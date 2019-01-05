@@ -27,11 +27,11 @@ SamplerState ssLinear;
 [numthreads(RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_Z)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
-    float w, dummy1, dummy2;
+    float w, h, dummy2;
 
-    dstTex.GetDimensions(w, dummy1, dummy2);
+    dstTex.GetDimensions(w, h, dummy2);
 
-    float2 uv = (float2)rcp(w) * (float2(DTI.xy) + (float2)0.5);
+    float2 uv = rcp(float2(w, h)) * (float2(DTI.xy) + (float2)0.5);
 
     dstTex[DTI] = srcTex.SampleLevel(ssLinear, float3(uv, DTI.z), 0);
 }

@@ -19,89 +19,39 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "ninniku/image/dds.h"
+#include "ninniku/Image/dds.h"
 
-#include "../utils/log.h"
-#include "../utils/misc.h"
+#include "dds_impl.h"
 
 namespace ninniku
 {
-    TextureParam ddsImage::CreateTextureParam(uint8_t viewFlags) const
+    const TextureParam ddsImage::CreateTextureParam(const ETextureViews viewFlags) const
     {
-        TextureParam res = {};
-
-        res.arraySize = static_cast<uint32_t>(_meta.arraySize);
-        res.depth = static_cast<uint32_t>(_meta.depth);
-        res.format = static_cast<uint32_t>(_meta.format);
-        res.width = static_cast<uint32_t>(_meta.width);
-        res.height = static_cast<uint32_t>(_meta.height);
-        res.imageDatas = GetInitializationData();
-        res.numMips = static_cast<uint32_t>(_meta.mipLevels);
-        res.viewflags = viewFlags;
-
-        return res;
+        return _impl->CreateTextureParam(viewFlags);
     }
 
-    std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
+    const bool ddsImage::Load(const std::string& path)
     {
-        return std::make_tuple(_scratch.GetPixels(), static_cast<uint32_t>(_scratch.GetPixelsSize()));
+        return _impl->Load(path);
     }
 
-    std::vector<SubresourceParam> ddsImage::GetInitializationData() const
+    const std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
     {
-        if (_meta.IsVolumemap()) {
-            LOGE << "Texture3D are now supported for now";
-
-            return std::vector<SubresourceParam>();
-        }
-
-        // texture1D or 2D
-        std::vector<SubresourceParam> res(_meta.arraySize * _meta.mipLevels);
-
-        size_t idx = 0;
-
-        for (size_t item = 0; item < _meta.arraySize; ++item) {
-            for (size_t level = 0; level < _meta.mipLevels; ++level) {
-                size_t index = _meta.ComputeIndex(level, item, 0);
-                auto& img = _scratch.GetImages()[index];
-
-                res[idx].data = img.pixels;
-                res[idx].rowPitch = static_cast<uint32_t>(img.rowPitch);
-                res[idx].depthPitch = static_cast<uint32_t>(img.slicePitch);
-                ++idx;
-            }
-        }
-
-        return res;
+        return _impl->GetData();
     }
 
-    bool ddsImage::Load(const std::string& path)
+    void ddsImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
-        auto wPath = strToWStr(path);
+        return _impl->InitializeFromTextureObject(dx, srcTex);
+    }
 
-        HRESULT hr = GetMetadataFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, _meta);
-        if (FAILED(hr)) {
-            auto fmt = boost::format("Could not load metadata for DDS file %1%") % path;
-            LOGE << boost::str(fmt);
-            return false;
-        }
+    const SizeFixResult ddsImage::IsRequiringFix() const
+    {
+        return _impl->IsRequiringFix();
+    }
 
-        if (_meta.miscFlags & DirectX::TEX_MISC_TEXTURECUBE) {
-            LOGW << "Loading cubemap from DDS, if you want to process it, please use cmft";
-        }
-
-        if ((_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE3D) && (_meta.arraySize > 1)) {
-            LOGE << "Texture3DArray cannot be loaded";
-            return false;
-        }
-
-        hr = LoadFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, &_meta, _scratch);
-        if (FAILED(hr)) {
-            auto fmt = boost::format("Failed to load DDS file %1%") % path;
-            LOGE << boost::str(fmt);
-            return false;
-        }
-
-        return true;
+    bool ddsImage::SaveImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
+    {
+        return _impl->SaveImage(path, dx, format);
     }
 } // namespace ninniku

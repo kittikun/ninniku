@@ -24,36 +24,37 @@
 #include <cassert>
 
 namespace ninniku {
-bool IsPow2(uint32_t x)
-{
-    return ((x != 0) && !(x & (x - 1)));
-}
-
-uint32_t CountMips(uint32_t faceSize)
-{
-    uint32_t mipLevels = 1;
-
-    while (faceSize > 1) {
-        if (faceSize > 1)
-            faceSize >>= 1;
-
-        ++mipLevels;
+    const bool IsPow2(const uint32_t x) noexcept
+    {
+        return ((x != 0) && !(x & (x - 1)));
     }
 
-    return mipLevels;
-}
+    const uint32_t CountMips(const uint32_t faceSize) noexcept
+    {
+        uint32_t mipLevels = 1;
+        auto face = faceSize;
 
-int NearestPow2Floor(int x)
-{
-    int res = 1;
+        while (face > 1) {
+            if (face > 1)
+                face >>= 1;
 
-    while (res < x)
-        res = res << 1;
+            ++mipLevels;
+        }
 
-    res = res >> 1;
+        return mipLevels;
+    }
 
-    assert(res > 0);
+    const int NearestPow2Floor(const int x)
+    {
+        int res = 1;
 
-    return res;
-}
+        while (res < x)
+            res = res << 1;
+
+        res = res >> 1;
+
+        assert(res > 0);
+
+        return res;
+    }
 } // namespace ninniku

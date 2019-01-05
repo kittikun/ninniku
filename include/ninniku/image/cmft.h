@@ -20,39 +20,41 @@
 
 #pragma once
 
+#include "../export.h"
 #include "image.h"
-
-#include <cmft/image.h>
 
 namespace ninniku
 {
-    class cmftImage : public Image
+    class cmftImageImpl;
+
+    class cmftImage final : public Image
     {
+        // no copy of any kind allowed
+        cmftImage(const cmftImage&) = delete;
+        cmftImage& operator=(cmftImage&) = delete;
+        cmftImage(cmftImage&&) = delete;
+        cmftImage& operator=(cmftImage&&) = delete;
+
     public:
-        cmftImage() = default;
-        cmftImage(uint32_t width, uint32_t height, uint32_t numMips);
+        NINNIKU_API cmftImage();
+        NINNIKU_API ~cmftImage();
 
-        ~cmftImage();
+        NINNIKU_API const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        NINNIKU_API const bool Load(const std::string&) override;
+        NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
-        TextureParam CreateTextureParam(uint8_t viewFlags) const override;
-        bool Load(const std::string&) override;
-        std::tuple<uint8_t*, uint32_t> GetData() const override;
+        // Used when transfering data back from the GPU
+        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
-        std::tuple<bool, uint32_t> IsRequiringFix();
+        NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
-        void ResizeImage(uint32_t size);
-        void UpdateSubImage(uint32_t dstFace, uint32_t dstMip, uint8_t* newData, uint32_t newRowPitch);
+        // Save Image as DDS R32G32B32A32_FLOAT
+        NINNIKU_API bool SaveImage(const std::string&);
 
-        void SaveImage(const std::string&);
-        void SaveImageFaceList(const std::string&);
-
-    protected:
-        std::vector<SubresourceParam> GetInitializationData() const override;
+        // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
+        NINNIKU_API bool SaveImageFaceList(const std::string&);
 
     private:
-        void AllocateMemory();
-
-    private:
-        cmft::Image _image;
+        std::unique_ptr<cmftImageImpl> _impl;
     };
 } // namespace ninniku

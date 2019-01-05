@@ -36,17 +36,16 @@ namespace keywords = boost::log::keywords;
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
 
-namespace ninniku
-{
-    namespace Log
-    {
-        BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", ELogLevel);
+namespace ninniku {
+    namespace Log {
+        BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", BoostLogLevel);
 
         //////////////////////////////////////////////////////////////////////////
         /// Indentation manager
         //////////////////////////////////////////////////////////////////////////
         class LogContext
         {
+            // no copy of any kind allowed
             LogContext(const LogContext&) = delete;
             LogContext& operator=(const LogContext&) = delete;
             LogContext(LogContext&&) = delete;
@@ -70,22 +69,29 @@ namespace ninniku
         //////////////////////////////////////////////////////////////////////////
         class ColorConsoleSink : public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::synchronized_feeding>
         {
+            // no copy of any kind allowed
+            ColorConsoleSink(const ColorConsoleSink&) = delete;
+            ColorConsoleSink& operator=(const ColorConsoleSink&) = delete;
+            ColorConsoleSink(ColorConsoleSink&&) = delete;
+            ColorConsoleSink& operator=(ColorConsoleSink&&) = delete;
+
         public:
+            ColorConsoleSink() = default;
+
             static void consume(boost::log::record_view const& rec, string_type const& formatted_string)
             {
-                auto getColor = [](ELogLevel level)
-                {
+                auto getColor = [](BoostLogLevel level) {
                     // default is white
                     WORD res = 7;
 
                     switch (level) {
-                        case ELogLevel::Log_DX:
+                        case BoostLogLevel::Log_DX:
                             res = 11;
                             break;
-                        case ELogLevel::Log_Warning:
+                        case BoostLogLevel::Log_Warning:
                             res = 10;  // green
                             break;
-                        case ELogLevel::Log_Error:
+                        case BoostLogLevel::Log_Error:
                             res = 12;  // red
                             break;
                     }
@@ -107,11 +113,11 @@ namespace ninniku
 
         //////////////////////////////////////////////////////////////////////////
 
-        std::ostream& operator<<(std::ostream& strm, ELogLevel level)
+        std::ostream& operator<<(std::ostream& strm, BoostLogLevel level)
         {
             constexpr const char* strings[] = {
-                "core",
                 "dx11",
+                "core",
                 "warn",
                 "ERRO"
             };
@@ -124,7 +130,7 @@ namespace ninniku
             return strm;
         }
 
-        void Initialize(uint8_t level)
+        void Initialize(const ELogLevel level)
         {
             if (sLogInitizalized)
                 return;
@@ -151,17 +157,17 @@ namespace ninniku
             auto core = logging::core::get();
 
             switch (level) {
-                case LL_NONE:
+                case ELogLevel::LL_NONE:
                     colorSink->set_filter(severity > Log_Error);
                     debugSink->set_filter(severity > Log_Error);
                     break;
 
-                case LL_NORMAL:
+                case ELogLevel::LL_NORMAL:
                     colorSink->set_filter(severity > Log_DX);
                     debugSink->set_filter(severity > Log_DX);
                     break;
 
-                case LL_WARN_ERROR:
+                case ELogLevel::LL_WARN_ERROR:
                     colorSink->set_filter(severity > Log_Core);
                     debugSink->set_filter(severity > Log_Core);
                     break;
