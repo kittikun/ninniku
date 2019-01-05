@@ -239,7 +239,7 @@ namespace ninniku {
             initialData[i].SysMemSlicePitch = subParam.depthPitch;
         }
 
-        auto res = std::make_unique<TextureObject>();
+        auto res = new TextureObject();
 
         res->desc = params;
 
@@ -388,7 +388,7 @@ namespace ninniku {
             }
         }
 
-        return res;
+        return TextureHandle(res);
     }
 
     const bool DX11Impl::Dispatch(const Command& cmd) const

@@ -126,7 +126,7 @@ namespace ninniku {
         std::vector<DX11UAV> uav;
 
         // Desc that was used to create those resources
-        std::shared_ptr<TextureParam> desc;
+        std::shared_ptr<const TextureParam> desc;
     };
 
     using TextureHandle = std::unique_ptr<const TextureObject>;

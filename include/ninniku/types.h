@@ -94,5 +94,5 @@ namespace ninniku {
         std::vector<SubresourceParam> imageDatas;
     };
 
-    using TextureParamHandle = std::shared_ptr<TextureParam>;
+    using TextureParamHandle = std::shared_ptr<const TextureParam>;
 } // namespace ninniku
