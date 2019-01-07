@@ -48,10 +48,10 @@ namespace ninniku {
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        NINNIKU_API bool SaveImage(const std::string&);
+        NINNIKU_API bool SaveImageCubemap(const std::string&, uint32_t format);
 
         // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        NINNIKU_API bool SaveImageFaceList(const std::string&);
+        NINNIKU_API bool SaveImageFaceList(const std::string&, uint32_t format);
 
     private:
         std::unique_ptr<cmftImageImpl> _impl;

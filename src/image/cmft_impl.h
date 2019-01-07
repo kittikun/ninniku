@@ -45,10 +45,10 @@ namespace ninniku {
         void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        bool SaveImage(const std::string&);
+        bool SaveImageCubemap(const std::string&, uint32_t format);
 
         // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        bool SaveImageFaceList(const std::string&);
+        bool SaveImageFaceList(const std::string&, uint32_t format);
 
     protected:
         const uint32_t GetHeight() const override { return _image.m_height; }
@@ -58,6 +58,7 @@ namespace ninniku {
 
     private:
         void AllocateMemory();
+        bool SaveImage(const std::string& path, uint32_t format, uint32_t type);
 
     private:
         cmft::Image _image;

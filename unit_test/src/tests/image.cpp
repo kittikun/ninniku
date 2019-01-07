@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    BOOST_TEST(image->SaveImage("cmft_saveImage"));
+    BOOST_TEST(image->SaveImageCubemap("cmft_saveImage", DXGI_FORMAT_R32G32B32A32_FLOAT));
 
     auto basePath(boost::filesystem::current_path());
     auto path = basePath / "cmft_saveImage.dds";
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    BOOST_TEST(image->SaveImageFaceList("cmft_saveImageFace"));
+    BOOST_TEST(image->SaveImageFaceList("cmft_saveImageFace", DXGI_FORMAT_R32G32B32A32_FLOAT));
 
     std::array<std::string, ninniku::CUBEMAP_NUM_FACES> suffixes = { "negx", "negy", "negz", "posx", "posy", "posz" };
     std::array<uint64_t, ninniku::CUBEMAP_NUM_FACES * 2> hashes = {

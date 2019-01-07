@@ -49,13 +49,13 @@ namespace ninniku {
         return _impl->IsRequiringFix();
     }
 
-    bool cmftImage::SaveImage(const std::string& path)
+    bool cmftImage::SaveImageCubemap(const std::string& path, uint32_t format)
     {
-        return _impl->SaveImage(path);
+        return _impl->SaveImageCubemap(path, format);
     }
 
-    bool cmftImage::SaveImageFaceList(const std::string& path)
+    bool cmftImage::SaveImageFaceList(const std::string& path, uint32_t format)
     {
-        return _impl->SaveImageFaceList(path);
+        return _impl->SaveImageFaceList(path, format);
     }
 }

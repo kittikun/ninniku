@@ -200,20 +200,32 @@ namespace ninniku {
         return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
     }
 
-    bool cmftImageImpl::SaveImage(const std::string& path)
+    bool cmftImageImpl::SaveImage(const std::string& path, uint32_t format, uint32_t type)
     {
-        auto fmt = boost::format("Saving DDS with cmftImageImpl file \"%1%\"") % path;
-        LOG << boost::str(fmt);
+        uint32_t cmftFormat;
 
-        return cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, cmft::OutputType::Enum::Cubemap, cmft::TextureFormat::Enum::RGBA32F, true);
+        if (format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
+            cmftFormat = cmft::TextureFormat::Enum::RGBA32F;
+        } else if (format == DXGI_FORMAT_R8G8B8A8_UNORM) {
+            cmftFormat = cmft::TextureFormat::Enum::BGRA8;
+        } else {
+            LOGE << "SaveImage* format only supports DXGI_FORMAT_R32G32B32A32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM";
+            return false;
+        }
+
+        cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, static_cast<cmft::OutputType::Enum>(type), static_cast<cmft::TextureFormat::Enum>(cmftFormat), true);
+
+        return true;
     }
 
-    bool cmftImageImpl::SaveImageFaceList(const std::string& path)
+    bool cmftImageImpl::SaveImageCubemap(const std::string& path, uint32_t format)
     {
-        auto fmt = boost::format("Saving DDS face list with cmftImageImpl files \"%1%\"") % path;
-        LOG << boost::str(fmt);
+        return SaveImage(path, format, cmft::OutputType::Enum::Cubemap);
+    }
 
-        return cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, cmft::OutputType::Enum::FaceList, cmft::TextureFormat::Enum::RGBA32F, true);
+    bool cmftImageImpl::SaveImageFaceList(const std::string& path, uint32_t format)
+    {
+        return SaveImage(path, format, cmft::OutputType::Enum::FaceList);
     }
 
     void cmftImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)

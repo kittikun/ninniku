@@ -20,12 +20,13 @@
 
 #pragma once
 
-namespace ninniku
-{
-    const bool IsPow2(const uint32_t x);
-    const uint32_t CountMips(const uint32_t faceSize);
-    const int NearestPow2Floor(const int x);
+#include "export.h"
 
-    const std::wstring strToWStr(const std::string&);
-    const std::string wstrToStr(const std::wstring&);
+namespace ninniku {
+    NINNIKU_API const bool IsPow2(const uint32_t x);
+    NINNIKU_API const uint32_t CountMips(const uint32_t faceSize);
+    NINNIKU_API const int NearestPow2Floor(const int x);
+
+    NINNIKU_API const std::wstring strToWStr(const std::string&);
+    NINNIKU_API const std::string wstrToStr(const std::wstring&);
 } // namespace ninniku
