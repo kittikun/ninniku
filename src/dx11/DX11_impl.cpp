@@ -32,7 +32,8 @@
 #include <comdef.h>
 #include <d3dcompiler.h>
 
-namespace ninniku {
+namespace ninniku
+{
     DX11::DX11()
         : _impl{ new DX11Impl() }
     {
@@ -73,13 +74,13 @@ namespace ninniku {
         _context->Unmap(_texObj->texture.Get(), _index);
     }
 
-    const uint32_t MappedResource::GetRowPitch() const
+    uint32_t MappedResource::GetRowPitch() const
     {
         return _mapped.RowPitch;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const std::tuple<uint32_t, uint32_t> DX11Impl::CopySubresource(const CopySubresourceParam& params) const
+    std::tuple<uint32_t, uint32_t> DX11Impl::CopySubresource(const CopySubresourceParam& params) const
     {
         uint32_t dstSub = D3D11CalcSubresource(params.dstMip, params.dstFace, params.dst->desc->numMips);
         uint32_t srcSub = D3D11CalcSubresource(params.srcMip, params.srcFace, params.src->desc->numMips);
@@ -89,7 +90,7 @@ namespace ninniku {
         return std::make_tuple(srcSub, dstSub);
     }
 
-    const DebugMarkerHandle DX11Impl::CreateDebugMarker(const std::string& name) const
+    DebugMarkerHandle DX11Impl::CreateDebugMarker(const std::string& name) const
     {
         DX11Marker marker;
 #ifdef _USE_RENDERDOC
@@ -100,7 +101,7 @@ namespace ninniku {
         return std::make_unique<DebugMarker>(marker, name);
     }
 
-    const bool DX11Impl::CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
+    bool DX11Impl::CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
     {
         LOGD << "Creating ID3D11Device..";
 
@@ -391,7 +392,7 @@ namespace ninniku {
         return TextureHandle(res);
     }
 
-    const bool DX11Impl::Dispatch(const Command& cmd) const
+    bool DX11Impl::Dispatch(const Command& cmd) const
     {
         auto found = _shaders.find(cmd.shader);
 
@@ -413,7 +414,8 @@ namespace ninniku {
         static VectorSet<uint32_t, ID3D11UnorderedAccessView*> vmUAV;
         static VectorSet<uint32_t, ID3D11SamplerState*> vmSS;
 
-        auto lambda = [&](auto kvp, auto & container) {
+        auto lambda = [&](auto kvp, auto & container)
+        {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -483,7 +485,7 @@ namespace ninniku {
         return true;
     }
 
-    const bool DX11Impl::GetDXGIFactory(IDXGIFactory1** pFactory)
+    bool DX11Impl::GetDXGIFactory(IDXGIFactory1** pFactory)
     {
         if (!pFactory)
             return false;
@@ -508,7 +510,7 @@ namespace ninniku {
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
-    const bool DX11Impl::Initialize(const std::string& shaderPath, const bool isWarp)
+    bool DX11Impl::Initialize(const std::string& shaderPath, const bool isWarp)
     {
         auto adapter = 0;
 
@@ -560,7 +562,7 @@ namespace ninniku {
         return true;
     }
 
-    const MappedResourceHandle DX11Impl::MapTexture(const TextureHandle& tObj, const uint32_t index)
+    MappedResourceHandle DX11Impl::MapTexture(const TextureHandle& tObj, const uint32_t index)
     {
         auto res = std::make_unique<MappedResource>(_context, tObj, index);
 
@@ -579,14 +581,15 @@ namespace ninniku {
     /// <summary>
     /// Load all shaders in /data
     /// </summary>
-    const bool DX11Impl::LoadShaders(const std::string& shaderPath)
+    bool DX11Impl::LoadShaders(const std::string& shaderPath)
     {
         std::string ext{ ".cso" };
 
         // Count the number of .cso found
         boost::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const boost::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const boost::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 
@@ -665,7 +668,7 @@ namespace ninniku {
         return true;
     }
 
-    const std::unordered_map<std::string, uint32_t> DX11Impl::ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection)
+    std::unordered_map<std::string, uint32_t> DX11Impl::ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection)
     {
         std::unordered_map<std::string, uint32_t> resMap;
 
@@ -709,7 +712,7 @@ namespace ninniku {
         return resMap;
     }
 
-    const bool DX11Impl::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
+    bool DX11Impl::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
     {
         auto found = _cBuffers.find(name);
 

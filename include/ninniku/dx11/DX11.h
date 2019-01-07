@@ -23,7 +23,8 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11Impl;
 
     class DX11
@@ -38,11 +39,11 @@ namespace ninniku {
         NINNIKU_API DX11();
         NINNIKU_API ~DX11();
 
-        NINNIKU_API const std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
-        NINNIKU_API const DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
+        NINNIKU_API std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
+        NINNIKU_API DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
         NINNIKU_API TextureHandle CreateTexture(const TextureParamHandle& param);
-        NINNIKU_API const bool Dispatch(const Command& cmd) const;
-        NINNIKU_API const bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
+        NINNIKU_API bool Dispatch(const Command& cmd) const;
+        NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
         NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;
 

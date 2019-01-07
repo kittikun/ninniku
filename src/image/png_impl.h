@@ -22,7 +22,8 @@
 
 #include "image_Impl.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class pngImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -35,7 +36,7 @@ namespace ninniku {
         pngImageImpl() = default;
         ~pngImageImpl();
 
-        TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const override;
+        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         const bool Load(const std::string&) override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 

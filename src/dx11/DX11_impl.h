@@ -24,7 +24,8 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11Impl
     {
         // no copy of any kind allowed
@@ -36,21 +37,21 @@ namespace ninniku {
     public:
         DX11Impl() = default;
 
-        const std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
-        const DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
+        std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
+        DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
         TextureHandle CreateTexture(const TextureParamHandle& param);
-        const bool Dispatch(const Command& cmd) const;
-        const bool Initialize(const std::string& shaderPath, const bool isWarp);
-        const MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
-        const bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
+        bool Dispatch(const Command& cmd) const;
+        bool Initialize(const std::string& shaderPath, const bool isWarp);
+        MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
+        bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
         const DX11SamplerState& GetSampler(ESamplerState sampler) const { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)]; }
 
     private:
-        const bool CreateDevice(int adapter, ID3D11Device** pDevice);
-        const bool GetDXGIFactory(IDXGIFactory1** pFactory);
-        const bool LoadShaders(const std::string& shaderPath);
-        const std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
+        bool CreateDevice(int adapter, ID3D11Device** pDevice);
+        bool GetDXGIFactory(IDXGIFactory1** pFactory);
+        bool LoadShaders(const std::string& shaderPath);
+        std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
 
     private:
         DX11Device _device;

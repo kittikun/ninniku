@@ -71,5 +71,8 @@
     <FxCompile Include="src\shaders\resize.hlsl">
       <Filter>Source Files\shaders</Filter>
     </FxCompile>
+    <FxCompile Include="src\shaders\packNormals.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

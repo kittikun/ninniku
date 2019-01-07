@@ -23,8 +23,9 @@
 
 #include "dds_impl.h"
 
-namespace ninniku {
-    TextureParamHandle ddsImage::CreateTextureParam(const ETextureViews viewFlags) const
+namespace ninniku
+{
+    TextureParamHandle ddsImage::CreateTextureParam(const uint8_t viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }

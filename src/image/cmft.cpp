@@ -23,8 +23,9 @@
 
 #include "cmft_impl.h"
 
-namespace ninniku {
-    TextureParamHandle cmftImage::CreateTextureParam(const ETextureViews viewFlags) const
+namespace ninniku
+{
+    TextureParamHandle cmftImage::CreateTextureParam(const uint8_t viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }

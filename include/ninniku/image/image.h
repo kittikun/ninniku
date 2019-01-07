@@ -23,7 +23,8 @@
 #include "../types.h"
 #include "../dx11/DX11Types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     using SizeFixResult = std::tuple<bool, uint32_t, uint32_t>;
 
     class Image
@@ -39,7 +40,7 @@ namespace ninniku {
         virtual ~Image() = default;
 
         virtual const bool Load(const std::string&) = 0;
-        virtual TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const = 0;
+        virtual TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const = 0;
 
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 

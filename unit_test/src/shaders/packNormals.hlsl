@@ -18,15 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-Texture2D<float2> srcTex;
-RWTexture2D<float3> dstTex;
+#include "utility.hlsl"
+
+Texture2D<float3> srcTex;
+RWTexture2D<float2> dstTex;
 
 [numthreads(32, 32, 1)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
-    //float2 d = mad(srcTex[DTI.xy], 2.0, -1.0);
-    float2 d = srcTex[DTI.xy];
-    float z = z = sqrt(1 - (d.x * d.x) - (d.y * d.y));
-
-    dstTex[DTI.xy] = mad(float3(d, z), 0.5, 0.5);
+    dstTex[DTI.xy] = packNormal(srcTex[DTI.xy]);
 }

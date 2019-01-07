@@ -28,7 +28,8 @@
 #include "../dx11/DX11_impl.h"
 #include "../utils/log.h"
 
-namespace ninniku {
+namespace ninniku
+{
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -64,7 +65,7 @@ namespace ninniku {
         _image.m_dataSize = dstDataSize;
     }
 
-    TextureParamHandle cmftImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    TextureParamHandle cmftImageImpl::CreateTextureParam(const uint8_t viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 

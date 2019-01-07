@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../shaders/cbuffers.h"
 #include "../check.h"
 #include "../common.h"
 
@@ -96,10 +97,12 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    BOOST_TEST(image->SaveImageCubemap("cmft_saveImage", DXGI_FORMAT_R32G32B32A32_FLOAT));
+    std::string filename = "cmft_saveImage.dds";
+
+    BOOST_TEST(image->SaveImageCubemap(filename, DXGI_FORMAT_R32G32B32A32_FLOAT));
 
     auto basePath(boost::filesystem::current_path());
-    auto path = basePath / "cmft_saveImage.dds";
+    auto path = basePath / filename;
 
     BOOST_TEST(boost::filesystem::exists(path));
 
@@ -205,15 +208,16 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix);
-
     auto res = std::make_unique<ninniku::ddsImage>();
 
     res->InitializeFromTextureObject(dx, resized);
 
-    BOOST_TEST(res->SaveImage("dds_saveImage_bc1.dds", dx, DXGI_FORMAT_BC1_UNORM));
+    std::string filename = "dds_saveImage_bc1.dds";
+
+    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC1_UNORM));
 
     auto basePath(boost::filesystem::current_path());
-    auto path = basePath / "dds_saveImage_bc1.dds";
+    auto path = basePath / filename;
 
     BOOST_TEST(boost::filesystem::exists(path));
 
@@ -231,15 +235,16 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc3)
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix);
-
     auto res = std::make_unique<ninniku::ddsImage>();
 
     res->InitializeFromTextureObject(dx, resized);
 
-    BOOST_TEST(res->SaveImage("dds_saveImage_bc3.dds", dx, DXGI_FORMAT_BC3_UNORM));
+    std::string filename = "dds_saveImage_bc3.dds";
+
+    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC3_UNORM));
 
     auto basePath(boost::filesystem::current_path());
-    auto path = basePath / "dds_saveImage_bc3.dds";
+    auto path = basePath / filename;
 
     BOOST_TEST(boost::filesystem::exists(path));
 
@@ -257,15 +262,16 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix);
-
     auto res = std::make_unique<ninniku::ddsImage>();
 
     res->InitializeFromTextureObject(dx, resized);
 
-    BOOST_TEST(res->SaveImage("dds_saveImage_bc4.dds", dx, DXGI_FORMAT_BC4_UNORM));
+    std::string filename = "dds_saveImage_bc3.dds";
+
+    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC4_UNORM));
 
     auto basePath(boost::filesystem::current_path());
-    auto path = basePath / "dds_saveImage_bc4.dds";
+    auto path = basePath / filename;
 
     BOOST_TEST(boost::filesystem::exists(path));
 
@@ -274,6 +280,58 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
     CheckFileMD5(path, 0x397286da7060fabd, 0xb36a91e9ee1c3620);
 #else
     CheckFileMD5(path, 0x7131b97822cbd2e5, 0x9b68b7bc18d5a9fe);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(dds_saveImage_bc5)
+{
+    auto image = std::make_unique<ninniku::pngImage>();
+
+    image->Load("data/CC0-compressed-rock-NRM.png");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+
+    // normal to derivative
+    auto dstParam = std::make_shared<ninniku::TextureParam>();
+    dstParam->width = srcParam->width;
+    dstParam->height = srcParam->height;
+    dstParam->depth = srcParam->depth;
+    dstParam->format = DXGI_FORMAT_R8G8_UNORM;
+    dstParam->numMips = srcParam->numMips;
+    dstParam->arraySize = srcParam->arraySize;
+    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+
+    auto dst = dx->CreateTexture(dstParam);
+
+    // dispatch
+    ninniku::Command cmd = {};
+    cmd.shader = "packNormals";
+    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
+    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+
+    cmd.dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
+    cmd.dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
+    cmd.dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
+
+    dx->Dispatch(cmd);
+
+    auto res = std::make_unique<ninniku::ddsImage>();
+    std::string filename = "dds_saveImage_bc5.dds";
+
+    res->InitializeFromTextureObject(dx, dst);
+    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
+
+    auto basePath(boost::filesystem::current_path());
+    auto path = basePath / filename;
+
+    BOOST_TEST(boost::filesystem::exists(path));
+
+#ifdef _DEBUG
+    CheckFileMD5(path, 0x761f2459eea31240, 0x37acb8698b047512);
+#else
+    CheckFileMD5(path, 0xeb0ad4d69515c34d, 0xdbf59283e822f1db);
 #endif
 }
 
@@ -289,10 +347,13 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc6h)
     auto res = std::make_unique<ninniku::ddsImage>();
 
     res->InitializeFromTextureObject(dx, srcTex);
-    BOOST_TEST(res->SaveImage("dds_saveImage_bc6h.dds", dx, DXGI_FORMAT_BC6H_UF16));
+
+    std::string filename = "dds_saveImage_bc6h.dds";
+
+    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC6H_UF16));
 
     auto basePath(boost::filesystem::current_path());
-    auto path = basePath / "dds_saveImage_bc6h.dds";
+    auto path = basePath / filename;
 
     BOOST_TEST(boost::filesystem::exists(path));
 
@@ -310,15 +371,16 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc7)
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix);
-
     auto res = std::make_unique<ninniku::ddsImage>();
 
     res->InitializeFromTextureObject(dx, resized);
 
-    BOOST_TEST(res->SaveImage("dds_saveImage_bc7.dds", dx, DXGI_FORMAT_BC7_UNORM));
+    std::string filename = "dds_saveImage_bc7.dds";
+
+    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC7_UNORM));
 
     auto basePath(boost::filesystem::current_path());
-    auto path = basePath / "dds_saveImage_bc7.dds";
+    auto path = basePath / filename;
 
     BOOST_TEST(boost::filesystem::exists(path));
 
