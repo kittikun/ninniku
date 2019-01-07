@@ -27,6 +27,7 @@
 
 #include "../dx11/DX11_impl.h"
 #include "../utils/log.h"
+#include "../utils/misc.h"
 
 namespace ninniku
 {
@@ -203,6 +204,7 @@ namespace ninniku
 
     bool cmftImageImpl::SaveImage(const std::string& path, uint32_t format, uint32_t type)
     {
+        auto stripped = removeFileExtension(path);
         uint32_t cmftFormat;
 
         if (format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
@@ -214,7 +216,7 @@ namespace ninniku
             return false;
         }
 
-        cmft::imageSave(_image, path.c_str(), cmft::ImageFileType::Enum::DDS, static_cast<cmft::OutputType::Enum>(type), static_cast<cmft::TextureFormat::Enum>(cmftFormat), true);
+        cmft::imageSave(_image, stripped.c_str(), cmft::ImageFileType::Enum::DDS, static_cast<cmft::OutputType::Enum>(type), static_cast<cmft::TextureFormat::Enum>(cmftFormat), true);
 
         return true;
     }
