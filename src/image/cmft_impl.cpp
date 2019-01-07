@@ -28,8 +28,7 @@
 #include "../dx11/DX11_impl.h"
 #include "../utils/log.h"
 
-namespace ninniku
-{
+namespace ninniku {
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -65,20 +64,20 @@ namespace ninniku
         _image.m_dataSize = dstDataSize;
     }
 
-    const TextureParam cmftImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    TextureParamHandle cmftImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
     {
-        TextureParam res = {};
+        auto res = std::make_shared<TextureParam>();
 
         if (viewFlags == ETextureViews::TV_None) {
-            LOGE << "TextureParam view flags cannot be 0";
+            LOGE << "TextureParam view flags cannot be ETextureViews::TV_None";
         } else {
-            res.arraySize = CUBEMAP_NUM_FACES;
-            res.depth = 1;
-            res.format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
-            res.height = res.width = imageGetCubemapFaceSize(_image);
-            res.imageDatas = GetInitializationData();
-            res.numMips = 1;
-            res.viewflags = viewFlags;
+            res->arraySize = CUBEMAP_NUM_FACES;
+            res->depth = 1;
+            res->format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
+            res->height = res->width = imageGetCubemapFaceSize(_image);
+            res->imageDatas = GetInitializationData();
+            res->numMips = 1;
+            res->viewflags = viewFlags;
         }
 
         return res;
@@ -133,14 +132,14 @@ namespace ninniku
     void cmftImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         // we want to enforce 1:1 for now
-        assert(srcTex->desc.width == srcTex->desc.height);
+        assert(srcTex->desc->width == srcTex->desc->height);
 
         // allocate memory
-        _image.m_width = srcTex->desc.width;
-        _image.m_height = srcTex->desc.height;
+        _image.m_width = srcTex->desc->width;
+        _image.m_height = srcTex->desc->height;
         _image.m_format = cmft::TextureFormat::RGBA32F;
         _image.m_numFaces = CUBEMAP_NUM_FACES;
-        _image.m_numMips = srcTex->desc.numMips;
+        _image.m_numMips = srcTex->desc->numMips;
 
         auto fmt = boost::format("cmftImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % _image.m_width % _image.m_height % (int)_image.m_numFaces % (int)_image.m_numMips;
         LOG << boost::str(fmt);
@@ -150,15 +149,15 @@ namespace ninniku
         auto marker = dx->CreateDebugMarker("ImageFromTextureObject");
 
         // we have to copy each mip with a read back texture or the same size for each face
-        for (uint32_t mip = 0; mip < srcTex->desc.numMips; ++mip) {
-            TextureParam param = {};
+        for (uint32_t mip = 0; mip < srcTex->desc->numMips; ++mip) {
+            auto param = std::make_shared<TextureParam>();
 
-            param.width = srcTex->desc.width >> mip;
-            param.height = srcTex->desc.height >> mip;
-            param.format = srcTex->desc.format;
-            param.numMips = 1;
-            param.arraySize = 1;
-            param.viewflags = ETextureViews::TV_CPU_READ;
+            param->width = srcTex->desc->width >> mip;
+            param->height = srcTex->desc->height >> mip;
+            param->format = srcTex->desc->format;
+            param->numMips = 1;
+            param->arraySize = 1;
+            param->viewflags = ETextureViews::TV_CPU_READ;
 
             auto readBack = dx->CreateTexture(param);
 

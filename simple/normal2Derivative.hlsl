@@ -18,36 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+Texture2D<float3> srcTex;
+RWTexture2D<float2> dstTex;
 
-#include "../export.h"
-#include "image.h"
+[numthreads(32, 32, 1)]
+void main(uint3 DTI : SV_DispatchThreadID)
+{
+    float3 normal = mad(srcTex[DTI.xy], 2.0, -1.0);
+    float2 d = normal.xy / normal.z;
 
-namespace ninniku {
-    class pngImageImpl;
-
-    class pngImage final : public Image
-    {
-        // no copy of any kind allowed
-        pngImage(const pngImage&) = delete;
-        pngImage& operator=(pngImage&) = delete;
-        pngImage(pngImage&&) = delete;
-        pngImage& operator=(pngImage&&) = delete;
-
-    public:
-        NINNIKU_API pngImage();
-        NINNIKU_API ~pngImage();
-
-        NINNIKU_API TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const override;
-        NINNIKU_API const bool Load(const std::string&) override;
-        NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
-
-        // Used when transfering data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
-
-        NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
-
-    private:
-        std::unique_ptr<pngImageImpl> _impl;
-    };
-} // namespace ninniku
+    //dstTex[DTI.xy] = mad(d, 0.5, 0.5);
+    dstTex[DTI.xy] = normalize(float3(d, 1)).xy;
+}

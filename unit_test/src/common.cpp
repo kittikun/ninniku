@@ -28,24 +28,24 @@ ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::Textu
 {
     auto subMarker = dx->CreateDebugMarker("CommonResizeImageImpl");
 
-    ninniku::TextureParam dstParam = {};
-    dstParam.width = std::get<1>(fixRes);
-    dstParam.height = std::get<2>(fixRes);
-    dstParam.depth = srcTex->desc.depth;
-    dstParam.format = srcTex->desc.format;
-    dstParam.numMips = srcTex->desc.numMips;
-    dstParam.arraySize = srcTex->desc.arraySize;
-    dstParam.viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    auto dstParam = std::make_shared<ninniku::TextureParam>();
+    dstParam->width = std::get<1>(fixRes);
+    dstParam->height = std::get<2>(fixRes);
+    dstParam->depth = srcTex->desc->depth;
+    dstParam->format = srcTex->desc->format;
+    dstParam->numMips = srcTex->desc->numMips;
+    dstParam->arraySize = srcTex->desc->arraySize;
+    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
 
     auto dst = dx->CreateTexture(dstParam);
 
-    for (uint32_t mip = 0; mip < dstParam.numMips; ++mip) {
+    for (uint32_t mip = 0; mip < dstParam->numMips; ++mip) {
         // dispatch
         ninniku::Command cmd = {};
         cmd.shader = "resize";
         cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::ESamplerState::SS_Linear)));
 
-        if (dstParam.arraySize > 1)
+        if (dstParam->arraySize > 1)
             cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[mip]));
         else
             cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
@@ -53,9 +53,9 @@ ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::Textu
         cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[mip]));
 
         static_assert((RESIZE_NUMTHREAD_X == RESIZE_NUMTHREAD_Y) && (RESIZE_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = dstParam.width / RESIZE_NUMTHREAD_X;
-        cmd.dispatch[1] = dstParam.height / RESIZE_NUMTHREAD_Y;
-        cmd.dispatch[2] = dstParam.arraySize / RESIZE_NUMTHREAD_Z;
+        cmd.dispatch[0] = dstParam->width / RESIZE_NUMTHREAD_X;
+        cmd.dispatch[1] = dstParam->height / RESIZE_NUMTHREAD_Y;
+        cmd.dispatch[2] = dstParam->arraySize / RESIZE_NUMTHREAD_Z;
 
         dx->Dispatch(cmd);
     }

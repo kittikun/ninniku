@@ -24,8 +24,7 @@
 
 #include <DirectXTex.h>
 
-namespace ninniku
-{
+namespace ninniku {
     class ddsImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -37,7 +36,7 @@ namespace ninniku
     public:
         ddsImageImpl() = default;
 
-        const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const override;
         const bool Load(const std::string&) override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 

@@ -23,8 +23,7 @@
 #include "../export.h"
 #include "image.h"
 
-namespace ninniku
-{
+namespace ninniku {
     class ddsImageImpl;
 
     class ddsImage final : public Image
@@ -39,7 +38,7 @@ namespace ninniku
         NINNIKU_API ddsImage();
         NINNIKU_API ~ddsImage();
 
-        NINNIKU_API const TextureParam CreateTextureParam(const ETextureViews viewFlags) const override;
+        NINNIKU_API TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const override;
         NINNIKU_API const bool Load(const std::string&) override;
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 

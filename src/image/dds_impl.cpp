@@ -31,8 +31,7 @@
 
 #include <comdef.h>
 
-namespace ninniku
-{
+namespace ninniku {
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {
@@ -40,18 +39,18 @@ namespace ninniku
 
     ddsImage::~ddsImage() = default;
 
-    const TextureParam ddsImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    TextureParamHandle ddsImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
     {
-        TextureParam res = {};
+        auto res = std::make_shared<TextureParam>();
 
-        res.arraySize = static_cast<uint32_t>(_meta.arraySize);
-        res.depth = static_cast<uint32_t>(_meta.depth);
-        res.format = static_cast<uint32_t>(_meta.format);
-        res.width = static_cast<uint32_t>(_meta.width);
-        res.height = static_cast<uint32_t>(_meta.height);
-        res.imageDatas = GetInitializationData();
-        res.numMips = static_cast<uint32_t>(_meta.mipLevels);
-        res.viewflags = viewFlags;
+        res->arraySize = static_cast<uint32_t>(_meta.arraySize);
+        res->depth = static_cast<uint32_t>(_meta.depth);
+        res->format = static_cast<uint32_t>(_meta.format);
+        res->width = static_cast<uint32_t>(_meta.width);
+        res->height = static_cast<uint32_t>(_meta.height);
+        res->imageDatas = GetInitializationData();
+        res->numMips = static_cast<uint32_t>(_meta.mipLevels);
+        res->viewflags = viewFlags;
 
         return res;
     }
@@ -121,12 +120,12 @@ namespace ninniku
     void ddsImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         // DirectXTex
-        _meta.width = srcTex->desc.width;
-        _meta.height = srcTex->desc.height;
-        _meta.depth = srcTex->desc.depth;
-        _meta.arraySize = srcTex->desc.arraySize;
-        _meta.mipLevels = srcTex->desc.numMips;
-        _meta.format = static_cast<DXGI_FORMAT>(srcTex->desc.format);
+        _meta.width = srcTex->desc->width;
+        _meta.height = srcTex->desc->height;
+        _meta.depth = srcTex->desc->depth;
+        _meta.arraySize = srcTex->desc->arraySize;
+        _meta.mipLevels = srcTex->desc->numMips;
+        _meta.format = static_cast<DXGI_FORMAT>(srcTex->desc->format);
 
         auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
         LOG << boost::str(fmt);
@@ -158,14 +157,14 @@ namespace ninniku
 
         // we have to copy each mip with a read back texture or the same size for each face
         for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
-            ninniku::TextureParam param = {};
+            auto param = std::make_shared<ninniku::TextureParam>();
 
-            param.width = srcTex->desc.width >> mip;
-            param.height = srcTex->desc.height >> mip;
-            param.format = srcTex->desc.format;
-            param.numMips = 1;
-            param.arraySize = 1;
-            param.viewflags = ninniku::TV_CPU_READ;
+            param->width = srcTex->desc->width >> mip;
+            param->height = srcTex->desc->height >> mip;
+            param->format = srcTex->desc->format;
+            param->numMips = 1;
+            param->arraySize = 1;
+            param->viewflags = ninniku::TV_CPU_READ;
 
             auto readBack = dx->CreateTexture(param);
 
