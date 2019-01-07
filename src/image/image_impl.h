@@ -22,7 +22,8 @@
 
 #include "ninniku/image/image.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class ImageImpl : public Image
     {
         // no copy of any kind allowed
@@ -36,7 +37,7 @@ namespace ninniku {
         virtual ~ImageImpl() = default;
 
         virtual const bool Load(const std::string&) = 0;
-        virtual TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const = 0;
+        virtual TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const = 0;
 
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 

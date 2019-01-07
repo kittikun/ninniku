@@ -59,16 +59,26 @@ static const float3 s_faceUvVectors[6][3] = {
     }
 };
 
+float max3(float3 value)
+{
+    return max(max(value.x, value.y), value.z);
+}
+
+float2 packNormal(float3 n)
+{
+    return n.xy * rcp(n.z);
+}
+
+float3 unpackNormal(float2 packed)
+{
+    return normalize(float3(packed, 1));
+}
+
 float3 uvToVec(float3 uv)
 {
     float2 viewPos = mad(float2(uv.x, 1.0 - uv.y), 2.0, -1.0);
 
     return normalize(viewPos.x * s_faceUvVectors[uv.z][0] + viewPos.y * s_faceUvVectors[uv.z][1] + s_faceUvVectors[uv.z][2]);
-}
-
-float max3(float3 value)
-{
-    return max(max(value.x, value.y), value.z);
 }
 
 float3 vecToUv(float3 dir)

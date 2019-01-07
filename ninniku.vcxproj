@@ -94,7 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\cmft\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;_USE_RENDERDOC;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -115,9 +115,13 @@
       <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
     <PostBuildEvent>
-      <Command>(robocopy $(SolutionDir)external\renderdoc $(OutDir) renderdoc.dll /njh /njs /ndl /nc /ns) ^&amp; IF %ERRORLEVEL% LEQ 1 exit 0</Command>
+      <Command>(robocopy $(ProjectDir)external\renderdoc $(OutDir) renderdoc.dll /njh /njs /ndl /nc /ns) ^&amp; IF %ERRORLEVEL% LEQ 1 exit 0</Command>
       <Message>Copying RenderDoc DLL..</Message>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -142,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\cmft\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -176,7 +180,6 @@
     <ClCompile Include="src\image\cmft_impl.cpp" />
     <ClCompile Include="src\image\dds.cpp" />
     <ClCompile Include="src\image\dds_impl.cpp" />
-    <ClCompile Include="src\image\image.cpp" />
     <ClCompile Include="src\image\image_impl.cpp" />
     <ClCompile Include="src\image\png.cpp" />
     <ClCompile Include="src\image\png_impl.cpp" />

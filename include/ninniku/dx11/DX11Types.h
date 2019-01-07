@@ -19,7 +19,8 @@ template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
-namespace ninniku {
+namespace ninniku
+{
     using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
@@ -149,7 +150,7 @@ namespace ninniku {
 
         D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
         void* GetData() const { return _mapped.pData; }
-        const uint32_t GetRowPitch() const;
+        uint32_t GetRowPitch() const;
 
     private:
         const DX11Context& _context;

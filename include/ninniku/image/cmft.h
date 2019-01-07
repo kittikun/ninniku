@@ -23,7 +23,8 @@
 #include "../export.h"
 #include "image.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class cmftImageImpl;
 
     class cmftImage final : public Image
@@ -38,7 +39,7 @@ namespace ninniku {
         NINNIKU_API cmftImage();
         NINNIKU_API ~cmftImage();
 
-        NINNIKU_API TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const override;
+        NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         NINNIKU_API const bool Load(const std::string&) override;
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
@@ -48,10 +49,10 @@ namespace ninniku {
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        NINNIKU_API bool SaveImage(const std::string&);
+        NINNIKU_API bool SaveImageCubemap(const std::string&, uint32_t format);
 
         // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        NINNIKU_API bool SaveImageFaceList(const std::string&);
+        NINNIKU_API bool SaveImageFaceList(const std::string&, uint32_t format);
 
     private:
         std::unique_ptr<cmftImageImpl> _impl;

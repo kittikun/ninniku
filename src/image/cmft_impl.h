@@ -24,7 +24,8 @@
 
 #include <cmft/image.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class cmftImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -37,7 +38,7 @@ namespace ninniku {
         cmftImageImpl() = default;
         ~cmftImageImpl();
 
-        TextureParamHandle CreateTextureParam(const ETextureViews viewFlags) const override;
+        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         const bool Load(const std::string&) override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
@@ -45,10 +46,10 @@ namespace ninniku {
         void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        bool SaveImage(const std::string&);
+        bool SaveImageCubemap(const std::string&, uint32_t format);
 
         // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        bool SaveImageFaceList(const std::string&);
+        bool SaveImageFaceList(const std::string&, uint32_t format);
 
     protected:
         const uint32_t GetHeight() const override { return _image.m_height; }
@@ -58,6 +59,7 @@ namespace ninniku {
 
     private:
         void AllocateMemory();
+        bool SaveImage(const std::string& path, uint32_t format, uint32_t type);
 
     private:
         cmft::Image _image;

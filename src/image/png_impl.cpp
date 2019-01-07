@@ -30,7 +30,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-namespace ninniku {
+namespace ninniku
+{
     pngImage::pngImage()
         : _impl{ new pngImageImpl() }
     {
@@ -60,7 +61,7 @@ namespace ninniku {
         }
     }
 
-    TextureParamHandle pngImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    TextureParamHandle pngImageImpl::CreateTextureParam(const uint8_t viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 

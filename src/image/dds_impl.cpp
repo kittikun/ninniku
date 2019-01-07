@@ -31,7 +31,8 @@
 
 #include <comdef.h>
 
-namespace ninniku {
+namespace ninniku
+{
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {
@@ -39,7 +40,7 @@ namespace ninniku {
 
     ddsImage::~ddsImage() = default;
 
-    TextureParamHandle ddsImageImpl::CreateTextureParam(const ETextureViews viewFlags) const
+    TextureParamHandle ddsImageImpl::CreateTextureParam(const uint8_t viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 

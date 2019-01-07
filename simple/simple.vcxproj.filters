@@ -14,12 +14,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="shaders\derivative2Normal.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="normal2Derivative.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-  </ItemGroup>
 </Project>
