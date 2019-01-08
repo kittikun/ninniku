@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "export.h"
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -95,4 +97,6 @@ namespace ninniku {
     };
 
     using TextureParamHandle = std::shared_ptr<const TextureParam>;
+
+    NINNIKU_API std::shared_ptr<TextureParam> CreateEmptyTextureParam();
 } // namespace ninniku

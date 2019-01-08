@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5)
     auto srcTex = dx->CreateTexture(srcParam);
 
     // normal to derivative
-    auto dstParam = std::make_shared<ninniku::TextureParam>();
+    auto dstParam = ninniku::CreateEmptyTextureParam();
     dstParam->width = srcParam->width;
     dstParam->height = srcParam->height;
     dstParam->depth = srcParam->depth;
@@ -329,9 +329,9 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5)
     BOOST_TEST(boost::filesystem::exists(path));
 
 #ifdef _DEBUG
-    CheckFileMD5(path, 0x761f2459eea31240, 0x37acb8698b047512);
+    CheckFileMD5(path, 0xf93c2d7e95db8dd7, 0xd2895e64d48c6168);
 #else
-    CheckFileMD5(path, 0xeb0ad4d69515c34d, 0xdbf59283e822f1db);
+    CheckFileMD5(path, 0xab4fb70bf9b349f1, 0x9e5495233f1bf35d);
 #endif
 }
 

@@ -67,6 +67,9 @@
     <ClCompile Include="src\image\image_impl.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
+    <ClCompile Include="src\types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

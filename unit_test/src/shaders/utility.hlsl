@@ -64,8 +64,10 @@ float max3(float3 value)
     return max(max(value.x, value.y), value.z);
 }
 
+// https://aras-p.info/texts/CompactNormalStorage.html
 float2 packNormal(float3 n)
 {
+    n = normalize(n);
     return n.xy * rcp(n.z);
 }
 
