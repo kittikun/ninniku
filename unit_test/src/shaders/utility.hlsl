@@ -66,7 +66,13 @@ float max3(float3 value)
 
 float2 packNormal(float3 n)
 {
+    n = normalize(n);
     return n.xy * rcp(n.z);
+}
+
+float pow3(float x)
+{
+    return x * x * x;
 }
 
 float3 unpackNormal(float2 packed)
@@ -76,7 +82,7 @@ float3 unpackNormal(float2 packed)
 
 float3 uvToVec(float3 uv)
 {
-    float2 viewPos = mad(float2(uv.x, 1.0 - uv.y), 2.0, -1.0);
+    float2 viewPos = mad(uv.xy, 2.0, -1.0);
 
     return normalize(viewPos.x * s_faceUvVectors[uv.z][0] + viewPos.y * s_faceUvVectors[uv.z][1] + s_faceUvVectors[uv.z][2]);
 }

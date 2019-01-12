@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(Shader)
 
 BOOST_AUTO_TEST_CASE(shader_colorMips)
 {
-    auto param = std::make_shared<ninniku::TextureParam>();
+    auto param = ninniku::CreateEmptyTextureParam();
     param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     param->width = param->height = 512;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
     auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("CubemapDirToArray");
 
-    auto param = std::make_shared<ninniku::TextureParam>();
+    auto param = ninniku::CreateEmptyTextureParam();
     param->width = param->height = 512;
     param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     param->depth = 1;
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
     auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
 
-    auto param = std::make_shared<ninniku::TextureParam>();
+    auto param = ninniku::CreateEmptyTextureParam();
     param->format = srcParam->format;
     param->width = srcParam->width;
     param->height = srcParam->height;
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     auto marker = dx->CreateDebugMarker("Resize");
     auto srcTex = dx->CreateTexture(srcParam);
 
-    auto dstParam = std::make_shared<ninniku::TextureParam>();
+    auto dstParam = ninniku::CreateEmptyTextureParam();
     dstParam->width = newSize;
     dstParam->height = newSize;
     dstParam->format = srcTex->desc->format;

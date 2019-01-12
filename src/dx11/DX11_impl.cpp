@@ -529,9 +529,11 @@ namespace ninniku
             return false;
         }
 
-        if (!LoadShaders(shaderPath)) {
-            LOGE << "Failed to load shaders.";
-            return false;
+        if ((shaderPath.length() > 0)) {
+            if (!LoadShaders(shaderPath)) {
+                LOGE << "Failed to load shaders.";
+                return false;
+            }
         }
 
         // sampler states
@@ -583,6 +585,14 @@ namespace ninniku
     /// </summary>
     bool DX11Impl::LoadShaders(const std::string& shaderPath)
     {
+        // check if directory is valid
+        if (!boost::filesystem::is_directory(shaderPath)) {
+            auto fmt = boost::format("Failed to open directory: %1%") % shaderPath;
+            LOGE << boost::str(fmt);
+
+            return false;
+        }
+
         std::string ext{ ".cso" };
 
         // Count the number of .cso found

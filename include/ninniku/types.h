@@ -20,11 +20,14 @@
 
 #pragma once
 
+#include "export.h"
+
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
     struct TextureObject;
@@ -95,4 +98,6 @@ namespace ninniku {
     };
 
     using TextureParamHandle = std::shared_ptr<const TextureParam>;
+
+    NINNIKU_API std::shared_ptr<TextureParam> CreateEmptyTextureParam();
 } // namespace ninniku

@@ -24,8 +24,7 @@
 
 #include <cmft/image.h>
 
-namespace ninniku
-{
+namespace ninniku {
     class cmftImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -38,8 +37,6 @@ namespace ninniku
         cmftImageImpl() = default;
         ~cmftImageImpl();
 
-        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
-        const bool Load(const std::string&) override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
@@ -52,13 +49,17 @@ namespace ninniku
         bool SaveImageFaceList(const std::string&, uint32_t format);
 
     protected:
-        const uint32_t GetHeight() const override { return _image.m_height; }
+        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
+        uint32_t GetHeight() const override { return _image.m_height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
-        const uint32_t GetWidth() const override { return _image.m_width; }
+        uint32_t GetWidth() const override { return _image.m_width; }
+        bool LoadInternal(const std::string& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
+        bool ValidateExtension(const std::string& ext) const override;
 
     private:
         void AllocateMemory();
+        bool LoadEXR(const std::string& path);
         bool SaveImage(const std::string& path, uint32_t format, uint32_t type);
 
     private:

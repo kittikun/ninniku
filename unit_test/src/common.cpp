@@ -28,7 +28,7 @@ ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::Textu
 {
     auto subMarker = dx->CreateDebugMarker("CommonResizeImageImpl");
 
-    auto dstParam = std::make_shared<ninniku::TextureParam>();
+    auto dstParam = ninniku::CreateEmptyTextureParam();
     dstParam->width = std::get<1>(fixRes);
     dstParam->height = std::get<2>(fixRes);
     dstParam->depth = srcTex->desc->depth;

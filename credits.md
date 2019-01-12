@@ -2,9 +2,11 @@ The following resources are provided under [CC0 1.0 Universal (CC0 1.0) Public D
 - [whipple_creek_regional_park_01_2k.hdr](https://hdrihaven.com/hdri/?c=outdoor&h=whipple_creek_regional_park_01)
 - [banner.png](http://publicdomainpng.com/2018/04/15/banner/)
 - [Rainbow_to_alpha_gradient.png](http://clubpenguin.wikia.com/wiki/File:Rainbow_to_alpha_gradient.png)
-- [CC0-compressed-rock-NRM.png](https://www.outworldz.com/SeamlessTextures/master/Rock%20and%20Stone/CC0-compressed-rock-NRM.png)
 
-Following PNG  credit goes to [Toshi](https://unsplash.com/@toshidog):
+Following JPG credit goes to [Toshi](https://unsplash.com/@toshidog):
+- [architecture-buildings-city-1769347](https://www.pexels.com/photo/bird-s-eye-view-of-high-rise-buildings-1769347/)
+
+Following PNG credit goes to [Toshi](https://unsplash.com/@toshidog):
 - [toshi-1072059-unsplash.png](https://unsplash.com/photos/MC2hOZsBsLg)
 
 Following HDRI credit goes to [Joost Vanhoutte](https://gumroad.com/joost):

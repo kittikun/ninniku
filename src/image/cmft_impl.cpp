@@ -29,8 +29,10 @@
 #include "../utils/log.h"
 #include "../utils/misc.h"
 
-namespace ninniku
-{
+#define TINYEXR_IMPLEMENTATION
+#include <tinyexr/tinyexr.h>
+
+namespace ninniku {
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -66,31 +68,57 @@ namespace ninniku
         _image.m_dataSize = dstDataSize;
     }
 
-    TextureParamHandle cmftImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle cmftImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
     {
-        auto res = std::make_shared<TextureParam>();
+        auto res = CreateEmptyTextureParam();
 
-        if (viewFlags == ETextureViews::TV_None) {
-            LOGE << "TextureParam view flags cannot be ETextureViews::TV_None";
-        } else {
-            res->arraySize = CUBEMAP_NUM_FACES;
-            res->depth = 1;
-            res->format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
-            res->height = res->width = imageGetCubemapFaceSize(_image);
-            res->imageDatas = GetInitializationData();
-            res->numMips = 1;
-            res->viewflags = viewFlags;
-        }
+        res->arraySize = CUBEMAP_NUM_FACES;
+        res->depth = 1;
+        res->format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
+        res->height = res->width = imageGetCubemapFaceSize(_image);
+        res->imageDatas = GetInitializationData();
+        res->numMips = 1;
+        res->viewflags = viewFlags;
 
-        return res;
+        return std::move(res);
     }
 
-    const bool cmftImageImpl::Load(const std::string& path)
+    bool cmftImageImpl::LoadEXR(const std::string& path)
+    {
+        int width, height;
+        float* rgba;
+        const char* err;
+
+        int ret = ::LoadEXR(&rgba, &width, &height, path.c_str(), &err);
+        if (ret != TINYEXR_SUCCESS) {
+            auto fmt = boost::format("cmftImageImpl::LoadEXR failed with: %1%") % err;
+            LOG << boost::str(fmt);
+
+            return false;
+        }
+
+        _image.m_width = width;
+        _image.m_height = height;
+        _image.m_dataSize = width * height * sizeof(float);
+        _image.m_format = cmft::TextureFormat::RGBA32F;
+        _image.m_numMips = 1;
+        _image.m_numFaces = 1;
+        _image.m_data = rgba;
+
+        return true;
+    }
+
+    bool cmftImageImpl::LoadInternal(const std::string& path)
     {
         auto fmt = boost::format("cmftImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
 
-        bool imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
+        bool imageLoaded = false;
+
+        if (boost::filesystem::path{ path } .extension() == ".exr")
+            imageLoaded = LoadEXR(path);
+        else
+            imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
 
         if (!imageLoaded) {
             LOGE << "Failed to load file";
@@ -262,5 +290,19 @@ namespace ninniku
 
             memcpy_s(offset + imgOffset, imgPitch, newData + newOffset, std::min(newRowPitch, imgPitch));
         }
+    }
+
+    bool cmftImageImpl::ValidateExtension(const std::string& ext) const
+    {
+        const std::array<std::string, 5> valid = { ".dds", ".exr", ".ktx", ".hdr", ".tga" };
+
+        for (auto& validExt : valid)
+            if (ext == validExt)
+                return true;
+
+        auto fmt = boost::format("cmftImage does not support extension: \"%1%\"") % ext;
+        LOGE << boost::str(fmt);
+
+        return false;
     }
 } // namespace ninniku

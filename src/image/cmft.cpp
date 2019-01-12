@@ -30,7 +30,7 @@ namespace ninniku
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    const bool cmftImage::Load(const std::string& path)
+    bool cmftImage::Load(const std::string& path)
     {
         return _impl->Load(path);
     }
