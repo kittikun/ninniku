@@ -46,9 +46,6 @@
     <ClCompile Include="src\utils\mathUtils.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\image\png.cpp">
-      <Filter>Source Files\image</Filter>
-    </ClCompile>
     <ClCompile Include="src\image\cmft_impl.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
@@ -56,9 +53,6 @@
       <Filter>Source Files\image</Filter>
     </ClCompile>
     <ClCompile Include="src\image\dds_impl.cpp">
-      <Filter>Source Files\image</Filter>
-    </ClCompile>
-    <ClCompile Include="src\image\png_impl.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
     <ClCompile Include="src\dx11\DX11_impl.cpp">
@@ -70,11 +64,15 @@
     <ClCompile Include="src\types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\image\generic.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\generic_impl.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="LICENSE" />
-    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\utils\log.h">
@@ -116,16 +114,10 @@
     <ClInclude Include="include\ninniku\utils.h">
       <Filter>Include</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\image\png.h">
-      <Filter>Include\image</Filter>
-    </ClInclude>
     <ClInclude Include="src\image\cmft_impl.h">
       <Filter>Source Files\image</Filter>
     </ClInclude>
     <ClInclude Include="src\image\dds_impl.h">
-      <Filter>Source Files\image</Filter>
-    </ClInclude>
-    <ClInclude Include="src\image\png_impl.h">
       <Filter>Source Files\image</Filter>
     </ClInclude>
     <ClInclude Include="src\dx11\DX11_impl.h">
@@ -136,6 +128,12 @@
     </ClInclude>
     <ClInclude Include="include\ninniku\export.h">
       <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\image\generic.h">
+      <Filter>Include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\generic_impl.h">
+      <Filter>Source Files\image</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

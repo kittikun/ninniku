@@ -85,7 +85,7 @@ namespace ninniku
         return res;
     }
 
-    const bool cmftImageImpl::Load(const std::string& path)
+    bool cmftImageImpl::LoadInternal(const std::string& path)
     {
         auto fmt = boost::format("cmftImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -262,5 +262,19 @@ namespace ninniku
 
             memcpy_s(offset + imgOffset, imgPitch, newData + newOffset, std::min(newRowPitch, imgPitch));
         }
+    }
+
+    bool cmftImageImpl::ValidateExtension(const std::string& ext) const
+    {
+        const std::array<std::string, 4> valid = { ".dds", ".ktx", ".hdr", ".tga" };
+
+        for (auto& validExt : valid)
+            if (ext == validExt)
+                return true;
+
+        auto fmt = boost::format("cmftImage does not support extension: \"%1%\"") % ext;
+        LOGE << boost::str(fmt);
+
+        return false;
     }
 } // namespace ninniku

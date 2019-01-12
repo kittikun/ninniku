@@ -21,7 +21,7 @@
 #include <ninniku/ninniku.h>
 #include <ninniku/dx11/DX11.h>
 #include <ninniku/image/dds.h>
-#include <ninniku/image/png.h>
+#include <ninniku/Image/generic.h>
 
 int main()
 {

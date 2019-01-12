@@ -18,37 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "pch.h"
+#include "ninniku/Image/generic.h"
 
-#include "../export.h"
-#include "image.h"
+#include "generic_impl.h"
 
 namespace ninniku
 {
-    class pngImageImpl;
-
-    class pngImage final : public Image
+    TextureParamHandle genericImage::CreateTextureParam(const uint8_t viewFlags) const
     {
-        // no copy of any kind allowed
-        pngImage(const pngImage&) = delete;
-        pngImage& operator=(pngImage&) = delete;
-        pngImage(pngImage&&) = delete;
-        pngImage& operator=(pngImage&&) = delete;
+        return _impl->CreateTextureParam(viewFlags);
+    }
 
-    public:
-        NINNIKU_API pngImage();
-        NINNIKU_API ~pngImage();
+    bool genericImage::Load(const std::string& path)
+    {
+        return _impl->Load(path);
+    }
 
-        NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
-        NINNIKU_API const bool Load(const std::string&) override;
-        NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
+    const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
+    {
+        return _impl->GetData();
+    }
 
-        // Used when transfering data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
+    void genericImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    {
+        return _impl->InitializeFromTextureObject(dx, srcTex);
+    }
 
-        NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
-
-    private:
-        std::unique_ptr<pngImageImpl> _impl;
-    };
+    const SizeFixResult genericImage::IsRequiringFix() const
+    {
+        return _impl->IsRequiringFix();
+    }
 } // namespace ninniku

@@ -26,7 +26,7 @@
 #include <ninniku/dx11/DX11.h>
 #include <ninniku/image/cmft.h>
 #include <ninniku/image/dds.h>
-#include <ninniku/image/png.h>
+#include <ninniku/Image/generic.h>
 #include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 
@@ -100,13 +100,9 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage)
     std::string filename = "cmft_saveImage.dds";
 
     BOOST_TEST(image->SaveImageCubemap(filename, DXGI_FORMAT_R32G32B32A32_FLOAT));
+    BOOST_TEST(boost::filesystem::exists(filename));
 
-    auto basePath(boost::filesystem::current_path());
-    auto path = basePath / filename;
-
-    BOOST_TEST(boost::filesystem::exists(path));
-
-    CheckFileMD5(path, 0x62a804a10dedbe15, 0xdcf18df4c67beda7);
+    CheckFileMD5(filename, 0x62a804a10dedbe15, 0xdcf18df4c67beda7);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
@@ -130,11 +126,10 @@ BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
     auto basePath(boost::filesystem::current_path());
 
     for (auto i = 0; i < suffixes.size(); ++i) {
-        auto fileName = "cmft_saveImageFace_" + suffixes[i] + ".dds";
-        auto path = basePath / fileName;
+        auto filename = "cmft_saveImageFace_" + suffixes[i] + ".dds";
 
-        BOOST_TEST(boost::filesystem::exists(path));
-        CheckFileMD5(path, hashes[i * 2], hashes[i * 2 + 1]);
+        BOOST_TEST(boost::filesystem::exists(filename));
+        CheckFileMD5(filename, hashes[i * 2], hashes[i * 2 + 1]);
     }
 }
 
@@ -199,7 +194,7 @@ BOOST_AUTO_TEST_CASE(dds_from_texture_object)
 
 BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)
 {
-    auto image = std::make_unique<ninniku::pngImage>();
+    auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/banner.png"));
 
@@ -215,18 +210,14 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)
     std::string filename = "dds_saveImage_bc1.dds";
 
     BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC1_UNORM));
+    BOOST_TEST(boost::filesystem::exists(filename));
 
-    auto basePath(boost::filesystem::current_path());
-    auto path = basePath / filename;
-
-    BOOST_TEST(boost::filesystem::exists(path));
-
-    CheckFileMD5(path, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
+    CheckFileMD5(filename, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
 }
 
 BOOST_AUTO_TEST_CASE(dds_saveImage_bc3)
 {
-    auto image = std::make_unique<ninniku::pngImage>();
+    auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/Rainbow_to_alpha_gradient.png"));
 
@@ -242,18 +233,14 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc3)
     std::string filename = "dds_saveImage_bc3.dds";
 
     BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC3_UNORM));
+    BOOST_TEST(boost::filesystem::exists(filename));
 
-    auto basePath(boost::filesystem::current_path());
-    auto path = basePath / filename;
-
-    BOOST_TEST(boost::filesystem::exists(path));
-
-    CheckFileMD5(path, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
+    CheckFileMD5(filename, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
 }
 
 BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
 {
-    auto image = std::make_unique<ninniku::pngImage>();
+    auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/toshi-1072059-unsplash.png"));
 
@@ -269,23 +256,19 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
     std::string filename = "dds_saveImage_bc3.dds";
 
     BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC4_UNORM));
-
-    auto basePath(boost::filesystem::current_path());
-    auto path = basePath / filename;
-
-    BOOST_TEST(boost::filesystem::exists(path));
+    BOOST_TEST(boost::filesystem::exists(filename));
 
     // for some reason BC4 leads to different results between debug and release builds
 #ifdef _DEBUG
-    CheckFileMD5(path, 0x397286da7060fabd, 0xb36a91e9ee1c3620);
+    CheckFileMD5(filename, 0x397286da7060fabd, 0xb36a91e9ee1c3620);
 #else
-    CheckFileMD5(path, 0x7131b97822cbd2e5, 0x9b68b7bc18d5a9fe);
+    CheckFileMD5(filename, 0x7131b97822cbd2e5, 0x9b68b7bc18d5a9fe);
 #endif
 }
 
 BOOST_AUTO_TEST_CASE(dds_saveImage_bc5)
 {
-    auto image = std::make_unique<ninniku::pngImage>();
+    auto image = std::make_unique<ninniku::genericImage>();
 
     image->Load("data/CC0-compressed-rock-NRM.png");
 
@@ -351,18 +334,14 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc6h)
     std::string filename = "dds_saveImage_bc6h.dds";
 
     BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC6H_UF16));
+    BOOST_TEST(boost::filesystem::exists(filename));
 
-    auto basePath(boost::filesystem::current_path());
-    auto path = basePath / filename;
-
-    BOOST_TEST(boost::filesystem::exists(path));
-
-    CheckFileMD5(path, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
+    CheckFileMD5(filename, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
 }
 
 BOOST_AUTO_TEST_CASE(dds_saveImage_bc7)
 {
-    auto image = std::make_unique<ninniku::pngImage>();
+    auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/banner.png"));
 
@@ -378,36 +357,43 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc7)
     std::string filename = "dds_saveImage_bc7.dds";
 
     BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC7_UNORM));
+    BOOST_TEST(boost::filesystem::exists(filename));
 
-    auto basePath(boost::filesystem::current_path());
-    auto path = basePath / filename;
-
-    BOOST_TEST(boost::filesystem::exists(path));
-
-    CheckFileMD5(path, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
+    CheckFileMD5(filename, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
 }
 
-BOOST_AUTO_TEST_CASE(png_load)
+BOOST_AUTO_TEST_CASE(generic_load)
 {
-    auto image = std::make_unique<ninniku::pngImage>();
+    auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/banner.png"));
 
     auto data = image->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x5c284747dea82181, 0xcdc216b5cbc13d95);
+
+    BOOST_TEST(image->Load("data/architecture-buildings-city-1769347.jpg"));
+    data = image->GetData();
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x68762d0598a19f79, 0xa183c7f8664ffd53);
 }
 
-BOOST_AUTO_TEST_CASE(png_need_resize)
+BOOST_AUTO_TEST_CASE(generic_need_resize)
 {
-    auto image = std::make_unique<ninniku::pngImage>();
+    auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_TEST(image->Load("data/banner.png"));
+    image->Load("data/banner.png");
 
     auto needFix = image->IsRequiringFix();
 
     BOOST_TEST(std::get<0>(needFix));
     BOOST_TEST(std::get<1>(needFix) == 1024);
+    BOOST_TEST(std::get<2>(needFix) == 2048);
+
+    image->Load("data/architecture-buildings-city-1769347.jpg");
+    needFix = image->IsRequiringFix();
+
+    BOOST_TEST(std::get<0>(needFix));
+    BOOST_TEST(std::get<1>(needFix) == 2048);
     BOOST_TEST(std::get<2>(needFix) == 2048);
 }
 

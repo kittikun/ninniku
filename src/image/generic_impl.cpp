@@ -19,12 +19,13 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "png_impl.h"
+#include "generic_impl.h"
 
-#include "ninniku/image/png.h"
+#include "ninniku/Image/generic.h"
 
 #include "../utils/log.h"
 
+#include <boost/filesystem.hpp>
 #include <DirectXPackedVector.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -32,20 +33,20 @@
 
 namespace ninniku
 {
-    pngImage::pngImage()
-        : _impl{ new pngImageImpl() }
+    genericImage::genericImage()
+        : _impl{ new genericImageImpl() }
     {
     }
 
-    pngImage::~pngImage() = default;
+    genericImage::~genericImage() = default;
 
-    pngImageImpl::~pngImageImpl()
+    genericImageImpl::~genericImageImpl()
     {
         if (_data != nullptr)
             stbi_image_free(_data);
     }
 
-    void pngImageImpl::ConvertToR11G11B10()
+    void genericImageImpl::ConvertToR11G11B10()
     {
         auto size = _width * _height;
 
@@ -61,7 +62,7 @@ namespace ninniku
         }
     }
 
-    TextureParamHandle pngImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle genericImageImpl::CreateTextureParam(const uint8_t viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 
@@ -94,9 +95,9 @@ namespace ninniku
         return res;
     }
 
-    const bool pngImageImpl::Load(const std::string& path)
+    bool genericImageImpl::LoadInternal(const std::string& path)
     {
-        auto fmt = boost::format("pngImageImpl::Load, Path=\"%1%\"") % path;
+        auto fmt = boost::format("genericImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
 
         int forcedSize = 0;
@@ -112,14 +113,14 @@ namespace ninniku
         return true;
     }
 
-    const std::tuple<uint8_t*, uint32_t> pngImageImpl::GetData() const
+    const std::tuple<uint8_t*, uint32_t> genericImageImpl::GetData() const
     {
         uint32_t size = _width * _height * _bpp;
 
         return std::make_tuple(_data, size);
     }
 
-    const std::vector<SubresourceParam> pngImageImpl::GetInitializationData() const
+    const std::vector<SubresourceParam> genericImageImpl::GetInitializationData() const
     {
         std::vector<SubresourceParam> res(1);
 
@@ -136,13 +137,27 @@ namespace ninniku
         return res;
     }
 
-    void pngImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void genericImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         throw std::exception("not implemented");
     }
 
-    void pngImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
+    void genericImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
     {
         throw std::exception("not implemented");
+    }
+
+    bool genericImageImpl::ValidateExtension(const std::string& ext) const
+    {
+        const std::array<std::string, 9> valid = { ".jpg", ".png", ".tga", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
+
+        for (auto& validExt : valid)
+            if (ext == validExt)
+                return true;
+
+        auto fmt = boost::format("genericImage does not support extension: \"%1%\"") % ext;
+        LOGE << boost::str(fmt);
+
+        return false;
     }
 } // namespace ninniku

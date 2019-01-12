@@ -30,7 +30,7 @@ namespace ninniku
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    const bool ddsImage::Load(const std::string& path)
+    bool ddsImage::Load(const std::string& path)
     {
         return _impl->Load(path);
     }

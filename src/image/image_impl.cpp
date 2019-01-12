@@ -50,4 +50,21 @@ namespace ninniku
 
         return std::make_tuple(res, tx, ty);
     }
+
+    bool ImageImpl::Load(const std::string& path)
+    {
+        auto validPath = boost::filesystem::path{ path };
+
+        if (!boost::filesystem::exists(validPath)) {
+            auto fmt = boost::format("Could not find file \"%1%\"") % path;
+            LOGE << boost::str(fmt);
+
+            return false;
+        }
+
+        if (!ValidateExtension(validPath.extension().string()))
+            return false;
+
+        return LoadInternal(path);
+    }
 } // namespace ninniku

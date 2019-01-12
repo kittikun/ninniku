@@ -38,7 +38,6 @@ namespace ninniku
         ddsImageImpl() = default;
 
         TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
-        const bool Load(const std::string&) override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
@@ -47,10 +46,12 @@ namespace ninniku
         bool SaveImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
 
     protected:
-        const uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
+        uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
         const std::vector<SubresourceParam> GetInitializationData() const override;
-        const uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }
+        uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }
+        bool LoadInternal(const std::string& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
+        bool ValidateExtension(const std::string& ext) const override;
 
     private:
         DirectX::TexMetadata _meta;

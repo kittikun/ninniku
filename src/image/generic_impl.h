@@ -24,20 +24,19 @@
 
 namespace ninniku
 {
-    class pngImageImpl final : public ImageImpl
+    class genericImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
-        pngImageImpl(const pngImageImpl&) = delete;
-        pngImageImpl& operator=(pngImageImpl&) = delete;
-        pngImageImpl(pngImageImpl&&) = delete;
-        pngImageImpl& operator=(pngImageImpl&&) = delete;
+        genericImageImpl(const genericImageImpl&) = delete;
+        genericImageImpl& operator=(genericImageImpl&) = delete;
+        genericImageImpl(genericImageImpl&&) = delete;
+        genericImageImpl& operator=(genericImageImpl&&) = delete;
 
     public:
-        pngImageImpl() = default;
-        ~pngImageImpl();
+        genericImageImpl() = default;
+        ~genericImageImpl();
 
         TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
-        const bool Load(const std::string&) override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
@@ -47,13 +46,16 @@ namespace ninniku
         bool SaveImage(const std::string&);
 
     protected:
-        const uint32_t GetHeight() const override { return _height; }
+        uint32_t GetHeight() const override { return _height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
-        const uint32_t GetWidth() const override { return _width; }
+        uint32_t GetWidth() const override { return _width; }
+        bool LoadInternal(const std::string& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
+        bool ValidateExtension(const std::string& ext) const override;
 
     private:
         void ConvertToR11G11B10();
+
     private:
         uint32_t _width;
         uint32_t _height;

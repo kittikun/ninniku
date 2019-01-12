@@ -89,7 +89,7 @@ namespace ninniku
         return res;
     }
 
-    const bool ddsImageImpl::Load(const std::string& path)
+    bool ddsImageImpl::LoadInternal(const std::string& path)
     {
         auto fmt = boost::format("ddsImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -270,5 +270,16 @@ namespace ninniku
         auto& img = _scratch.GetImages()[index];
 
         memcpy_s(img.pixels, img.height * img.rowPitch, newData, img.height * std::min(newRowPitch, static_cast<uint32_t>(img.rowPitch)));
+    }
+
+    bool ddsImageImpl::ValidateExtension(const std::string& ext) const
+    {
+        if (ext == ".dds")
+            return true;
+
+        auto fmt = boost::format("ddsImage does not support extension: \"%1%\"") % ext;
+        LOGE << boost::str(fmt);
+
+        return false;
     }
 } // namespace ninniku
