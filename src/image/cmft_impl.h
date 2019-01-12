@@ -24,8 +24,7 @@
 
 #include <cmft/image.h>
 
-namespace ninniku
-{
+namespace ninniku {
     class cmftImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -60,6 +59,7 @@ namespace ninniku
 
     private:
         void AllocateMemory();
+        bool LoadEXR(const std::string& path);
         bool SaveImage(const std::string& path, uint32_t format, uint32_t type);
 
     private:

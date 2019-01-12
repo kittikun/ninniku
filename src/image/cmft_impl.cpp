@@ -29,8 +29,10 @@
 #include "../utils/log.h"
 #include "../utils/misc.h"
 
-namespace ninniku
-{
+#define TINYEXR_IMPLEMENTATION
+#include <tinyexr/tinyexr.h>
+
+namespace ninniku {
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -81,12 +83,42 @@ namespace ninniku
         return std::move(res);
     }
 
+    bool cmftImageImpl::LoadEXR(const std::string& path)
+    {
+        int width, height;
+        float* rgba;
+        const char* err;
+
+        int ret = ::LoadEXR(&rgba, &width, &height, path.c_str(), &err);
+        if (ret != TINYEXR_SUCCESS) {
+            auto fmt = boost::format("cmftImageImpl::LoadEXR failed with: %1%") % err;
+            LOG << boost::str(fmt);
+
+            return false;
+        }
+
+        _image.m_width = width;
+        _image.m_height = height;
+        _image.m_dataSize = width * height * sizeof(float);
+        _image.m_format = cmft::TextureFormat::RGBA32F;
+        _image.m_numMips = 1;
+        _image.m_numFaces = 1;
+        _image.m_data = rgba;
+
+        return true;
+    }
+
     bool cmftImageImpl::LoadInternal(const std::string& path)
     {
         auto fmt = boost::format("cmftImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
 
-        bool imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
+        bool imageLoaded = false;
+
+        if (boost::filesystem::path{ path } .extension() == ".exr")
+            imageLoaded = LoadEXR(path);
+        else
+            imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
 
         if (!imageLoaded) {
             LOGE << "Failed to load file";
@@ -262,7 +294,7 @@ namespace ninniku
 
     bool cmftImageImpl::ValidateExtension(const std::string& ext) const
     {
-        const std::array<std::string, 4> valid = { ".dds", ".ktx", ".hdr", ".tga" };
+        const std::array<std::string, 5> valid = { ".dds", ".exr", ".ktx", ".hdr", ".tga" };
 
         for (auto& validExt : valid)
             if (ext == validExt)

@@ -4,3 +4,4 @@
 unit_test/data/*.png filter=lfs diff=lfs merge=lfs -text
 simple/data/*.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
+*.exr filter=lfs diff=lfs merge=lfs -text

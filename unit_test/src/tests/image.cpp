@@ -41,6 +41,10 @@ BOOST_AUTO_TEST_CASE(cmft_load)
     auto data = image->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xd39b5bad561c83d3, 0x585a996223bd1765);
+
+    image->Load("data/park02.exr");
+    data = image->GetData();
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0xffd14431d2c8bd50, 0x959afcd3fef4f28c);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_from_texture_object)
