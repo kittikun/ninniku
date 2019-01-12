@@ -42,8 +42,7 @@ namespace ninniku
 
     genericImageImpl::~genericImageImpl()
     {
-        if (_data != nullptr)
-            stbi_image_free(_data);
+        Reset();
     }
 
     void genericImageImpl::ConvertToR11G11B10()
@@ -53,37 +52,34 @@ namespace ninniku
         _convertedData.resize(size);
 
         for (uint32_t i = 0; i < size; ++i) {
-            float r = static_cast<float>(_data[i * 3 + 0]) / 255.f;
-            float g = static_cast<float>(_data[i * 3 + 1]) / 255.f;
-            float b = static_cast<float>(_data[i * 3 + 2]) / 255.f;
+            float r, g, b;
+
+            if (_data16 != nullptr) {
+                r = static_cast<float>(_data16[i * 3 + 0]);
+                g = static_cast<float>(_data16[i * 3 + 1]);
+                b = static_cast<float>(_data16[i * 3 + 2]);
+            } else {
+                r = static_cast<float>(_data8[i * 3 + 0]) / 255.f;
+                g = static_cast<float>(_data8[i * 3 + 1]) / 255.f;
+                b = static_cast<float>(_data8[i * 3 + 2]) / 255.f;
+            }
+
             auto r11b11g10 = DirectX::PackedVector::XMFLOAT3PK(r, g, b);
 
             _convertedData[i] = r11b11g10;
         }
     }
 
-    TextureParamHandle genericImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle genericImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 
-        switch (_bpp) {
-            case 4:
-                res->format = DXGI_FORMAT_R8G8B8A8_UNORM;
-                break;
+        auto fmt = GetFormat();
 
-            case 3:
-                res->format = DXGI_FORMAT_R11G11B10_FLOAT;
-                break;
+        if (fmt == DXGI_FORMAT_UNKNOWN)
+            return std::move(res);
 
-            case 1:
-                res->format = DXGI_FORMAT_R8_UNORM;
-                break;
-
-            default:
-                LOGE << "Unsupported PNG format";
-                return std::move(res);
-        }
-
+        res->format = fmt;
         res->arraySize = 1;
         res->depth = 1;
         res->numMips = 1;
@@ -91,6 +87,43 @@ namespace ninniku
         res->height = _height;
         res->imageDatas = GetInitializationData();
         res->viewflags = viewFlags;
+
+        return std::move(res);
+    }
+
+    uint32_t genericImageImpl::GetFormat() const
+    {
+        uint32_t res = DXGI_FORMAT_UNKNOWN;
+
+        switch (_bpp) {
+            case 4:
+                if (_data16 != nullptr)
+                    res = DXGI_FORMAT_R16G16B16A16_UNORM;
+                else
+                    res = DXGI_FORMAT_R8G8B8A8_UNORM;
+                break;
+
+            case 3:
+                res = DXGI_FORMAT_R11G11B10_FLOAT;
+                break;
+
+            case 2:
+                if (_data16 != nullptr)
+                    res = DXGI_FORMAT_R16G16_UNORM;
+                else
+                    res = DXGI_FORMAT_R8G8_UNORM;
+                break;
+
+            case 1:
+                if (_data16 != nullptr)
+                    res = DXGI_FORMAT_R16_UNORM;
+                else
+                    res = DXGI_FORMAT_R8_UNORM;
+                break;
+
+            default:
+                LOGE << "Unsupported format";
+        }
 
         return res;
     }
@@ -100,9 +133,12 @@ namespace ninniku
         auto fmt = boost::format("genericImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
 
-        int forcedSize = 0;
+        Reset();
 
-        _data = stbi_load(path.c_str(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
+        if (stbi_is_16_bit(path.c_str()))
+            _data16 = stbi_load_16(path.c_str(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
+        else
+            _data8 = stbi_load(path.c_str(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
 
         if (_bpp == 3) {
             // we must convert from RGB to R11G11B10 since there is no R8G8B8 formats
@@ -117,7 +153,10 @@ namespace ninniku
     {
         uint32_t size = _width * _height * _bpp;
 
-        return std::make_tuple(_data, size);
+        if (_data16 != nullptr)
+            return std::make_tuple(reinterpret_cast<uint8_t*>(_data16), size * 2);
+
+        return std::make_tuple(_data8, size);
     }
 
     const std::vector<SubresourceParam> genericImageImpl::GetInitializationData() const
@@ -128,8 +167,13 @@ namespace ninniku
             res[0].data = const_cast<uint32_t*>(_convertedData.data());
             res[0].rowPitch = _width * sizeof(uint32_t);
         } else {
-            res[0].data = _data;
-            res[0].rowPitch = _width * _bpp;
+            if (_data16 != nullptr) {
+                res[0].data = _data16;
+                res[0].rowPitch = _width * _bpp * 2;
+            } else {
+                res[0].data = _data8;
+                res[0].rowPitch = _width * _bpp;
+            }
         }
 
         res[0].depthPitch = 0;
@@ -140,6 +184,21 @@ namespace ninniku
     void genericImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         throw std::exception("not implemented");
+    }
+
+    void genericImageImpl::Reset()
+    {
+        _width = _height = _bpp = 0;
+
+        if (_data8 != nullptr) {
+            stbi_image_free(_data8);
+            _data8 = nullptr;
+        }
+
+        if (_data16 != nullptr) {
+            stbi_image_free(_data16);
+            _data16 = nullptr;
+        }
     }
 
     void genericImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)

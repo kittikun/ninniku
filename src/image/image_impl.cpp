@@ -26,6 +26,16 @@
 
 namespace ninniku
 {
+    TextureParamHandle ImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    {
+        if (viewFlags == ETextureViews::TV_None) {
+            LOGE << "TextureParam view flags cannot be ETextureViews::TV_None";
+            return CreateEmptyTextureParam();
+        }
+
+        return CreateTextureParamInternal(viewFlags);
+    }
+
     const SizeFixResult ImageImpl::IsRequiringFix() const
     {
         auto tx = GetWidth();

@@ -40,7 +40,7 @@ namespace ninniku
 
     ddsImage::~ddsImage() = default;
 
-    TextureParamHandle ddsImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle ddsImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 
@@ -53,7 +53,7 @@ namespace ninniku
         res->numMips = static_cast<uint32_t>(_meta.mipLevels);
         res->viewflags = viewFlags;
 
-        return res;
+        return std::move(res);
     }
 
     const std::tuple<uint8_t*, uint32_t> ddsImageImpl::GetData() const

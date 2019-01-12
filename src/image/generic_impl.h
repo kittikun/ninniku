@@ -36,7 +36,6 @@ namespace ninniku
         genericImageImpl() = default;
         ~genericImageImpl();
 
-        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
@@ -46,6 +45,7 @@ namespace ninniku
         bool SaveImage(const std::string&);
 
     protected:
+        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
         uint32_t GetHeight() const override { return _height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return _width; }
@@ -55,12 +55,15 @@ namespace ninniku
 
     private:
         void ConvertToR11G11B10();
+        uint32_t GetFormat() const;
+        void Reset();
 
     private:
         uint32_t _width;
         uint32_t _height;
         uint32_t _bpp;
-        uint8_t* _data;
+        uint8_t* _data8;
+        uint16_t* _data16;
         std::vector<uint32_t> _convertedData;
     };
 } // namespace ninniku

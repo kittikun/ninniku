@@ -66,23 +66,19 @@ namespace ninniku
         _image.m_dataSize = dstDataSize;
     }
 
-    TextureParamHandle cmftImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle cmftImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
     {
-        auto res = std::make_shared<TextureParam>();
+        auto res = CreateEmptyTextureParam();
 
-        if (viewFlags == ETextureViews::TV_None) {
-            LOGE << "TextureParam view flags cannot be ETextureViews::TV_None";
-        } else {
-            res->arraySize = CUBEMAP_NUM_FACES;
-            res->depth = 1;
-            res->format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
-            res->height = res->width = imageGetCubemapFaceSize(_image);
-            res->imageDatas = GetInitializationData();
-            res->numMips = 1;
-            res->viewflags = viewFlags;
-        }
+        res->arraySize = CUBEMAP_NUM_FACES;
+        res->depth = 1;
+        res->format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
+        res->height = res->width = imageGetCubemapFaceSize(_image);
+        res->imageDatas = GetInitializationData();
+        res->numMips = 1;
+        res->viewflags = viewFlags;
 
-        return res;
+        return std::move(res);
     }
 
     bool cmftImageImpl::LoadInternal(const std::string& path)

@@ -38,7 +38,6 @@ namespace ninniku
         cmftImageImpl() = default;
         ~cmftImageImpl();
 
-        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
@@ -51,6 +50,7 @@ namespace ninniku
         bool SaveImageFaceList(const std::string&, uint32_t format);
 
     protected:
+        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
         uint32_t GetHeight() const override { return _image.m_height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return _image.m_width; }

@@ -37,7 +37,6 @@ namespace ninniku
     public:
         ddsImageImpl() = default;
 
-        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transfering data back from the GPU
@@ -46,6 +45,7 @@ namespace ninniku
         bool SaveImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
 
     protected:
+        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
         uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }

@@ -25,7 +25,38 @@
 
 int main()
 {
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, "shaders", ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, "E:\\ninniku\\unit_test\\shaders", ninniku::ELogLevel::LL_FULL);
 
+    auto image = std::make_unique<ninniku::genericImage>();
+
+    image->Load("E:\\ninniku\\unit_test\\data\\weave_16.png");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+
+    // packed normal
+    auto dstParam = ninniku::CreateEmptyTextureParam();
+    dstParam->width = srcParam->width;
+    dstParam->height = srcParam->height;
+    dstParam->depth = srcParam->depth;
+    dstParam->format = DXGI_FORMAT_R8G8_UNORM;
+    dstParam->numMips = srcParam->numMips;
+    dstParam->arraySize = srcParam->arraySize;
+    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+
+    auto dst = dx->CreateTexture(dstParam);
+
+    // dispatch
+    ninniku::Command cmd = {};
+    cmd.shader = "packNormals";
+    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
+    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+
+    cmd.dispatch[0] = dstParam->width / 32;
+    cmd.dispatch[1] = dstParam->height / 32;
+    cmd.dispatch[2] = 1;
+
+    dx->Dispatch(cmd);
     ninniku::Terminate();
 }

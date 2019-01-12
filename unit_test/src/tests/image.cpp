@@ -123,8 +123,6 @@ BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
         0xd4d16960ed5c53ef, 0x4efd2157bdf514d6
     };
 
-    auto basePath(boost::filesystem::current_path());
-
     for (auto i = 0; i < suffixes.size(); ++i) {
         auto filename = "cmft_saveImageFace_" + suffixes[i] + ".dds";
 
@@ -266,17 +264,17 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
 #endif
 }
 
-BOOST_AUTO_TEST_CASE(dds_saveImage_bc5)
+BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
-    image->Load("data/CC0-compressed-rock-NRM.png");
+    image->Load("data/weave_8.png");
 
     auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
 
-    // normal to derivative
+    // packed normal
     auto dstParam = ninniku::CreateEmptyTextureParam();
     dstParam->width = srcParam->width;
     dstParam->height = srcParam->height;
@@ -301,20 +299,64 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5)
     dx->Dispatch(cmd);
 
     auto res = std::make_unique<ninniku::ddsImage>();
-    std::string filename = "dds_saveImage_bc5.dds";
+    std::string filename = "dds_saveImage_bc5_8.dds";
 
     res->InitializeFromTextureObject(dx, dst);
     BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
-
-    auto basePath(boost::filesystem::current_path());
-    auto path = basePath / filename;
-
-    BOOST_TEST(boost::filesystem::exists(path));
+    BOOST_TEST(boost::filesystem::exists(filename));
 
 #ifdef _DEBUG
-    CheckFileMD5(path, 0xf93c2d7e95db8dd7, 0xd2895e64d48c6168);
+    CheckFileMD5(filename, 0x8338717097b81c8f, 0x96d43528fdcca03a);
 #else
-    CheckFileMD5(path, 0xab4fb70bf9b349f1, 0x9e5495233f1bf35d);
+    CheckFileMD5(filename, 0x1d2f7456159cd181, 0xc1b06bff0beb41ef);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_16bit)
+{
+    auto image = std::make_unique<ninniku::genericImage>();
+
+    image->Load("data/weave_16.png");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+
+    // packed normal
+    auto dstParam = ninniku::CreateEmptyTextureParam();
+    dstParam->width = srcParam->width;
+    dstParam->height = srcParam->height;
+    dstParam->depth = srcParam->depth;
+    dstParam->format = DXGI_FORMAT_R8G8_UNORM;
+    dstParam->numMips = srcParam->numMips;
+    dstParam->arraySize = srcParam->arraySize;
+    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+
+    auto dst = dx->CreateTexture(dstParam);
+
+    // dispatch
+    ninniku::Command cmd = {};
+    cmd.shader = "packNormals";
+    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
+    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+
+    cmd.dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
+    cmd.dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
+    cmd.dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
+
+    dx->Dispatch(cmd);
+
+    auto res = std::make_unique<ninniku::ddsImage>();
+    std::string filename = "dds_saveImage_bc5_16.dds";
+
+    res->InitializeFromTextureObject(dx, dst);
+    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
+    BOOST_TEST(boost::filesystem::exists(filename));
+
+#ifdef _DEBUG
+    CheckFileMD5(filename, 0x41be141dec6447ee, 0xb881f3768608f0e1);
+#else
+    CheckFileMD5(filename, 0xde0f2a29efd9bbe6, 0xbad3cdbbde9f3e22);
 #endif
 }
 
@@ -375,6 +417,10 @@ BOOST_AUTO_TEST_CASE(generic_load)
     BOOST_TEST(image->Load("data/architecture-buildings-city-1769347.jpg"));
     data = image->GetData();
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x68762d0598a19f79, 0xa183c7f8664ffd53);
+
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    data = image->GetData();
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0xbde7e6526b1c6f06, 0x87ac4825f91dc73b);
 }
 
 BOOST_AUTO_TEST_CASE(generic_need_resize)
@@ -395,6 +441,13 @@ BOOST_AUTO_TEST_CASE(generic_need_resize)
     BOOST_TEST(std::get<0>(needFix));
     BOOST_TEST(std::get<1>(needFix) == 2048);
     BOOST_TEST(std::get<2>(needFix) == 2048);
+
+    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+    needFix = image->IsRequiringFix();
+
+    BOOST_TEST(std::get<0>(needFix) == false);
+    BOOST_TEST(std::get<1>(needFix) == 2048);
+    BOOST_TEST(std::get<2>(needFix) == 1024);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
