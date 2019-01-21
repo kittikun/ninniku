@@ -18,24 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+struct SimpleStruct
+{
+    float3 pos;
+};
 
-// STL
-#include <algorithm>
-#include <cassert>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <variant>
-#include <vector>
+RWStructuredBuffer<SimpleStruct> res;
 
-// DX11/WIN
-#include <wrl/client.h>
-#include <d3d11_1.h>
-
-// BOOST
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/severity_logger.hpp>
+[numthreads(32, 32, 1)]
+void main(uint3 DTI : SV_DispatchThreadID)
+{
+    uint index = mad(DTI.y, 256, DTI.x);
+    res[index].pos = float3(DTI);
+}

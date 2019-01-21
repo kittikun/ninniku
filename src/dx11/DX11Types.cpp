@@ -18,24 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "pch.h"
+#include "ninniku/dx11/DX11Types.h"
 
-// STL
-#include <algorithm>
-#include <cassert>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <variant>
-#include <vector>
+namespace ninniku
+{
+    ID3D11Resource* TextureObject::GetResource() const
+    {
+        ID3D11Resource* res = nullptr;
 
-// DX11/WIN
-#include <wrl/client.h>
-#include <d3d11_1.h>
+        if (std::holds_alternative<DX11Tex2D>(texture))
+            res = std::get<DX11Tex2D>(texture).Get();
+        else if (std::holds_alternative<DX11Tex1D>(texture))
+            res = std::get<DX11Tex1D>(texture).Get();
+        else if (std::holds_alternative<DX11Tex3D>(texture))
+            res = std::get<DX11Tex3D>(texture).Get();
 
-// BOOST
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/severity_logger.hpp>
+        return res;
+    }
+} // namespace ninniku

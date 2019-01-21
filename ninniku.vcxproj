@@ -175,6 +175,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\dx11\DX11Types.cpp" />
     <ClCompile Include="src\dx11\DX11_impl.cpp" />
     <ClCompile Include="src\image\cmft.cpp" />
     <ClCompile Include="src\image\cmft_impl.cpp" />

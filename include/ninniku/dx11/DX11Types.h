@@ -7,6 +7,7 @@
 #include <d3d11_1.h>
 #include <array>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
@@ -14,7 +15,9 @@ template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Buffer>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Device>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture1D>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture2D>;
+template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture3D>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
@@ -26,7 +29,9 @@ namespace ninniku
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
     using DX11CS = Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
     using DX11Device = Microsoft::WRL::ComPtr<ID3D11Device>;
+    using DX11Tex1D = Microsoft::WRL::ComPtr<ID3D11Texture1D>;
     using DX11Tex2D = Microsoft::WRL::ComPtr<ID3D11Texture2D>;
+    using DX11Tex3D = Microsoft::WRL::ComPtr<ID3D11Texture3D>;
     using DX11SamplerState = Microsoft::WRL::ComPtr<ID3D11SamplerState>;
     using DX11SRV = Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
     using DX11UAV = Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
@@ -101,7 +106,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
-    struct TextureObject
+    class TextureObject
     {
         // no copy of any kind allowed
         TextureObject(const TextureObject&) = delete;
@@ -109,10 +114,13 @@ namespace ninniku
         TextureObject(TextureObject&&) = delete;
         TextureObject& operator=(TextureObject&&) = delete;
 
+    public:
         TextureObject() = default;
 
-        DX11Tex2D texture;
+        ID3D11Resource* GetResource() const;
 
+    public:
+        std::variant<DX11Tex1D, DX11Tex2D, DX11Tex3D> texture;
         DX11SRV srvDefault;
 
         // D3D_SRV_DIMENSION_TEXTURECUBE
