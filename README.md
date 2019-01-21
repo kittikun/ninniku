@@ -10,7 +10,7 @@ Simple framework to run compute jobs with DX11
   * Saved dds files can be DXGI_FORMAT_R32G32B32A32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM
 - Can load/save DDS with [DirectXTex](https://github.com/Microsoft/DirectXTex)
   * Saved dds files must be compressed BCx format (but BC2 is not supported)
-- Can load PNG files with [stb](https://github.com/nothings/stb)
+- Can load BMP, GIF, HDR, JPG, PNG, PIC, PNM, PSD, TGA files with [stb](https://github.com/nothings/stb)
   * Can be 1-4 channel, 8 or 16 bits
 - Can load EXR files with [tinyexr](https://github.com/syoyo/tinyexr)
 - Can capture commands with [RenderDoc](https://renderdoc.org/).
