@@ -32,7 +32,8 @@
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr/tinyexr.h>
 
-namespace ninniku {
+namespace ninniku
+{
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -115,7 +116,7 @@ namespace ninniku {
 
         bool imageLoaded = false;
 
-        if (boost::filesystem::path{ path } .extension() == ".exr")
+        if (boost::filesystem::path{ path }.extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
             imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);

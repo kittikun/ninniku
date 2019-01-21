@@ -104,7 +104,10 @@ namespace ninniku
                 break;
 
             case 3:
-                res = DXGI_FORMAT_R11G11B10_FLOAT;
+                if (_data16 != nullptr)
+                    res = DXGI_FORMAT_R16G16B16A16_UNORM;
+                else
+                    res = DXGI_FORMAT_R11G11B10_FLOAT;
                 break;
 
             case 2:

@@ -70,6 +70,9 @@
     <ClCompile Include="src\image\generic_impl.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
+    <ClCompile Include="src\dx11\DX11Types.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
