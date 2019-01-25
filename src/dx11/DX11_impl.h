@@ -24,8 +24,7 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11Impl
     {
         // no copy of any kind allowed
@@ -48,9 +47,22 @@ namespace ninniku
         const DX11SamplerState& GetSampler(ESamplerState sampler) const { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)]; }
 
     private:
+        struct SRVParams
+        {
+            TextureObject* obj;
+            TextureParamHandle texParams;
+            bool is1d;
+            bool is2d;
+            bool is3d;
+            bool isCube;
+            bool isCubeArray;
+        };
+
+
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
         bool GetDXGIFactory(IDXGIFactory1** pFactory);
         bool LoadShaders(const std::string& shaderPath);
+        bool MakeSRV(const SRVParams& params);
         std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
 
     private:
