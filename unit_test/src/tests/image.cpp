@@ -29,6 +29,7 @@
 #include <ninniku/Image/generic.h>
 #include <ninniku/ninniku.h>
 #include <ninniku/types.h>
+#include <ninniku/utils.h>
 
 BOOST_AUTO_TEST_SUITE(Image)
 
@@ -194,48 +195,40 @@ BOOST_AUTO_TEST_CASE(dds_from_texture_object)
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
 }
 
-BOOST_AUTO_TEST_CASE(dds_saveImage_original)
+BOOST_AUTO_TEST_CASE(dds_saveImage_raw_mips)
 {
-    auto image = std::make_unique<ninniku::genericImage>();
-
-    image->Load("data/weave_16.png");
-
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
-    auto srcTex = dx->CreateTexture(srcParam);
+    auto image = std::make_unique<ninniku::ddsImage>();
 
-    // packed normal
-    auto dstParam = ninniku::CreateEmptyTextureParam();
-    dstParam->width = srcParam->width;
-    dstParam->height = srcParam->height;
-    dstParam->depth = srcParam->depth;
-    dstParam->format = DXGI_FORMAT_R16G16_FLOAT;
-    dstParam->numMips = srcParam->numMips;
-    dstParam->arraySize = srcParam->arraySize;
-    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    image->Load("data/Cathedral01.dds");
 
-    auto dst = dx->CreateTexture(dstParam);
-
-    // dispatch
-    ninniku::Command cmd = {};
-    cmd.shader = "packNormals";
-    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
-    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
-
-    cmd.dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
-    cmd.dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
-    cmd.dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
-
-    dx->Dispatch(cmd);
-
+    auto resTex = Generate2DTexWithMips(dx, image.get());
     auto res = std::make_unique<ninniku::ddsImage>();
-    std::string filename = "dds_saveImage_original.dds";
 
-    res->InitializeFromTextureObject(dx, dst);
+    res->InitializeFromTextureObject(dx, resTex);
+
+    std::string filename = "dds_saveImage_raw_mips.dds";
+
     BOOST_TEST(res->SaveImage(filename));
     BOOST_TEST(boost::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x0eeb69d3e373404c, 0x54cfbf0e4a1bff92);
+    CheckFileMD5(filename, 0x90d2840de5fc390c, 0xaafa055284578053);
+}
+
+BOOST_AUTO_TEST_CASE(dds_saveImage_raw_cube_mips)
+{
+    auto& dx = ninniku::GetRenderer();
+    auto resTex = GenerateColoredMips(dx);
+    auto res = std::make_unique<ninniku::ddsImage>();
+
+    res->InitializeFromTextureObject(dx, resTex);
+
+    std::string filename = "dds_saveImage_raw_cube_mips.dds";
+
+    BOOST_TEST(res->SaveImage(filename));
+    BOOST_TEST(boost::filesystem::exists(filename));
+
+    CheckFileMD5(filename, 0x96fc6f64b6361b46, 0xbb4679a507b22fe8);
 }
 
 BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)

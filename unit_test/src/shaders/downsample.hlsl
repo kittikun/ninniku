@@ -28,9 +28,10 @@ RWTexture2DArray<float4> dstMipSlice;
 [numthreads(DOWNSAMPLE_NUMTHREAD_X, DOWNSAMPLE_NUMTHREAD_Y, DOWNSAMPLE_NUMTHREAD_Z)]
 void main(uint3 GID : SV_GroupID, uint3 GTI : SV_GroupThreadID)
 {
-    uint size, dummy1, dummy2, dummy3;
+    uint size, dummy1, dummy2;
 
-    srcMip.GetDimensions(targetMip, size, dummy1, dummy2, dummy3);
+    // we always slice for one mip level so no need to specify target mip
+    srcMip.GetDimensions(size, dummy1, dummy2);
 
     uint2 samplePos = mad(GID.xy, DOWNSAMPLE_NUMTHREAD_X << 1, GTI.xy << 1); // on srcMip, x2 because we sample 2x2 with gather
     float3 startPosUV = float3(rcp((float2)size) * float2(samplePos + (float2)0.5), GID.z);

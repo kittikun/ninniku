@@ -34,39 +34,8 @@ BOOST_AUTO_TEST_SUITE(Shader)
 
 BOOST_AUTO_TEST_CASE(shader_colorMips)
 {
-    auto param = ninniku::CreateEmptyTextureParam();
-    param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    param->width = param->height = 512;
-    param->numMips = ninniku::CountMips(std::min(param->width, param->height));
-    param->arraySize = ninniku::CUBEMAP_NUM_FACES;
-    param->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
-
     auto& dx = ninniku::GetRenderer();
-    auto marker = dx->CreateDebugMarker("ColorMips");
-    auto resTex = dx->CreateTexture(param);
-
-    for (uint32_t i = 0; i < param->numMips; ++i) {
-        // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "colorMips";
-        cmd.cbufferStr = "CBGlobal";
-
-        static_assert((COLORMIPS_NUMTHREAD_X == COLORMIPS_NUMTHREAD_Y) && (COLORMIPS_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
-        cmd.dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
-        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORMIPS_NUMTHREAD_Z;
-
-        cmd.uavBindings.insert(std::make_pair("dstTex", resTex->uav[i]));
-
-        // constant buffer
-        CBGlobal cb = {};
-
-        cb.targetMip = i;
-        dx->UpdateConstantBuffer(cmd.cbufferStr, &cb, sizeof(CBGlobal));
-
-        dx->Dispatch(cmd);
-    }
-
+    auto resTex = GenerateColoredMips(dx);
     auto res = std::make_unique<ninniku::cmftImage>();
 
     res->InitializeFromTextureObject(dx, resTex);
@@ -124,7 +93,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
 
         cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
-        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube));
+        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube[0]));
         cmd.uavBindings.insert(std::make_pair("dstTex", dstTex->uav[0]));
 
         dx->Dispatch(cmd);
@@ -149,71 +118,11 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
 BOOST_AUTO_TEST_CASE(shader_genMips)
 {
     auto& dx = ninniku::GetRenderer();
-    auto marker = dx->CreateDebugMarker("Generate Mips");
-
     auto image = std::make_unique<ninniku::ddsImage>();
 
     image->Load("data/Cathedral01.dds");
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
-    auto srcTex = dx->CreateTexture(srcParam);
-
-    auto param = ninniku::CreateEmptyTextureParam();
-    param->format = srcParam->format;
-    param->width = srcParam->width;
-    param->height = srcParam->height;
-    param->numMips = ninniku::CountMips(std::min(param->width, param->height));
-    param->arraySize = ninniku::CUBEMAP_NUM_FACES;
-    param->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
-
-    auto resTex = dx->CreateTexture(param);
-
-    // copy srcTex mip 0 to resTex
-    {
-        auto subMarker = dx->CreateDebugMarker("Copy mip 0");
-
-        ninniku::CopySubresourceParam copyParams = {};
-
-        copyParams.src = srcTex.get();
-        copyParams.dst = resTex.get();
-
-        for (uint16_t i = 0; i < ninniku::CUBEMAP_NUM_FACES; ++i) {
-            copyParams.srcFace = i;
-            copyParams.dstFace = i;
-
-            dx->CopySubresource(copyParams);
-        }
-    }
-
-    // mip generation
-    {
-        auto subMarker = dx->CreateDebugMarker("Generate remaining mips");
-
-        for (uint32_t srcMip = 0; srcMip < param->numMips - 1; ++srcMip) {
-            // dispatch
-            ninniku::Command cmd = {};
-            cmd.shader = "downsample";
-            cmd.cbufferStr = "CBGlobal";
-
-            static_assert((DOWNSAMPLE_NUMTHREAD_X == DOWNSAMPLE_NUMTHREAD_Y) && (DOWNSAMPLE_NUMTHREAD_Z == 1));
-            cmd.dispatch[0] = std::max(1u, (param->width >> srcMip) / DOWNSAMPLE_NUMTHREAD_X);
-            cmd.dispatch[1] = std::max(1u, (param->height >> srcMip) / DOWNSAMPLE_NUMTHREAD_Y);
-            cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DOWNSAMPLE_NUMTHREAD_Z;
-
-            cmd.srvBindings.insert(std::make_pair("srcMip", resTex->srvArray[srcMip]));
-            cmd.uavBindings.insert(std::make_pair("dstMipSlice", resTex->uav[srcMip + 1]));
-            cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
-
-            // constant buffer
-            CBGlobal cb = {};
-
-            cb.targetMip = srcMip;
-            dx->UpdateConstantBuffer(cmd.cbufferStr, &cb, sizeof(CBGlobal));
-
-            dx->Dispatch(cmd);
-        }
-    }
-
+    auto resTex = Generate2DTexWithMips(dx, image.get());
     auto res = std::make_unique<ninniku::cmftImage>();
 
     res->InitializeFromTextureObject(dx, resTex);
@@ -221,7 +130,7 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
     auto data = res->GetData();
 
     // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3a04d2be1d8de890, 0x551c8fa6af29a0fd);
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0xc85514693c51df6f, 0xd10b1b7b4175a5ff);
 }
 
 BOOST_AUTO_TEST_CASE(shader_resize)

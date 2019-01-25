@@ -22,8 +22,7 @@ template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
-namespace ninniku
-{
+namespace ninniku {
     using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
@@ -124,7 +123,7 @@ namespace ninniku
         DX11SRV srvDefault;
 
         // D3D_SRV_DIMENSION_TEXTURECUBE
-        DX11SRV srvCube;
+        std::vector<DX11SRV> srvCube;
 
         // D3D_SRV_DIMENSION_TEXTURE2DARRAY per mip level
         std::vector<DX11SRV> srvArray;
