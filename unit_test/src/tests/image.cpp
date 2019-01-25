@@ -194,6 +194,50 @@ BOOST_AUTO_TEST_CASE(dds_from_texture_object)
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
 }
 
+BOOST_AUTO_TEST_CASE(dds_saveImage_original)
+{
+    auto image = std::make_unique<ninniku::genericImage>();
+
+    image->Load("data/weave_16.png");
+
+    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+
+    // packed normal
+    auto dstParam = ninniku::CreateEmptyTextureParam();
+    dstParam->width = srcParam->width;
+    dstParam->height = srcParam->height;
+    dstParam->depth = srcParam->depth;
+    dstParam->format = DXGI_FORMAT_R16G16_FLOAT;
+    dstParam->numMips = srcParam->numMips;
+    dstParam->arraySize = srcParam->arraySize;
+    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+
+    auto dst = dx->CreateTexture(dstParam);
+
+    // dispatch
+    ninniku::Command cmd = {};
+    cmd.shader = "packNormals";
+    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
+    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+
+    cmd.dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
+    cmd.dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
+    cmd.dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
+
+    dx->Dispatch(cmd);
+
+    auto res = std::make_unique<ninniku::ddsImage>();
+    std::string filename = "dds_saveImage_original.dds";
+
+    res->InitializeFromTextureObject(dx, dst);
+    BOOST_TEST(res->SaveImage(filename));
+    BOOST_TEST(boost::filesystem::exists(filename));
+
+    CheckFileMD5(filename, 0x0eeb69d3e373404c, 0x54cfbf0e4a1bff92);
+}
+
 BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)
 {
     auto image = std::make_unique<ninniku::genericImage>();
@@ -211,7 +255,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)
 
     std::string filename = "dds_saveImage_bc1.dds";
 
-    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC1_UNORM));
+    BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC1_UNORM));
     BOOST_TEST(boost::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
@@ -234,7 +278,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc3)
 
     std::string filename = "dds_saveImage_bc3.dds";
 
-    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC3_UNORM));
+    BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC3_UNORM));
     BOOST_TEST(boost::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
@@ -257,7 +301,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
 
     std::string filename = "dds_saveImage_bc3.dds";
 
-    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC4_UNORM));
+    BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC4_UNORM));
     BOOST_TEST(boost::filesystem::exists(filename));
 
     // for some reason BC4 leads to different results between debug and release builds
@@ -306,7 +350,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
     std::string filename = "dds_saveImage_bc5_8.dds";
 
     res->InitializeFromTextureObject(dx, dst);
-    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
+    BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_TEST(boost::filesystem::exists(filename));
 
 #ifdef _DEBUG
@@ -354,7 +398,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_16bit)
     std::string filename = "dds_saveImage_bc5_16.dds";
 
     res->InitializeFromTextureObject(dx, dst);
-    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
+    BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_TEST(boost::filesystem::exists(filename));
 
 #ifdef _DEBUG
@@ -379,7 +423,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc6h)
 
     std::string filename = "dds_saveImage_bc6h.dds";
 
-    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC6H_UF16));
+    BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC6H_UF16));
     BOOST_TEST(boost::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
@@ -402,7 +446,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc7)
 
     std::string filename = "dds_saveImage_bc7.dds";
 
-    BOOST_TEST(res->SaveImage(filename, dx, DXGI_FORMAT_BC7_UNORM));
+    BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC7_UNORM));
     BOOST_TEST(boost::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
