@@ -23,8 +23,7 @@
 #include "../export.h"
 #include "image.h"
 
-namespace ninniku
-{
+namespace ninniku {
     class ddsImageImpl;
 
     class ddsImage final : public Image
@@ -48,7 +47,8 @@ namespace ninniku
 
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
-        NINNIKU_API bool SaveImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
+        NINNIKU_API bool SaveImage(const std::string&);
+        NINNIKU_API bool SaveCompressedImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
 
     private:
         std::unique_ptr<ddsImageImpl> _impl;

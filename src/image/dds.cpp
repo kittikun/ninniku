@@ -23,8 +23,7 @@
 
 #include "dds_impl.h"
 
-namespace ninniku
-{
+namespace ninniku {
     TextureParamHandle ddsImage::CreateTextureParam(const uint8_t viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
@@ -50,8 +49,13 @@ namespace ninniku
         return _impl->IsRequiringFix();
     }
 
-    bool ddsImage::SaveImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
+    bool ddsImage::SaveImage(const std::string& path)
     {
-        return _impl->SaveImage(path, dx, format);
+        return _impl->SaveImage(path);
+    }
+
+    bool ddsImage::SaveCompressedImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
+    {
+        return _impl->SaveCompressedImage(path, dx, format);
     }
 } // namespace ninniku

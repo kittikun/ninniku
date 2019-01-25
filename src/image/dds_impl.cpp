@@ -31,8 +31,7 @@
 
 #include <comdef.h>
 
-namespace ninniku
-{
+namespace ninniku {
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {
@@ -185,7 +184,19 @@ namespace ninniku
         }
     }
 
-    bool ddsImageImpl::SaveImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
+    bool ddsImageImpl::SaveImage(const std::string& path)
+    {
+        auto hr = DirectX::SaveToDDSFile(_scratch.GetImage(0, 0, 0), _scratch.GetImageCount(), _meta, DirectX::DDS_FLAGS_FORCE_DX10_EXT, ninniku::strToWStr(path).c_str());
+
+        if (FAILED(hr)) {
+            LOGE << "Failed to save compressed DDS";
+            return false;
+        }
+
+        return true;
+    }
+
+    bool ddsImageImpl::SaveCompressedImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
     {
         auto fmt = boost::format("Saving DDS with ddsImageImpl file \"%1%\"") % path;
         LOG << boost::str(fmt);
