@@ -43,9 +43,4 @@ namespace ninniku {
 
         return res;
     }
-
-    std::shared_ptr<TextureParam> DuplicateTextureParam(const TextureParamHandle& src)
-    {
-
-    }
 } // namespace ninniku
