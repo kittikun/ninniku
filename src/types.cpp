@@ -22,8 +22,30 @@
 #include "ninniku/types.h"
 
 namespace ninniku {
-    std::shared_ptr<TextureParam> CreateEmptyTextureParam()
+    std::shared_ptr<TextureParam> TextureParam::Create()
     {
         return std::make_shared<TextureParam>();
+    }
+
+    std::shared_ptr<TextureParam> TextureParam::Duplicate()
+    {
+        auto res = TextureParam::Create();
+
+        res->arraySize = arraySize;
+        res->depth = depth;
+        res->format = format;
+        res->height = height;
+        res->numMips = numMips;
+        res->viewflags = viewflags;
+        res->width = width;
+        res->imageDatas.reserve(imageDatas.size());
+        res->imageDatas.assign(imageDatas.begin(), imageDatas.end());
+
+        return res;
+    }
+
+    std::shared_ptr<TextureParam> DuplicateTextureParam(const TextureParamHandle& src)
+    {
+
     }
 } // namespace ninniku

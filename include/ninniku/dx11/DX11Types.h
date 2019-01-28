@@ -123,7 +123,10 @@ namespace ninniku {
         DX11SRV srvDefault;
 
         // D3D_SRV_DIMENSION_TEXTURECUBE
-        std::vector<DX11SRV> srvCube;
+        DX11SRV srvCube;
+
+        // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
+        DX11SRV srvCubeArray;
 
         // D3D_SRV_DIMENSION_TEXTURE2DARRAY per mip level
         std::vector<DX11SRV> srvArray;

@@ -27,7 +27,7 @@
 
 ninniku::TextureHandle GenerateColoredMips(ninniku::DX11Handle& dx)
 {
-    auto param = ninniku::CreateEmptyTextureParam();
+    auto param = ninniku::TextureParam::Create();
     param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     param->width = param->height = 512;
     param->depth = 1;
@@ -69,7 +69,7 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninn
     auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
 
-    auto param = ninniku::CreateEmptyTextureParam();
+    auto param = ninniku::TextureParam::Create();
     param->format = srcParam->format;
     param->width = srcParam->width;
     param->height = srcParam->height;
@@ -127,7 +127,7 @@ ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::Textu
 {
     auto subMarker = dx->CreateDebugMarker("CommonResizeImageImpl");
 
-    auto dstParam = ninniku::CreateEmptyTextureParam();
+    auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = std::get<1>(fixRes);
     dstParam->height = std::get<2>(fixRes);
     dstParam->depth = srcTex->desc->depth;

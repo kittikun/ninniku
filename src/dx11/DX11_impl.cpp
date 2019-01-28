@@ -630,24 +630,17 @@ namespace ninniku {
             srvDesc.Format = static_cast<DXGI_FORMAT>(params.texParams->format);
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBEARRAY;
             srvDesc.TextureCubeArray.MipLevels = params.texParams->numMips;
+            srvDesc.TextureCubeArray.NumCubes = params.texParams->arraySize % CUBEMAP_NUM_FACES;
 
-            auto numCubes = params.texParams->arraySize % CUBEMAP_NUM_FACES;
-
-            srvDesc.TextureCubeArray.NumCubes = numCubes;
-            params.obj->srvCube.resize(numCubes);
-
-            for (uint32_t i = 0; i < numCubes; ++i) {
-                srvDesc.TextureCubeArray.First2DArrayFace = i * CUBEMAP_NUM_FACES;
-
-                auto hr = _device->CreateShaderResourceView(params.obj->GetResource(), &srvDesc, params.obj->srvCube[i].GetAddressOf());
-                if (FAILED(hr)) {
-                    LOGE << "Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBE with:";
-                    _com_error err(hr);
-                    LOGE << err.ErrorMessage();
-                    return false;
-                }
+            auto hr = _device->CreateShaderResourceView(params.obj->GetResource(), &srvDesc, params.obj->srvCubeArray.GetAddressOf());
+            if (FAILED(hr)) {
+                LOGE << "Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBE with:";
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
+                return false;
             }
         }
+
         if (params.isCube) {
             // To sample texture as cubemap
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -656,9 +649,7 @@ namespace ninniku {
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
             srvDesc.TextureCube.MipLevels = params.texParams->numMips;
 
-            params.obj->srvCube.resize(1);
-
-            auto hr = _device->CreateShaderResourceView(params.obj->GetResource(), &srvDesc, params.obj->srvCube.front().GetAddressOf());
+            auto hr = _device->CreateShaderResourceView(params.obj->GetResource(), &srvDesc, params.obj->srvCube.GetAddressOf());
             if (FAILED(hr)) {
                 LOGE << "Failed to CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBE with:";
                 _com_error err(hr);

@@ -26,8 +26,7 @@
 #include <memory>
 #include <vector>
 
-namespace ninniku
-{
+namespace ninniku {
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
     class TextureObject;
@@ -83,8 +82,20 @@ namespace ninniku
         TV_CPU_READ = 1 << 2
     };
 
-    struct TextureParam
+    class TextureParam
     {
+        // no copy of any kind allowed, use Duplicate for that
+        TextureParam(const TextureParam&) = delete;
+        TextureParam& operator=(TextureParam&) = delete;
+        TextureParam(TextureParam&&) = delete;
+        TextureParam& operator=(TextureParam&&) = delete;
+    public:
+        TextureParam() = default;
+
+        static NINNIKU_API std::shared_ptr<TextureParam> Create();
+        NINNIKU_API std::shared_ptr<TextureParam> Duplicate();
+
+    public:
         uint32_t numMips;
         uint32_t arraySize;
         uint32_t width;
@@ -98,6 +109,4 @@ namespace ninniku
     };
 
     using TextureParamHandle = std::shared_ptr<const TextureParam>;
-
-    NINNIKU_API std::shared_ptr<TextureParam> CreateEmptyTextureParam();
 } // namespace ninniku
