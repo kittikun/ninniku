@@ -280,7 +280,18 @@ namespace ninniku {
         auto index = _meta.ComputeIndex(dstMip, dstFace, 0);
         auto& img = _scratch.GetImages()[index];
 
-        memcpy_s(img.pixels, img.height * img.rowPitch, newData, img.height * std::min(newRowPitch, static_cast<uint32_t>(img.rowPitch)));
+        if (newRowPitch > img.rowPitch) {
+            // row pitch from dx11 can be larger than for the image so we have to do each row manually
+            std::vector<uint8_t> temp(img.height * img.rowPitch);
+
+            for (size_t y = 0; y < img.height; ++y) {
+                memcpy_s(&temp[y * img.rowPitch], img.rowPitch, &newData[y * newRowPitch], img.rowPitch);
+            }
+
+            memcpy_s(img.pixels, img.height * img.rowPitch, temp.data(), temp.size());
+        } else {
+            memcpy_s(img.pixels, img.height * img.rowPitch, newData, img.height * newRowPitch);
+        }
     }
 
     bool ddsImageImpl::ValidateExtension(const std::string& ext) const

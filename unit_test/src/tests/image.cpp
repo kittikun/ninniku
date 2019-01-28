@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
     auto srcTex = dx->CreateTexture(srcParam);
 
     // packed normal
-    auto dstParam = ninniku::CreateEmptyTextureParam();
+    auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = srcParam->width;
     dstParam->height = srcParam->height;
     dstParam->depth = srcParam->depth;
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_16bit)
     auto srcTex = dx->CreateTexture(srcParam);
 
     // packed normal
-    auto dstParam = ninniku::CreateEmptyTextureParam();
+    auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = srcParam->width;
     dstParam->height = srcParam->height;
     dstParam->depth = srcParam->depth;

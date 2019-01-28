@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
     auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("CubemapDirToArray");
 
-    auto param = ninniku::CreateEmptyTextureParam();
+    auto param = ninniku::TextureParam::Create();
     param->width = param->height = 512;
     param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     param->depth = 1;
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
 
         cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
-        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube[0]));
+        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube));
         cmd.uavBindings.insert(std::make_pair("dstTex", dstTex->uav[0]));
 
         dx->Dispatch(cmd);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     auto marker = dx->CreateDebugMarker("Resize");
     auto srcTex = dx->CreateTexture(srcParam);
 
-    auto dstParam = ninniku::CreateEmptyTextureParam();
+    auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = newSize;
     dstParam->height = newSize;
     dstParam->format = srcTex->desc->format;
