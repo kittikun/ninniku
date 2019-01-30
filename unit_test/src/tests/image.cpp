@@ -96,27 +96,27 @@ BOOST_AUTO_TEST_CASE(cmft_texture_param)
     BOOST_TEST(param->width == 512);
 }
 
-BOOST_AUTO_TEST_CASE(cmft_saveImage)
+BOOST_AUTO_TEST_CASE(cmft_saveImage_cubemap)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    std::string filename = "cmft_saveImage.dds";
+    std::string filename = "cmft_saveImage_cubemap.dds";
 
-    BOOST_TEST(image->SaveImageCubemap(filename, DXGI_FORMAT_R32G32B32A32_FLOAT));
+    BOOST_TEST(image->SaveImage(filename, DXGI_FORMAT_R32G32B32A32_FLOAT, ninniku::cmftImage::SaveType::Cubemap));
     BOOST_TEST(boost::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x62a804a10dedbe15, 0xdcf18df4c67beda7);
 }
 
-BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
+BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    BOOST_TEST(image->SaveImageFaceList("cmft_saveImageFace", DXGI_FORMAT_R32G32B32A32_FLOAT));
+    BOOST_TEST(image->SaveImage("cmft_saveImageFace", DXGI_FORMAT_R32G32B32A32_FLOAT, ninniku::cmftImage::SaveType::Facelist));
 
     std::array<std::string, ninniku::CUBEMAP_NUM_FACES> suffixes = { "negx", "negy", "negz", "posx", "posy", "posz" };
     std::array<uint64_t, ninniku::CUBEMAP_NUM_FACES * 2> hashes = {
@@ -134,6 +134,20 @@ BOOST_AUTO_TEST_CASE(cmft_saveImageFaceList)
         BOOST_TEST(boost::filesystem::exists(filename));
         CheckFileMD5(filename, hashes[i * 2], hashes[i * 2 + 1]);
     }
+}
+
+BOOST_AUTO_TEST_CASE(cmft_saveImage_vcross)
+{
+    auto image = std::make_unique<ninniku::cmftImage>();
+
+    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+
+    std::string filename = "cmft_saveImage_vcross.dds";
+
+    BOOST_TEST(image->SaveImage(filename, DXGI_FORMAT_R32G32B32A32_FLOAT, ninniku::cmftImage::SaveType::VCross));
+    BOOST_TEST(boost::filesystem::exists(filename));
+
+    CheckFileMD5(filename, 0x5da8b5ff55d4480b, 0x460a8d8b63904acd);
 }
 
 BOOST_AUTO_TEST_CASE(dds_load)

@@ -22,6 +22,8 @@
 
 #include "image_Impl.h"
 
+#include "ninniku/image/cmft.h"
+
 #include <cmft/image.h>
 
 namespace ninniku {
@@ -42,11 +44,7 @@ namespace ninniku {
         // Used when transfering data back from the GPU
         void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
-        // Save Image as DDS R32G32B32A32_FLOAT
-        bool SaveImageCubemap(const std::string&, uint32_t format);
-
-        // Save each face of the cubemap as DDS R32G32B32A32_FLOAT
-        bool SaveImageFaceList(const std::string&, uint32_t format);
+        bool SaveImage(const std::string& path, uint32_t format, cmftImage::SaveType type);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
@@ -60,7 +58,6 @@ namespace ninniku {
     private:
         void AllocateMemory();
         bool LoadEXR(const std::string& path);
-        bool SaveImage(const std::string& path, uint32_t format, uint32_t type);
 
     private:
         cmft::Image _image;

@@ -230,10 +230,11 @@ namespace ninniku {
         return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
     }
 
-    bool cmftImageImpl::SaveImage(const std::string& path, uint32_t format, uint32_t type)
+    bool cmftImageImpl::SaveImage(const std::string& path, uint32_t format, cmftImage::SaveType type)
     {
         auto stripped = removeFileExtension(path);
         uint32_t cmftFormat;
+        uint32_t cmftType;
 
         if (format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
             cmftFormat = cmft::TextureFormat::Enum::RGBA32F;
@@ -244,19 +245,21 @@ namespace ninniku {
             return false;
         }
 
-        cmft::imageSave(_image, stripped.c_str(), cmft::ImageFileType::Enum::DDS, static_cast<cmft::OutputType::Enum>(type), static_cast<cmft::TextureFormat::Enum>(cmftFormat), true);
+        switch (type) {
+            case ninniku::cmftImage::SaveType::Cubemap:
+                cmftType = cmft::OutputType::Cubemap;
+                break;
+            case ninniku::cmftImage::SaveType::Facelist:
+                cmftType = cmft::OutputType::FaceList;
+                break;
+            case ninniku::cmftImage::SaveType::VCross:
+                cmftType = cmft::OutputType::VCross;
+                break;
+        }
+
+        cmft::imageSave(_image, stripped.c_str(), cmft::ImageFileType::Enum::DDS, static_cast<cmft::OutputType::Enum>(cmftType), static_cast<cmft::TextureFormat::Enum>(cmftFormat), true);
 
         return true;
-    }
-
-    bool cmftImageImpl::SaveImageCubemap(const std::string& path, uint32_t format)
-    {
-        return SaveImage(path, format, cmft::OutputType::Enum::Cubemap);
-    }
-
-    bool cmftImageImpl::SaveImageFaceList(const std::string& path, uint32_t format)
-    {
-        return SaveImage(path, format, cmft::OutputType::Enum::FaceList);
     }
 
     void cmftImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
