@@ -92,7 +92,7 @@ int main()
 
     image.reset();
 
-    res->SaveImageCubemap("test", DXGI_FORMAT_R32G32B32A32_FLOAT);
+    res->SaveImage("test", DXGI_FORMAT_R32G32B32A32_FLOAT, ninniku::cmftImage::SaveType::Cubemap);
 
     ninniku::Terminate();
 }

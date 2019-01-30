@@ -129,12 +129,6 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
 
     auto data = res->GetData();
 
-    auto dstImg = std::make_unique<ninniku::ddsImage>();
-
-    dstImg->InitializeFromTextureObject(dx, resTex);
-    dstImg->SaveImage("testDDS.dds");
-
-
     // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xc85514693c51df6f, 0xd10b1b7b4175a5ff);
 }
