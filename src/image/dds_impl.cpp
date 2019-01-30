@@ -165,6 +165,7 @@ namespace ninniku {
             param->numMips = 1;
             param->arraySize = 1;
             param->viewflags = ninniku::TV_CPU_READ;
+            param->depth = 1;
 
             auto readBack = dx->CreateTexture(param);
 
