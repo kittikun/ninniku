@@ -120,6 +120,7 @@ namespace ninniku {
     void ddsImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         // DirectXTex
+        _meta = DirectX::TexMetadata{};
         _meta.width = srcTex->desc->width;
         _meta.height = srcTex->desc->height;
         _meta.depth = srcTex->desc->depth;
