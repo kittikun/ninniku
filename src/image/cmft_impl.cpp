@@ -49,7 +49,7 @@ namespace ninniku {
     void cmftImageImpl::AllocateMemory()
     {
         // Alloc dst data.
-        const uint32_t bytesPerPixel = 16; // RGBA32F;
+        const uint32_t bytesPerPixel = GetBPPFromFormat(_image.m_format);
         uint32_t dstDataSize = 0;
         uint32_t dstOffsets[CUBE_FACE_NUM][MAX_MIP_NUM];
 
@@ -81,6 +81,41 @@ namespace ninniku {
         res->viewflags = viewFlags;
 
         return std::move(res);
+    }
+
+    uint32_t cmftImageImpl::GetBPPFromFormat(cmft::TextureFormat::Enum format) const
+    {
+        // Assume that we are always using 4 channels
+        // RGBA32F
+        auto res = 16;
+
+        if (format == cmft::TextureFormat::RGBA16F)
+            res = 8;
+        else if (format == cmft::TextureFormat::BGRA8)
+            res = 4;
+
+        return res;
+    }
+
+    cmft::TextureFormat::Enum cmftImageImpl::GetFormatFromDXGIFormat(uint32_t format) const
+    {
+        auto res = cmft::TextureFormat::Enum::Null;
+
+        switch (format) {
+            case DXGI_FORMAT_R16G16B16A16_FLOAT:
+                res = cmft::TextureFormat::Enum::RGBA16F;
+                break;
+
+            case DXGI_FORMAT_R32G32B32A32_FLOAT:
+                res = cmft::TextureFormat::Enum::RGBA32F;
+                break;
+
+            case DXGI_FORMAT_R8G8B8A8_UNORM:
+                res = cmft::TextureFormat::Enum::BGRA8;
+                break;
+        }
+
+        return res;
     }
 
     bool cmftImageImpl::LoadEXR(const std::string& path)
@@ -167,8 +202,8 @@ namespace ninniku {
         // allocate memory
         _image.m_width = srcTex->desc->width;
         _image.m_height = srcTex->desc->height;
-        _image.m_format = cmft::TextureFormat::RGBA32F;
-        _image.m_numFaces = CUBEMAP_NUM_FACES;
+        _image.m_format = GetFormatFromDXGIFormat(srcTex->desc->format);
+        _image.m_numFaces = srcTex->desc->arraySize;
         _image.m_numMips = srcTex->desc->numMips;
 
         auto fmt = boost::format("cmftImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % _image.m_width % _image.m_height % (int)_image.m_numFaces % (int)_image.m_numMips;
@@ -233,15 +268,11 @@ namespace ninniku {
     bool cmftImageImpl::SaveImage(const std::string& path, uint32_t format, cmftImage::SaveType type)
     {
         auto stripped = removeFileExtension(path);
-        uint32_t cmftFormat;
+        uint32_t cmftFormat = GetFormatFromDXGIFormat(format);
         uint32_t cmftType;
 
-        if (format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
-            cmftFormat = cmft::TextureFormat::Enum::RGBA32F;
-        } else if (format == DXGI_FORMAT_R8G8B8A8_UNORM) {
-            cmftFormat = cmft::TextureFormat::Enum::BGRA8;
-        } else {
-            LOGE << "SaveImage* format only supports DXGI_FORMAT_R32G32B32A32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM";
+        if (cmftFormat == cmft::TextureFormat::Null) {
+            LOGE << "Unsupported format was passed to SaveImage";
             return false;
         }
 
@@ -265,7 +296,7 @@ namespace ninniku {
     void cmftImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
     {
         // get the right offset
-        const uint32_t bytesPerPixel = 16; // RGBA32F;
+        const uint32_t bytesPerPixel = GetBPPFromFormat(_image.m_format);
         uint32_t size = _image.m_width;
         uint32_t dstDataSize = 0;
         uint32_t dstOffsets[CUBE_FACE_NUM][MAX_MIP_NUM];

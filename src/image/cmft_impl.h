@@ -58,6 +58,8 @@ namespace ninniku {
     private:
         void AllocateMemory();
         bool LoadEXR(const std::string& path);
+        cmft::TextureFormat::Enum GetFormatFromDXGIFormat(uint32_t format) const;
+        uint32_t GetBPPFromFormat(cmft::TextureFormat::Enum format) const;
 
     private:
         cmft::Image _image;
