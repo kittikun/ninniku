@@ -10,7 +10,6 @@ float3 HSLtoRGB(in float3 HSL)
     return (RGB - 0.5) * C + HSL.z;
 }
 
-
 float3 RGBtoHSL(in float3 RGB)
 {
     float3 HCV = RGBtoHCV(RGB);
@@ -22,7 +21,7 @@ float3 RGBtoHSL(in float3 RGB)
 [numthreads(32, 32, 1)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
-    float3 src = RGBtoHSL(srcTex[DTI.xy]);
+    float3 src = RGBtoHSL(srcTex[DTI.xy].rgb);
 
     float3 temp = To565nFrom(src);
 

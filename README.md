@@ -6,7 +6,7 @@
 
 Simple framework to run compute jobs with DX11
 - Texture are supported with the SRV/UAV views
-- Can load cubemaps with [cmft](https://github.com/dariomanesku/cmft).
+- Can load/save cubemaps with [cmft](https://github.com/dariomanesku/cmft).
   * Saved dds files can be DXGI_FORMAT_R32G32B32A32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM
 - Can load/save DDS with [DirectXTex](https://github.com/Microsoft/DirectXTex)
   * Saved dds files must be compressed BCx format (but BC2 is not supported)
