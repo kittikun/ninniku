@@ -24,9 +24,9 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11;
 
     enum class ELogLevel : uint8_t
@@ -45,9 +45,9 @@ namespace ninniku
 
     /// <summary>
     /// Initialize ninniku framework
-    /// shaderPath must point to compiled .cso folder
+    /// shaderPaths must point to compiled .cso folders
     /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, const std::string& shaderPath, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Cleanup resources used by ninniku

@@ -20,28 +20,25 @@
 
 #include <ninniku/ninniku.h>
 #include <ninniku/dx11/DX11.h>
-#include <ninniku/image/cmft.h>
+#include <ninniku/image/generic.h>
 #include <ninniku/image/dds.h>
 
 int main()
 {
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, "D:\\Misc\\ninniku\\unit_test\\shaders", ninniku::ELogLevel::LL_FULL);
+    std::vector<std::string> shaderPaths = { "D:\\Misc\\ninniku\\simple\\shaders", "D:\\Misc\\ninniku\\unit_test\\shaders" };
 
-    auto image = std::make_unique<ninniku::ddsImage>();
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
 
-    image->Load("D:\\Misc\\ninniku\\simple\\narita.dds");
+    auto image = std::make_unique<ninniku::genericImage>();
+
+    image->Load("D:\\Misc\\ninniku\\simple\\gradient.png");
 
     auto params = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(params);
 
-    auto outImage = std::make_unique<ninniku::cmftImage>();
-
-    outImage->InitializeFromTextureObject(dx, srcTex);
 
 
-
-    outImage->SaveImage("vcross", DXGI_FORMAT_R16G16B16A16_FLOAT, ninniku::cmftImage::SaveType::VCross);
 
 
 

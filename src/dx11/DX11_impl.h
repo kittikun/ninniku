@@ -40,7 +40,7 @@ namespace ninniku {
         DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
         TextureHandle CreateTexture(const TextureParamHandle& param);
         bool Dispatch(const Command& cmd) const;
-        bool Initialize(const std::string& shaderPath, const bool isWarp);
+        bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp);
         MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
         bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 

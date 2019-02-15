@@ -467,7 +467,7 @@ namespace ninniku {
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
-    bool DX11Impl::Initialize(const std::string& shaderPath, const bool isWarp)
+    bool DX11Impl::Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp)
     {
         auto adapter = 0;
 
@@ -486,10 +486,13 @@ namespace ninniku {
             return false;
         }
 
-        if ((shaderPath.length() > 0)) {
-            if (!LoadShaders(shaderPath)) {
-                LOGE << "Failed to load shaders.";
-                return false;
+        if ((shaderPaths.size() > 0)) {
+            for (auto& path : shaderPaths) {
+                if (!LoadShaders(path)) {
+                    auto fmt = boost::format("Failed to load shaders in: %1%") % path;
+                    LOGE << boost::str(fmt);
+                    return false;
+                }
             }
         }
 
