@@ -23,13 +23,68 @@ float3 HUEtoRGB(in float H)
     return saturate(float3(R, G, B));
 }
 
-float3 To565nFrom(float3 val)
+float3 To655nFrom(float3 val)
 {
     const float3 range = float3(0x3f, 0x1f, 0x1f);
 
-    uint3 temp = uint3(val * range);
+    uint3 temp = uint3(val * range + 0.5);
 
     temp = uint3(temp.r & 0x3f, temp.g & 0x1f, temp.b & 0x1f);
+
+    return float3(temp) / range;
+}
+
+float3 To565nFrom(float3 val)
+{
+    const float3 range = float3(0x1f, 0x3f, 0x1f);
+
+    uint3 temp = uint3(val * range + 0.5);
+
+    temp = uint3(temp.r & 0x1f, temp.g & 0x3f, temp.b & 0x1f);
+
+    return float3(temp) / range;
+}
+
+float3 To556nFrom(float3 val)
+{
+    const float3 range = float3(0x1f, 0x1f, 0x3f);
+
+    uint3 temp = uint3(val * range + 0.5);
+
+    temp = uint3(temp.r & 0x1f, temp.g & 0x1f, temp.b & 0x3f);
+
+    return float3(temp) / range;
+}
+
+float3 To766nFrom(float3 val)
+{
+    const float3 range = float3(0x7f, 0x3f, 0x3f);
+
+    uint3 temp = uint3(val * range + 0.5);
+
+    temp = uint3(temp.r & 0x7f, temp.g & 0x3f, temp.b & 0x3f);
+
+    return float3(temp) / range;
+}
+
+float3 To676nFrom(float3 val)
+{
+    const float3 range = float3(0x3f, 0x7f, 0x3f);
+
+    uint3 temp = uint3(val * range + 0.5);
+
+    temp = uint3(temp.r & 0x3f, temp.g & 0x7f, temp.b & 0x3f);
+
+    return float3(temp) / range;
+}
+
+float3 To667nFrom(float3 val)
+{
+    const float3 range = float3(0x3f, 0x3f, 0x7f);
+
+    uint3 temp = uint3(val * range + 0.5);
+
+    temp = uint3(temp.r & 0x3f, temp.g & 0x3f, temp.b & 0x7f);
 
     return float3(temp) / range;
 }

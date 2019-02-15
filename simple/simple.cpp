@@ -25,13 +25,13 @@
 
 int main()
 {
-    std::vector<std::string> shaderPaths = { "D:\\Misc\\ninniku\\simple\\shaders", "D:\\Misc\\ninniku\\unit_test\\shaders" };
+    std::vector<std::string> shaderPaths = { "..\\simple\\shaders", "..\\unit_test\\shaders" };
 
     ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
 
     auto image = std::make_unique<ninniku::genericImage>();
 
-    image->Load("D:\\Misc\\ninniku\\simple\\gradient.png");
+    image->Load("..\\simple\\gradient.png");
 
     auto params = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();

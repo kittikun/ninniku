@@ -3,6 +3,7 @@
 Texture2D<float4> srcTex;
 RWTexture2D<float4> dstTex;
 
+// http://www.chilliant.com/rgb2hsv.html
 // The weights of RGB contributions to luminance.
 // Should sum to unity.
 float3 HCYwts = float3(0.299, 0.587, 0.114);
@@ -39,7 +40,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
     float3 src = RGBtoHCY(srcTex[DTI.xy].rgb);
 
     // focus on H
-    float3 temp = To565nFrom(src);
+    float3 temp = To766nFrom(src);
 
     dstTex[DTI.xy] = float4(HCYtoRGB(temp), 1);
 }

@@ -3,6 +3,8 @@
 Texture2D<float4> srcTex;
 RWTexture2D<float4> dstTex;
 
+// http://www.chilliant.com/rgb2hsv.html
+
 float HCLgamma = 3;
 float HCLy0 = 100;
 float HCLmaxL = 0.530454533953517; // == exp(HCLgamma / HCLy0) - 0.5
@@ -81,7 +83,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
 {
     float3 src = RGBtoHCL(srcTex[DTI.xy].rgb);
 
-    float3 temp = To565nFrom(src);
+    float3 temp = To766nFrom(src);
 
     dstTex[DTI.xy] = float4(HCLtoRGB(temp), 1);
 }

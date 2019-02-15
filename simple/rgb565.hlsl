@@ -8,5 +8,5 @@ void main(uint3 DTI : SV_DispatchThreadID)
 {
     float3 src = srcTex[DTI.xy].rgb;
 
-    dstTex[DTI.xy] = float4(To565nFrom(src), 1);
+    dstTex[DTI.xy] = float4(To676nFrom(src), 1);
 }

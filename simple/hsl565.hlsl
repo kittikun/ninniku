@@ -3,6 +3,8 @@
 Texture2D<float4> srcTex;
 RWTexture2D<float4> dstTex;
 
+// http://www.chilliant.com/rgb2hsv.html
+
 float3 HSLtoRGB(in float3 HSL)
 {
     float3 RGB = HUEtoRGB(HSL.x);
@@ -23,7 +25,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
 {
     float3 src = RGBtoHSL(srcTex[DTI.xy].rgb);
 
-    float3 temp = To565nFrom(src);
+    float3 temp = To766nFrom(src);
 
     dstTex[DTI.xy] = float4(HSLtoRGB(temp), 1);
 }
