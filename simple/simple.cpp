@@ -37,11 +37,39 @@ int main()
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(params);
 
+    auto lmdb = [&](const std::string & shaderName) {
+        auto subMarker = dx->CreateDebugMarker(shaderName);
 
+        auto desc = params->Duplicate();
+        desc->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+        desc->imageDatas.clear();
 
+        auto dst = dx->CreateTexture(desc);
 
+        // dispatch
+        ninniku::Command cmd = {};
+        cmd.shader = shaderName;
 
+        cmd.dispatch[0] = desc->width / 32;
+        cmd.dispatch[1] = desc->height / 32;
+        cmd.dispatch[2] = 1;
 
+        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
+        cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+
+        dx->Dispatch(cmd);
+
+        auto out = std::make_unique<ninniku::ddsImage>();
+        out->InitializeFromTextureObject(dx, dst);
+        out->SaveImage(shaderName + ".dds");
+    };
+
+    lmdb("rgb565");
+    lmdb("hsv565");
+    lmdb("hsl565");
+    lmdb("hcy565");
+    lmdb("hcl565");
+    lmdb("ycocg565");
 
     ninniku::Terminate();
 }

@@ -262,7 +262,7 @@ namespace ninniku {
             desc.MiscFlags = miscFlags;
 
             res->texture.emplace<DX11Tex2D>();
-            hr = _device->CreateTexture2D(&desc, initialData.data(), std::get<DX11Tex2D>(res->texture).GetAddressOf());
+            hr = _device->CreateTexture2D(&desc, (numImageImpls > 0) ? initialData.data() : nullptr, std::get<DX11Tex2D>(res->texture).GetAddressOf());
             apiName = "CreateTexture2D";
         } else if (is1d) {
             D3D11_TEXTURE1D_DESC desc = {};

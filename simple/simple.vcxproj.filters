@@ -15,10 +15,25 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="structured.hlsl">
+    <FxCompile Include="rgb565.hlsl">
       <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="565.hlsl">
+    <FxCompile Include="hsv565.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="common.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="hsl565.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="hcy565.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="hcl565.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ycocg565.hlsl">
       <Filter>Source Files\shaders</Filter>
     </FxCompile>
   </ItemGroup>
