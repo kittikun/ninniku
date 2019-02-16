@@ -29,20 +29,43 @@ int main()
 
     ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
 
-    auto image = std::make_unique<ninniku::genericImage>();
-
-    image->Load("..\\simple\\gradient.png");
-
-    auto params = image->CreateTextureParam(ninniku::TV_SRV);
     auto& dx = ninniku::GetRenderer();
+    auto params = ninniku::TextureParam::Create();
+
+    params->width = 512;
+    params->height = 512;
+    params->depth = 1;
+    params->arraySize = 1;
+    params->format = DXGI_FORMAT_R11G11B10_FLOAT;
+    params->numMips = 1;
+    params->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+
     auto srcTex = dx->CreateTexture(params);
 
-    auto lmdb = [&](const std::string & shaderName) {
+    // dispatch
+    ninniku::Command cmd = {};
+    cmd.shader = "gradient";
+
+    cmd.dispatch[0] = params->width / 32;
+    cmd.dispatch[1] = params->height / 32;
+    cmd.dispatch[2] = 1;
+
+    cmd.uavBindings.insert(std::make_pair("dstTex", srcTex->uav[0]));
+
+    dx->Dispatch(cmd);
+
+    auto outSRC = std::make_unique<ninniku::ddsImage>();
+    outSRC->InitializeFromTextureObject(dx, srcTex);
+    outSRC->SaveImage("gradient.dds");
+
+    auto lmdb = [&](const std::string & shaderName)
+    {
         auto subMarker = dx->CreateDebugMarker(shaderName);
 
         auto desc = params->Duplicate();
         desc->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
         desc->imageDatas.clear();
+        desc->format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
         auto dst = dx->CreateTexture(desc);
 

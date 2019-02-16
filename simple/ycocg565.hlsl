@@ -1,6 +1,6 @@
 #include "common.hlsl"
 
-Texture2D<float4> srcTex;
+Texture2D<float3> srcTex;
 RWTexture2D<float4> dstTex;
 
 float3 YCoCg_FromRGB(in float3 color)
@@ -22,8 +22,7 @@ float3 YCoCg_ToRGB(in float3 ycocg)
 [numthreads(32, 32, 1)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
-    float3 src = YCoCg_FromRGB(srcTex[DTI.xy].rgb);
-
+    float3 src = YCoCg_FromRGB(srcTex[DTI.xy]);
     float3 temp = To766nFrom(src);
 
     dstTex[DTI.xy] = float4(YCoCg_ToRGB(temp), 1);
