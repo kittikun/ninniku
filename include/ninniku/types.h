@@ -93,7 +93,7 @@ namespace ninniku {
         TextureParam() = default;
 
         static NINNIKU_API std::shared_ptr<TextureParam> Create();
-        NINNIKU_API std::shared_ptr<TextureParam> Duplicate();
+        NINNIKU_API std::shared_ptr<TextureParam> Duplicate() const;
 
     public:
         uint32_t numMips;

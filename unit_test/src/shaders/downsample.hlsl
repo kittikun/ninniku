@@ -31,6 +31,7 @@ void main(uint3 GID : SV_GroupID, uint3 GTI : SV_GroupThreadID)
     uint size, dummy1, dummy2;
 
     // we always slice for one mip level so no need to specify target mip
+    // Note that this version of GetDimensions works with WARP but not a proper GPU
     srcMip.GetDimensions(size, dummy1, dummy2);
 
     uint2 samplePos = mad(GID.xy, DOWNSAMPLE_NUMTHREAD_X << 1, GTI.xy << 1); // on srcMip, x2 because we sample 2x2 with gather

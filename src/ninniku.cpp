@@ -30,8 +30,7 @@
 #include <renderdoc/renderdoc_app.h>
 #endif
 
-namespace ninniku
-{
+namespace ninniku {
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_1_2* gRenderDocApi = nullptr;
 #endif
@@ -74,7 +73,7 @@ namespace ninniku
         return sRenderer;
     }
 
-    bool Initialize(const ERenderer renderer, const std::string& shaderPath, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
     {
         ninniku::Log::Initialize(logLevel);
 
@@ -88,7 +87,7 @@ namespace ninniku
             sRenderer.reset(new ninniku::DX11());
 
             // since CI is running test, we must use warp driver
-            if (!sRenderer->GetImpl()->Initialize(shaderPath, (renderer == ERenderer::RENDERER_WARP) ? true : false)) {
+            if (!sRenderer->GetImpl()->Initialize(shaderPaths, (renderer == ERenderer::RENDERER_WARP) ? true : false)) {
                 LOGE << "DX11App::Initialize failed";
                 return false;
             }

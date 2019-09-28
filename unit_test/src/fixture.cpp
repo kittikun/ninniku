@@ -25,7 +25,9 @@
 SetupFixture::SetupFixture()
 {
     // because unit test run on CI, always use WARP
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP, "shaders", ninniku::ELogLevel::LL_FULL);
+    std::vector<std::string> shaderPaths = { "shaders" };
+
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP, shaderPaths, ninniku::ELogLevel::LL_FULL);
 }
 
 SetupFixture::~SetupFixture()

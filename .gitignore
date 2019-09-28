@@ -8,3 +8,6 @@ bin/
 *.rdc
 *.cso
 unit_test/*.dds
+simple/*.dds
+*.tlog
+*.idb

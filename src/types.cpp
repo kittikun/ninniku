@@ -27,7 +27,7 @@ namespace ninniku {
         return std::make_shared<TextureParam>();
     }
 
-    std::shared_ptr<TextureParam> TextureParam::Duplicate()
+    std::shared_ptr<TextureParam> TextureParam::Duplicate() const
     {
         auto res = TextureParam::Create();
 

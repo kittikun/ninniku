@@ -262,7 +262,7 @@ namespace ninniku {
             desc.MiscFlags = miscFlags;
 
             res->texture.emplace<DX11Tex2D>();
-            hr = _device->CreateTexture2D(&desc, initialData.data(), std::get<DX11Tex2D>(res->texture).GetAddressOf());
+            hr = _device->CreateTexture2D(&desc, (numImageImpls > 0) ? initialData.data() : nullptr, std::get<DX11Tex2D>(res->texture).GetAddressOf());
             apiName = "CreateTexture2D";
         } else if (is1d) {
             D3D11_TEXTURE1D_DESC desc = {};
@@ -467,7 +467,7 @@ namespace ninniku {
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
-    bool DX11Impl::Initialize(const std::string& shaderPath, const bool isWarp)
+    bool DX11Impl::Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp)
     {
         auto adapter = 0;
 
@@ -486,10 +486,13 @@ namespace ninniku {
             return false;
         }
 
-        if ((shaderPath.length() > 0)) {
-            if (!LoadShaders(shaderPath)) {
-                LOGE << "Failed to load shaders.";
-                return false;
+        if ((shaderPaths.size() > 0)) {
+            for (auto& path : shaderPaths) {
+                if (!LoadShaders(path)) {
+                    auto fmt = boost::format("Failed to load shaders in: %1%") % path;
+                    LOGE << boost::str(fmt);
+                    return false;
+                }
             }
         }
 
