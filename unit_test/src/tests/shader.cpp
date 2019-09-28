@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
 
     auto data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x0a8789456200fe0c, 0x0801bef40235cedb);
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0xb3ba50ac382fe166, 0xdd1bda49f1b43409);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

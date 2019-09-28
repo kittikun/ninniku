@@ -23,7 +23,8 @@
 
 #include "cmft_impl.h"
 
-namespace ninniku {
+namespace ninniku
+{
     TextureParamHandle cmftImage::CreateTextureParam(const uint8_t viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
@@ -49,8 +50,8 @@ namespace ninniku {
         return _impl->IsRequiringFix();
     }
 
-    bool cmftImage::SaveImage(const std::string& path, uint32_t format, SaveType type)
+    bool cmftImage::SaveImage(const std::string& path, SaveType type)
     {
-        return _impl->SaveImage(path, format, type);
+        return _impl->SaveImage(path, type);
     }
 }

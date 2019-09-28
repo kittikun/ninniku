@@ -26,7 +26,8 @@
 
 #include <cmft/image.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class cmftImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -44,7 +45,7 @@ namespace ninniku {
         // Used when transfering data back from the GPU
         void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
-        bool SaveImage(const std::string& path, uint32_t format, cmftImage::SaveType type);
+        bool SaveImage(const std::string& path, cmftImage::SaveType type);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
@@ -59,6 +60,7 @@ namespace ninniku {
         void AllocateMemory();
         bool LoadEXR(const std::string& path);
         cmft::TextureFormat::Enum GetFormatFromDXGIFormat(uint32_t format) const;
+        cmft::ImageFileType::Enum GetFiletypeFromFilename(const std::string& path);
         uint32_t GetBPPFromFormat(cmft::TextureFormat::Enum format) const;
 
     private:

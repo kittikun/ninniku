@@ -23,7 +23,8 @@
 #include "../export.h"
 #include "image.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class cmftImageImpl;
 
     class cmftImage final : public Image
@@ -51,10 +52,11 @@ namespace ninniku {
         {
             Cubemap,
             Facelist,
+            LatLong,
             VCross
         };
 
-        NINNIKU_API bool SaveImage(const std::string&, uint32_t format, SaveType type);
+        NINNIKU_API bool SaveImage(const std::string&, SaveType type);
 
     private:
         std::unique_ptr<cmftImageImpl> _impl;

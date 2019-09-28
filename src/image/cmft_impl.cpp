@@ -29,10 +29,13 @@
 #include "../utils/log.h"
 #include "../utils/misc.h"
 
+#include <boost/filesystem.hpp>
+
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr/tinyexr.h>
 
-namespace ninniku {
+namespace ninniku
+{
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -97,6 +100,29 @@ namespace ninniku {
         return res;
     }
 
+    cmft::ImageFileType::Enum cmftImageImpl::GetFiletypeFromFilename(const std::string& path)
+    {
+        auto res = cmft::ImageFileType::Count;
+
+        boost::filesystem::path p{ path };
+
+        if (!p.has_extension())
+            LOGE << "Path passed to SaveImage must contain an extension";
+
+        auto ext = p.extension();
+
+        if (ext == ".dds")
+            res = cmft::ImageFileType::Enum::DDS;
+        else if (ext == ".hdr")
+            res = cmft::ImageFileType::Enum::HDR;
+        else if (ext == ".tga")
+            res = cmft::ImageFileType::Enum::TGA;
+        else
+            LOGE << "Requested file extension is not supported by cmft";
+
+        return res;
+    }
+
     cmft::TextureFormat::Enum cmftImageImpl::GetFormatFromDXGIFormat(uint32_t format) const
     {
         auto res = cmft::TextureFormat::Enum::Null;
@@ -113,6 +139,9 @@ namespace ninniku {
             case DXGI_FORMAT_R8G8B8A8_UNORM:
                 res = cmft::TextureFormat::Enum::BGRA8;
                 break;
+
+            default:
+                LOGE << "Unsupported format was passed to GetFormatFromDXGIFormat";
         }
 
         return res;
@@ -150,7 +179,7 @@ namespace ninniku {
 
         bool imageLoaded = false;
 
-        if (boost::filesystem::path{ path } .extension() == ".exr")
+        if (boost::filesystem::path{ path }.extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
             imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
@@ -265,16 +294,27 @@ namespace ninniku {
         return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
     }
 
-    bool cmftImageImpl::SaveImage(const std::string& path, uint32_t format, cmftImage::SaveType type)
+    bool cmftImageImpl::SaveImage(const std::string& path, cmftImage::SaveType type)
     {
-        auto stripped = removeFileExtension(path);
-        uint32_t cmftFormat = GetFormatFromDXGIFormat(format);
-        uint32_t cmftType;
+        auto cmftFileType = GetFiletypeFromFilename(path);
 
-        if (cmftFormat == cmft::TextureFormat::Null) {
-            LOGE << "Unsupported format was passed to SaveImage";
+        if (cmftFileType == cmft::ImageFileType::Count)
             return false;
+
+        cmft::TextureFormat::Enum cmftFormat;
+
+        switch (cmftFileType) {
+            case cmft::ImageFileType::DDS:
+            case cmft::ImageFileType::TGA:
+                cmftFormat = cmft::TextureFormat::Enum::RGBA32F;
+                break;
+
+            case cmft::ImageFileType::HDR:
+                cmftFormat = cmft::TextureFormat::Enum::RGBE;
+                break;
         }
+
+        cmft::OutputType::Enum cmftType;
 
         switch (type) {
             case ninniku::cmftImage::SaveType::Cubemap:
@@ -283,14 +323,15 @@ namespace ninniku {
             case ninniku::cmftImage::SaveType::Facelist:
                 cmftType = cmft::OutputType::FaceList;
                 break;
+            case ninniku::cmftImage::SaveType::LatLong:
+                cmftType = cmft::OutputType::LatLong;
+                break;
             case ninniku::cmftImage::SaveType::VCross:
                 cmftType = cmft::OutputType::VCross;
                 break;
         }
 
-        cmft::imageSave(_image, stripped.c_str(), cmft::ImageFileType::Enum::DDS, static_cast<cmft::OutputType::Enum>(cmftType), static_cast<cmft::TextureFormat::Enum>(cmftFormat), true);
-
-        return true;
+        return cmft::imageSave(_image, removeFileExtension(path).c_str(), cmftFileType, cmftType, cmftFormat, true);
     }
 
     void cmftImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
