@@ -39,9 +39,11 @@ namespace ninniku
         NINNIKU_API DX11();
         NINNIKU_API ~DX11();
 
-        NINNIKU_API std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
+        NINNIKU_API void CopyBufferResource(const CopyBufferSubresourceParam& params) const;
+        NINNIKU_API std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const;
         NINNIKU_API DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
-        NINNIKU_API TextureHandle CreateTexture(const TextureParamHandle& param);
+        NINNIKU_API BufferHandle CreateBuffer(const BufferParamHandle& params);
+        NINNIKU_API TextureHandle CreateTexture(const TextureParamHandle& params);
         NINNIKU_API bool Dispatch(const Command& cmd) const;
         NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 

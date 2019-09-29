@@ -20,43 +20,35 @@
 
 #pragma once
 
-#include "../export.h"
+#include "../../export.h"
 #include "image.h"
 
-namespace ninniku {
-    class cmftImageImpl;
+namespace ninniku
+{
+    class genericImageImpl;
 
-    class cmftImage final : public Image
+    class genericImage final : public Image
     {
         // no copy of any kind allowed
-        cmftImage(const cmftImage&) = delete;
-        cmftImage& operator=(cmftImage&) = delete;
-        cmftImage(cmftImage&&) = delete;
-        cmftImage& operator=(cmftImage&&) = delete;
+        genericImage(const genericImage&) = delete;
+        genericImage& operator=(genericImage&) = delete;
+        genericImage(genericImage&&) = delete;
+        genericImage& operator=(genericImage&&) = delete;
 
     public:
-        NINNIKU_API cmftImage();
-        NINNIKU_API ~cmftImage();
+        NINNIKU_API genericImage();
+        NINNIKU_API ~genericImage();
 
         NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
-        // Used when transfering data back from the GPU
+        // Used when transferring data back from the GPU
         NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
-        enum class SaveType
-        {
-            Cubemap,
-            Facelist,
-            VCross
-        };
-
-        NINNIKU_API bool SaveImage(const std::string&, uint32_t format, SaveType type);
-
     private:
-        std::unique_ptr<cmftImageImpl> _impl;
+        std::unique_ptr<genericImageImpl> _impl;
     };
 } // namespace ninniku

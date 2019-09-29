@@ -19,43 +19,39 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "ninniku/Image/dds.h"
+#include "ninniku/core/image/cmft.h"
 
-#include "dds_impl.h"
+#include "cmft_impl.h"
 
-namespace ninniku {
-    TextureParamHandle ddsImage::CreateTextureParam(const uint8_t viewFlags) const
+namespace ninniku
+{
+    TextureParamHandle cmftImage::CreateTextureParam(const uint8_t viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    bool ddsImage::Load(const std::string& path)
+    bool cmftImage::Load(const std::string& path)
     {
         return _impl->Load(path);
     }
 
-    const std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
+    const std::tuple<uint8_t*, uint32_t> cmftImage::GetData() const
     {
         return _impl->GetData();
     }
 
-    void ddsImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void cmftImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }
 
-    const SizeFixResult ddsImage::IsRequiringFix() const
+    const SizeFixResult cmftImage::IsRequiringFix() const
     {
         return _impl->IsRequiringFix();
     }
 
-    bool ddsImage::SaveImage(const std::string& path)
+    bool cmftImage::SaveImage(const std::string& path, SaveType type)
     {
-        return _impl->SaveImage(path);
-    }
-
-    bool ddsImage::SaveCompressedImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
-    {
-        return _impl->SaveCompressedImage(path, dx, format);
+        return _impl->SaveImage(path, type);
     }
 } // namespace ninniku

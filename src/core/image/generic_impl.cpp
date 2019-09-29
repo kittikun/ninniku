@@ -21,9 +21,9 @@
 #include "pch.h"
 #include "generic_impl.h"
 
-#include "ninniku/Image/generic.h"
+#include "ninniku/core/image/generic.h"
 
-#include "../utils/log.h"
+#include "../../utils/log.h"
 
 #include <boost/filesystem.hpp>
 #include <DirectXPackedVector.h>

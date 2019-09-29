@@ -1,4 +1,4 @@
-// stb_voxel_render.h - v0.86 - Sean Barrett, 2015 - public domain
+// stb_voxel_render.h - v0.88 - Sean Barrett, 2015 - public domain
 //
 // This library helps render large-scale "voxel" worlds for games,
 // in this case, one with blocks that can have textures and that
@@ -192,6 +192,8 @@
 //
 // VERSION HISTORY
 //
+//   0.88   (2019-03-04)  fix warnings
+//   0.87   (2019-02-25)  fix warning
 //   0.86   (2019-02-07)  fix typos in comments
 //   0.85   (2017-03-03)  add block_selector (by guitarfreak)
 //   0.84   (2016-04-02)  fix GLSL syntax error on glModelView path
@@ -2370,16 +2372,16 @@ static unsigned short stbvox_face_visible[STBVOX_FT_count] =
 {
    // we encode the table by listing which cases cause *obscuration*, and bitwise inverting that
    // table is pre-shifted by 5 to save a shift when it's accessed
-   (unsigned short) ((~0x07ff                                          )<<5),  // none is completely obscured by everything
-   (unsigned short) ((~((1<<STBVOX_FT_solid) | (1<<STBVOX_FT_upper)   ))<<5),  // upper
-   (unsigned short) ((~((1<<STBVOX_FT_solid) | (1<<STBVOX_FT_lower)   ))<<5),  // lower
-   (unsigned short) ((~((1<<STBVOX_FT_solid)                          ))<<5),  // solid is only completely obscured only by solid
-   (unsigned short) ((~((1<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_013)))<<5),  // diag012 matches diag013
-   (unsigned short) ((~((1<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_123)))<<5),  // diag023 matches diag123
-   (unsigned short) ((~((1<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_012)))<<5),  // diag013 matches diag012
-   (unsigned short) ((~((1<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_023)))<<5),  // diag123 matches diag023
-   (unsigned short) ((~0                                               )<<5),  // force is always rendered regardless, always forces neighbor
-   (unsigned short) ((~((1<<STBVOX_FT_solid)                          ))<<5),  // partial is only completely obscured only by solid
+   (unsigned short) ((~0x07ffu                                          )<<5),  // none is completely obscured by everything
+   (unsigned short) ((~((1u<<STBVOX_FT_solid) | (1<<STBVOX_FT_upper)   ))<<5),  // upper
+   (unsigned short) ((~((1u<<STBVOX_FT_solid) | (1<<STBVOX_FT_lower)   ))<<5),  // lower
+   (unsigned short) ((~((1u<<STBVOX_FT_solid)                          ))<<5),  // solid is only completely obscured only by solid
+   (unsigned short) ((~((1u<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_013)))<<5),  // diag012 matches diag013
+   (unsigned short) ((~((1u<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_123)))<<5),  // diag023 matches diag123
+   (unsigned short) ((~((1u<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_012)))<<5),  // diag013 matches diag012
+   (unsigned short) ((~((1u<<STBVOX_FT_solid) | (1<<STBVOX_FT_diag_023)))<<5),  // diag123 matches diag023
+   (unsigned short) ((~0u                                               )<<5),  // force is always rendered regardless, always forces neighbor
+   (unsigned short) ((~((1u<<STBVOX_FT_solid)                          ))<<5),  // partial is only completely obscured only by solid
 };
 
 // the vertex heights of the block types, in binary vertex order (zyx):
@@ -3551,7 +3553,7 @@ void stbvox_set_buffer(stbvox_mesh_maker *mm, int mesh, int slot, void *buffer, 
    stbvox_bring_up_to_date(mm);
    mm->output_buffer[mesh][slot] = (char *) buffer;
    mm->output_cur   [mesh][slot] = (char *) buffer;
-   mm->output_len   [mesh][slot] = len;
+   mm->output_len   [mesh][slot] = (int) len;
    mm->output_end   [mesh][slot] = (char *) buffer + len;
    for (i=0; i < STBVOX_MAX_MESH_SLOTS; ++i) {
       if (mm->output_buffer[mesh][i]) {
@@ -3567,7 +3569,7 @@ void stbvox_set_default_mesh(stbvox_mesh_maker *mm, int mesh)
 
 int stbvox_get_quad_count(stbvox_mesh_maker *mm, int mesh)
 {
-   return (mm->output_cur[mesh][0] - mm->output_buffer[mesh][0]) / mm->output_size[mesh][0];
+   return (int) ((mm->output_cur[mesh][0] - mm->output_buffer[mesh][0]) / mm->output_size[mesh][0]);
 }
 
 stbvox_input_description *stbvox_get_input_description(stbvox_mesh_maker *mm)

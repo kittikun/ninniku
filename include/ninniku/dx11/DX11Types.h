@@ -22,7 +22,8 @@ template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
 template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
-namespace ninniku {
+namespace ninniku
+{
     using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
@@ -43,6 +44,32 @@ namespace ninniku {
     };
 
     using DX11Handle = std::unique_ptr<DX11, DX11Deleter>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Buffers
+    //////////////////////////////////////////////////////////////////////////
+    class BufferObject
+    {
+        // no copy of any kind allowed
+        BufferObject(const BufferObject&) = delete;
+        BufferObject& operator=(BufferObject&) = delete;
+        BufferObject(BufferObject&&) = delete;
+        BufferObject& operator=(BufferObject&&) = delete;
+
+    public:
+        BufferObject() = default;
+
+    public:
+        DX11Buffer buffer;
+        DX11SRV srv;
+        DX11UAV uav;
+
+        // Initial desc that was used to create the resource
+        std::shared_ptr<const BufferParam> desc;
+    };
+
+    using BufferHandle = std::unique_ptr<const BufferObject>;
+    static BufferHandle Empty_BufferHandle;
 
     //////////////////////////////////////////////////////////////////////////
     // Commands
@@ -136,11 +163,12 @@ namespace ninniku {
         // One D3D11_TEX2D_ARRAY_UAV per mip level
         std::vector<DX11UAV> uav;
 
-        // Desc that was used to create those resources
+        // Initial desc that was used to create the resource
         std::shared_ptr<const TextureParam> desc;
     };
 
     using TextureHandle = std::unique_ptr<const TextureObject>;
+    static TextureHandle Empty_TextureHandle;
 
     //////////////////////////////////////////////////////////////////////////
     // GPU to CPU readback
@@ -156,6 +184,7 @@ namespace ninniku {
 
     public:
         MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);
+        MappedResource(const DX11Context& context, const BufferHandle& bufObj);
         ~MappedResource();
 
         D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
@@ -163,6 +192,7 @@ namespace ninniku {
         uint32_t GetRowPitch() const;
 
     private:
+        const BufferHandle& _bufferObj;
         const DX11Context& _context;
         const TextureHandle& _texObj;
         const uint32_t _index;

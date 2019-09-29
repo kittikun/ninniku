@@ -23,15 +23,16 @@
 
 #include "ninniku/dx11/DX11.h"
 #include "ninniku/dx11/DX11Types.h"
-#include "ninniku/image/dds.h"
+#include "ninniku/core/image/dds.h"
 
-#include "../dx11/DX11_impl.h"
-#include "../utils/log.h"
-#include "../utils/misc.h"
+#include "../../dx11/DX11_impl.h"
+#include "../../utils/log.h"
+#include "../../utils/misc.h"
 
 #include <comdef.h>
 
-namespace ninniku {
+namespace ninniku
+{
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {
@@ -165,12 +166,12 @@ namespace ninniku {
             param->format = srcTex->desc->format;
             param->numMips = 1;
             param->arraySize = 1;
-            param->viewflags = ninniku::TV_CPU_READ;
+            param->viewflags = ninniku::RV_CPU_READ;
             param->depth = 1;
 
             auto readBack = dx->CreateTexture(param);
 
-            ninniku::CopySubresourceParam params = {};
+            ninniku::CopyTextureSubresourceParam params = {};
             params.src = srcTex.get();
             params.srcMip = mip;
             params.dst = readBack.get();
@@ -178,7 +179,7 @@ namespace ninniku {
             for (uint32_t face = 0; face < _meta.arraySize; ++face) {
                 params.srcFace = face;
 
-                auto indexes = dx->CopySubresource(params);
+                auto indexes = dx->CopyTextureSubresource(params);
                 auto mapped = dx->GetImpl()->MapTexture(readBack, std::get<1>(indexes));
 
                 UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());

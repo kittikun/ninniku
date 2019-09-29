@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <ninniku/image/image.h>
+#include <ninniku/core/image/image.h>
 
 ninniku::TextureHandle GenerateColoredMips(ninniku::DX11Handle& dx);
 ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninniku::Image* image);

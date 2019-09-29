@@ -20,8 +20,7 @@
 
 #include <ninniku/ninniku.h>
 #include <ninniku/dx11/DX11.h>
-#include <ninniku/image/generic.h>
-#include <ninniku/image/dds.h>
+#include <ninniku/core/buffer.h>
 
 int main()
 {
@@ -30,69 +29,34 @@ int main()
     ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
 
     auto& dx = ninniku::GetRenderer();
-    auto params = ninniku::TextureParam::Create();
+    auto params = ninniku::BufferParam::Create();
 
-    params->width = 512;
-    params->height = 512;
-    params->depth = 1;
-    params->arraySize = 1;
-    params->format = DXGI_FORMAT_R11G11B10_FLOAT;
-    params->numMips = 1;
-    params->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    params->numElements = 16;
+    params->elementSize = sizeof(uint32_t);
+    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
-    auto srcTex = dx->CreateTexture(params);
+    auto srcBuffer = dx->CreateBuffer(params);
 
-    // dispatch
-    ninniku::Command cmd = {};
-    cmd.shader = "gradient";
-
-    cmd.dispatch[0] = params->width / 32;
-    cmd.dispatch[1] = params->height / 32;
-    cmd.dispatch[2] = 1;
-
-    cmd.uavBindings.insert(std::make_pair("dstTex", srcTex->uav[0]));
-
-    dx->Dispatch(cmd);
-
-    auto outSRC = std::make_unique<ninniku::ddsImage>();
-    outSRC->InitializeFromTextureObject(dx, srcTex);
-    outSRC->SaveImage("gradient.dds");
-
-    auto lmdb = [&](const std::string & shaderName)
+    // fill structured buffer
     {
-        auto subMarker = dx->CreateDebugMarker(shaderName);
-
-        auto desc = params->Duplicate();
-        desc->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
-        desc->imageDatas.clear();
-        desc->format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        auto dst = dx->CreateTexture(desc);
+        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
 
         // dispatch
         ninniku::Command cmd = {};
-        cmd.shader = shaderName;
+        cmd.shader = "fillBuffer";
 
-        cmd.dispatch[0] = desc->width / 32;
-        cmd.dispatch[1] = desc->height / 32;
-        cmd.dispatch[2] = 1;
+        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
 
-        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
-        cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
 
         dx->Dispatch(cmd);
+    }
 
-        auto out = std::make_unique<ninniku::ddsImage>();
-        out->InitializeFromTextureObject(dx, dst);
-        out->SaveImage(shaderName + ".dds");
-    };
+    ninniku::Buffer dstBuffer;
 
-    lmdb("rgb565");
-    lmdb("hsv565");
-    lmdb("hsl565");
-    lmdb("hcy565");
-    lmdb("hcl565");
-    lmdb("ycocg565");
+    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
+
+    auto& data = dstBuffer.GetData();
 
     ninniku::Terminate();
 }

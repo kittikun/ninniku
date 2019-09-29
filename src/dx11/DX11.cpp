@@ -25,9 +25,21 @@
 
 namespace ninniku
 {
-    std::tuple<uint32_t, uint32_t> DX11::CopySubresource(const CopySubresourceParam& params) const
+    DX11::DX11()
+        : _impl{ new DX11Impl() }
     {
-        return _impl->CopySubresource(params);
+    }
+
+    DX11::~DX11() = default;
+
+    void DX11::CopyBufferResource(const CopyBufferSubresourceParam& params) const
+    {
+        return _impl->CopyBufferResource(params);
+    }
+
+    std::tuple<uint32_t, uint32_t> DX11::CopyTextureSubresource(const CopyTextureSubresourceParam& params) const
+    {
+        return _impl->CopyTextureSubresource(params);
     }
 
     DebugMarkerHandle DX11::CreateDebugMarker(const std::string& name) const
@@ -35,9 +47,14 @@ namespace ninniku
         return _impl->CreateDebugMarker(name);
     }
 
-    TextureHandle DX11::CreateTexture(const TextureParamHandle& param)
+    BufferHandle DX11::CreateBuffer(const BufferParamHandle& params)
     {
-        return _impl->CreateTexture(param);
+        return _impl->CreateBuffer(params);
+    }
+
+    TextureHandle DX11::CreateTexture(const TextureParamHandle& params)
+    {
+        return _impl->CreateTexture(params);
     }
 
     bool DX11::Dispatch(const Command& cmd) const

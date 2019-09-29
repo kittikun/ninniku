@@ -18,35 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "pch.h"
-#include "ninniku/Image/generic.h"
+#pragma once
 
-#include "generic_impl.h"
+#include "../../types.h"
+#include "../../dx11/DX11Types.h"
 
 namespace ninniku
 {
-    TextureParamHandle genericImage::CreateTextureParam(const uint8_t viewFlags) const
-    {
-        return _impl->CreateTextureParam(viewFlags);
-    }
+    using SizeFixResult = std::tuple<bool, uint32_t, uint32_t>;
 
-    bool genericImage::Load(const std::string& path)
+    class Image
     {
-        return _impl->Load(path);
-    }
+        // no copy of any kind allowed
+        Image(const Image&) = delete;
+        Image& operator=(Image&) = delete;
+        Image(Image&&) = delete;
+        Image& operator=(Image&&) = delete;
 
-    const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
-    {
-        return _impl->GetData();
-    }
+    public:
+        Image() = default;
+        virtual ~Image() = default;
 
-    void genericImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
-    {
-        return _impl->InitializeFromTextureObject(dx, srcTex);
-    }
+        virtual bool Load(const std::string&) = 0;
+        virtual TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const = 0;
 
-    const SizeFixResult genericImage::IsRequiringFix() const
-    {
-        return _impl->IsRequiringFix();
-    }
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+
+        // Used when transferring data back from the GPU
+        virtual void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) = 0;
+
+        /// <summary>
+        /// Check if a image is a power of 2 and return a 2 item tuple
+        /// 0 bool: need fix
+        /// 1 uint32: new width
+        /// 2 uint32: new height
+        /// </summary>
+        virtual const SizeFixResult IsRequiringFix() const = 0;
+    };
 } // namespace ninniku

@@ -26,21 +26,66 @@
 #include <memory>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
+    class BufferObject;
     class TextureObject;
 
     //////////////////////////////////////////////////////////////////////////
     // Resources
     //////////////////////////////////////////////////////////////////////////
-    struct CopySubresourceParam
+    struct BufferParam
+    {
+        // no copy of any kind allowed, use Duplicate for that
+        BufferParam(const BufferParam&) = delete;
+        BufferParam& operator=(BufferParam&) = delete;
+        BufferParam(BufferParam&&) = delete;
+        BufferParam& operator=(BufferParam&&) = delete;
+    public:
+        BufferParam() = default;
+
+        uint32_t numElements;
+        uint32_t elementSize;        // If != 0, this will create a StructuredBuffer, otherwise a ByteAddressBuffer will be created
+        uint8_t viewflags;
+
+        static NINNIKU_API std::shared_ptr<BufferParam> Create();
+        NINNIKU_API std::shared_ptr<BufferParam> Duplicate() const;
+    };
+
+    using BufferParamHandle = std::shared_ptr<const BufferParam>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Resources
+    //////////////////////////////////////////////////////////////////////////
+    enum EResourceViews : uint8_t
+    {
+        RV_None = 0,            // Should not be used
+        RV_SRV = 1 << 0,
+        RV_UAV = 1 << 1,
+        RV_CPU_READ = 1 << 2
+    };
+
+    struct CopyBufferSubresourceParam
     {
         // no copy of any kind allowed
-        CopySubresourceParam(const CopySubresourceParam&) = delete;
-        CopySubresourceParam& operator=(CopySubresourceParam&) = delete;
-        CopySubresourceParam(CopySubresourceParam&&) = delete;
-        CopySubresourceParam& operator=(CopySubresourceParam&&) = delete;
+        CopyBufferSubresourceParam(const CopyBufferSubresourceParam&) = delete;
+        CopyBufferSubresourceParam& operator=(CopyBufferSubresourceParam&) = delete;
+        CopyBufferSubresourceParam(CopyBufferSubresourceParam&&) = delete;
+        CopyBufferSubresourceParam& operator=(CopyBufferSubresourceParam&&) = delete;
+
+        const BufferObject* src;
+        const BufferObject* dst;
+    };
+
+    struct CopyTextureSubresourceParam
+    {
+        // no copy of any kind allowed
+        CopyTextureSubresourceParam(const CopyTextureSubresourceParam&) = delete;
+        CopyTextureSubresourceParam& operator=(CopyTextureSubresourceParam&) = delete;
+        CopyTextureSubresourceParam(CopyTextureSubresourceParam&&) = delete;
+        CopyTextureSubresourceParam& operator=(CopyTextureSubresourceParam&&) = delete;
 
         const TextureObject* src;
         uint32_t srcFace;
@@ -74,14 +119,6 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
-    enum ETextureViews : uint8_t
-    {
-        TV_None = 0,            // Should not be used
-        TV_SRV = 1 << 0,
-        TV_UAV = 1 << 1,
-        TV_CPU_READ = 1 << 2
-    };
-
     class TextureParam
     {
         // no copy of any kind allowed, use Duplicate for that

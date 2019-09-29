@@ -32,14 +32,8 @@
 #include <comdef.h>
 #include <d3dcompiler.h>
 
-namespace ninniku {
-    DX11::DX11()
-        : _impl{ new DX11Impl() }
-    {
-    }
-
-    DX11::~DX11() = default;
-
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // DebugMarker
     //////////////////////////////////////////////////////////////////////////
@@ -59,27 +53,12 @@ namespace ninniku {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // MappedResource
-    //////////////////////////////////////////////////////////////////////////
-    MappedResource::MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
-        : _context{ context }
-        , _texObj{ texObj }
-        , _index{ index }
-        , _mapped{}
-    {}
-
-    MappedResource::~MappedResource()
+    void DX11Impl::CopyBufferResource(const CopyBufferSubresourceParam& params) const
     {
-        _context->Unmap(_texObj->GetResource(), _index);
+        _context->CopyResource(params.dst->buffer.Get(), params.src->buffer.Get());
     }
 
-    uint32_t MappedResource::GetRowPitch() const
-    {
-        return _mapped.RowPitch;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    std::tuple<uint32_t, uint32_t> DX11Impl::CopySubresource(const CopySubresourceParam& params) const
+    std::tuple<uint32_t, uint32_t> DX11Impl::CopyTextureSubresource(const CopyTextureSubresourceParam& params) const
     {
         uint32_t dstSub = D3D11CalcSubresource(params.dstMip, params.dstFace, params.dst->desc->numMips);
         uint32_t srcSub = D3D11CalcSubresource(params.srcMip, params.srcFace, params.src->desc->numMips);
@@ -98,6 +77,98 @@ namespace ninniku {
 #endif
 
         return std::make_unique<DebugMarker>(marker, name);
+    }
+
+    BufferHandle DX11Impl::CreateBuffer(const BufferParamHandle& params)
+    {
+        auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
+        auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
+        auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
+
+        // let's only support default for now
+        D3D11_USAGE usage = isCPURead ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
+        std::string usageStr = isCPURead ? "D3D11_USAGE_STAGING" : "D3D11_USAGE_DEFAULT";
+
+        auto fmt = boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Usage=%3%") % params->elementSize % params->numElements % usageStr;
+
+        LOGD << boost::str(fmt);
+
+        uint32_t cpuFlags = 0;
+        uint32_t bindFlags = 0;
+
+        if (isCPURead)
+            cpuFlags = D3D11_CPU_ACCESS_READ;
+
+        if (isSRV)
+            bindFlags |= D3D11_BIND_SHADER_RESOURCE;
+
+        if (isUAV)
+            bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+
+        // Do not support ByteAddressBuffer for now, default to StructuredBuffer
+        uint32_t miscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+
+        D3D11_BUFFER_DESC desc = {};
+
+        // we need to pad to 4 bytes because Buffer data is an array of uint32_t
+        if (params->elementSize % 4 != 0) {
+            LOGE << "ElementSize must be a multiple of 4";
+            return BufferHandle();
+        }
+
+        desc.ByteWidth = params->numElements * params->elementSize;
+        desc.Usage = usage;
+        desc.BindFlags = bindFlags;
+        desc.MiscFlags = miscFlags;
+        desc.CPUAccessFlags = cpuFlags;
+        desc.StructureByteStride = params->elementSize;
+
+        // we want to use unique_ptr here so that the object is properly destroyed in case it fails before we return
+        auto res = std::make_unique<BufferObject>();
+
+        res->desc = params;
+
+        // do not support initial data for now
+        auto hr = _device->CreateBuffer(&desc, nullptr, res->buffer.GetAddressOf());
+
+        if (FAILED(hr)) {
+            LOGE << "Failed to CreateBuffer with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return BufferHandle();
+        }
+
+        if (isSRV) {
+            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+            srvDesc.Buffer.NumElements = params->numElements;
+
+            hr = _device->CreateShaderResourceView(res->buffer.Get(), &srvDesc, res->srv.GetAddressOf());
+            if (FAILED(hr)) {
+                LOGE << "Failed to CreateShaderResourceView with D3D11_SRV_DIMENSION_BUFFER with:";
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
+                return false;
+            }
+        }
+
+        if (isUAV) {
+            D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+
+            uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+            uavDesc.Buffer.NumElements = params->numElements;
+
+            hr = _device->CreateUnorderedAccessView(res->buffer.Get(), &uavDesc, res->uav.GetAddressOf());
+            if (FAILED(hr)) {
+                LOGE << "Failed to CreateUnorderedAccessView with D3D11_SRV_DIMENSION_BUFFER with:";
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
+                return false;
+            }
+        }
+
+        return res;
     }
 
     bool DX11Impl::CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
@@ -182,9 +253,9 @@ namespace ninniku {
 
     TextureHandle DX11Impl::CreateTexture(const TextureParamHandle& params)
     {
-        auto isSRV = (params->viewflags & ETextureViews::TV_SRV) != 0;
-        auto isUAV = (params->viewflags & ETextureViews::TV_UAV) != 0;
-        auto isCPURead = (params->viewflags & ETextureViews::TV_CPU_READ) != 0;
+        auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
+        auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
+        auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
         auto is3d = params->depth > 1;
         auto is1d = params->height == 1;
         auto is2d = (!is3d) && (!is1d);
@@ -306,7 +377,7 @@ namespace ninniku {
         }
 
         if (isSRV) {
-            SRVParams srvParams = {};
+            TextureSRVParams srvParams = {};
 
             srvParams.obj = res.get();
             srvParams.texParams = params;
@@ -316,7 +387,7 @@ namespace ninniku {
             srvParams.isCube = isCube;
             srvParams.isCubeArray = isCubeArray;
 
-            if (!MakeSRV(srvParams))
+            if (!MakeTextureSRV(srvParams))
                 return TextureHandle();
         }
 
@@ -372,7 +443,8 @@ namespace ninniku {
         static VectorSet<uint32_t, ID3D11UnorderedAccessView*> vmUAV;
         static VectorSet<uint32_t, ID3D11SamplerState*> vmSS;
 
-        auto lambda = [&](auto kvp, auto & container) {
+        auto lambda = [&](auto kvp, auto & container)
+        {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -546,7 +618,8 @@ namespace ninniku {
         // Count the number of .cso found
         boost::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const boost::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const boost::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 
@@ -625,7 +698,7 @@ namespace ninniku {
         return true;
     }
 
-    bool DX11Impl::MakeSRV(const SRVParams& params)
+    bool DX11Impl::MakeTextureSRV(const TextureSRVParams& params)
     {
         if (params.isCubeArray) {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -755,6 +828,22 @@ namespace ninniku {
         return true;
     }
 
+    MappedResourceHandle DX11Impl::MapBuffer(const BufferHandle& bObj)
+    {
+        auto res = std::make_unique<MappedResource>(_context, bObj);
+
+        auto hr = _context->Map(bObj->buffer.Get(), 0, D3D11_MAP_READ, 0, res->Get());
+
+        if (FAILED(hr)) {
+            _com_error err(hr);
+            LOGE << "Failed to map buffer with:";
+            LOGE << err.ErrorMessage();
+            return std::unique_ptr<MappedResource>();
+        }
+
+        return res;
+    }
+
     MappedResourceHandle DX11Impl::MapTexture(const TextureHandle& tObj, const uint32_t index)
     {
         auto res = std::make_unique<MappedResource>(_context, tObj, index);
@@ -783,20 +872,28 @@ namespace ninniku {
             std::string restypeStr = "UNKNOWN";
 
             switch (res.Type) {
-                case D3D_SIT_TEXTURE:
-                    restypeStr = "D3D_SIT_TEXTURE";
+                case D3D_SIT_CBUFFER:
+                    restypeStr = "D3D10_SIT_CBUFFER";
                     break;
 
                 case D3D_SIT_SAMPLER:
                     restypeStr = "D3D_SIT_SAMPLER";
                     break;
 
+                case D3D_SIT_STRUCTURED:
+                    restypeStr = "D3D_SIT_STRUCTURED";
+                    break;
+
+                case D3D_SIT_TEXTURE:
+                    restypeStr = "D3D_SIT_TEXTURE";
+                    break;
+
                 case D3D_SIT_UAV_RWTYPED:
                     restypeStr = "D3D_SIT_UAV_RWTYPED";
                     break;
 
-                case D3D_SIT_CBUFFER:
-                    restypeStr = "D3D10_SIT_CBUFFER";
+                case D3D_SIT_UAV_RWSTRUCTURED:
+                    restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
                     break;
             }
 

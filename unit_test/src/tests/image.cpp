@@ -1,22 +1,22 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+//Copyright(c) 2018 - 2019 Kitti Vongsay
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files(the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions :
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files(the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions :
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
 
 #include "../shaders/cbuffers.h"
 #include "../check.h"
@@ -24,9 +24,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/dx11/DX11.h>
-#include <ninniku/image/cmft.h>
-#include <ninniku/image/dds.h>
-#include <ninniku/Image/generic.h>
+#include <ninniku/core/image/cmft.h>
+#include <ninniku/core/image/dds.h>
+#include <ninniku/core/image/generic.h>
 #include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 #include <ninniku/utils.h>
@@ -39,13 +39,13 @@ BOOST_AUTO_TEST_CASE(cmft_load)
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
-    auto data = image->GetData();
+    auto& data = image->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xd39b5bad561c83d3, 0x585a996223bd1765);
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x13f4aafdebe25865, 0x7ba34b1487530781);
 
     image->Load("data/park02.exr");
-    data = image->GetData();
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xffd14431d2c8bd50, 0x959afcd3fef4f28c);
+    auto& data2 = image->GetData();
+    CheckMD5(std::get<0>(data2), std::get<1>(data2), 0x7df5652cbaf3a5af, 0xf758a4c5d9f5b418);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_from_texture_object)
@@ -54,16 +54,16 @@ BOOST_AUTO_TEST_CASE(cmft_from_texture_object)
 
     image->Load("data/Cathedral01.hdr");
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::cmftImage>();
 
     res->InitializeFromTextureObject(dx, srcTex);
 
-    auto data = res->GetData();
+    auto& data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0xe4b0b9443383639a, 0x1236acd08f0a5de7);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_need_resize)
@@ -85,14 +85,14 @@ BOOST_AUTO_TEST_CASE(cmft_texture_param)
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
-    auto param = image->CreateTextureParam(ninniku::TV_SRV);
+    auto param = image->CreateTextureParam(ninniku::RV_SRV);
 
     BOOST_TEST(param->arraySize == 6);
     BOOST_TEST(param->depth == 1);
     BOOST_TEST(param->format == DXGI_FORMAT_R32G32B32A32_FLOAT);
     BOOST_TEST(param->height == 512);
     BOOST_TEST(param->numMips == 1);
-    BOOST_TEST(param->viewflags == ninniku::TV_SRV);
+    BOOST_TEST(param->viewflags == ninniku::RV_SRV);
     BOOST_TEST(param->width == 512);
 }
 
@@ -104,10 +104,10 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_cubemap)
 
     std::string filename = "cmft_saveImage_cubemap.dds";
 
-    BOOST_TEST(image->SaveImage(filename, DXGI_FORMAT_R32G32B32A32_FLOAT, ninniku::cmftImage::SaveType::Cubemap));
+    BOOST_TEST(image->SaveImage(filename, ninniku::cmftImage::SaveType::Cubemap));
     BOOST_TEST(boost::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x62a804a10dedbe15, 0xdcf18df4c67beda7);
+    CheckFileMD5(filename, 0xd390897a261c6e6d, 0xa7c0fc8663cf6756);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
@@ -116,16 +116,16 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    BOOST_TEST(image->SaveImage("cmft_saveImageFace", DXGI_FORMAT_R32G32B32A32_FLOAT, ninniku::cmftImage::SaveType::Facelist));
+    BOOST_TEST(image->SaveImage("cmft_saveImageFace.dds", ninniku::cmftImage::SaveType::Facelist));
 
     std::array<std::string, ninniku::CUBEMAP_NUM_FACES> suffixes = { "negx", "negy", "negz", "posx", "posy", "posz" };
     std::array<uint64_t, ninniku::CUBEMAP_NUM_FACES * 2> hashes = {
-        0xf7013ee5b23c35ec, 0x2306cbcf87ed72fa,
-        0x24954fe70382d69d, 0x057fa4a570e5d4e6,
-        0x6e160948a9b88224, 0x47b58686fa530e9c,
-        0x76b52949fc7534b8, 0xc7d97ddf7931834f,
-        0x491744857fbacde7, 0x196987a132477a4c,
-        0xd4d16960ed5c53ef, 0x4efd2157bdf514d6
+        0xdc56b26bf003de44, 0x06c970d707c430b6,
+        0x870b6392741412ab, 0x10fbb21a5578aa5f,
+        0xe5aaa9a1b0aa8b65, 0x3e2db13cced7c072,
+        0xc866115bfa171b17, 0xdd0d2aca5d914f85,
+        0x44672d04d224b3b6, 0x5445be0b2f0e5ef6,
+        0x92ddcb5da9e8b320, 0xa1dfbe7d24cf0c2e
     };
 
     for (auto i = 0; i < suffixes.size(); ++i) {
@@ -136,6 +136,27 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
     }
 }
 
+BOOST_AUTO_TEST_CASE(cmft_saveImage_latlong)
+{
+    auto image = std::make_unique<ninniku::ddsImage>();
+
+    image->Load("data/Cathedral01.dds");
+
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
+    auto& dx = ninniku::GetRenderer();
+    auto srcTex = dx->CreateTexture(srcParam);
+    auto res = std::make_unique<ninniku::cmftImage>();
+
+    res->InitializeFromTextureObject(dx, srcTex);
+
+    std::string filename = "cmft_saveImage_longlat.hdr";
+
+    BOOST_TEST(res->SaveImage(filename, ninniku::cmftImage::SaveType::LatLong));
+    BOOST_TEST(boost::filesystem::exists(filename));
+
+    CheckFileMD5(filename, 0x0e595ac204b6395f, 0x40389132a20d31db);
+}
+
 BOOST_AUTO_TEST_CASE(cmft_saveImage_vcross)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
@@ -144,10 +165,10 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_vcross)
 
     std::string filename = "cmft_saveImage_vcross.dds";
 
-    BOOST_TEST(image->SaveImage(filename, DXGI_FORMAT_R32G32B32A32_FLOAT, ninniku::cmftImage::SaveType::VCross));
+    BOOST_TEST(image->SaveImage(filename, ninniku::cmftImage::SaveType::VCross));
     BOOST_TEST(boost::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x5da8b5ff55d4480b, 0x460a8d8b63904acd);
+    CheckFileMD5(filename, 0x7b301fd498ff0aaf, 0x10cfb2d95c6fbb22);
 }
 
 BOOST_AUTO_TEST_CASE(dds_load)
@@ -156,7 +177,7 @@ BOOST_AUTO_TEST_CASE(dds_load)
 
     BOOST_TEST(image->Load("data/Cathedral01.dds"));
 
-    auto data = image->GetData();
+    auto& data = image->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x48e0c9680b2cbcc9, 0xea5f523bdad5cec4);
 }
@@ -180,14 +201,14 @@ BOOST_AUTO_TEST_CASE(dds_texture_param)
 
     BOOST_TEST(image->Load("data/Cathedral01.dds"));
 
-    auto param = image->CreateTextureParam(ninniku::TV_SRV);
+    auto param = image->CreateTextureParam(ninniku::RV_SRV);
 
     BOOST_TEST(param->arraySize == 6);
     BOOST_TEST(param->depth == 1);
     BOOST_TEST(param->format == DXGI_FORMAT_R32G32B32A32_FLOAT);
     BOOST_TEST(param->height == 512);
     BOOST_TEST(param->numMips == 1);
-    BOOST_TEST(param->viewflags == ninniku::TV_SRV);
+    BOOST_TEST(param->viewflags == ninniku::RV_SRV);
     BOOST_TEST(param->width == 512);
 }
 
@@ -197,16 +218,16 @@ BOOST_AUTO_TEST_CASE(dds_from_texture_object)
 
     image->Load("data/Cathedral01.hdr");
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::ddsImage>();
 
     res->InitializeFromTextureObject(dx, srcTex);
 
-    auto data = res->GetData();
+    auto& data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3da2a6a5fa290619, 0xd219e8a635672d15);
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0xe4b0b9443383639a, 0x1236acd08f0a5de7);
 }
 
 BOOST_AUTO_TEST_CASE(dds_saveImage_raw_mips)
@@ -251,7 +272,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc1)
 
     BOOST_TEST(image->Load("data/banner.png"));
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
@@ -274,7 +295,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc3)
 
     BOOST_TEST(image->Load("data/Rainbow_to_alpha_gradient.png"));
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
@@ -297,7 +318,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc4)
 
     BOOST_TEST(image->Load("data/toshi-1072059-unsplash.png"));
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
@@ -325,7 +346,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
 
     image->Load("data/weave_8.png");
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
 
@@ -337,7 +358,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
     dstParam->format = DXGI_FORMAT_R8G8_UNORM;
     dstParam->numMips = srcParam->numMips;
     dstParam->arraySize = srcParam->arraySize;
-    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto dst = dx->CreateTexture(dstParam);
 
@@ -373,7 +394,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_16bit)
 
     image->Load("data/weave_16.png");
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
 
@@ -385,7 +406,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_16bit)
     dstParam->format = DXGI_FORMAT_R8G8_UNORM;
     dstParam->numMips = srcParam->numMips;
     dstParam->arraySize = srcParam->arraySize;
-    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto dst = dx->CreateTexture(dstParam);
 
@@ -421,7 +442,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc6h)
 
     image->Load("data/whipple_creek_regional_park_01_2k.hdr");
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::ddsImage>();
@@ -442,7 +463,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc7)
 
     BOOST_TEST(image->Load("data/banner.png"));
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
@@ -465,17 +486,17 @@ BOOST_AUTO_TEST_CASE(generic_load)
 
     BOOST_TEST(image->Load("data/banner.png"));
 
-    auto data = image->GetData();
+    auto& data = image->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x5c284747dea82181, 0xcdc216b5cbc13d95);
 
     BOOST_TEST(image->Load("data/architecture-buildings-city-1769347.jpg"));
-    data = image->GetData();
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x68762d0598a19f79, 0xa183c7f8664ffd53);
+    auto& data2 = image->GetData();
+    CheckMD5(std::get<0>(data2), std::get<1>(data2), 0x68762d0598a19f79, 0xa183c7f8664ffd53);
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
-    data = image->GetData();
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xbde7e6526b1c6f06, 0x87ac4825f91dc73b);
+    auto& data3 = image->GetData();
+    CheckMD5(std::get<0>(data3), std::get<1>(data3), 0xbde7e6526b1c6f06, 0x87ac4825f91dc73b);
 }
 
 BOOST_AUTO_TEST_CASE(generic_need_resize)

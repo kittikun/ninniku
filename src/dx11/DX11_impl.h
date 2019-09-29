@@ -24,7 +24,8 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11Impl
     {
         // no copy of any kind allowed
@@ -36,18 +37,21 @@ namespace ninniku {
     public:
         DX11Impl() = default;
 
-        std::tuple<uint32_t, uint32_t> CopySubresource(const CopySubresourceParam& params) const;
+        void CopyBufferResource(const CopyBufferSubresourceParam& params) const;
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const;
         DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
-        TextureHandle CreateTexture(const TextureParamHandle& param);
+        BufferHandle CreateBuffer(const BufferParamHandle& params);
+        TextureHandle CreateTexture(const TextureParamHandle& params);
         bool Dispatch(const Command& cmd) const;
         bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp);
+        MappedResourceHandle MapBuffer(const BufferHandle& bObj);
         MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
         bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
         const DX11SamplerState& GetSampler(ESamplerState sampler) const { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)]; }
 
     private:
-        struct SRVParams
+        struct TextureSRVParams
         {
             TextureObject* obj;
             TextureParamHandle texParams;
@@ -58,11 +62,10 @@ namespace ninniku {
             bool isCubeArray;
         };
 
-
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
         bool GetDXGIFactory(IDXGIFactory1** pFactory);
         bool LoadShaders(const std::string& shaderPath);
-        bool MakeSRV(const SRVParams& params);
+        bool MakeTextureSRV(const TextureSRVParams& params);
         std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
 
     private:
