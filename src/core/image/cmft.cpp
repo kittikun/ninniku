@@ -19,7 +19,7 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "ninniku/image/cmft.h"
+#include "ninniku/core/image/cmft.h"
 
 #include "cmft_impl.h"
 
@@ -54,4 +54,4 @@ namespace ninniku
     {
         return _impl->SaveImage(path, type);
     }
-}
+} // namespace ninniku

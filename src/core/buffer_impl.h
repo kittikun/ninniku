@@ -18,45 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ninniku/ninniku.h>
-#include <ninniku/dx11/DX11.h>
-#include <ninniku/core/buffer.h>
+#pragma once
 
-int main()
+#include "ninniku/core/buffer.h"
+
+namespace ninniku
 {
-    std::vector<std::string> shaderPaths = { "..\\simple\\shaders", "..\\unit_test\\shaders" };
-
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
-
-    auto& dx = ninniku::GetRenderer();
-    auto params = ninniku::BufferParam::Create();
-
-    params->numElements = 16;
-    params->elementSize = sizeof(uint32_t);
-    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
-
-    auto srcBuffer = dx->CreateBuffer(params);
-
-    // fill structured buffer
+    class BufferImpl
     {
-        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
+        // no copy of any kind allowed
+        BufferImpl(const BufferImpl&) = delete;
+        BufferImpl& operator=(BufferImpl&) = delete;
+        BufferImpl(BufferImpl&&) = delete;
+        BufferImpl& operator=(BufferImpl&&) = delete;
 
-        // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "fillBuffer";
+    public:
+        BufferImpl() = default;
+        virtual ~BufferImpl() = default;
 
-        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
+        const std::vector<uint32_t>& GetData() const { return _data; }
 
-        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
+        void InitializeFromBufferObject(DX11Handle& dx, const BufferHandle& src);
 
-        dx->Dispatch(cmd);
-    }
-
-    ninniku::Buffer dstBuffer;
-
-    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
-
-    auto& data = dstBuffer.GetData();
-
-    ninniku::Terminate();
-}
+    private:
+        std::vector<uint32_t> _data;
+    };
+} // namespace ninniku

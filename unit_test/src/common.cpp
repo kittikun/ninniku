@@ -33,7 +33,7 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::DX11Handle& dx)
     param->depth = 1;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
-    param->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto marker = dx->CreateDebugMarker("ColorMips");
     auto resTex = dx->CreateTexture(param);
@@ -66,7 +66,7 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::DX11Handle& dx)
 ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninniku::Image* image)
 {
     auto marker = dx->CreateDebugMarker("CommonGenerateMips");
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
 
     auto param = ninniku::TextureParam::Create();
@@ -76,7 +76,7 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninn
     param->depth = 1;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
-    param->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto resTex = dx->CreateTexture(param);
 
@@ -84,7 +84,7 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninn
     {
         auto subMarker = dx->CreateDebugMarker("Copy mip 0");
 
-        ninniku::CopySubresourceParam copyParams = {};
+        ninniku::CopyTextureSubresourceParam copyParams = {};
 
         copyParams.src = srcTex.get();
         copyParams.dst = resTex.get();
@@ -93,7 +93,7 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninn
             copyParams.srcFace = i;
             copyParams.dstFace = i;
 
-            dx->CopySubresource(copyParams);
+            dx->CopyTextureSubresource(copyParams);
         }
     }
 
@@ -134,7 +134,7 @@ ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::Textu
     dstParam->format = srcTex->desc->format;
     dstParam->numMips = srcTex->desc->numMips;
     dstParam->arraySize = srcTex->desc->arraySize;
-    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto dst = dx->CreateTexture(dstParam);
 

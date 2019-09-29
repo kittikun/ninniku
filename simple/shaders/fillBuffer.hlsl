@@ -18,35 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "pch.h"
-#include "ninniku/Image/generic.h"
+RWStructuredBuffer<uint> dstBuffer;
 
-#include "generic_impl.h"
-
-namespace ninniku
+[numthreads(16, 1, 1)]
+void main(uint3 DTI : SV_DispatchThreadID)
 {
-    TextureParamHandle genericImage::CreateTextureParam(const uint8_t viewFlags) const
-    {
-        return _impl->CreateTextureParam(viewFlags);
-    }
-
-    bool genericImage::Load(const std::string& path)
-    {
-        return _impl->Load(path);
-    }
-
-    const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
-    {
-        return _impl->GetData();
-    }
-
-    void genericImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
-    {
-        return _impl->InitializeFromTextureObject(dx, srcTex);
-    }
-
-    const SizeFixResult genericImage::IsRequiringFix() const
-    {
-        return _impl->IsRequiringFix();
-    }
-} // namespace ninniku
+    dstBuffer[DTI.x] = DTI.x;
+}

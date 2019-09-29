@@ -21,13 +21,14 @@
 #include "pch.h"
 #include "image_impl.h"
 
-#include "../utils/mathUtils.h"
-#include "../utils/log.h"
+#include "../../utils/mathUtils.h"
+#include "../../utils/log.h"
 
-namespace ninniku {
+namespace ninniku
+{
     TextureParamHandle ImageImpl::CreateTextureParam(const uint8_t viewFlags) const
     {
-        if (viewFlags == ETextureViews::TV_None) {
+        if (viewFlags == EResourceViews::RV_None) {
             LOGE << "TextureParam view flags cannot be ETextureViews::TV_None";
             return TextureParam::Create();
         }

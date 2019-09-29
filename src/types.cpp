@@ -21,7 +21,24 @@
 #include "pch.h"
 #include "ninniku/types.h"
 
-namespace ninniku {
+namespace ninniku
+{
+    std::shared_ptr<BufferParam> BufferParam::Create()
+    {
+        return std::make_shared<BufferParam>();
+    }
+
+    std::shared_ptr<BufferParam> BufferParam::Duplicate() const
+    {
+        auto res = BufferParam::Create();
+
+        res->elementSize = elementSize;
+        res->numElements = numElements;
+        res->viewflags = viewflags;
+
+        return res;
+    }
+
     std::shared_ptr<TextureParam> TextureParam::Create()
     {
         return std::make_shared<TextureParam>();

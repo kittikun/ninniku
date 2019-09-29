@@ -20,37 +20,35 @@
 
 #pragma once
 
-#include "../export.h"
+#include "../../export.h"
 #include "image.h"
 
-namespace ninniku {
-    class ddsImageImpl;
+namespace ninniku
+{
+    class genericImageImpl;
 
-    class ddsImage final : public Image
+    class genericImage final : public Image
     {
         // no copy of any kind allowed
-        ddsImage(const ddsImage&) = delete;
-        ddsImage& operator=(ddsImage&) = delete;
-        ddsImage(ddsImage&&) = delete;
-        ddsImage& operator=(ddsImage&&) = delete;
+        genericImage(const genericImage&) = delete;
+        genericImage& operator=(genericImage&) = delete;
+        genericImage(genericImage&&) = delete;
+        genericImage& operator=(genericImage&&) = delete;
 
     public:
-        NINNIKU_API ddsImage();
-        NINNIKU_API ~ddsImage();
+        NINNIKU_API genericImage();
+        NINNIKU_API ~genericImage();
 
         NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
-        // Used when transfering data back from the GPU
+        // Used when transferring data back from the GPU
         NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
-        NINNIKU_API bool SaveImage(const std::string&);
-        NINNIKU_API bool SaveCompressedImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
-
     private:
-        std::unique_ptr<ddsImageImpl> _impl;
+        std::unique_ptr<genericImageImpl> _impl;
     };
 } // namespace ninniku

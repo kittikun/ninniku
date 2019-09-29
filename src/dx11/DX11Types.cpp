@@ -36,4 +36,39 @@ namespace ninniku
 
         return res;
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    // MappedResource
+    //////////////////////////////////////////////////////////////////////////
+    MappedResource::MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
+        : _bufferObj{ Empty_BufferHandle }
+        , _context{ context }
+        , _texObj{ texObj }
+        , _index{ index }
+        , _mapped{}
+    {
+    }
+
+    MappedResource::MappedResource(const DX11Context& context, const BufferHandle& bufObj)
+        : _bufferObj{ bufObj }
+        , _context{ context }
+        , _texObj{ Empty_TextureHandle }
+        , _index{ }
+        , _mapped{}
+    {
+    }
+
+    MappedResource::~MappedResource()
+    {
+        if (_bufferObj) {
+            _context->Unmap(_bufferObj->buffer.Get(), 0);
+        } else {
+            _context->Unmap(_texObj->GetResource(), _index);
+        }
+    }
+
+    uint32_t MappedResource::GetRowPitch() const
+    {
+        return _mapped.RowPitch;
+    }
 } // namespace ninniku

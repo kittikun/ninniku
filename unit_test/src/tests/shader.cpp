@@ -24,8 +24,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/dx11/DX11.h>
-#include <ninniku/image/cmft.h>
-#include <ninniku/image/dds.h>
+#include <ninniku/core/buffer.h>
+#include <ninniku/core/image/cmft.h>
+#include <ninniku/core/image/dds.h>
 #include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 #include <ninniku/utils.h>
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE(shader_colorMips)
 
     res->InitializeFromTextureObject(dx, resTex);
 
-    auto data = res->GetData();
+    auto& data = res->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x91086088d369be49, 0x74d54476510012cc);
 }
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
     param->depth = 1;
     param->numMips = 1;
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
-    param->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto srcTex = dx->CreateTexture(param);
     auto dstTex = dx->CreateTexture(param);
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
 
     res->InitializeFromTextureObject(dx, resTex);
 
-    auto data = res->GetData();
+    auto& data = res->GetData();
 
     // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xc85514693c51df6f, 0xd10b1b7b4175a5ff);
@@ -142,7 +143,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     auto needFix = image->IsRequiringFix();
     auto newSize = std::get<1>(needFix);
 
-    auto srcParam = image->CreateTextureParam(ninniku::TV_SRV);
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("Resize");
     auto srcTex = dx->CreateTexture(srcParam);
@@ -153,7 +154,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     dstParam->format = srcTex->desc->format;
     dstParam->numMips = 1;
     dstParam->arraySize = 6;
-    dstParam->viewflags = ninniku::TV_SRV | ninniku::TV_UAV;
+    dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto dst = ResizeImage(dx, srcTex, needFix);
 
@@ -161,9 +162,44 @@ BOOST_AUTO_TEST_CASE(shader_resize)
 
     res->InitializeFromTextureObject(dx, dst);
 
-    auto data = res->GetData();
+    auto& data = res->GetData();
 
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xb3ba50ac382fe166, 0xdd1bda49f1b43409);
+}
+
+BOOST_AUTO_TEST_CASE(shader_structuredBuffer)
+{
+    auto& dx = ninniku::GetRenderer();
+    auto params = ninniku::BufferParam::Create();
+
+    params->numElements = 16;
+    params->elementSize = sizeof(uint32_t);
+    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+
+    auto srcBuffer = dx->CreateBuffer(params);
+
+    // fill structured buffer
+    {
+        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
+
+        // dispatch
+        ninniku::Command cmd = {};
+        cmd.shader = "fillBuffer";
+
+        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
+
+        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
+
+        dx->Dispatch(cmd);
+    }
+
+    ninniku::Buffer dstBuffer;
+
+    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
+
+    auto& data = dstBuffer.GetData();
+
+    CheckMD5(reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(&data.front())), static_cast<uint32_t>(data.size() * sizeof(uint32_t)), 0xe4c6bd586aa54c9b, 0xb02b6bb8ec6b10db);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

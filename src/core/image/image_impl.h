@@ -20,39 +20,39 @@
 
 #pragma once
 
-#include "../types.h"
-#include "../dx11/DX11Types.h"
+#include "ninniku/core/image/image.h"
 
 namespace ninniku
 {
-    using SizeFixResult = std::tuple<bool, uint32_t, uint32_t>;
-
-    class Image
+    class ImageImpl : public Image
     {
         // no copy of any kind allowed
-        Image(const Image&) = delete;
-        Image& operator=(Image&) = delete;
-        Image(Image&&) = delete;
-        Image& operator=(Image&&) = delete;
+        ImageImpl(const ImageImpl&) = delete;
+        ImageImpl& operator=(ImageImpl&) = delete;
+        ImageImpl(ImageImpl&&) = delete;
+        ImageImpl& operator=(ImageImpl&&) = delete;
 
     public:
-        Image() = default;
-        virtual ~Image() = default;
+        ImageImpl() = default;
+        virtual ~ImageImpl() = default;
 
-        virtual bool Load(const std::string&) = 0;
-        virtual TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const = 0;
+        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const;
 
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
-        // Used when transfering data back from the GPU
         virtual void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) = 0;
 
-        /// <summary>
-        /// Check if a image is a power of 2 and return a 2 item tuple
-        /// 0 bool: need fix
-        /// 1 uint32: new width
-        /// 2 uint32: new height
-        /// </summary>
-        virtual const SizeFixResult IsRequiringFix() const = 0;
+        const SizeFixResult IsRequiringFix() const override;
+
+        bool Load(const std::string& path) override;
+
+    protected:
+        virtual TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const = 0;
+        virtual uint32_t GetHeight() const = 0;
+        virtual const std::vector<SubresourceParam> GetInitializationData() const = 0;
+        virtual uint32_t GetWidth() const = 0;
+        virtual bool LoadInternal(const std::string& path) = 0;
+        virtual void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) = 0;
+        virtual bool ValidateExtension(const std::string& ext) const = 0;
     };
 } // namespace ninniku

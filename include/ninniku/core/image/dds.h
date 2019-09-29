@@ -20,45 +20,38 @@
 
 #pragma once
 
-#include "../export.h"
+#include "../../export.h"
 #include "image.h"
 
 namespace ninniku
 {
-    class cmftImageImpl;
+    class ddsImageImpl;
 
-    class cmftImage final : public Image
+    class ddsImage final : public Image
     {
         // no copy of any kind allowed
-        cmftImage(const cmftImage&) = delete;
-        cmftImage& operator=(cmftImage&) = delete;
-        cmftImage(cmftImage&&) = delete;
-        cmftImage& operator=(cmftImage&&) = delete;
+        ddsImage(const ddsImage&) = delete;
+        ddsImage& operator=(ddsImage&) = delete;
+        ddsImage(ddsImage&&) = delete;
+        ddsImage& operator=(ddsImage&&) = delete;
 
     public:
-        NINNIKU_API cmftImage();
-        NINNIKU_API ~cmftImage();
+        NINNIKU_API ddsImage();
+        NINNIKU_API ~ddsImage();
 
         NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
-        // Used when transfering data back from the GPU
+        // Used when transferring data back from the GPU
         NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
-        enum class SaveType
-        {
-            Cubemap,
-            Facelist,
-            LatLong,
-            VCross
-        };
-
-        NINNIKU_API bool SaveImage(const std::string&, SaveType type);
+        NINNIKU_API bool SaveImage(const std::string&);
+        NINNIKU_API bool SaveCompressedImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
 
     private:
-        std::unique_ptr<cmftImageImpl> _impl;
+        std::unique_ptr<ddsImageImpl> _impl;
     };
 } // namespace ninniku

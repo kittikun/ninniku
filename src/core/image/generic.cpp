@@ -18,45 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ninniku/ninniku.h>
-#include <ninniku/dx11/DX11.h>
-#include <ninniku/core/buffer.h>
+#include "pch.h"
+#include "ninniku/core/image/generic.h"
 
-int main()
+#include "generic_impl.h"
+
+namespace ninniku
 {
-    std::vector<std::string> shaderPaths = { "..\\simple\\shaders", "..\\unit_test\\shaders" };
-
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
-
-    auto& dx = ninniku::GetRenderer();
-    auto params = ninniku::BufferParam::Create();
-
-    params->numElements = 16;
-    params->elementSize = sizeof(uint32_t);
-    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
-
-    auto srcBuffer = dx->CreateBuffer(params);
-
-    // fill structured buffer
+    TextureParamHandle genericImage::CreateTextureParam(const uint8_t viewFlags) const
     {
-        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
-
-        // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "fillBuffer";
-
-        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
-
-        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
-
-        dx->Dispatch(cmd);
+        return _impl->CreateTextureParam(viewFlags);
     }
 
-    ninniku::Buffer dstBuffer;
+    bool genericImage::Load(const std::string& path)
+    {
+        return _impl->Load(path);
+    }
 
-    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
+    const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
+    {
+        return _impl->GetData();
+    }
 
-    auto& data = dstBuffer.GetData();
+    void genericImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    {
+        return _impl->InitializeFromTextureObject(dx, srcTex);
+    }
 
-    ninniku::Terminate();
-}
+    const SizeFixResult genericImage::IsRequiringFix() const
+    {
+        return _impl->IsRequiringFix();
+    }
+} // namespace ninniku

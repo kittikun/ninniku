@@ -22,48 +22,48 @@
 
 #include "image_Impl.h"
 
-#include "ninniku/image/cmft.h"
-
-#include <cmft/image.h>
-
 namespace ninniku
 {
-    class cmftImageImpl final : public ImageImpl
+    class genericImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
-        cmftImageImpl(const cmftImageImpl&) = delete;
-        cmftImageImpl& operator=(cmftImageImpl&) = delete;
-        cmftImageImpl(cmftImageImpl&&) = delete;
-        cmftImageImpl& operator=(cmftImageImpl&&) = delete;
+        genericImageImpl(const genericImageImpl&) = delete;
+        genericImageImpl& operator=(genericImageImpl&) = delete;
+        genericImageImpl(genericImageImpl&&) = delete;
+        genericImageImpl& operator=(genericImageImpl&&) = delete;
 
     public:
-        cmftImageImpl() = default;
-        ~cmftImageImpl();
+        genericImageImpl() = default;
+        ~genericImageImpl();
 
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
-        // Used when transfering data back from the GPU
+        // Used when transferring data back from the GPU
         void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
-        bool SaveImage(const std::string& path, cmftImage::SaveType type);
+        // Save Image as DDS R32G32B32A32_FLOAT
+        bool SaveImage(const std::string&);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
-        uint32_t GetHeight() const override { return _image.m_height; }
+        uint32_t GetHeight() const override { return _height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
-        uint32_t GetWidth() const override { return _image.m_width; }
+        uint32_t GetWidth() const override { return _width; }
         bool LoadInternal(const std::string& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
         bool ValidateExtension(const std::string& ext) const override;
 
     private:
-        void AllocateMemory();
-        bool LoadEXR(const std::string& path);
-        cmft::TextureFormat::Enum GetFormatFromDXGIFormat(uint32_t format) const;
-        cmft::ImageFileType::Enum GetFiletypeFromFilename(const std::string& path);
-        uint32_t GetBPPFromFormat(cmft::TextureFormat::Enum format) const;
+        void ConvertToR11G11B10();
+        uint32_t GetFormat() const;
+        void Reset();
 
     private:
-        cmft::Image _image;
+        uint32_t _width;
+        uint32_t _height;
+        uint32_t _bpp;
+        uint8_t* _data8;
+        uint16_t* _data16;
+        std::vector<uint32_t> _convertedData;
     };
 } // namespace ninniku

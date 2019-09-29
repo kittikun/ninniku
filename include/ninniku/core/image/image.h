@@ -20,35 +20,39 @@
 
 #pragma once
 
-#include "../export.h"
-#include "image.h"
+#include "../../types.h"
+#include "../../dx11/DX11Types.h"
 
 namespace ninniku
 {
-    class genericImageImpl;
+    using SizeFixResult = std::tuple<bool, uint32_t, uint32_t>;
 
-    class genericImage final : public Image
+    class Image
     {
         // no copy of any kind allowed
-        genericImage(const genericImage&) = delete;
-        genericImage& operator=(genericImage&) = delete;
-        genericImage(genericImage&&) = delete;
-        genericImage& operator=(genericImage&&) = delete;
+        Image(const Image&) = delete;
+        Image& operator=(Image&) = delete;
+        Image(Image&&) = delete;
+        Image& operator=(Image&&) = delete;
 
     public:
-        NINNIKU_API genericImage();
-        NINNIKU_API ~genericImage();
+        Image() = default;
+        virtual ~Image() = default;
 
-        NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
-        NINNIKU_API bool Load(const std::string&) override;
-        NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
+        virtual bool Load(const std::string&) = 0;
+        virtual TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const = 0;
 
-        // Used when transfering data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
-        NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
+        // Used when transferring data back from the GPU
+        virtual void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) = 0;
 
-    private:
-        std::unique_ptr<genericImageImpl> _impl;
+        /// <summary>
+        /// Check if a image is a power of 2 and return a 2 item tuple
+        /// 0 bool: need fix
+        /// 1 uint32: new width
+        /// 2 uint32: new height
+        /// </summary>
+        virtual const SizeFixResult IsRequiringFix() const = 0;
     };
 } // namespace ninniku

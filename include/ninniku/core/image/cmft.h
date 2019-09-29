@@ -18,44 +18,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../export.h"
-#include "DX11Types.h"
+#pragma once
 
-#include <d3d11shader.h>
+#include "../../export.h"
+#include "image.h"
 
 namespace ninniku
 {
-    class DX11Impl;
+    class cmftImageImpl;
 
-    class DX11
+    class cmftImage final : public Image
     {
         // no copy of any kind allowed
-        DX11(const DX11&) = delete;
-        DX11& operator=(DX11&) = delete;
-        DX11(DX11&&) = delete;
-        DX11& operator=(DX11&&) = delete;
+        cmftImage(const cmftImage&) = delete;
+        cmftImage& operator=(cmftImage&) = delete;
+        cmftImage(cmftImage&&) = delete;
+        cmftImage& operator=(cmftImage&&) = delete;
 
     public:
-        NINNIKU_API DX11();
-        NINNIKU_API ~DX11();
+        NINNIKU_API cmftImage();
+        NINNIKU_API ~cmftImage();
 
-        NINNIKU_API void CopyBufferResource(const CopyBufferSubresourceParam& params) const;
-        NINNIKU_API std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const;
-        NINNIKU_API DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
-        NINNIKU_API BufferHandle CreateBuffer(const BufferParamHandle& params);
-        NINNIKU_API TextureHandle CreateTexture(const TextureParamHandle& params);
-        NINNIKU_API bool Dispatch(const Command& cmd) const;
-        NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
+        NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
+        NINNIKU_API bool Load(const std::string&) override;
+        NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
-        NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;
+        // Used when transferring data back from the GPU
+        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
-#ifdef NINNIKU_EXPORT
-        DX11Impl* GetImpl() { return _impl.get(); }
-#endif
+        NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
+
+        enum class SaveType
+        {
+            Cubemap,
+            Facelist,
+            LatLong,
+            VCross
+        };
+
+        NINNIKU_API bool SaveImage(const std::string&, SaveType type);
 
     private:
-        std::unique_ptr<DX11Impl> _impl;
+        std::unique_ptr<cmftImageImpl> _impl;
     };
-
-    NINNIKU_API DX11Handle& GetRenderer();
 } // namespace ninniku
