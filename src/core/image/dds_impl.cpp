@@ -118,6 +118,17 @@ namespace ninniku
         return true;
     }
 
+	bool ddsImageImpl::LoadRaw(const void* pData, const size_t size)
+	{
+		const auto hr = LoadFromDDSMemory(pData, size, DirectX::DDS_FLAGS_NONE, &_meta, _scratch);
+		if (FAILED(hr)) {
+			LOGE << "Failed to load DDS file";
+			return false;
+		}
+
+		return true;
+	}
+
 	bool ddsImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
 	{
 		throw std::exception("not implemented");

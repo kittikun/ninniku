@@ -47,6 +47,9 @@ namespace ninniku
         NINNIKU_API BufferHandle CreateBuffer(const BufferParamHandle& params);
         NINNIKU_API TextureHandle CreateTexture(const TextureParamHandle& params);
         NINNIKU_API bool Dispatch(const Command& cmd) const;
+		NINNIKU_API bool LoadShader(const std::string& name, const void* pData, const size_t size);
+		NINNIKU_API MappedResourceHandle MapBuffer(const BufferHandle& bObj);
+		NINNIKU_API MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
         NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
         NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;

@@ -50,6 +50,12 @@ namespace ninniku {
     NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
+    /// Initialize ninniku framework
+    /// alternative version where each shader blob must be manually loaded
+    /// </summary>
+	NINNIKU_API bool Initialize(const ERenderer renderer, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+
+    /// <summary>
     /// Cleanup resources used by ninniku
     /// If Renderdoc capture mode is enabled, finalize file capture
     /// </summary>

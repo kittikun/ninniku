@@ -35,6 +35,11 @@ namespace ninniku
         return _impl->Load(path);
     }
 
+	bool ddsImage::LoadRaw(const void* pData, const size_t size)
+	{
+		return _impl->LoadRaw(pData, size);
+	}
+
 	bool ddsImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
 	{
 		return _impl->LoadRaw(pData, size, width, height, format);

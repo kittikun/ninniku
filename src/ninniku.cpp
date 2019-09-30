@@ -73,37 +73,49 @@ namespace ninniku {
         return sRenderer;
     }
 
+	bool _Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
+	{
+		ninniku::Log::Initialize(logLevel);
+
+		LOG << "ninniku HLSL compute shader framework";
+
+#if defined(_USE_RENDERDOC)
+		LoadRenderDoc();
+#endif
+
+		if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
+			sRenderer.reset(new ninniku::DX11());
+
+			// since CI is running test, we must use warp driver
+			if (!sRenderer->GetImpl()->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP)) {
+				LOGE << "DX11App::Initialize failed";
+				return false;
+			}
+
+#if defined(_USE_RENDERDOC)
+			if (gRenderDocApi != nullptr) {
+				gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
+				gRenderDocApi->StartFrameCapture(nullptr, nullptr);
+			}
+#endif
+
+			return true;
+		}
+
+		return false;
+	}
+
     bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
     {
-        ninniku::Log::Initialize(logLevel);
-
-        LOG << "ninniku HLSL compute shader framework";
-
-#if defined(_USE_RENDERDOC)
-        LoadRenderDoc();
-#endif
-
-        if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
-            sRenderer.reset(new ninniku::DX11());
-
-            // since CI is running test, we must use warp driver
-            if (!sRenderer->GetImpl()->Initialize(shaderPaths, (renderer == ERenderer::RENDERER_WARP) ? true : false)) {
-                LOGE << "DX11App::Initialize failed";
-                return false;
-            }
-
-#if defined(_USE_RENDERDOC)
-            if (gRenderDocApi != nullptr) {
-                gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
-                gRenderDocApi->StartFrameCapture(nullptr, nullptr);
-            }
-#endif
-
-            return true;
-        }
-
-        return false;
+		return _Initialize(renderer, shaderPaths, logLevel);
     }
+
+	bool Initialize(const ERenderer renderer, const ELogLevel logLevel)
+	{
+		std::vector<std::string> shaderPaths;
+
+		return _Initialize(renderer, shaderPaths, logLevel);
+	}
 
     void Terminate()
     {

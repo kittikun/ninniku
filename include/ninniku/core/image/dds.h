@@ -41,6 +41,7 @@ namespace ninniku
 
         NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
+		NINNIKU_API bool LoadRaw(const void* pData, const size_t size);
 		NINNIKU_API bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 

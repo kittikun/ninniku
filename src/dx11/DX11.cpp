@@ -62,6 +62,21 @@ namespace ninniku
         return _impl->Dispatch(cmd);
     }
 
+	bool DX11::LoadShader(const std::string& name, const void* pData, const size_t size)
+	{
+		return _impl->LoadShader(name, pData, size);
+	}
+
+	MappedResourceHandle DX11::MapBuffer(const BufferHandle& bObj)
+	{
+		return _impl->MapBuffer(bObj);
+	}
+
+	MappedResourceHandle DX11::MapTexture(const TextureHandle& tObj, const uint32_t index)
+	{
+		return _impl->MapTexture(tObj, index);
+	}
+
     bool DX11::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
     {
         return _impl->UpdateConstantBuffer(name, data, size);

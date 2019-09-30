@@ -44,6 +44,7 @@ namespace ninniku
         TextureHandle CreateTexture(const TextureParamHandle& params);
         bool Dispatch(const Command& cmd) const;
         bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp);
+		bool LoadShader(const std::string& name, const void* pData, const size_t size);
         MappedResourceHandle MapBuffer(const BufferHandle& bObj);
         MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
         bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
@@ -64,6 +65,7 @@ namespace ninniku
 
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
         bool GetDXGIFactory(IDXGIFactory1** pFactory);
+		bool LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path);
         bool LoadShaders(const std::string& shaderPath);
         bool MakeTextureSRV(const TextureSRVParams& params);
         std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
