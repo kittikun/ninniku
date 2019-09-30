@@ -40,6 +40,7 @@ namespace ninniku
         virtual ~Image() = default;
 
         virtual bool Load(const std::string&) = 0;
+		virtual bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) = 0;
         virtual TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const = 0;
 
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }

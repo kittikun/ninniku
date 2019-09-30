@@ -22,6 +22,8 @@
 
 #include "ninniku/export.h"
 
+#include <cstdint>
+
 namespace ninniku {
     const bool IsPow2(const uint32_t x) noexcept;
     NINNIKU_API const uint32_t CountMips(const uint32_t faceSize) noexcept;

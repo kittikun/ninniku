@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace ninniku
 {
     std::string removeFileExtension(const std::string&);

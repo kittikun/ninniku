@@ -35,6 +35,11 @@ namespace ninniku
         return _impl->Load(path);
     }
 
+	bool cmftImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+	{
+		return _impl->LoadRaw(pData, size, width, height, format);
+	}
+
     const std::tuple<uint8_t*, uint32_t> cmftImage::GetData() const
     {
         return _impl->GetData();

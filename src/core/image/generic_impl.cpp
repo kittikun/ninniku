@@ -152,6 +152,11 @@ namespace ninniku
         return true;
     }
 
+	bool genericImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+	{
+		throw std::exception("not implemented");
+	}
+
     const std::tuple<uint8_t*, uint32_t> genericImageImpl::GetData() const
     {
         uint32_t size = _width * _height * _bpp;

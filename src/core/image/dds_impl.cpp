@@ -118,6 +118,11 @@ namespace ninniku
         return true;
     }
 
+	bool ddsImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+	{
+		throw std::exception("not implemented");
+	}
+
     void ddsImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
     {
         // DirectXTex

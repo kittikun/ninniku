@@ -45,7 +45,10 @@ namespace ninniku
         // Used when transferring data back from the GPU
         void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
 
+		bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
+
         bool SaveImage(const std::string& path, cmftImage::SaveType type);
+
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
@@ -58,6 +61,7 @@ namespace ninniku
 
     private:
         void AllocateMemory();
+		bool AssembleCubemap();
         bool LoadEXR(const std::string& path);
         cmft::TextureFormat::Enum GetFormatFromDXGIFormat(uint32_t format) const;
         cmft::ImageFileType::Enum GetFiletypeFromFilename(const std::string& path);

@@ -77,4 +77,5 @@ namespace ninniku
 
         return LoadInternal(path);
     }
+
 } // namespace ninniku
