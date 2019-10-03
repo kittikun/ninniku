@@ -61,7 +61,7 @@ namespace ninniku {
             uint32_t isNew;
         };
 
-        static std::unique_ptr<LogContext> sLogContext;
+        static LogContext sLogContext;
         static bool sLogInitizalized;
 
         //////////////////////////////////////////////////////////////////////////
@@ -135,7 +135,6 @@ namespace ninniku {
             if (sLogInitizalized)
                 return;
 
-            sLogContext.reset(new LogContext());
             logging::add_common_attributes();
 
             auto colorSink = boost::make_shared<sinks::synchronous_sink<ColorConsoleSink>>();
@@ -181,27 +180,27 @@ namespace ninniku {
 
         void StartIndent()
         {
-            ++sLogContext->count;
-            sLogContext->isNew = 1;
+            ++sLogContext.count;
+            sLogContext.isNew = 1;
         }
 
         void EndIndent()
         {
-            --sLogContext->count;
+            --sLogContext.count;
         }
 
         std::string GetIndent()
         {
             std::string res;
 
-            if (sLogContext->isNew > 0) {
-                for (uint32_t i = 1; i < sLogContext->count; ++i)
+            if (sLogContext.isNew > 0) {
+                for (uint32_t i = 1; i < sLogContext.count; ++i)
                     res += " ";
 
                 res += "- ";
-                --sLogContext->isNew;
+                --sLogContext.isNew;
             } else {
-                for (uint32_t i = 0; i < sLogContext->count; ++i)
+                for (uint32_t i = 0; i < sLogContext.count; ++i)
                     res += "  ";
             }
 
