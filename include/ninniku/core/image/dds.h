@@ -41,17 +41,17 @@ namespace ninniku
 
         NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
-		NINNIKU_API bool LoadRaw(const void* pData, const size_t size);
-		NINNIKU_API bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
+        NINNIKU_API bool LoadRaw(const void* pData, const size_t size);
+        NINNIKU_API bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transferring data back from the GPU
-        NINNIKU_API void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
+        NINNIKU_API void InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) override;
 
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
         NINNIKU_API bool SaveImage(const std::string&);
-        NINNIKU_API bool SaveCompressedImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
+        NINNIKU_API bool SaveCompressedImage(const std::string&, RenderDeviceHandle& dx, DXGI_FORMAT format);
 
     private:
         std::unique_ptr<ddsImageImpl> _impl;

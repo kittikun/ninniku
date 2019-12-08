@@ -24,7 +24,8 @@
 
 #include <DirectXTex.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class ddsImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -39,13 +40,13 @@ namespace ninniku {
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transferring data back from the GPU
-        void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
+        void InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) override;
 
-		bool LoadRaw(const void* pData, const size_t size);
-		bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
+        bool LoadRaw(const void* pData, const size_t size);
+        bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
 
         bool SaveImage(const std::string&);
-        bool SaveCompressedImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
+        bool SaveCompressedImage(const std::string&, RenderDeviceHandle& dx, DXGI_FORMAT format);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;

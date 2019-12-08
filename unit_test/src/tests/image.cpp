@@ -23,7 +23,7 @@
 #include "../common.h"
 
 #include <boost/test/unit_test.hpp>
-#include <ninniku/dx11/DX11.h>
+#include <ninniku/renderer/dx11/DX11.h>
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
 #include <ninniku/core/image/generic.h>

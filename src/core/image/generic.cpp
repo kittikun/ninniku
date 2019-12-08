@@ -35,17 +35,17 @@ namespace ninniku
         return _impl->Load(path);
     }
 
-	bool genericImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-	{
-		return _impl->LoadRaw(pData, size, width, height, format);
-	}
+    bool genericImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    {
+        return _impl->LoadRaw(pData, size, width, height, format);
+    }
 
     const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
     {
         return _impl->GetData();
     }
 
-    void genericImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }

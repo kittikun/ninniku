@@ -21,11 +21,11 @@
 #include "pch.h"
 #include "cmft_impl.h"
 
-#include "ninniku/dx11/DX11.h"
-#include "ninniku/dx11/DX11Types.h"
+#include "ninniku/renderer/dx11/DX11.h"
+#include "ninniku/renderer/dx11/DX11Types.h"
 #include "ninniku/core/image/cmft.h"
 
-#include "../../dx11/DX11_impl.h"
+#include "../../renderer/dx11/DX11_impl.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 
@@ -172,41 +172,36 @@ namespace ninniku
         return true;
     }
 
-	bool cmftImageImpl::AssembleCubemap()
-	{
-		if (!imageIsCubemap(_image)) {
-			if (imageIsCubeCross(_image)) {
-				LOG << "Converting cube cross to cubemap.";
-				imageCubemapFromCross(_image);
-			}
-			else if (imageIsLatLong(_image)) {
-				LOG << "Converting latlong image to cubemap.";
-				imageCubemapFromLatLong(_image);
-			}
-			else if (imageIsHStrip(_image)) {
-				LOG << "Converting hstrip image to cubemap.";
-				imageCubemapFromStrip(_image);
-			}
-			else if (imageIsVStrip(_image)) {
-				LOG << "Converting vstrip image to cubemap.";
-				imageCubemapFromStrip(_image);
-			}
-			else if (imageIsOctant(_image)) {
-				LOG << "Converting octant image to cubemap.";
-				imageCubemapFromOctant(_image);
-			}
-			else {
-				LOGE << "Image is not cubemap(6 faces), cubecross(ratio 3:4 or 4:3), latlong(ratio 2:1), hstrip(ratio 6:1), vstrip(ration 1:6)";
+    bool cmftImageImpl::AssembleCubemap()
+    {
+        if (!imageIsCubemap(_image)) {
+            if (imageIsCubeCross(_image)) {
+                LOG << "Converting cube cross to cubemap.";
+                imageCubemapFromCross(_image);
+            } else if (imageIsLatLong(_image)) {
+                LOG << "Converting latlong image to cubemap.";
+                imageCubemapFromLatLong(_image);
+            } else if (imageIsHStrip(_image)) {
+                LOG << "Converting hstrip image to cubemap.";
+                imageCubemapFromStrip(_image);
+            } else if (imageIsVStrip(_image)) {
+                LOG << "Converting vstrip image to cubemap.";
+                imageCubemapFromStrip(_image);
+            } else if (imageIsOctant(_image)) {
+                LOG << "Converting octant image to cubemap.";
+                imageCubemapFromOctant(_image);
+            } else {
+                LOGE << "Image is not cubemap(6 faces), cubecross(ratio 3:4 or 4:3), latlong(ratio 2:1), hstrip(ratio 6:1), vstrip(ration 1:6)";
 
-				return false;
-			}
-		}
+                return false;
+            }
+        }
 
-		if (!imageIsCubemap(_image))
-			return false;
+        if (!imageIsCubemap(_image))
+            return false;
 
-		return true;
-	}
+        return true;
+    }
 
     bool cmftImageImpl::LoadInternal(const std::string& path)
     {
@@ -235,42 +230,40 @@ namespace ninniku
         return true;
     }
 
-	bool cmftImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-	{
-		auto cmftFormat = cmft::TextureFormat::RGBA32F;
+    bool cmftImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    {
+        auto cmftFormat = cmft::TextureFormat::RGBA32F;
 
-		if (format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
-			cmftFormat = cmft::TextureFormat::Enum::RGBA32F;
-		}
-		else if (format == DXGI_FORMAT_R8G8B8A8_UNORM) {
-			cmftFormat = cmft::TextureFormat::Enum::BGRA8;
-		}
-		else {
-			LOGE << "SaveImage* format only supports DXGI_FORMAT_R32G32B32A32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM";
-			return false;
-		}
+        if (format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
+            cmftFormat = cmft::TextureFormat::Enum::RGBA32F;
+        } else if (format == DXGI_FORMAT_R8G8B8A8_UNORM) {
+            cmftFormat = cmft::TextureFormat::Enum::BGRA8;
+        } else {
+            LOGE << "SaveImage* format only supports DXGI_FORMAT_R32G32B32A32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM";
+            return false;
+        }
 
-		_image.m_width = width;
-		_image.m_height = height;
-		_image.m_dataSize = static_cast<uint32_t>(size);
-		_image.m_format = cmftFormat;
-		_image.m_numMips = 1;
-		_image.m_numFaces = 1;
-		//_image.m_data = (float*)pData;
+        _image.m_width = width;
+        _image.m_height = height;
+        _image.m_dataSize = static_cast<uint32_t>(size);
+        _image.m_format = cmftFormat;
+        _image.m_numMips = 1;
+        _image.m_numFaces = 1;
+        //_image.m_data = (float*)pData;
 
-		_image.m_data = CMFT_ALLOC(cmft::g_allocator, size);
-		memcpy_s(_image.m_data, size, pData, size);
+        _image.m_data = CMFT_ALLOC(cmft::g_allocator, size);
+        memcpy_s(_image.m_data, size, pData, size);
 
-		if (!AssembleCubemap()) {
-			LOGE << "Conversion failed.";
+        if (!AssembleCubemap()) {
+            LOGE << "Conversion failed.";
 
-			return false;
-		}
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-    void cmftImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         // we want to enforce 1:1 for now
         assert(srcTex->desc->width == srcTex->desc->height);

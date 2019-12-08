@@ -2,7 +2,7 @@
 
 ```ninniku (にんにく) is the Japanese word for garlic```
 
-[![Build status](https://ci.appveyor.com/api/projects/status/9wne2qsbsihhxnxd/branch/develop?svg=true)](https://ci.appveyor.com/project/kittikun/ninniku/branch/develop)
+[![Build status](https://ci.appveyor.com/api/projects/status/9wne2qsbsihhxnxd/branch/dx12?svg=true)](https://ci.appveyor.com/project/kittikun/ninniku/branch/dx12)
 
 Simple framework to run compute jobs with DX11
 - Texture are supported with the SRV/UAV views

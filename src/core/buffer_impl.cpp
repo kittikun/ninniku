@@ -21,13 +21,13 @@
 #include "pch.h"
 #include "buffer_impl.h"
 
-#include "ninniku/dx11/DX11.h"
-#include "../dx11/DX11_impl.h"
+#include "ninniku/renderer/dx11/DX11.h"
+#include "../renderer/dx11/DX11_impl.h"
 #include "../utils/log.h"
 
 namespace ninniku
 {
-    void BufferImpl::InitializeFromBufferObject(DX11Handle& dx, const BufferHandle& src)
+    void BufferImpl::InitializeFromBufferObject(RenderDeviceHandle& dx, const BufferHandle& src)
     {
         assert(src->desc->elementSize % 4 == 0);
 

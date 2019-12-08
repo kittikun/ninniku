@@ -19,7 +19,7 @@
 // SOFTWARE.
 
 #include <ninniku/ninniku.h>
-#include <ninniku/dx11/DX11.h>
+#include <ninniku/renderer/dx11/DX11.h>
 #include <ninniku/core/buffer.h>
 
 int main()

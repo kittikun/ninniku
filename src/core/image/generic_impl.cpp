@@ -25,11 +25,12 @@
 
 #include "../../utils/log.h"
 
-#include <boost/filesystem.hpp>
-#include <DirectXPackedVector.h>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+
+#include <boost/filesystem.hpp>
+#include <array>
+#include <DirectXPackedVector.h>
 
 namespace ninniku
 {
@@ -152,10 +153,10 @@ namespace ninniku
         return true;
     }
 
-	bool genericImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-	{
-		throw std::exception("not implemented");
-	}
+    bool genericImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    {
+        throw std::exception("not implemented");
+    }
 
     const std::tuple<uint8_t*, uint32_t> genericImageImpl::GetData() const
     {
@@ -189,7 +190,7 @@ namespace ninniku
         return res;
     }
 
-    void genericImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void genericImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         throw std::exception("not implemented");
     }

@@ -19,11 +19,11 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "ninniku/dx11/DX11Types.h"
+#include "ninniku/renderer/dx11/DX11Types.h"
 
 namespace ninniku
 {
-    ID3D11Resource* TextureObject::GetResource() const
+    ID3D11Resource* DX11TextureObject::GetResource() const
     {
         ID3D11Resource* res = nullptr;
 

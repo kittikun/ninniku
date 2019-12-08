@@ -20,46 +20,9 @@
 
 #pragma once
 
-#include "export.h"
-
-#include <stdint.h>
-#include <string>
-#include <vector>
-
 namespace ninniku
 {
-    class DX11;
-
-    enum class ELogLevel : uint8_t
+    class DX12 : public RenderDevice
     {
-        LL_NONE,
-        LL_WARN_ERROR,
-        LL_NORMAL,
-        LL_FULL
     };
-
-    enum class ERenderer : uint8_t
-    {
-        RENDERER_DX11,
-        RENDERER_DX12,
-        RENDERER_WARP
-    };
-
-    /// <summary>
-    /// Initialize ninniku framework
-    /// shaderPaths must point to compiled .cso folders
-    /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
-
-    /// <summary>
-    /// Initialize ninniku framework
-    /// alternative version where each shader blob must be manually loaded
-    /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
-
-    /// <summary>
-    /// Cleanup resources used by ninniku
-    /// If Renderdoc capture mode is enabled, finalize file capture
-    /// </summary>
-    NINNIKU_API void Terminate();
 } // namespace ninniku

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "ninniku/dx11/DX11Types.h"
+#include "ninniku/renderer/dx11/DX11Types.h"
 
 #include <d3d11shader.h>
 

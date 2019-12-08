@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../export.h"
-#include "../types.h"
+#include "../../renderer/types.h"
+#include "../../export.h"
+#include "../../types.h"
 
 #include <wrl/client.h>
 #include <d3d11_1.h>
@@ -36,28 +37,19 @@ namespace ninniku
     using DX11SRV = Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
     using DX11UAV = Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
-    class DX11;
-
-    struct DX11Deleter
-    {
-        void operator()(DX11* value);
-    };
-
-    using DX11Handle = std::unique_ptr<DX11, DX11Deleter>;
-
     //////////////////////////////////////////////////////////////////////////
     // Buffers
     //////////////////////////////////////////////////////////////////////////
-    class BufferObject
+    class DX11BufferObject : public BufferObject
     {
         // no copy of any kind allowed
-        BufferObject(const BufferObject&) = delete;
-        BufferObject& operator=(BufferObject&) = delete;
-        BufferObject(BufferObject&&) = delete;
-        BufferObject& operator=(BufferObject&&) = delete;
+        DX11BufferObject(const DX11BufferObject&) = delete;
+        DX11BufferObject& operator=(DX11BufferObject&) = delete;
+        DX11BufferObject(DX11BufferObject&&) = delete;
+        DX11BufferObject& operator=(DX11BufferObject&&) = delete;
 
     public:
-        BufferObject() = default;
+        DX11BufferObject() = default;
 
     public:
         DX11Buffer buffer;
@@ -68,7 +60,6 @@ namespace ninniku
         std::shared_ptr<const BufferParam> desc;
     };
 
-    using BufferHandle = std::unique_ptr<const BufferObject>;
     static BufferHandle Empty_BufferHandle;
 
     //////////////////////////////////////////////////////////////////////////
@@ -132,16 +123,16 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
-    class TextureObject
+    class DX11TextureObject : public TextureObject
     {
         // no copy of any kind allowed
-        TextureObject(const TextureObject&) = delete;
-        TextureObject& operator=(TextureObject&) = delete;
-        TextureObject(TextureObject&&) = delete;
-        TextureObject& operator=(TextureObject&&) = delete;
+        DX11TextureObject(const DX11TextureObject&) = delete;
+        DX11TextureObject& operator=(DX11TextureObject&) = delete;
+        DX11TextureObject(DX11TextureObject&&) = delete;
+        DX11TextureObject& operator=(DX11TextureObject&&) = delete;
 
     public:
-        TextureObject() = default;
+        DX11TextureObject() = default;
 
         ID3D11Resource* GetResource() const;
 
@@ -167,7 +158,6 @@ namespace ninniku
         std::shared_ptr<const TextureParam> desc;
     };
 
-    using TextureHandle = std::unique_ptr<const TextureObject>;
     static TextureHandle Empty_TextureHandle;
 
     //////////////////////////////////////////////////////////////////////////

@@ -37,7 +37,7 @@ namespace ninniku
         return _impl->GetData();
     }
 
-    void Buffer::InitializeFromBufferObject(DX11Handle& dx, const BufferHandle& src)
+    void Buffer::InitializeFromBufferObject(RenderDeviceHandle& dx, const BufferHandle& src)
     {
         _impl->InitializeFromBufferObject(dx, src);
     }

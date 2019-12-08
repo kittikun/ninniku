@@ -40,7 +40,7 @@ namespace ninniku
 
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
-        virtual void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) = 0;
+        virtual void InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) = 0;
 
         const SizeFixResult IsRequiringFix() const override;
 

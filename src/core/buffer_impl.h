@@ -38,7 +38,7 @@ namespace ninniku
 
         const std::vector<uint32_t>& GetData() const { return _data; }
 
-        void InitializeFromBufferObject(DX11Handle& dx, const BufferHandle& src);
+        void InitializeFromBufferObject(RenderDeviceHandle& dx, const BufferHandle& src);
 
     private:
         std::vector<uint32_t> _data;

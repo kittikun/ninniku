@@ -186,17 +186,14 @@
     <ClCompile Include="src\core\image\generic.cpp" />
     <ClCompile Include="src\core\image\generic_impl.cpp" />
     <ClCompile Include="src\core\image\image_impl.cpp" />
-    <ClCompile Include="src\dx11\DX11.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\dx11\DX11Types.cpp" />
-    <ClCompile Include="src\dx11\DX11_impl.cpp" />
     <ClCompile Include="src\ninniku.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\renderer\dx11\DX11.cpp" />
+    <ClCompile Include="src\renderer\dx11\DX11Types.cpp" />
+    <ClCompile Include="src\renderer\dx11\DX11_impl.cpp" />
     <ClCompile Include="src\types.cpp" />
     <ClCompile Include="src\utils\log.cpp" />
     <ClCompile Include="src\utils\mathUtils.cpp" />
@@ -213,10 +210,13 @@
     <ClInclude Include="include\ninniku\core\image\dds.h" />
     <ClInclude Include="include\ninniku\core\image\generic.h" />
     <ClInclude Include="include\ninniku\core\image\image.h" />
-    <ClInclude Include="include\ninniku\dx11\DX11.h" />
-    <ClInclude Include="include\ninniku\dx11\DX11Types.h" />
     <ClInclude Include="include\ninniku\export.h" />
     <ClInclude Include="include\ninniku\ninniku.h" />
+    <ClInclude Include="include\ninniku\renderer\dx11\DX11.h" />
+    <ClInclude Include="include\ninniku\renderer\dx11\DX11Types.h" />
+    <ClInclude Include="include\ninniku\renderer\dx12\DX12.h" />
+    <ClInclude Include="include\ninniku\renderer\renderdevice.h" />
+    <ClInclude Include="include\ninniku\renderer\types.h" />
     <ClInclude Include="include\ninniku\types.h" />
     <ClInclude Include="include\ninniku\utils.h" />
     <ClInclude Include="src\core\buffer_impl.h" />
@@ -224,8 +224,8 @@
     <ClInclude Include="src\core\image\dds_impl.h" />
     <ClInclude Include="src\core\image\generic_impl.h" />
     <ClInclude Include="src\core\image\image_impl.h" />
-    <ClInclude Include="src\dx11\DX11_impl.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\renderer\dx11\DX11_impl.h" />
     <ClInclude Include="src\utils\log.h" />
     <ClInclude Include="src\utils\mathUtils.h" />
     <ClInclude Include="src\utils\misc.h" />
@@ -238,30 +238,30 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="packages\directxtex_desktop_win10.2019.8.23.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('packages\directxtex_desktop_win10.2019.8.23.1\build\native\directxtex_desktop_win10.targets')" />
-    <Import Project="packages\boost.1.70.0.0\build\boost.targets" Condition="Exists('packages\boost.1.70.0.0\build\boost.targets')" />
-    <Import Project="packages\boost_filesystem-vc141.1.70.0.0\build\boost_filesystem-vc141.targets" Condition="Exists('packages\boost_filesystem-vc141.1.70.0.0\build\boost_filesystem-vc141.targets')" />
-    <Import Project="packages\boost_system-vc141.1.70.0.0\build\boost_system-vc141.targets" Condition="Exists('packages\boost_system-vc141.1.70.0.0\build\boost_system-vc141.targets')" />
-    <Import Project="packages\boost_log-vc141.1.70.0.0\build\boost_log-vc141.targets" Condition="Exists('packages\boost_log-vc141.1.70.0.0\build\boost_log-vc141.targets')" />
-    <Import Project="packages\boost_date_time-vc141.1.70.0.0\build\boost_date_time-vc141.targets" Condition="Exists('packages\boost_date_time-vc141.1.70.0.0\build\boost_date_time-vc141.targets')" />
-    <Import Project="packages\boost_thread-vc141.1.70.0.0\build\boost_thread-vc141.targets" Condition="Exists('packages\boost_thread-vc141.1.70.0.0\build\boost_thread-vc141.targets')" />
-    <Import Project="packages\boost_log_setup-vc141.1.70.0.0\build\boost_log_setup-vc141.targets" Condition="Exists('packages\boost_log_setup-vc141.1.70.0.0\build\boost_log_setup-vc141.targets')" />
-    <Import Project="packages\boost_chrono-vc141.1.70.0.0\build\boost_chrono-vc141.targets" Condition="Exists('packages\boost_chrono-vc141.1.70.0.0\build\boost_chrono-vc141.targets')" />
-    <Import Project="packages\boost_atomic-vc141.1.70.0.0\build\boost_atomic-vc141.targets" Condition="Exists('packages\boost_atomic-vc141.1.70.0.0\build\boost_atomic-vc141.targets')" />
+    <Import Project="packages\boost.1.71.0.0\build\boost.targets" Condition="Exists('packages\boost.1.71.0.0\build\boost.targets')" />
+    <Import Project="packages\boost_atomic-vc141.1.71.0.0\build\boost_atomic-vc141.targets" Condition="Exists('packages\boost_atomic-vc141.1.71.0.0\build\boost_atomic-vc141.targets')" />
+    <Import Project="packages\boost_chrono-vc141.1.71.0.0\build\boost_chrono-vc141.targets" Condition="Exists('packages\boost_chrono-vc141.1.71.0.0\build\boost_chrono-vc141.targets')" />
+    <Import Project="packages\boost_date_time-vc141.1.71.0.0\build\boost_date_time-vc141.targets" Condition="Exists('packages\boost_date_time-vc141.1.71.0.0\build\boost_date_time-vc141.targets')" />
+    <Import Project="packages\boost_filesystem-vc141.1.71.0.0\build\boost_filesystem-vc141.targets" Condition="Exists('packages\boost_filesystem-vc141.1.71.0.0\build\boost_filesystem-vc141.targets')" />
+    <Import Project="packages\boost_log-vc141.1.71.0.0\build\boost_log-vc141.targets" Condition="Exists('packages\boost_log-vc141.1.71.0.0\build\boost_log-vc141.targets')" />
+    <Import Project="packages\boost_log_setup-vc141.1.71.0.0\build\boost_log_setup-vc141.targets" Condition="Exists('packages\boost_log_setup-vc141.1.71.0.0\build\boost_log_setup-vc141.targets')" />
+    <Import Project="packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets" Condition="Exists('packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets')" />
+    <Import Project="packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets" Condition="Exists('packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets')" />
+    <Import Project="packages\directxtex_desktop_win10.2019.10.17.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('packages\directxtex_desktop_win10.2019.10.17.1\build\native\directxtex_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\directxtex_desktop_win10.2019.8.23.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtex_desktop_win10.2019.8.23.1\build\native\directxtex_desktop_win10.targets'))" />
-    <Error Condition="!Exists('packages\boost.1.70.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.70.0.0\build\boost.targets'))" />
-    <Error Condition="!Exists('packages\boost_filesystem-vc141.1.70.0.0\build\boost_filesystem-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_filesystem-vc141.1.70.0.0\build\boost_filesystem-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_system-vc141.1.70.0.0\build\boost_system-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_system-vc141.1.70.0.0\build\boost_system-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_log-vc141.1.70.0.0\build\boost_log-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log-vc141.1.70.0.0\build\boost_log-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_date_time-vc141.1.70.0.0\build\boost_date_time-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_date_time-vc141.1.70.0.0\build\boost_date_time-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_thread-vc141.1.70.0.0\build\boost_thread-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc141.1.70.0.0\build\boost_thread-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_log_setup-vc141.1.70.0.0\build\boost_log_setup-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log_setup-vc141.1.70.0.0\build\boost_log_setup-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_chrono-vc141.1.70.0.0\build\boost_chrono-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_chrono-vc141.1.70.0.0\build\boost_chrono-vc141.targets'))" />
-    <Error Condition="!Exists('packages\boost_atomic-vc141.1.70.0.0\build\boost_atomic-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_atomic-vc141.1.70.0.0\build\boost_atomic-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost.1.71.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.71.0.0\build\boost.targets'))" />
+    <Error Condition="!Exists('packages\boost_atomic-vc141.1.71.0.0\build\boost_atomic-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_atomic-vc141.1.71.0.0\build\boost_atomic-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_chrono-vc141.1.71.0.0\build\boost_chrono-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_chrono-vc141.1.71.0.0\build\boost_chrono-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_date_time-vc141.1.71.0.0\build\boost_date_time-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_date_time-vc141.1.71.0.0\build\boost_date_time-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_filesystem-vc141.1.71.0.0\build\boost_filesystem-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_filesystem-vc141.1.71.0.0\build\boost_filesystem-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_log-vc141.1.71.0.0\build\boost_log-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log-vc141.1.71.0.0\build\boost_log-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_log_setup-vc141.1.71.0.0\build\boost_log_setup-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log_setup-vc141.1.71.0.0\build\boost_log_setup-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets'))" />
+    <Error Condition="!Exists('packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets'))" />
+    <Error Condition="!Exists('packages\directxtex_desktop_win10.2019.10.17.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtex_desktop_win10.2019.10.17.1\build\native\directxtex_desktop_win10.targets'))" />
   </Target>
 </Project>

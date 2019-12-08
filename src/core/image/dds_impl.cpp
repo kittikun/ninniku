@@ -21,11 +21,11 @@
 #include "pch.h"
 #include "dds_impl.h"
 
-#include "ninniku/dx11/DX11.h"
-#include "ninniku/dx11/DX11Types.h"
+#include "ninniku/renderer/dx11/DX11.h"
+#include "ninniku/renderer/dx11/DX11Types.h"
 #include "ninniku/core/image/dds.h"
 
-#include "../../dx11/DX11_impl.h"
+#include "../../renderer/dx11/DX11_impl.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 
@@ -118,23 +118,23 @@ namespace ninniku
         return true;
     }
 
-	bool ddsImageImpl::LoadRaw(const void* pData, const size_t size)
-	{
-		const auto hr = LoadFromDDSMemory(pData, size, DirectX::DDS_FLAGS_NONE, &_meta, _scratch);
-		if (FAILED(hr)) {
-			LOGE << "Failed to load DDS file";
-			return false;
-		}
+    bool ddsImageImpl::LoadRaw(const void* pData, const size_t size)
+    {
+        const auto hr = LoadFromDDSMemory(pData, size, DirectX::DDS_FLAGS_NONE, &_meta, _scratch);
+        if (FAILED(hr)) {
+            LOGE << "Failed to load DDS file";
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	bool ddsImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-	{
-		throw std::exception("not implemented");
-	}
+    bool ddsImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    {
+        throw std::exception("not implemented");
+    }
 
-    void ddsImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         // DirectXTex
         _meta = DirectX::TexMetadata{};
@@ -215,7 +215,7 @@ namespace ninniku
         return true;
     }
 
-    bool ddsImageImpl::SaveCompressedImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
+    bool ddsImageImpl::SaveCompressedImage(const std::string& path, RenderDeviceHandle& dx, DXGI_FORMAT format)
     {
         auto fmt = boost::format("Saving DDS with ddsImageImpl file \"%1%\"") % path;
         LOG << boost::str(fmt);

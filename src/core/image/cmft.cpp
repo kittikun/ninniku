@@ -45,7 +45,7 @@ namespace ninniku
         return _impl->GetData();
     }
 
-    void cmftImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }

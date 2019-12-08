@@ -20,7 +20,9 @@
 
 #pragma once
 
-#include "../export.h"
+#include "../renderdevice.h"
+
+#include "../../export.h"
 #include "DX11Types.h"
 
 #include <d3d11shader.h>
@@ -29,7 +31,7 @@ namespace ninniku
 {
     class DX11Impl;
 
-    class DX11
+    class DX11 : public RenderDevice
     {
         // no copy of any kind allowed
         DX11(const DX11&) = delete;
@@ -47,9 +49,9 @@ namespace ninniku
         NINNIKU_API BufferHandle CreateBuffer(const BufferParamHandle& params);
         NINNIKU_API TextureHandle CreateTexture(const TextureParamHandle& params);
         NINNIKU_API bool Dispatch(const Command& cmd) const;
-		NINNIKU_API bool LoadShader(const std::string& name, const void* pData, const size_t size);
-		NINNIKU_API MappedResourceHandle MapBuffer(const BufferHandle& bObj);
-		NINNIKU_API MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
+        NINNIKU_API bool LoadShader(const std::string& name, const void* pData, const size_t size);
+        NINNIKU_API MappedResourceHandle MapBuffer(const BufferHandle& bObj);
+        NINNIKU_API MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
         NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
 
         NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;
@@ -62,5 +64,5 @@ namespace ninniku
         std::unique_ptr<DX11Impl> _impl;
     };
 
-    NINNIKU_API DX11Handle& GetRenderer();
+    NINNIKU_API RenderDeviceHandle& GetRenderer();
 } // namespace ninniku

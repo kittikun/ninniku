@@ -50,7 +50,7 @@ namespace ninniku
         return _impl->GetData();
     }
 
-    void ddsImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    void ddsImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }
@@ -65,7 +65,7 @@ namespace ninniku
         return _impl->SaveImage(path);
     }
 
-    bool ddsImage::SaveCompressedImage(const std::string& path, DX11Handle& dx, DXGI_FORMAT format)
+    bool ddsImage::SaveCompressedImage(const std::string& path, RenderDeviceHandle& dx, DXGI_FORMAT format)
     {
         return _impl->SaveCompressedImage(path, dx, format);
     }

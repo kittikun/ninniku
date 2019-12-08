@@ -21,7 +21,8 @@
 #pragma once
 
 #include "../types.h"
-#include "../dx11/DX11Types.h"
+#include "../renderer/renderdevice.h"
+#include "../renderer/types.h"
 
 namespace ninniku
 {
@@ -42,7 +43,7 @@ namespace ninniku
         NINNIKU_API const std::vector<uint32_t>& GetData() const;
 
         // Used when transferring data back from the GPU
-        NINNIKU_API void InitializeFromBufferObject(DX11Handle& dx, const BufferHandle& src);
+        NINNIKU_API void InitializeFromBufferObject(RenderDeviceHandle& dx, const BufferHandle& src);
 
     private:
         std::unique_ptr<BufferImpl> _impl;

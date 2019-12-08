@@ -23,11 +23,11 @@
 
 #pragma comment(lib, "D3DCompiler.lib")
 
-#include "ninniku/dx11/DX11.h"
+#include "ninniku/renderer/dx11/DX11.h"
 
-#include "../utils/log.h"
-#include "../utils/misc.h"
-#include "../utils/VectorSet.h"
+#include "../../utils/log.h"
+#include "../../utils/misc.h"
+#include "../../utils/VectorSet.h"
 
 #include <comdef.h>
 #include <d3dcompiler.h>
@@ -600,69 +600,68 @@ namespace ninniku
         return true;
     }
 
-	bool DX11Impl::LoadShader(const std::string& name, const void* pData, const size_t size)
-	{
-		ID3DBlob* pBlob = nullptr;
-		const auto hr = D3DCreateBlob(size, &pBlob);
-		if (FAILED(hr)) {
-			LOGE << (boost::format("Failed to call D3DCreateBlob: %1% with: %2%") % name % _com_error(hr).ErrorMessage()).str();
-			return false;
-		}
+    bool DX11Impl::LoadShader(const std::string& name, const void* pData, const size_t size)
+    {
+        ID3DBlob* pBlob = nullptr;
+        const auto hr = D3DCreateBlob(size, &pBlob);
+        if (FAILED(hr)) {
+            LOGE << (boost::format("Failed to call D3DCreateBlob: %1% with: %2%") % name % _com_error(hr).ErrorMessage()).str();
+            return false;
+        }
 
-		memcpy_s(pBlob->GetBufferPointer(), size, pData, size);
+        memcpy_s(pBlob->GetBufferPointer(), size, pData, size);
 
-		return LoadShader(name, pBlob, "");
-	}
+        return LoadShader(name, pBlob, "");
+    }
 
-	bool DX11Impl::LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path)
-	{
-		// reflection
-		ID3D11ShaderReflection* reflect = nullptr;
-		D3D11_SHADER_DESC desc;
+    bool DX11Impl::LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path)
+    {
+        // reflection
+        ID3D11ShaderReflection* reflect = nullptr;
+        D3D11_SHADER_DESC desc;
 
-		auto hr = D3DReflect(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&reflect));
-		if (FAILED(hr)) {
-			auto fmt = boost::format("Failed to call D3DReflect on shader: %1% with:") % path;
-			LOGE << boost::str(fmt);
-			_com_error err(hr);
-			LOGE << err.ErrorMessage();
-			return false;
-		}
+        auto hr = D3DReflect(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&reflect));
+        if (FAILED(hr)) {
+            auto fmt = boost::format("Failed to call D3DReflect on shader: %1% with:") % path;
+            LOGE << boost::str(fmt);
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
 
-		hr = reflect->GetDesc(&desc);
-		if (FAILED(hr)) {
-			auto fmt = boost::format("Failed to GetDesc from shader reflection on shader: %1% with:") % path;
-			LOGE << boost::str(fmt);
-			_com_error err(hr);
-			LOGE << err.ErrorMessage();
-			return false;
-		}
+        hr = reflect->GetDesc(&desc);
+        if (FAILED(hr)) {
+            auto fmt = boost::format("Failed to GetDesc from shader reflection on shader: %1% with:") % path;
+            LOGE << boost::str(fmt);
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
 
-		auto bindings = ParseShaderResources(desc, reflect);
+        auto bindings = ParseShaderResources(desc, reflect);
 
-		// create shader
-		DX11CS shader;
+        // create shader
+        DX11CS shader;
 
-		hr = _device->CreateComputeShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, shader.GetAddressOf());
+        hr = _device->CreateComputeShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, shader.GetAddressOf());
 
-		if (FAILED(hr)) {
-			auto fmt = boost::format("Failed to CreateComputeShader: %1% with:") % path;
-			LOGE << boost::str(fmt);
-			_com_error err(hr);
-			LOGE << err.ErrorMessage();
-			return false;
-		}
-		else {
-			auto fmt = boost::format("Adding CS: \"%1%\" to library") % name;
-			LOGD << boost::str(fmt);
+        if (FAILED(hr)) {
+            auto fmt = boost::format("Failed to CreateComputeShader: %1% with:") % path;
+            LOGE << boost::str(fmt);
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        } else {
+            auto fmt = boost::format("Adding CS: \"%1%\" to library") % name;
+            LOGD << boost::str(fmt);
 
-			_shaders.insert(std::make_pair(name, ComputeShader{ shader, bindings }));
-		}
+            _shaders.insert(std::make_pair(name, ComputeShader{ shader, bindings }));
+        }
 
-		LOG_INDENT_END;
+        LOG_INDENT_END;
 
-		return true;
-	}
+        return true;
+    }
 
     /// <summary>
     /// Load all shaders in /data
@@ -692,30 +691,30 @@ namespace ninniku
 
         LOGD << boost::str(fmt);
 
-		for (auto& iter : boost::filesystem::recursive_directory_iterator(shaderPath)) {
-			if (iter.path().extension() == ext) {
-				auto path = iter.path().string();
+        for (auto& iter : boost::filesystem::recursive_directory_iterator(shaderPath)) {
+            if (iter.path().extension() == ext) {
+                auto path = iter.path().string();
 
-				fmt = boost::format("Loading %1%..") % path;
+                fmt = boost::format("Loading %1%..") % path;
 
-				LOG_INDENT_START << boost::str(fmt);
+                LOG_INDENT_START << boost::str(fmt);
 
-				ID3DBlob* blob = nullptr;
-				auto hr = D3DReadFileToBlob(ninniku::strToWStr(path).c_str(), &blob);
+                ID3DBlob* blob = nullptr;
+                auto hr = D3DReadFileToBlob(ninniku::strToWStr(path).c_str(), &blob);
 
-				if (FAILED(hr)) {
-					fmt = boost::format("Failed to D3DReadFileToBlob: %1% with:") % path;
-					LOGE << boost::str(fmt);
-					_com_error err(hr);
-					LOGE << err.ErrorMessage();
-					return false;
-				}
+                if (FAILED(hr)) {
+                    fmt = boost::format("Failed to D3DReadFileToBlob: %1% with:") % path;
+                    LOGE << boost::str(fmt);
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
+                    return false;
+                }
 
-				auto name = iter.path().stem().string();
+                auto name = iter.path().stem().string();
 
-				LoadShader(name, blob, path);
-			}
-		}
+                LoadShader(name, blob, path);
+            }
+        }
 
         return true;
     }

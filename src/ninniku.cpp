@@ -21,8 +21,8 @@
 #include "pch.h"
 #include "ninniku/ninniku.h"
 
-#include "ninniku/dx11/DX11.h"
-#include "dx11/DX11_impl.h"
+#include "ninniku/renderer/dx11/DX11.h"
+#include "renderer/dx11/DX11_impl.h"
 #include "utils/log.h"
 #include "utils/misc.h"
 
@@ -30,19 +30,20 @@
 #include <renderdoc/renderdoc_app.h>
 #endif
 
-namespace ninniku {
+namespace ninniku
+{
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_1_2* gRenderDocApi = nullptr;
 #endif
 
-    void DX11Deleter::operator()(DX11* value)
+    void RenderDeviceDeleter::operator()(RenderDevice* value)
     {
         Terminate();
 
         delete value;
     }
 
-    static DX11Handle sRenderer;
+    static RenderDeviceHandle sRenderer;
 
 #if defined(_USE_RENDERDOC)
     void LoadRenderDoc()
@@ -68,54 +69,54 @@ namespace ninniku {
     }
 #endif
 
-    DX11Handle& GetRenderer()
+    RenderDeviceHandle& GetRenderer()
     {
         return sRenderer;
     }
 
-	bool _Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
-	{
-		ninniku::Log::Initialize(logLevel);
+    bool _Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
+    {
+        ninniku::Log::Initialize(logLevel);
 
-		LOG << "ninniku HLSL compute shader framework";
-
-#if defined(_USE_RENDERDOC)
-		LoadRenderDoc();
-#endif
-
-		if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
-			sRenderer.reset(new ninniku::DX11());
-
-			// since CI is running test, we must use warp driver
-			if (!sRenderer->GetImpl()->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP)) {
-				LOGE << "DX11App::Initialize failed";
-				return false;
-			}
+        LOG << "ninniku HLSL compute shader framework";
 
 #if defined(_USE_RENDERDOC)
-			if (gRenderDocApi != nullptr) {
-				gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
-				gRenderDocApi->StartFrameCapture(nullptr, nullptr);
-			}
+        LoadRenderDoc();
 #endif
 
-			return true;
-		}
+        if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
+            sRenderer.reset(new ninniku::DX11());
 
-		return false;
-	}
+            // since CI is running test, we must use warp driver
+            if (!sRenderer->GetImpl()->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP)) {
+                LOGE << "DX11App::Initialize failed";
+                return false;
+            }
+
+#if defined(_USE_RENDERDOC)
+            if (gRenderDocApi != nullptr) {
+                gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
+                gRenderDocApi->StartFrameCapture(nullptr, nullptr);
+            }
+#endif
+
+            return true;
+        }
+
+        return false;
+    }
 
     bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
     {
-		return _Initialize(renderer, shaderPaths, logLevel);
+        return _Initialize(renderer, shaderPaths, logLevel);
     }
 
-	bool Initialize(const ERenderer renderer, const ELogLevel logLevel)
-	{
-		std::vector<std::string> shaderPaths;
+    bool Initialize(const ERenderer renderer, const ELogLevel logLevel)
+    {
+        std::vector<std::string> shaderPaths;
 
-		return _Initialize(renderer, shaderPaths, logLevel);
-	}
+        return _Initialize(renderer, shaderPaths, logLevel);
+    }
 
     void Terminate()
     {

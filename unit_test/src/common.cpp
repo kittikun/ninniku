@@ -22,10 +22,10 @@
 
 #include "shaders/cbuffers.h"
 
-#include <ninniku/dx11/DX11.h>
+#include <ninniku/renderer/dx11/DX11.h>
 #include <ninniku/utils.h>
 
-ninniku::TextureHandle GenerateColoredMips(ninniku::DX11Handle& dx)
+ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)
 {
     auto param = ninniku::TextureParam::Create();
     param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -63,7 +63,7 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::DX11Handle& dx)
     return resTex;
 }
 
-ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninniku::Image* image)
+ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, const ninniku::Image* image)
 {
     auto marker = dx->CreateDebugMarker("CommonGenerateMips");
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
@@ -123,7 +123,7 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninn
     return std::move(resTex);
 }
 
-ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes)
+ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes)
 {
     auto subMarker = dx->CreateDebugMarker("CommonResizeImageImpl");
 
