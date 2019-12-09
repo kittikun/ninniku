@@ -23,22 +23,16 @@
     <Filter Include="Source Files\core\image">
       <UniqueIdentifier>{1af98406-f9d1-4194-afaa-abdd912490a1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Include\renderer">
+    <Filter Include="Include\core\renderer">
       <UniqueIdentifier>{eb83b084-3d34-4ea9-bbb8-c559c0b7f3db}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Include\renderer\dx11">
-      <UniqueIdentifier>{eca5dfd1-c0cb-44f1-9f95-3c9ee0c39d1a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\renderer">
+    <Filter Include="Source Files\core\renderer">
       <UniqueIdentifier>{18839f85-7841-4ab9-92a9-bdae08e7a89e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\renderer\dx11">
+    <Filter Include="Source Files\core\renderer\dx11">
       <UniqueIdentifier>{f2e48192-a364-48c2-aa47-271d307f3aee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Include\renderer\dx12">
-      <UniqueIdentifier>{87d24774-75f6-4905-8d1c-5246c42be4f5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\renderer\dx12">
+    <Filter Include="Source Files\core\renderer\dx12">
       <UniqueIdentifier>{d40cf3e3-f8cd-4641-87ca-58290091b874}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -88,17 +82,11 @@
     <ClCompile Include="src\core\buffer.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\dx11\DX11.cpp">
-      <Filter>Source Files\renderer\dx11</Filter>
+    <ClCompile Include="src\core\renderer\dx11\DX11.cpp">
+      <Filter>Source Files\core\renderer\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\dx11\DX11_impl.cpp">
-      <Filter>Source Files\renderer\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="src\renderer\dx11\DX11Types.cpp">
-      <Filter>Source Files\renderer\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="src\renderer\dx11\DX11Types_impl.cpp">
-      <Filter>Source Files\renderer\dx11</Filter>
+    <ClCompile Include="src\core\renderer\dx11\DX11Types.cpp">
+      <Filter>Source Files\core\renderer\dx11</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -162,26 +150,20 @@
     <ClInclude Include="src\core\buffer_impl.h">
       <Filter>Source Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\renderer\dx11\DX11.h">
-      <Filter>Include\renderer\dx11</Filter>
+    <ClInclude Include="include\ninniku\core\renderer\renderdevice.h">
+      <Filter>Include\core\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\renderer\dx11\DX11Types.h">
-      <Filter>Include\renderer\dx11</Filter>
+    <ClInclude Include="include\ninniku\core\renderer\types.h">
+      <Filter>Include\core\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\dx11\DX11_impl.h">
-      <Filter>Source Files\renderer\dx11</Filter>
+    <ClInclude Include="src\core\renderer\dx11\DX11.h">
+      <Filter>Source Files\core\renderer\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\renderer\renderdevice.h">
-      <Filter>Include\renderer</Filter>
+    <ClInclude Include="src\core\renderer\dx11\DX11Types.h">
+      <Filter>Source Files\core\renderer\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\renderer\dx12\DX12.h">
-      <Filter>Include\renderer\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ninniku\renderer\types.h">
-      <Filter>Include\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\dx11\DX11Types_impl.h">
-      <Filter>Source Files\renderer\dx11</Filter>
+    <ClInclude Include="src\core\renderer\dx12\DX12.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

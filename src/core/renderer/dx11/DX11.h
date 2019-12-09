@@ -20,17 +20,14 @@
 
 #pragma once
 
-#include "../renderdevice.h"
+#include "ninniku/core/renderer/renderdevice.h"
 
-#include "../../export.h"
 #include "DX11Types.h"
 
 #include <d3d11shader.h>
 
 namespace ninniku
 {
-    class DX11Impl;
-
     class DX11 : public RenderDevice
     {
         // no copy of any kind allowed
@@ -40,29 +37,49 @@ namespace ninniku
         DX11& operator=(DX11&&) = delete;
 
     public:
-        NINNIKU_API DX11();
-        NINNIKU_API ~DX11();
+        DX11() = default;
 
-        NINNIKU_API void CopyBufferResource(const CopyBufferSubresourceParam& params) const;
-        NINNIKU_API std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const;
-        NINNIKU_API DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
-        NINNIKU_API BufferHandle CreateBuffer(const BufferParamHandle& params);
-        NINNIKU_API TextureHandle CreateTexture(const TextureParamHandle& params);
-        NINNIKU_API bool Dispatch(const Command& cmd) const;
-        NINNIKU_API bool LoadShader(const std::string& name, const void* pData, const size_t size);
-        NINNIKU_API MappedResourceHandle MapBuffer(const BufferHandle& bObj);
-        NINNIKU_API MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
-        NINNIKU_API bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
+        // RenderDevice
+        void CopyBufferResource(const CopyBufferSubresourceParam& params) const override;
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
+        DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
+        BufferHandle CreateBuffer(const BufferParamHandle& params) override;
+        TextureHandle CreateTexture(const TextureParamHandle& params) override;
+        bool Dispatch(const Command& cmd) const override;
+        bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;
+        bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
+        MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
+        MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) override;
+        bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) override;
 
-        NINNIKU_API const DX11SamplerState& GetSampler(ESamplerState sampler) const;
-
-#ifdef NINNIKU_EXPORT
-        DX11Impl* GetImpl() { return _impl.get(); }
-#endif
+        const DX11SamplerState& GetSampler(ESamplerState sampler) const { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)]; }
 
     private:
-        std::unique_ptr<DX11Impl> _impl;
-    };
+        struct TextureSRVParams
+        {
+            TextureObject* obj;
+            TextureParamHandle texParams;
+            bool is1d;
+            bool is2d;
+            bool is3d;
+            bool isCube;
+            bool isCubeArray;
+        };
 
-    NINNIKU_API RenderDeviceHandle& GetRenderer();
+        bool CreateDevice(int adapter, ID3D11Device** pDevice);
+        bool GetDXGIFactory(IDXGIFactory1** pFactory);
+        bool LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path);
+        bool LoadShaders(const std::string& shaderPath);
+        bool MakeTextureSRV(const TextureSRVParams& params);
+        std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
+
+    private:
+        DX11Device _device;
+        DX11Context _context;
+        std::unordered_map<std::string, ComputeShader> _shaders;
+        std::unordered_map<std::string, DX11Buffer> _cBuffers;
+        std::array<DX11SamplerState, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
+
+        friend class ddsImageImpl;
+    };
 } // namespace ninniku

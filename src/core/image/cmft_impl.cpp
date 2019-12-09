@@ -21,11 +21,11 @@
 #include "pch.h"
 #include "cmft_impl.h"
 
-#include "ninniku/renderer/dx11/DX11.h"
-#include "ninniku/renderer/dx11/DX11Types.h"
+#include "ninniku/core/renderer/renderdevice.h"
+#include "ninniku/core/renderer/types.h"
 #include "ninniku/core/image/cmft.h"
 
-#include "../../renderer/dx11/DX11_impl.h"
+//#include "../../renderer/dx11/DX11_impl.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 
@@ -33,6 +33,8 @@
 
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr/tinyexr.h>
+
+#include <array>
 
 namespace ninniku
 {
@@ -304,7 +306,7 @@ namespace ninniku
                 params.srcFace = face;
 
                 auto indexes = dx->CopyTextureSubresource(params);
-                auto mapped = dx->GetImpl()->MapTexture(readBack, std::get<1>(indexes));
+                auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
 
                 UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
             }

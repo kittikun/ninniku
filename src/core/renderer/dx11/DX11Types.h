@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../../renderer/types.h"
-#include "../../export.h"
-#include "../../types.h"
+#include "ninniku/core/renderer/types.h"
 
 #include <wrl/client.h>
 #include <d3d11_1.h>
@@ -11,24 +9,13 @@
 #include <variant>
 #include <vector>
 
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Buffer>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Device>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture1D>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture2D>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11Texture3D>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11SamplerState>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
-template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
-
 namespace ninniku
 {
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
     using DX11CS = Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
     using DX11Device = Microsoft::WRL::ComPtr<ID3D11Device>;
+    using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Tex1D = Microsoft::WRL::ComPtr<ID3D11Texture1D>;
     using DX11Tex2D = Microsoft::WRL::ComPtr<ID3D11Texture2D>;
     using DX11Tex3D = Microsoft::WRL::ComPtr<ID3D11Texture3D>;
@@ -37,7 +24,7 @@ namespace ninniku
     using DX11UAV = Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
     //////////////////////////////////////////////////////////////////////////
-    // Buffers
+    // DX11BufferObject
     //////////////////////////////////////////////////////////////////////////
     class DX11BufferObject : public BufferObject
     {
@@ -62,13 +49,13 @@ namespace ninniku
     // Commands
     //////////////////////////////////////////////////////////////////////////
 
-    struct Command
+    struct DX11Command : Command
     {
         // no copy of any kind allowed
-        Command(const Command&) = delete;
-        Command& operator=(Command&) = delete;
-        Command(Command&&) = delete;
-        Command& operator=(Command&&) = delete;
+        DX11Command(const DX11Command&) = delete;
+        DX11Command& operator=(DX11Command&) = delete;
+        DX11Command(DX11Command&&) = delete;
+        DX11Command& operator=(DX11Command&&) = delete;
 
         std::string shader;
         std::string cbufferStr;
@@ -76,6 +63,26 @@ namespace ninniku
         std::unordered_map<std::string, DX11UAV> uavBindings;
         std::unordered_map<std::string, DX11SamplerState> ssBindings;
         std::array<uint32_t, 3> dispatch;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX11DebugMarker
+    //////////////////////////////////////////////////////////////////////////
+
+    class DX11DebugMarker : public DebugMarker
+    {
+        // no copy of any kind allowed
+        DX11DebugMarker(const DX11DebugMarker&) = delete;
+        DX11DebugMarker& operator=(DX11DebugMarker&) = delete;
+        DX11DebugMarker(DX11DebugMarker&&) = delete;
+        DX11DebugMarker& operator=(DX11DebugMarker&&) = delete;
+
+    public:
+        DX11DebugMarker(const DX11Marker& marker, const std::string& name);
+        ~DX11DebugMarker() override;
+
+    private:
+        DX11Marker _marker;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -95,7 +102,7 @@ namespace ninniku
     };
 
     //////////////////////////////////////////////////////////////////////////
-    // Textures
+    // DX11TextureObject
     //////////////////////////////////////////////////////////////////////////
     class DX11TextureObject : public TextureObject
     {
@@ -135,22 +142,24 @@ namespace ninniku
     // GPU to CPU readback
     //////////////////////////////////////////////////////////////////////////
 
-    class MappedResource
+    class DX11MappedResource : public MappedResource
     {
         // no copy of any kind allowed
-        MappedResource(const MappedResource&) = delete;
-        MappedResource& operator=(MappedResource&) = delete;
-        MappedResource(MappedResource&&) = delete;
-        MappedResource& operator=(MappedResource&&) = delete;
+        DX11MappedResource(const DX11MappedResource&) = delete;
+        DX11MappedResource& operator=(DX11MappedResource&) = delete;
+        DX11MappedResource(DX11MappedResource&&) = delete;
+        DX11MappedResource& operator=(DX11MappedResource&&) = delete;
 
     public:
-        MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);
-        MappedResource(const DX11Context& context, const BufferHandle& bufObj);
-        ~MappedResource();
+        DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);
+        DX11MappedResource(const DX11Context& context, const BufferHandle& bufObj);
+        ~DX11MappedResource();
+
+        // MappedResource
+        void* GetData() const override { return _mapped.pData; }
+        uint32_t GetRowPitch() const override;
 
         D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
-        void* GetData() const { return _mapped.pData; }
-        uint32_t GetRowPitch() const;
 
     private:
         const BufferHandle& _bufferObj;
@@ -159,6 +168,4 @@ namespace ninniku
         const uint32_t _index;
         D3D11_MAPPED_SUBRESOURCE _mapped;
     };
-
-    using MappedResourceHandle = std::unique_ptr<const MappedResource>;
 } // namespace ninniku

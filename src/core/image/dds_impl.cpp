@@ -21,7 +21,7 @@
 #include "pch.h"
 #include "dds_impl.h"
 
-#include "ninniku/renderer/dx11/DX11.h"
+#include "ninniku/core/renderer/dx11/DX11.h"
 #include "ninniku/renderer/dx11/DX11Types.h"
 #include "ninniku/core/image/dds.h"
 

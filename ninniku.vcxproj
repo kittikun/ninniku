@@ -186,15 +186,13 @@
     <ClCompile Include="src\core\image\generic.cpp" />
     <ClCompile Include="src\core\image\generic_impl.cpp" />
     <ClCompile Include="src\core\image\image_impl.cpp" />
+    <ClCompile Include="src\core\renderer\dx11\DX11.cpp" />
+    <ClCompile Include="src\core\renderer\dx11\DX11Types.cpp" />
     <ClCompile Include="src\ninniku.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\renderer\dx11\DX11.cpp" />
-    <ClCompile Include="src\renderer\dx11\DX11Types.cpp" />
-    <ClCompile Include="src\renderer\dx11\DX11Types_impl.cpp" />
-    <ClCompile Include="src\renderer\dx11\DX11_impl.cpp" />
     <ClCompile Include="src\types.cpp" />
     <ClCompile Include="src\utils\log.cpp" />
     <ClCompile Include="src\utils\mathUtils.cpp" />
@@ -211,13 +209,10 @@
     <ClInclude Include="include\ninniku\core\image\dds.h" />
     <ClInclude Include="include\ninniku\core\image\generic.h" />
     <ClInclude Include="include\ninniku\core\image\image.h" />
+    <ClInclude Include="include\ninniku\core\renderer\renderdevice.h" />
+    <ClInclude Include="include\ninniku\core\renderer\types.h" />
     <ClInclude Include="include\ninniku\export.h" />
     <ClInclude Include="include\ninniku\ninniku.h" />
-    <ClInclude Include="include\ninniku\renderer\dx11\DX11.h" />
-    <ClInclude Include="include\ninniku\renderer\dx11\DX11Types.h" />
-    <ClInclude Include="include\ninniku\renderer\dx12\DX12.h" />
-    <ClInclude Include="include\ninniku\renderer\renderdevice.h" />
-    <ClInclude Include="include\ninniku\renderer\types.h" />
     <ClInclude Include="include\ninniku\types.h" />
     <ClInclude Include="include\ninniku\utils.h" />
     <ClInclude Include="src\core\buffer_impl.h" />
@@ -225,9 +220,10 @@
     <ClInclude Include="src\core\image\dds_impl.h" />
     <ClInclude Include="src\core\image\generic_impl.h" />
     <ClInclude Include="src\core\image\image_impl.h" />
+    <ClInclude Include="src\core\renderer\dx11\DX11.h" />
+    <ClInclude Include="src\core\renderer\dx11\DX11Types.h" />
+    <ClInclude Include="src\core\renderer\dx12\DX12.h" />
     <ClInclude Include="src\pch.h" />
-    <ClInclude Include="src\renderer\dx11\DX11Types_impl.h" />
-    <ClInclude Include="src\renderer\dx11\DX11_impl.h" />
     <ClInclude Include="src\utils\log.h" />
     <ClInclude Include="src\utils\mathUtils.h" />
     <ClInclude Include="src\utils\misc.h" />

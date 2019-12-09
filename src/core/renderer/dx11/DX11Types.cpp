@@ -19,12 +19,14 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "ninniku/renderer/dx11/DX11Types.h"
+#include "DX11Types.h"
+
+#include "../../../utils/misc.h"
 
 namespace ninniku
 {
     //////////////////////////////////////////////////////////////////////////
-    // DebugMarker
+    // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
     DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, const std::string& name)
         : _marker{ marker }
@@ -42,10 +44,10 @@ namespace ninniku
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // Textures
+    // DX11TextureObject
     //////////////////////////////////////////////////////////////////////////
 
-    ID3D11Resource* TextureObject::GetResource() const
+    ID3D11Resource* DX11TextureObject::GetResource() const
     {
         ID3D11Resource* res = nullptr;
 
@@ -60,9 +62,9 @@ namespace ninniku
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // MappedResource
+    // DX11MappedResource
     //////////////////////////////////////////////////////////////////////////
-    MappedResource::MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
+    DX11MappedResource::DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
         : _bufferObj{ Empty_BufferHandle }
         , _context{ context }
         , _texObj{ texObj }
@@ -71,7 +73,7 @@ namespace ninniku
     {
     }
 
-    MappedResource::MappedResource(const DX11Context& context, const BufferHandle& bufObj)
+    DX11MappedResource::DX11MappedResource(const DX11Context& context, const BufferHandle& bufObj)
         : _bufferObj{ bufObj }
         , _context{ context }
         , _texObj{ Empty_TextureHandle }
@@ -80,16 +82,20 @@ namespace ninniku
     {
     }
 
-    MappedResource::~MappedResource()
+    DX11MappedResource::~DX11MappedResource()
     {
         if (_bufferObj) {
-            _context->Unmap(_bufferObj->buffer.Get(), 0);
+            auto obj = static_cast<const DX11BufferObject*>(_bufferObj.get());
+
+            _context->Unmap(obj->buffer.Get(), 0);
         } else {
-            _context->Unmap(_texObj->GetResource(), _index);
+            auto obj = static_cast<const DX11TextureObject*>(_texObj.get());
+
+            _context->Unmap(obj->GetResource(), _index);
         }
     }
 
-    uint32_t MappedResource::GetRowPitch() const
+    uint32_t DX11MappedResource::GetRowPitch() const
     {
         return _mapped.RowPitch;
     }

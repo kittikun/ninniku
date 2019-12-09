@@ -21,8 +21,8 @@
 #include "pch.h"
 #include "ninniku/ninniku.h"
 
-#include "ninniku/renderer/dx11/DX11.h"
-#include "renderer/dx11/DX11_impl.h"
+#include "ninniku/core/renderer/renderdevice.h"
+#include "core/renderer/dx11/DX11.h"
 #include "utils/log.h"
 #include "utils/misc.h"
 
@@ -85,10 +85,12 @@ namespace ninniku
 #endif
 
         if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
-            sRenderer.reset(new ninniku::DX11());
+            sRenderer.reset(new DX11());
+
+            auto dx11 = static_cast<DX11*>(sRenderer.get());
 
             // since CI is running test, we must use warp driver
-            if (!sRenderer->GetImpl()->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP)) {
+            if (!dx11->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP)) {
                 LOGE << "DX11App::Initialize failed";
                 return false;
             }

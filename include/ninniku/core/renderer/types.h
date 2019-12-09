@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "../types.h"
+#include "../../types.h"
 
 #include <memory>
 
@@ -40,6 +40,22 @@ namespace ninniku
     };
 
     using BufferHandle = std::unique_ptr<const BufferObject>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Commands
+    //////////////////////////////////////////////////////////////////////////
+
+    struct Command
+    {
+        // no copy of any kind allowed
+        Command(const Command&) = delete;
+        Command& operator=(Command&) = delete;
+        Command(Command&&) = delete;
+        Command& operator=(Command&&) = delete;
+
+    public:
+        ~Command() = default;
+    };
 
     //////////////////////////////////////////////////////////////////////////
     // Debug
@@ -85,4 +101,28 @@ namespace ninniku
     };
 
     using TextureHandle = std::unique_ptr<const TextureObject>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // GPU to CPU readback
+    //////////////////////////////////////////////////////////////////////////
+
+    class MappedResource
+    {
+        // no copy of any kind allowed
+        MappedResource(const MappedResource&) = delete;
+        MappedResource& operator=(MappedResource&) = delete;
+        MappedResource(MappedResource&&) = delete;
+        MappedResource& operator=(MappedResource&&) = delete;
+
+    public:
+        virtual ~MappedResource();
+
+        virtual void* GetData() const = 0;
+        virtual uint32_t GetRowPitch() const = 0;
+
+    protected:
+        MappedResource() = default;
+    };
+
+    using MappedResourceHandle = std::unique_ptr<const MappedResource>;
 } // namespace ninniku
