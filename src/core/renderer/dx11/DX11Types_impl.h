@@ -20,25 +20,30 @@
 
 #pragma once
 
-#include <memory>
+#include "ninniku/renderer/Types.h"
+
+#include <d3d11shader.h>
 
 namespace ninniku
 {
     //////////////////////////////////////////////////////////////////////////
-    // Buffers
+    // Debug
     //////////////////////////////////////////////////////////////////////////
-    class BufferObject
+    using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
+
+    class DX11DebugMarker : public DebugMarker
     {
+        // no copy of any kind allowed
+        DX11DebugMarker(const DX11DebugMarker&) = delete;
+        DX11DebugMarker& operator=(DX11DebugMarker&) = delete;
+        DX11DebugMarker(DX11DebugMarker&&) = delete;
+        DX11DebugMarker& operator=(DX11DebugMarker&&) = delete;
+
+    public:
+        DX11DebugMarker(const DX11Marker& marker, const std::string& name);
+        ~DX11DebugMarker() override;
+
+    private:
+        DX11Marker _marker;
     };
-
-    using BufferHandle = std::unique_ptr<const BufferObject>;
-
-    //////////////////////////////////////////////////////////////////////////
-    // Textures
-    //////////////////////////////////////////////////////////////////////////
-    class TextureObject
-    {
-    };
-
-    using TextureHandle = std::unique_ptr<const TextureObject>;
 } // namespace ninniku

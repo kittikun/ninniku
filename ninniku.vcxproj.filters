@@ -97,6 +97,9 @@
     <ClCompile Include="src\renderer\dx11\DX11Types.cpp">
       <Filter>Source Files\renderer\dx11</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\dx11\DX11Types_impl.cpp">
+      <Filter>Source Files\renderer\dx11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -176,6 +179,9 @@
     </ClInclude>
     <ClInclude Include="include\ninniku\renderer\types.h">
       <Filter>Include\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\dx11\DX11Types_impl.h">
+      <Filter>Source Files\renderer\dx11</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

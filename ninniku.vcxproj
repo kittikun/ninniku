@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -193,6 +193,7 @@
     </ClCompile>
     <ClCompile Include="src\renderer\dx11\DX11.cpp" />
     <ClCompile Include="src\renderer\dx11\DX11Types.cpp" />
+    <ClCompile Include="src\renderer\dx11\DX11Types_impl.cpp" />
     <ClCompile Include="src\renderer\dx11\DX11_impl.cpp" />
     <ClCompile Include="src\types.cpp" />
     <ClCompile Include="src\utils\log.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="src\core\image\generic_impl.h" />
     <ClInclude Include="src\core\image\image_impl.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\renderer\dx11\DX11Types_impl.h" />
     <ClInclude Include="src\renderer\dx11\DX11_impl.h" />
     <ClInclude Include="src\utils\log.h" />
     <ClInclude Include="src\utils\mathUtils.h" />

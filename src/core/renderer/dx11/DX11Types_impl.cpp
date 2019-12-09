@@ -18,21 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "pch.h"
+#include "DX11Types_impl.h"
 
-#include <memory>
+#include "../../utils/misc.h"
 
 namespace ninniku
 {
-    class RenderDevice
+    DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, const std::string& name)
+        : _marker{ marker }
     {
-    };
-
-    // This is just used for Renderdoc
-    struct RenderDeviceDeleter
-    {
-        void operator()(RenderDevice* value);
-    };
-
-    using RenderDeviceHandle = std::unique_ptr<RenderDevice, RenderDeviceDeleter>;
+#ifdef _USE_RENDERDOC
+        _marker->BeginEvent(strToWStr(name).c_str());
+#endif
+    }
 } // namespace ninniku

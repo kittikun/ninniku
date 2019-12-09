@@ -23,7 +23,29 @@
 
 namespace ninniku
 {
-    ID3D11Resource* DX11TextureObject::GetResource() const
+    //////////////////////////////////////////////////////////////////////////
+    // DebugMarker
+    //////////////////////////////////////////////////////////////////////////
+    DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, const std::string& name)
+        : _marker{ marker }
+    {
+#ifdef _USE_RENDERDOC
+        _marker->BeginEvent(strToWStr(name).c_str());
+#endif
+    }
+
+    DX11DebugMarker::~DX11DebugMarker()
+    {
+#ifdef _USE_RENDERDOC
+        _marker->EndEvent();
+#endif
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Textures
+    //////////////////////////////////////////////////////////////////////////
+
+    ID3D11Resource* TextureObject::GetResource() const
     {
         ID3D11Resource* res = nullptr;
 

@@ -25,7 +25,6 @@ template class NINNIKU_API Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
 namespace ninniku
 {
-    using DX11Marker = Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation>;
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
     using DX11CS = Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
@@ -55,9 +54,6 @@ namespace ninniku
         DX11Buffer buffer;
         DX11SRV srv;
         DX11UAV uav;
-
-        // Initial desc that was used to create the resource
-        std::shared_ptr<const BufferParam> desc;
     };
 
     static BufferHandle Empty_BufferHandle;
@@ -81,28 +77,6 @@ namespace ninniku
         std::unordered_map<std::string, DX11SamplerState> ssBindings;
         std::array<uint32_t, 3> dispatch;
     };
-
-    //////////////////////////////////////////////////////////////////////////
-    // Debug
-    //////////////////////////////////////////////////////////////////////////
-
-    class NINNIKU_API DebugMarker
-    {
-        // no copy of any kind allowed
-        DebugMarker(const DebugMarker&) = delete;
-        DebugMarker& operator=(DebugMarker&) = delete;
-        DebugMarker(DebugMarker&&) = delete;
-        DebugMarker& operator=(DebugMarker&&) = delete;
-
-    public:
-        DebugMarker(const DX11Marker& marker, const std::string& name);
-        ~DebugMarker();
-
-    private:
-        DX11Marker _marker;
-    };
-
-    using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
 
     //////////////////////////////////////////////////////////////////////////
     // Shader
@@ -153,9 +127,6 @@ namespace ninniku
 
         // One D3D11_TEX2D_ARRAY_UAV per mip level
         std::vector<DX11UAV> uav;
-
-        // Initial desc that was used to create the resource
-        std::shared_ptr<const TextureParam> desc;
     };
 
     static TextureHandle Empty_TextureHandle;
