@@ -26,26 +26,23 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11 : public RenderDevice
     {
-        // no copy of any kind allowed
-        DX11(const DX11&) = delete;
-        DX11& operator=(DX11&) = delete;
-        DX11(DX11&&) = delete;
-        DX11& operator=(DX11&&) = delete;
-
     public:
         DX11() = default;
 
         // RenderDevice
+        virtual ERenderer GetType() const override { return ERenderer::RENDERER_DX11; }
+
         void CopyBufferResource(const CopyBufferSubresourceParam& params) const override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
-        DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
+        BufferHandle CreateBuffer(const BufferHandle& src) override;
+        CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
+        DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
-        bool Dispatch(const Command& cmd) const override;
+        bool Dispatch(const CommandHandle& cmd) const override;
         bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;
         bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
         MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
@@ -72,6 +69,14 @@ namespace ninniku
         bool LoadShaders(const std::string& shaderPath);
         bool MakeTextureSRV(const TextureSRVParams& params);
         std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
+
+        // Helper to cast into the correct shader resource type
+        template<typename SourceType, typename DestType, typename ReturnType>
+        static ReturnType* castGenericResourceToDX11Resource(const SourceType* src)
+        {
+            auto view = static_cast<const DestType*>(src);
+            return static_cast<ReturnType*>(view->_resource.Get());
+        }
 
     private:
         DX11Device _device;

@@ -30,15 +30,14 @@
 #include <comdef.h>
 #include <d3dcompiler.h>
 
-namespace ninniku
-{
+namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     void DX11::CopyBufferResource(const CopyBufferSubresourceParam& params) const
     {
         auto src = static_cast<const DX11BufferObject*>(params.src);
         auto dst = static_cast<const DX11BufferObject*>(params.dst);
 
-        _context->CopyResource(dst->buffer.Get(), src->buffer.Get());
+        _context->CopyResource(dst->_buffer.Get(), src->_buffer.Get());
     }
 
     std::tuple<uint32_t, uint32_t> DX11::CopyTextureSubresource(const CopyTextureSubresourceParam& params) const
@@ -115,7 +114,7 @@ namespace ninniku
         res->desc = params;
 
         // do not support initial data for now
-        auto hr = _device->CreateBuffer(&desc, nullptr, res->buffer.GetAddressOf());
+        auto hr = _device->CreateBuffer(&desc, nullptr, res->_buffer.GetAddressOf());
 
         if (FAILED(hr)) {
             LOGE << "Failed to CreateBuffer with:";
@@ -130,7 +129,10 @@ namespace ninniku
             srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
             srvDesc.Buffer.NumElements = params->numElements;
 
-            hr = _device->CreateShaderResourceView(res->buffer.Get(), &srvDesc, res->srv.GetAddressOf());
+            auto* obj = static_cast<DX11BufferObject*>(res.get());
+            auto srv = static_cast<DX11ShaderResourceView*>(obj->GetSRV());
+
+            hr = _device->CreateShaderResourceView(res->_buffer.Get(), &srvDesc, srv->_resource.GetAddressOf());
             if (FAILED(hr)) {
                 LOGE << "Failed to CreateShaderResourceView with D3D11_SRV_DIMENSION_BUFFER with:";
                 _com_error err(hr);
@@ -145,7 +147,10 @@ namespace ninniku
             uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
             uavDesc.Buffer.NumElements = params->numElements;
 
-            hr = _device->CreateUnorderedAccessView(res->buffer.Get(), &uavDesc, res->uav.GetAddressOf());
+            auto* obj = static_cast<DX11BufferObject*>(res.get());
+            auto* uav = static_cast<DX11UnorderedAccessView*>(obj->GetUAV());
+
+            hr = _device->CreateUnorderedAccessView(res->_buffer.Get(), &uavDesc, uav->_resource.GetAddressOf());
             if (FAILED(hr)) {
                 LOGE << "Failed to CreateUnorderedAccessView with D3D11_SRV_DIMENSION_BUFFER with:";
                 _com_error err(hr);
@@ -153,6 +158,44 @@ namespace ninniku
                 return false;
             }
         }
+
+        return res;
+    }
+
+    BufferHandle DX11::CreateBuffer(const BufferHandle& src)
+    {
+        assert(src->desc->elementSize % 4 == 0);
+
+        auto res = std::make_unique<DX11BufferObject>();
+
+        auto stride = src->desc->elementSize / 4;
+
+        // allocate memory
+        res->_data.resize(stride * src->desc->numElements);
+
+        auto fmt = boost::format("cmftImageImpl::InitializeFromBufferObject with ElementSize=%1%, NumElements=%2%") % src->desc->elementSize % src->desc->numElements;
+        LOG << boost::str(fmt);
+
+        auto marker = CreateDebugMarker("InitializeFromBufferObject");
+
+        // create a temporary object
+        auto params = src->desc->Duplicate();
+
+        params->viewflags = RV_CPU_READ;
+
+        auto dst = CreateBuffer(params);
+
+        CopyBufferSubresourceParam copyParams = {};
+
+        copyParams.src = src.get();
+        copyParams.dst = dst.get();
+
+        CopyBufferResource(copyParams);
+
+        auto mapped = MapBuffer(dst);
+        uint32_t dstPitch = static_cast<uint32_t>(res->_data.size() * sizeof(uint32_t));
+
+        memcpy_s(&res->_data.front(), dstPitch, mapped->GetData(), std::min(dstPitch, mapped->GetRowPitch()));
 
         return res;
     }
@@ -407,12 +450,12 @@ namespace ninniku
         return TextureHandle(std::move(res));
     }
 
-    bool DX11::Dispatch(const Command& cmd) const
+    bool DX11::Dispatch(const CommandHandle& cmd) const
     {
-        auto found = _shaders.find(cmd.shader);
+        auto found = _shaders.find(cmd->shader);
 
         if (found == _shaders.end()) {
-            auto fmt = boost::format("Dispatch error: could not find shader \"%1%\"") % cmd.shader;
+            auto fmt = boost::format("Dispatch error: could not find shader \"%1%\"") % cmd->shader;
             LOGE << boost::str(fmt);
             return false;
         }
@@ -429,12 +472,16 @@ namespace ninniku
         static VectorSet<uint32_t, ID3D11UnorderedAccessView*> vmUAV;
         static VectorSet<uint32_t, ID3D11SamplerState*> vmSS;
 
-        auto lambda = [&](auto kvp, auto & container)
-        {
+        // all of this to wrap a static_cast
+        static std::function<ID3D11ShaderResourceView*(const ShaderResourceView*)> srvCast = &DX11::castGenericResourceToDX11Resource<ShaderResourceView, DX11ShaderResourceView, ID3D11ShaderResourceView>;
+        static std::function<ID3D11UnorderedAccessView*(const UnorderedAccessView*)> uavCast = &DX11::castGenericResourceToDX11Resource<UnorderedAccessView, DX11UnorderedAccessView, ID3D11UnorderedAccessView>;
+        static std::function<ID3D11SamplerState*(const SamplerState*)> ssCast = &DX11::castGenericResourceToDX11Resource<SamplerState, DX11SamplerState, ID3D11SamplerState>;
+
+        auto lambda = [&](auto kvp, auto & container, auto castFn) {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
-                container.insert(f->second, kvp.second.Get());
+                container.insert(f->second, castFn(kvp.second.get()));
             } else {
                 auto fmt = boost::format("Dispatch error: could not find bindSlots \"%1%\"") % kvp.first;
                 LOGE << boost::str(fmt);
@@ -448,8 +495,8 @@ namespace ninniku
         {
             vmSRV.beginInsert();
 
-            for (auto kvp : cmd.srvBindings) {
-                if (!lambda(kvp, vmSRV))
+            for (auto kvp : cmd->srvBindings) {
+                if (!lambda(kvp, vmSRV, srvCast))
                     return false;
             }
 
@@ -460,8 +507,8 @@ namespace ninniku
         {
             vmUAV.beginInsert();
 
-            for (auto kvp : cmd.uavBindings) {
-                if (!lambda(kvp, vmUAV))
+            for (auto kvp : cmd->uavBindings) {
+                if (!lambda(kvp, vmUAV, uavCast))
                     return false;
             }
 
@@ -472,8 +519,8 @@ namespace ninniku
         {
             vmSS.beginInsert();
 
-            for (auto kvp : cmd.ssBindings) {
-                if (!lambda(kvp, vmSS))
+            for (auto kvp : cmd->ssBindings) {
+                if (!lambda(kvp, vmSS, ssCast))
                     return false;
             }
 
@@ -484,7 +531,7 @@ namespace ninniku
         _context->CSSetShader(cs.shader.Get(), nullptr, 0);
 
         // Constant buffers
-        auto foundCB = _cBuffers.find(cmd.cbufferStr);
+        auto foundCB = _cBuffers.find(cmd->cbufferStr);
 
         if (foundCB != _cBuffers.end()) {
             std::array<ID3D11Buffer*, 1> cbs{ foundCB->second.Get() };
@@ -495,7 +542,7 @@ namespace ninniku
         _context->CSSetSamplers(0, vmSS.size(), vmSS.data());
         _context->CSSetUnorderedAccessViews(0, vmUAV.size(), vmUAV.data(), nullptr);
         _context->CSSetShaderResources(0, vmSRV.size(), vmSRV.data());
-        _context->Dispatch(cmd.dispatch[0], cmd.dispatch[1], cmd.dispatch[2]);
+        _context->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
         _context->Flush();
         return true;
     }
@@ -565,7 +612,7 @@ namespace ninniku
         samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 
-        auto hr = _device->CreateSamplerState(&samplerDesc, _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Point)].GetAddressOf());
+        auto hr = _device->CreateSamplerState(&samplerDesc, _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Point)]._resource.GetAddressOf());
         if (FAILED(hr)) {
             LOGE << "Failed to CreateSamplerState for nearest with:";
             _com_error err(hr);
@@ -575,7 +622,7 @@ namespace ninniku
 
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 
-        hr = _device->CreateSamplerState(&samplerDesc, _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Linear)].GetAddressOf());
+        hr = _device->CreateSamplerState(&samplerDesc, _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Linear)]._resource.GetAddressOf());
         if (FAILED(hr)) {
             LOGE << "Failed to CreateSamplerState for linear with:";
             _com_error err(hr);
@@ -667,8 +714,7 @@ namespace ninniku
         // Count the number of .cso found
         boost::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const boost::filesystem::directory_entry & d)
-        {
+        auto fileCounter = [&](const boost::filesystem::directory_entry & d) {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 
@@ -842,7 +888,7 @@ namespace ninniku
         auto res = std::make_unique<DX11MappedResource>(_context, bObj);
         auto obj = static_cast<const DX11BufferObject*>(bObj.get());
 
-        auto hr = _context->Map(obj->buffer.Get(), 0, D3D11_MAP_READ, 0, res->Get());
+        auto hr = _context->Map(obj->_buffer.Get(), 0, D3D11_MAP_READ, 0, res->Get());
 
         if (FAILED(hr)) {
             _com_error err(hr);

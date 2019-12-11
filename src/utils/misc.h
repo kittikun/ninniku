@@ -24,7 +24,7 @@
 
 namespace ninniku
 {
-    std::string removeFileExtension(const std::string&);
-    std::wstring strToWStr(const std::string&);
-    std::string wstrToStr(const std::wstring&);
+    const std::string removeFileExtension(const std::string&);
+    const std::wstring strToWStr(const std::string&);
+    const std::string wstrToStr(const std::wstring&);
 } // namespace ninniku

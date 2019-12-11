@@ -22,7 +22,7 @@
 
 #include "shaders/cbuffers.h"
 
-#include <ninniku/renderer/dx11/DX11.h>
+#include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/utils.h>
 
 ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)

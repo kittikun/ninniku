@@ -19,8 +19,7 @@
 // SOFTWARE.
 
 #include <ninniku/ninniku.h>
-#include <ninniku/renderer/dx11/DX11.h>
-#include <ninniku/core/buffer.h>
+#include <ninniku/core/renderer/renderdevice.h>
 
 int main()
 {
@@ -42,21 +41,19 @@ int main()
         auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
 
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "fillBuffer";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "fillBuffer";
 
-        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
+        cmd->dispatch[0] = cmd->dispatch[1] = cmd->dispatch[2] = 1;
 
-        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
+        cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
 
         dx->Dispatch(cmd);
     }
 
-    ninniku::Buffer dstBuffer;
+    auto dstBuffer = dx->CreateBuffer(srcBuffer);
 
-    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
-
-    auto& data = dstBuffer.GetData();
+    auto& data = dstBuffer->GetData();
 
     ninniku::Terminate();
 }

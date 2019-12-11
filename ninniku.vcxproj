@@ -177,8 +177,6 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\core\buffer.cpp" />
-    <ClCompile Include="src\core\buffer_impl.cpp" />
     <ClCompile Include="src\core\image\cmft.cpp" />
     <ClCompile Include="src\core\image\cmft_impl.cpp" />
     <ClCompile Include="src\core\image\dds.cpp" />
@@ -204,7 +202,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ninniku\core\buffer.h" />
     <ClInclude Include="include\ninniku\core\image\cmft.h" />
     <ClInclude Include="include\ninniku\core\image\dds.h" />
     <ClInclude Include="include\ninniku\core\image\generic.h" />
@@ -215,7 +212,6 @@
     <ClInclude Include="include\ninniku\ninniku.h" />
     <ClInclude Include="include\ninniku\types.h" />
     <ClInclude Include="include\ninniku\utils.h" />
-    <ClInclude Include="src\core\buffer_impl.h" />
     <ClInclude Include="src\core\image\cmft_impl.h" />
     <ClInclude Include="src\core\image\dds_impl.h" />
     <ClInclude Include="src\core\image\generic_impl.h" />

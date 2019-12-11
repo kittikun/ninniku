@@ -26,7 +26,7 @@
 
 namespace ninniku
 {
-    std::string wstrToStr(const std::wstring& wstr)
+    const std::string wstrToStr(const std::wstring& wstr)
     {
         std::string res;
 
@@ -40,7 +40,7 @@ namespace ninniku
         return res;
     }
 
-    std::wstring strToWStr(const std::string& str)
+    const std::wstring strToWStr(const std::string& str)
     {
         std::wstring res;
 
@@ -54,7 +54,7 @@ namespace ninniku
         return res;
     }
 
-    std::string removeFileExtension(const std::string& fileName)
+    const std::string removeFileExtension(const std::string& fileName)
     {
         return boost::filesystem::change_extension(fileName, "").string();
     }

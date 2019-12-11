@@ -21,18 +21,46 @@
 #pragma once
 
 #include "../../types.h"
+#include "../../utils.h"
 
+#include <array>
 #include <memory>
+#include <unordered_map>
 
-namespace ninniku
-{
+namespace ninniku {
+    //////////////////////////////////////////////////////////////////////////
+    // Shader Resources
+    //////////////////////////////////////////////////////////////////////////
+    struct ShaderResourceView : private NonCopyableBase
+    {
+    };
+
+    using SRVHandle = std::unique_ptr<ShaderResourceView>;
+
+    struct UnorderedAccessView : private NonCopyableBase
+    {
+    };
+
+    using UAVHandle = std::unique_ptr<UnorderedAccessView>;
+
+    struct SamplerState : private NonCopyableBase
+    {
+    };
+
+    using SSHandle = std::unique_ptr<SamplerState>;
+
     //////////////////////////////////////////////////////////////////////////
     // Buffers
     //////////////////////////////////////////////////////////////////////////
-    class BufferObject
+    class BufferObject : private NonCopyableBase
     {
     public:
-        virtual ~BufferObject() = default;
+        virtual const SRVHandle& GetSRV() const = 0;
+        virtual const UAVHandle& GetUAV() const = 0;
+
+        // This will only be filled when copied from another buffer (they are mapped)
+        // Add support for initial data later
+        virtual const std::vector<uint32_t>& GetData() const = 0;
 
     public:
         // Initial desc that was used to create the resource
@@ -42,59 +70,37 @@ namespace ninniku
     using BufferHandle = std::unique_ptr<const BufferObject>;
 
     //////////////////////////////////////////////////////////////////////////
-    // Commands
-    //////////////////////////////////////////////////////////////////////////
-
-    struct Command
-    {
-        // no copy of any kind allowed
-        Command(const Command&) = delete;
-        Command& operator=(Command&) = delete;
-        Command(Command&&) = delete;
-        Command& operator=(Command&&) = delete;
-
-    public:
-        ~Command() = default;
-    };
-
-    //////////////////////////////////////////////////////////////////////////
     // Debug
     //////////////////////////////////////////////////////////////////////////
 
-    class NINNIKU_API DebugMarker
+    class NINNIKU_API DebugMarker : private NonCopyableBase
     {
-        // no copy of any kind allowed
-        DebugMarker(const DebugMarker&) = delete;
-        DebugMarker& operator=(DebugMarker&) = delete;
-        DebugMarker(DebugMarker&&) = delete;
-        DebugMarker& operator=(DebugMarker&&) = delete;
-
-    public:
-        virtual ~DebugMarker() = default;
-
-    protected:
-        DebugMarker() = default;
     };
 
     using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
 
     //////////////////////////////////////////////////////////////////////////
+    // Commands
+    //////////////////////////////////////////////////////////////////////////
+
+    class Command : private NonCopyableBase
+    {
+    public:
+        std::string shader;
+        std::string cbufferStr;
+        std::array<uint32_t, 3> dispatch;
+        std::unordered_map<std::string, const SRVHandle&> srvBindings;
+        std::unordered_map<std::string, const UAVHandle&> uavBindings;
+        std::unordered_map<std::string, const SSHandle&> ssBindings;
+    };
+
+    using CommandHandle = std::unique_ptr<Command>;
+
+    //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
-    class TextureObject
+    class TextureObject : private NonCopyableBase
     {
-        // no copy of any kind allowed
-        TextureObject(const TextureObject&) = delete;
-        TextureObject& operator=(TextureObject&) = delete;
-        TextureObject(TextureObject&&) = delete;
-        TextureObject& operator=(TextureObject&&) = delete;
-
-    public:
-        virtual ~TextureObject() = default;
-
-    protected:
-        TextureObject() = default;
-
     public:
         // Initial desc that was used to create the resource
         std::shared_ptr<const TextureParam> desc;
@@ -106,22 +112,11 @@ namespace ninniku
     // GPU to CPU readback
     //////////////////////////////////////////////////////////////////////////
 
-    class MappedResource
+    class MappedResource : private NonCopyableBase
     {
-        // no copy of any kind allowed
-        MappedResource(const MappedResource&) = delete;
-        MappedResource& operator=(MappedResource&) = delete;
-        MappedResource(MappedResource&&) = delete;
-        MappedResource& operator=(MappedResource&&) = delete;
-
     public:
-        virtual ~MappedResource();
-
         virtual void* GetData() const = 0;
         virtual uint32_t GetRowPitch() const = 0;
-
-    protected:
-        MappedResource() = default;
     };
 
     using MappedResourceHandle = std::unique_ptr<const MappedResource>;

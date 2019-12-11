@@ -23,10 +23,16 @@
 #include "export.h"
 
 namespace ninniku {
-    NINNIKU_API const bool IsPow2(const uint32_t x);
-    NINNIKU_API const uint32_t CountMips(const uint32_t faceSize);
-    NINNIKU_API const int NearestPow2Floor(const int x);
+    class NINNIKU_API NonCopyableBase
+    {
+        // no copy of any kind allowed
+        NonCopyableBase(const NonCopyableBase&) = delete;
+        NonCopyableBase& operator=(NonCopyableBase&) = delete;
+        NonCopyableBase(NonCopyableBase&&) = delete;
+        NonCopyableBase& operator=(NonCopyableBase&&) = delete;
 
-    NINNIKU_API const std::wstring strToWStr(const std::string&);
-    NINNIKU_API const std::string wstrToStr(const std::wstring&);
+    protected:
+        NonCopyableBase() = default;
+        virtual ~NonCopyableBase() = default;
+    };
 } // namespace ninniku

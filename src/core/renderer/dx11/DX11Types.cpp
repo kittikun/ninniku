@@ -23,8 +23,7 @@
 
 #include "../../../utils/misc.h"
 
-namespace ninniku
-{
+namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
@@ -87,7 +86,7 @@ namespace ninniku
         if (_bufferObj) {
             auto obj = static_cast<const DX11BufferObject*>(_bufferObj.get());
 
-            _context->Unmap(obj->buffer.Get(), 0);
+            _context->Unmap(obj->_buffer.Get(), 0);
         } else {
             auto obj = static_cast<const DX11TextureObject*>(_texObj.get());
 

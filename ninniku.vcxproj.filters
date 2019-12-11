@@ -76,12 +76,6 @@
     <ClCompile Include="src\core\image\image_impl.cpp">
       <Filter>Source Files\core\image</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\buffer_impl.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\buffer.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\renderer\dx11\DX11.cpp">
       <Filter>Source Files\core\renderer\dx11</Filter>
     </ClCompile>
@@ -143,12 +137,6 @@
     </ClInclude>
     <ClInclude Include="src\core\image\image_impl.h">
       <Filter>Source Files\core\image</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ninniku\core\buffer.h">
-      <Filter>Include\core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\buffer_impl.h">
-      <Filter>Source Files\core</Filter>
     </ClInclude>
     <ClInclude Include="include\ninniku\core\renderer\renderdevice.h">
       <Filter>Include\core\renderer</Filter>

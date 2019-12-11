@@ -21,13 +21,11 @@
 #include "pch.h"
 #include "dds_impl.h"
 
-#include "ninniku/core/renderer/dx11/DX11.h"
-#include "ninniku/renderer/dx11/DX11Types.h"
 #include "ninniku/core/image/dds.h"
 
-#include "../../renderer/dx11/DX11_impl.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
+#include "../renderer/dx11/DX11.h"
 
 #include <comdef.h>
 
@@ -196,7 +194,7 @@ namespace ninniku
                 params.srcFace = face;
 
                 auto indexes = dx->CopyTextureSubresource(params);
-                auto mapped = dx->GetImpl()->MapTexture(readBack, std::get<1>(indexes));
+                auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
 
                 UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
             }
@@ -256,10 +254,19 @@ namespace ninniku
         };
 
         if (bc6hbc7) {
-            LOGD_INDENT_START << "DirectXTex GPU Compression";
-            auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
+            HRESULT hr;
 
-            auto hr = DirectX::Compress(dx->GetImpl()->_device.Get(), img, nimg, _meta, format, flags, 1.f, *resImageImpl);
+            if (dx->GetType() == ERenderer::RENDERER_DX11) {
+                LOGD_INDENT_START << "DirectXTex GPU Compression";
+                auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
+                auto dx11 = static_cast<DX11*>(dx.get());
+
+                hr = DirectX::Compress(dx11->_device.Get(), img, nimg, _meta, format, flags, 1.f, *resImageImpl);
+            } else {
+                LOGD_INDENT_START << "DirectXTex CPU Compression";
+
+                hr = DirectX::Compress(img, nimg, _meta, format, flags, 1.f, *resImageImpl);
+            }
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";
