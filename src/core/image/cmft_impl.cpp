@@ -73,13 +73,13 @@ namespace ninniku
         _image.m_dataSize = dstDataSize;
     }
 
-    TextureParamHandle cmftImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
+    TextureParamHandle cmftImageImpl::CreateTextureParamInternal(const EResourceViews viewFlags) const
     {
         auto res = TextureParam::Create();
 
         res->arraySize = CUBEMAP_NUM_FACES;
         res->depth = 1;
-        res->format = 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
+        res->format = TF_R32G32B32A32_FLOAT;
         res->height = res->width = imageGetCubemapFaceSize(_image);
         res->imageDatas = GetInitializationData();
         res->numMips = 1;

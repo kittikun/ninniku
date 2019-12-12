@@ -25,7 +25,7 @@
 
 namespace ninniku
 {
-    TextureParamHandle cmftImage::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle cmftImage::CreateTextureParam(const EResourceViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }
@@ -35,10 +35,10 @@ namespace ninniku
         return _impl->Load(path);
     }
 
-	bool cmftImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-	{
-		return _impl->LoadRaw(pData, size, width, height, format);
-	}
+    bool cmftImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    {
+        return _impl->LoadRaw(pData, size, width, height, format);
+    }
 
     const std::tuple<uint8_t*, uint32_t> cmftImage::GetData() const
     {

@@ -23,6 +23,8 @@
 #include "../../export.h"
 #include "image.h"
 
+#include <dxgiformat.h>
+
 namespace ninniku
 {
     class ddsImageImpl;
@@ -39,7 +41,7 @@ namespace ninniku
         NINNIKU_API ddsImage();
         NINNIKU_API ~ddsImage();
 
-        NINNIKU_API TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const override;
+        NINNIKU_API TextureParamHandle CreateTextureParam(const EResourceViews viewFlags) const override;
         NINNIKU_API bool Load(const std::string&) override;
         NINNIKU_API bool LoadRaw(const void* pData, const size_t size);
         NINNIKU_API bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;

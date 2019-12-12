@@ -38,13 +38,13 @@ namespace ninniku
 
     ddsImage::~ddsImage() = default;
 
-    TextureParamHandle ddsImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
+    TextureParamHandle ddsImageImpl::CreateTextureParamInternal(const EResourceViews viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 
         res->arraySize = static_cast<uint32_t>(_meta.arraySize);
         res->depth = static_cast<uint32_t>(_meta.depth);
-        res->format = static_cast<uint32_t>(_meta.format);
+        res->format = DXGIFormatToNinnikuTF(_meta.format);
         res->width = static_cast<uint32_t>(_meta.width);
         res->height = static_cast<uint32_t>(_meta.height);
         res->imageDatas = GetInitializationData();
@@ -141,7 +141,7 @@ namespace ninniku
         _meta.depth = srcTex->desc->depth;
         _meta.arraySize = srcTex->desc->arraySize;
         _meta.mipLevels = srcTex->desc->numMips;
-        _meta.format = static_cast<DXGI_FORMAT>(srcTex->desc->format);
+        _meta.format = NinnikuTFToDXGIFormat(srcTex->desc->format);
 
         auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
         LOG << boost::str(fmt);

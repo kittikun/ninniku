@@ -26,7 +26,7 @@
 
 namespace ninniku
 {
-    TextureParamHandle ImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle ImageImpl::CreateTextureParam(const EResourceViews viewFlags) const
     {
         if (viewFlags == EResourceViews::RV_None) {
             LOGE << "TextureParam view flags cannot be ETextureViews::TV_None";
@@ -77,5 +77,4 @@ namespace ninniku
 
         return LoadInternal(path);
     }
-
 } // namespace ninniku

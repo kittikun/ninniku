@@ -7,7 +7,8 @@
 #include <variant>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
     using DX11CS = Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
@@ -23,19 +24,19 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX11 Shader Resources
     //////////////////////////////////////////////////////////////////////////
-    struct DX11ShaderResourceView : public ShaderResourceView
+    class DX11ShaderResourceView : public ShaderResourceView
     {
     public:
         DX11SRV _resource;
     };
 
-    struct DX11UnorderedAccessView : public UnorderedAccessView
+    class DX11UnorderedAccessView : public UnorderedAccessView
     {
     public:
         DX11UAV _resource;
     };
 
-    struct DX11SamplerState : public SamplerState
+    class DX11SamplerState : public SamplerState
     {
     public:
         DX11SS _resource;
@@ -49,13 +50,11 @@ namespace ninniku {
     public:
         DX11BufferObject() = default;
 
-        ShaderResourceView* GetSRV() { return _srv.get(); }
-        const SRVHandle& GetSRV() const override { return _srv; }
-
-        UnorderedAccessView* GetUAV() { return _uav.get(); }
-        const UAVHandle& GetUAV() const override { return _uav; }
-
+        // BufferObject
         const std::vector<uint32_t>& GetData() const override { return _data; }
+        const ShaderResourceView* GetSRV() const override { return _srv.get(); }
+        const UnorderedAccessView* GetUAV() const override { return _uav.get(); }
+
     public:
         DX11Buffer _buffer;
         SRVHandle _srv;
@@ -105,25 +104,31 @@ namespace ninniku {
     public:
         DX11TextureObject() = default;
 
+        const ShaderResourceView* GetSRVDefault() const { return srvDefault.get(); }
+        const ShaderResourceView* GetSRVCube() const { return srvCube.get(); }
+        const ShaderResourceView* GetSRVCubeArray() const { return srvCubeArray.get(); }
+        const ShaderResourceView* GetSRVArray(uint32_t index) const { return srvArray[index].get(); }
+        const UnorderedAccessView* GetUAV(uint32_t index) const { return uav[index].get(); }
+
         ID3D11Resource* GetResource() const;
 
     public:
         std::variant<DX11Tex1D, DX11Tex2D, DX11Tex3D> texture;
-        DX11SRV srvDefault;
+        SRVHandle srvDefault;
 
         // D3D_SRV_DIMENSION_TEXTURECUBE
-        DX11SRV srvCube;
+        SRVHandle srvCube;
 
         // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
-        DX11SRV srvCubeArray;
+        SRVHandle srvCubeArray;
 
         // D3D_SRV_DIMENSION_TEXTURE2DARRAY per mip level
-        std::vector<DX11SRV> srvArray;
+        std::vector<SRVHandle> srvArray;
 
-        DX11SRV srvArrayWithMips;
+        SRVHandle srvArrayWithMips;
 
         // One D3D11_TEX2D_ARRAY_UAV per mip level
-        std::vector<DX11UAV> uav;
+        std::vector<UAVHandle> uav;
     };
 
     static TextureHandle Empty_TextureHandle;

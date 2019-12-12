@@ -22,7 +22,8 @@
 
 #include "export.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class NINNIKU_API NonCopyableBase
     {
         // no copy of any kind allowed
@@ -35,4 +36,7 @@ namespace ninniku {
         NonCopyableBase() = default;
         virtual ~NonCopyableBase() = default;
     };
+
+    NINNIKU_API const uint32_t DXGIFormatToNinnikuTF(uint32_t);
+    NINNIKU_API const uint32_t CountMips(const uint32_t faceSize) noexcept;
 } // namespace ninniku

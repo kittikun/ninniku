@@ -49,7 +49,7 @@ namespace ninniku
         bool SaveCompressedImage(const std::string&, RenderDeviceHandle& dx, DXGI_FORMAT format);
 
     protected:
-        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
+        TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
         uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }

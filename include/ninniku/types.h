@@ -34,7 +34,7 @@ namespace ninniku
     class TextureObject;
 
     //////////////////////////////////////////////////////////////////////////
-    // Resources
+    // Buffers Params
     //////////////////////////////////////////////////////////////////////////
     struct BufferParam
     {
@@ -119,6 +119,20 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
+
+    enum ETextureFormat : uint8_t
+    {
+        TF_UNKNOWN,
+        TF_R8_UNORM,
+        TF_R8G8_UNORM,
+        TF_R8G8B8A8_UNORM,
+        TF_R11G11B10_FLOAT,
+        TF_R16_UNORM,
+        TF_R16G16_UNORM,
+        TF_R16G16B16A16_UNORM,
+        TF_R32G32B32A32_FLOAT
+    };
+
     class TextureParam
     {
         // no copy of any kind allowed, use Duplicate for that
@@ -138,7 +152,7 @@ namespace ninniku
         uint32_t width;
         uint32_t height;
         uint32_t depth;
-        uint8_t viewflags;
+        uint32_t viewflags;
         uint32_t format;
 
         // one per face/mip/array etc..

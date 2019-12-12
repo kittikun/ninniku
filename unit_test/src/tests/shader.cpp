@@ -24,7 +24,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/core/renderer/renderdevice.h>
-#include <ninniku/core/buffer.h>
+#include <ninniku/core/renderer/types.h>
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
 #include <ninniku/ninniku.h>
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
 
     auto param = ninniku::TextureParam::Create();
     param->width = param->height = 512;
-    param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    param->format = ninniku::DXGIFormatToNinnikuTF(DXGI_FORMAT_R32G32B32A32_FLOAT);
     param->depth = 1;
     param->numMips = 1;
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
@@ -67,15 +67,15 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         auto subMarker = dx->CreateDebugMarker("Source Texture");
 
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "colorFaces";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "colorFaces";
 
         static_assert((COLORFACES_NUMTHREAD_X == COLORFACES_NUMTHREAD_Y) && (COLORFACES_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = param->width / COLORFACES_NUMTHREAD_X;
-        cmd.dispatch[1] = param->height / COLORFACES_NUMTHREAD_Y;
-        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORFACES_NUMTHREAD_Z;
+        cmd->dispatch[0] = param->width / COLORFACES_NUMTHREAD_X;
+        cmd->dispatch[1] = param->height / COLORFACES_NUMTHREAD_Y;
+        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORFACES_NUMTHREAD_Z;
 
-        cmd.uavBindings.insert(std::make_pair("dstTex", srcTex->uav[0]));
+        cmd->uavBindings.insert(std::make_pair("dstTex", srcTex->GetUAV(0)));
 
         dx->Dispatch(cmd);
     }
@@ -85,17 +85,17 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         auto subMarker = dx->CreateDebugMarker("Destination Texture");
 
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "dirToFaces";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "dirToFaces";
 
         static_assert((DIRTOFACE_NUMTHREAD_X == DIRTOFACE_NUMTHREAD_Y) && (DIRTOFACE_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = param->width / DIRTOFACE_NUMTHREAD_X;
-        cmd.dispatch[1] = param->height / DIRTOFACE_NUMTHREAD_Y;
-        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
+        cmd->dispatch[0] = param->width / DIRTOFACE_NUMTHREAD_X;
+        cmd->dispatch[1] = param->height / DIRTOFACE_NUMTHREAD_Y;
+        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
 
-        cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
-        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube));
-        cmd.uavBindings.insert(std::make_pair("dstTex", dstTex->uav[0]));
+        cmd->ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
+        cmd->srvBindings.insert(std::make_pair("srcTex", srcTex->GetSRVCube()));
+        cmd->uavBindings.insert(std::make_pair("dstTex", dstTex->GetUAV(0)));
 
         dx->Dispatch(cmd);
     }
@@ -183,21 +183,19 @@ BOOST_AUTO_TEST_CASE(shader_structuredBuffer)
         auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
 
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "fillBuffer";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "fillBuffer";
 
-        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
+        cmd->dispatch[0] = cmd->dispatch[1] = cmd->dispatch[2] = 1;
 
-        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
+        cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
 
         dx->Dispatch(cmd);
     }
 
-    ninniku::Buffer dstBuffer;
+    auto dstBuffer = dx->CreateBuffer(srcBuffer);
 
-    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
-
-    auto& data = dstBuffer.GetData();
+    auto& data = dstBuffer->GetData();
 
     CheckMD5(reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(&data.front())), static_cast<uint32_t>(data.size() * sizeof(uint32_t)), 0xe4c6bd586aa54c9b, 0xb02b6bb8ec6b10db);
 }

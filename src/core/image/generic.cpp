@@ -25,7 +25,7 @@
 
 namespace ninniku
 {
-    TextureParamHandle genericImage::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle genericImage::CreateTextureParam(const EResourceViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }

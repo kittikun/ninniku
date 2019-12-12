@@ -26,7 +26,8 @@
 
 #include <d3d11shader.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11 : public RenderDevice
     {
     public:
@@ -49,7 +50,7 @@ namespace ninniku {
         MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) override;
         bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) override;
 
-        const DX11SamplerState& GetSampler(ESamplerState sampler) const { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)]; }
+        const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
     private:
         struct TextureSRVParams
@@ -83,7 +84,7 @@ namespace ninniku {
         DX11Context _context;
         std::unordered_map<std::string, ComputeShader> _shaders;
         std::unordered_map<std::string, DX11Buffer> _cBuffers;
-        std::array<DX11SamplerState, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
+        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
 
         friend class ddsImageImpl;
     };

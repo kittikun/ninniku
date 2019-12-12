@@ -27,23 +27,24 @@
 #include <memory>
 #include <unordered_map>
 
-namespace ninniku {
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // Shader Resources
     //////////////////////////////////////////////////////////////////////////
-    struct ShaderResourceView : private NonCopyableBase
+    class ShaderResourceView : private NonCopyableBase
     {
     };
 
     using SRVHandle = std::unique_ptr<ShaderResourceView>;
 
-    struct UnorderedAccessView : private NonCopyableBase
+    class UnorderedAccessView : private NonCopyableBase
     {
     };
 
     using UAVHandle = std::unique_ptr<UnorderedAccessView>;
 
-    struct SamplerState : private NonCopyableBase
+    class SamplerState : private NonCopyableBase
     {
     };
 
@@ -55,12 +56,12 @@ namespace ninniku {
     class BufferObject : private NonCopyableBase
     {
     public:
-        virtual const SRVHandle& GetSRV() const = 0;
-        virtual const UAVHandle& GetUAV() const = 0;
-
         // This will only be filled when copied from another buffer (they are mapped)
         // Add support for initial data later
         virtual const std::vector<uint32_t>& GetData() const = 0;
+
+        virtual const ShaderResourceView* GetSRV() const = 0;
+        virtual const UnorderedAccessView* GetUAV() const = 0;
 
     public:
         // Initial desc that was used to create the resource
@@ -89,9 +90,9 @@ namespace ninniku {
         std::string shader;
         std::string cbufferStr;
         std::array<uint32_t, 3> dispatch;
-        std::unordered_map<std::string, const SRVHandle&> srvBindings;
-        std::unordered_map<std::string, const UAVHandle&> uavBindings;
-        std::unordered_map<std::string, const SSHandle&> ssBindings;
+        std::unordered_map<std::string, const ShaderResourceView*> srvBindings;
+        std::unordered_map<std::string, const UnorderedAccessView*> uavBindings;
+        std::unordered_map<std::string, const SamplerState*> ssBindings;
     };
 
     using CommandHandle = std::unique_ptr<Command>;
@@ -101,6 +102,13 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     class TextureObject : private NonCopyableBase
     {
+    public:
+        virtual const ShaderResourceView* GetSRVDefault() const = 0;
+        virtual const ShaderResourceView* GetSRVCube() const = 0;
+        virtual const ShaderResourceView* GetSRVCubeArray() const = 0;
+        virtual const ShaderResourceView* GetSRVArray(uint32_t index) const = 0;
+        virtual const UnorderedAccessView* GetUAV(uint32_t index) const = 0;
+
     public:
         // Initial desc that was used to create the resource
         std::shared_ptr<const TextureParam> desc;

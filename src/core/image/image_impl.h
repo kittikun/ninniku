@@ -36,7 +36,7 @@ namespace ninniku
         ImageImpl() = default;
         virtual ~ImageImpl() = default;
 
-        TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const;
+        TextureParamHandle CreateTextureParam(const EResourceViews viewFlags) const;
 
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
 
@@ -47,7 +47,7 @@ namespace ninniku
         bool Load(const std::string& path) override;
 
     protected:
-        virtual TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const = 0;
+        virtual TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const = 0;
         virtual uint32_t GetHeight() const = 0;
         virtual const std::vector<SubresourceParam> GetInitializationData() const = 0;
         virtual uint32_t GetWidth() const = 0;

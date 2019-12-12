@@ -23,7 +23,8 @@
 #include "../../ninniku.h"
 #include "types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class RenderDevice
     {
         // no copy of any kind allowed
@@ -50,6 +51,8 @@ namespace ninniku {
         virtual MappedResourceHandle MapBuffer(const BufferHandle& bObj) = 0;
         virtual MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) = 0;
         virtual bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) = 0;
+
+        virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;
 
     protected:
         RenderDevice() = default;

@@ -47,7 +47,7 @@ namespace ninniku
         bool SaveImage(const std::string&);
 
     protected:
-        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
+        TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
         uint32_t GetHeight() const override { return _height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return _width; }
@@ -57,7 +57,7 @@ namespace ninniku
 
     private:
         void ConvertToR11G11B10();
-        uint32_t GetFormat() const;
+        ETextureFormat GetFormat() const;
         void Reset();
 
     private:

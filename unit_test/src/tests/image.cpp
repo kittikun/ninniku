@@ -363,14 +363,14 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
     auto dst = dx->CreateTexture(dstParam);
 
     // dispatch
-    ninniku::Command cmd = {};
-    cmd.shader = "packNormals";
-    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
-    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+    auto cmd = dx->CreateCommand();
+    cmd->shader = "packNormals";
+    cmd->srvBindings.insert(std::make_pair("srcTex", srcTex->GetSRVDefault()));
+    cmd->uavBindings.insert(std::make_pair("dstTex", dst->GetUAV(0)));
 
-    cmd.dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
-    cmd.dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
-    cmd.dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
+    cmd->dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
+    cmd->dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
+    cmd->dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
 
     dx->Dispatch(cmd);
 
@@ -411,14 +411,14 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_16bit)
     auto dst = dx->CreateTexture(dstParam);
 
     // dispatch
-    ninniku::Command cmd = {};
-    cmd.shader = "packNormals";
-    cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
-    cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[0]));
+    auto cmd = dx->CreateCommand();
+    cmd->shader = "packNormals";
+    cmd->srvBindings.insert(std::make_pair("srcTex", srcTex->GetSRVDefault()));
+    cmd->uavBindings.insert(std::make_pair("dstTex", dst->GetUAV(0)));
 
-    cmd.dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
-    cmd.dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
-    cmd.dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
+    cmd->dispatch[0] = dstParam->width / PACKNORMALS_NUMTHREAD_X;
+    cmd->dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
+    cmd->dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
 
     dx->Dispatch(cmd);
 

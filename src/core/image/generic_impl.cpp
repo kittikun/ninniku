@@ -71,13 +71,13 @@ namespace ninniku
         }
     }
 
-    TextureParamHandle genericImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
+    TextureParamHandle genericImageImpl::CreateTextureParamInternal(const EResourceViews viewFlags) const
     {
         auto res = std::make_shared<TextureParam>();
 
         auto fmt = GetFormat();
 
-        if (fmt == DXGI_FORMAT_UNKNOWN)
+        if (fmt == TF_UNKNOWN)
             return std::move(res);
 
         res->format = fmt;
@@ -92,37 +92,37 @@ namespace ninniku
         return std::move(res);
     }
 
-    uint32_t genericImageImpl::GetFormat() const
+    ETextureFormat genericImageImpl::GetFormat() const
     {
-        uint32_t res = DXGI_FORMAT_UNKNOWN;
+        auto res = TF_UNKNOWN;
 
         switch (_bpp) {
             case 4:
                 if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16G16B16A16_UNORM;
+                    res = TF_R16G16B16A16_UNORM;
                 else
-                    res = DXGI_FORMAT_R8G8B8A8_UNORM;
+                    res = TF_R8G8B8A8_UNORM;
                 break;
 
             case 3:
                 if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16G16B16A16_UNORM;
+                    res = TF_R16G16B16A16_UNORM;
                 else
-                    res = DXGI_FORMAT_R11G11B10_FLOAT;
+                    res = TF_R11G11B10_FLOAT;
                 break;
 
             case 2:
                 if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16G16_UNORM;
+                    res = TF_R16G16_UNORM;
                 else
-                    res = DXGI_FORMAT_R8G8_UNORM;
+                    res = TF_R8G8_UNORM;
                 break;
 
             case 1:
                 if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16_UNORM;
+                    res = TF_R16_UNORM;
                 else
-                    res = DXGI_FORMAT_R8_UNORM;
+                    res = TF_R8_UNORM;
                 break;
 
             default:
