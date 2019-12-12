@@ -26,7 +26,7 @@
 namespace ninniku
 {
     NINNIKU_API const uint32_t DXGIFormatToNinnikuTF(uint32_t);
-    const DXGI_FORMAT NinnikuTFToDXGIFormat(uint32_t);
+    NINNIKU_API const uint32_t NinnikuTFToDXGIFormat(uint32_t);
 
     const std::string removeFileExtension(const std::string&);
     const std::wstring strToWStr(const std::string&);

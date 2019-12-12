@@ -129,6 +129,7 @@ namespace ninniku
         TF_R11G11B10_FLOAT,
         TF_R16_UNORM,
         TF_R16G16_UNORM,
+        TF_R16G16B16A16_FLOAT,
         TF_R16G16B16A16_UNORM,
         TF_R32G32B32A32_FLOAT
     };

@@ -37,6 +37,7 @@ namespace ninniku
         virtual ~NonCopyableBase() = default;
     };
 
-    NINNIKU_API const uint32_t DXGIFormatToNinnikuTF(uint32_t);
     NINNIKU_API const uint32_t CountMips(const uint32_t faceSize) noexcept;
+    NINNIKU_API const uint32_t DXGIFormatToNinnikuTF(uint32_t);
+    NINNIKU_API const uint32_t NinnikuTFToDXGIFormat(uint32_t);
 } // namespace ninniku

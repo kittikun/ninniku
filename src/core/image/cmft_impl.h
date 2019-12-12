@@ -62,7 +62,7 @@ namespace ninniku
         void AllocateMemory();
         bool AssembleCubemap();
         bool LoadEXR(const std::string& path);
-        cmft::TextureFormat::Enum GetFormatFromDXGIFormat(uint32_t format) const;
+        cmft::TextureFormat::Enum GetFormatFromNinnikuFormat(uint32_t format) const;
         cmft::ImageFileType::Enum GetFiletypeFromFilename(const std::string& path);
         uint32_t GetBPPFromFormat(cmft::TextureFormat::Enum format) const;
 

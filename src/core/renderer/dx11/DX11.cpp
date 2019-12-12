@@ -357,7 +357,7 @@ namespace ninniku
             desc.Height = params->height;
             desc.MipLevels = params->numMips;
             desc.ArraySize = params->arraySize;
-            desc.Format = NinnikuTFToDXGIFormat(params->format);
+            desc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
             desc.SampleDesc.Count = 1;
             desc.Usage = usage;
             desc.BindFlags = bindFlags;
@@ -373,7 +373,7 @@ namespace ninniku
             desc.Width = params->width;
             desc.MipLevels = params->numMips;
             desc.ArraySize = params->arraySize;
-            desc.Format = NinnikuTFToDXGIFormat(params->format);
+            desc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
             desc.Usage = usage;
             desc.BindFlags = bindFlags;
             desc.CPUAccessFlags = cpuFlags;
@@ -389,7 +389,7 @@ namespace ninniku
             desc.Height = params->height;
             desc.Depth = params->depth;
             desc.MipLevels = params->numMips;
-            desc.Format = NinnikuTFToDXGIFormat(params->format);
+            desc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
             desc.Usage = usage;
             desc.BindFlags = bindFlags;
             desc.CPUAccessFlags = cpuFlags;
@@ -429,7 +429,7 @@ namespace ninniku
             // we have to create an UAV for each miplevel
             for (uint32_t i = 0; i < params->numMips; ++i) {
                 D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-                uavDesc.Format = NinnikuTFToDXGIFormat(params->format);
+                uavDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
 
                 if (params->arraySize > 1) {
                     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
@@ -779,7 +779,7 @@ namespace ninniku
         if (params.isCubeArray) {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-            srvDesc.Format = NinnikuTFToDXGIFormat(params.texParams->format);
+            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBEARRAY;
             srvDesc.TextureCubeArray.MipLevels = params.texParams->numMips;
             srvDesc.TextureCubeArray.NumCubes = params.texParams->arraySize % CUBEMAP_NUM_FACES;
@@ -801,7 +801,7 @@ namespace ninniku
             // To sample texture as cubemap
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-            srvDesc.Format = NinnikuTFToDXGIFormat(params.texParams->format);
+            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
             srvDesc.TextureCube.MipLevels = params.texParams->numMips;
 
@@ -822,7 +822,7 @@ namespace ninniku
 
             for (uint32_t i = 0; i < params.texParams->numMips; ++i) {
                 srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-                srvDesc.Format = NinnikuTFToDXGIFormat(params.texParams->format);
+                srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
                 srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
                 srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
                 srvDesc.Texture2DArray.MostDetailedMip = i;
@@ -845,7 +845,7 @@ namespace ninniku
 
             // one for array with all mips
             srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-            srvDesc.Format = NinnikuTFToDXGIFormat(params.texParams->format);
+            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
             srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
             srvDesc.Texture2DArray.MostDetailedMip = 0;
@@ -865,7 +865,7 @@ namespace ninniku
         } else {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-            srvDesc.Format = NinnikuTFToDXGIFormat(params.texParams->format);
+            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
 
             if (params.texParams->arraySize > 1) {
                 // one for each miplevel

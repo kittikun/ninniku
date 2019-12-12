@@ -125,25 +125,25 @@ namespace ninniku
         return res;
     }
 
-    cmft::TextureFormat::Enum cmftImageImpl::GetFormatFromDXGIFormat(uint32_t format) const
+    cmft::TextureFormat::Enum cmftImageImpl::GetFormatFromNinnikuFormat(uint32_t format) const
     {
         auto res = cmft::TextureFormat::Enum::Null;
 
         switch (format) {
-            case DXGI_FORMAT_R16G16B16A16_FLOAT:
+            case TF_R16G16B16A16_FLOAT:
                 res = cmft::TextureFormat::Enum::RGBA16F;
                 break;
 
-            case DXGI_FORMAT_R32G32B32A32_FLOAT:
+            case TF_R32G32B32A32_FLOAT:
                 res = cmft::TextureFormat::Enum::RGBA32F;
                 break;
 
-            case DXGI_FORMAT_R8G8B8A8_UNORM:
+            case TF_R8G8B8A8_UNORM:
                 res = cmft::TextureFormat::Enum::BGRA8;
                 break;
 
             default:
-                LOGE << "Unsupported format was passed to GetFormatFromDXGIFormat";
+                LOGE << "Unsupported format was passed to GetFormatFromNinnikuFormat";
         }
 
         return res;
@@ -273,7 +273,7 @@ namespace ninniku
         // allocate memory
         _image.m_width = srcTex->desc->width;
         _image.m_height = srcTex->desc->height;
-        _image.m_format = GetFormatFromDXGIFormat(srcTex->desc->format);
+        _image.m_format = GetFormatFromNinnikuFormat(srcTex->desc->format);
         _image.m_numFaces = srcTex->desc->arraySize;
         _image.m_numMips = srcTex->desc->numMips;
 

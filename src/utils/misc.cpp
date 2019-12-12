@@ -53,6 +53,9 @@ namespace ninniku
             case DXGI_FORMAT_R16G16_UNORM:
                 res = TF_R16G16_UNORM;
                 break;
+            case DXGI_FORMAT_R16G16B16A16_FLOAT:
+                res = TF_R16G16B16A16_FLOAT;
+                break;
             case DXGI_FORMAT_R16G16B16A16_UNORM:
                 res = TF_R16G16B16A16_UNORM;
                 break;
@@ -67,7 +70,7 @@ namespace ninniku
         return res;
     }
 
-    const DXGI_FORMAT NinnikuTFToDXGIFormat(uint32_t fmt)
+    const uint32_t NinnikuTFToDXGIFormat(uint32_t fmt)
     {
         DXGI_FORMAT res = DXGI_FORMAT_UNKNOWN;
 
@@ -94,6 +97,10 @@ namespace ninniku
             case TF_R16G16_UNORM:
                 res = DXGI_FORMAT_R16G16_UNORM;
                 break;
+            case TF_R16G16B16A16_FLOAT:
+                res = DXGI_FORMAT_R16G16B16A16_FLOAT;
+                break;
+
             case TF_R16G16B16A16_UNORM:
                 res = DXGI_FORMAT_R16G16B16A16_UNORM;
                 break;

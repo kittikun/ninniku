@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(cmft_texture_param)
 
     BOOST_TEST(param->arraySize == 6);
     BOOST_TEST(param->depth == 1);
-    BOOST_TEST(param->format == DXGI_FORMAT_R32G32B32A32_FLOAT);
+    BOOST_TEST(param->format == ninniku::DXGIFormatToNinnikuTF(DXGI_FORMAT_R32G32B32A32_FLOAT));
     BOOST_TEST(param->height == 512);
     BOOST_TEST(param->numMips == 1);
     BOOST_TEST(param->viewflags == ninniku::RV_SRV);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(dds_texture_param)
 
     BOOST_TEST(param->arraySize == 6);
     BOOST_TEST(param->depth == 1);
-    BOOST_TEST(param->format == DXGI_FORMAT_R32G32B32A32_FLOAT);
+    BOOST_TEST(param->format == ninniku::DXGIFormatToNinnikuTF(DXGI_FORMAT_R32G32B32A32_FLOAT));
     BOOST_TEST(param->height == 512);
     BOOST_TEST(param->numMips == 1);
     BOOST_TEST(param->viewflags == ninniku::RV_SRV);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
     dstParam->width = srcParam->width;
     dstParam->height = srcParam->height;
     dstParam->depth = srcParam->depth;
-    dstParam->format = DXGI_FORMAT_R8G8_UNORM;
+    dstParam->format = ninniku::DXGIFormatToNinnikuTF(DXGI_FORMAT_R8G8_UNORM);
     dstParam->numMips = srcParam->numMips;
     dstParam->arraySize = srcParam->arraySize;
     dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
@@ -384,6 +384,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_8bit)
 #ifdef _DEBUG
     CheckFileMD5(filename, 0x8338717097b81c8f, 0x96d43528fdcca03a);
 #else
+
     CheckFileMD5(filename, 0x1d2f7456159cd181, 0xc1b06bff0beb41ef);
 #endif
 }
@@ -403,7 +404,7 @@ BOOST_AUTO_TEST_CASE(dds_saveImage_bc5_16bit)
     dstParam->width = srcParam->width;
     dstParam->height = srcParam->height;
     dstParam->depth = srcParam->depth;
-    dstParam->format = DXGI_FORMAT_R8G8_UNORM;
+    dstParam->format = ninniku::DXGIFormatToNinnikuTF(DXGI_FORMAT_R8G8_UNORM);
     dstParam->numMips = srcParam->numMips;
     dstParam->arraySize = srcParam->arraySize;
     dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;

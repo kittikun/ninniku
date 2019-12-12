@@ -141,7 +141,7 @@ namespace ninniku
         _meta.depth = srcTex->desc->depth;
         _meta.arraySize = srcTex->desc->arraySize;
         _meta.mipLevels = srcTex->desc->numMips;
-        _meta.format = NinnikuTFToDXGIFormat(srcTex->desc->format);
+        _meta.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcTex->desc->format));
 
         auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
         LOG << boost::str(fmt);
