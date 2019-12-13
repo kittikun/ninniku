@@ -22,15 +22,28 @@
 
 #include <ninniku/ninniku.h>
 
-SetupFixture::SetupFixture()
+SetupFixtureDX11::SetupFixtureDX11()
 {
     // because unit test run on CI, always use WARP
     std::vector<std::string> shaderPaths = { "shaders" };
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP, shaderPaths, ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
 }
 
-SetupFixture::~SetupFixture()
+SetupFixtureDX11::~SetupFixtureDX11()
+{
+    ninniku::Terminate();
+}
+
+SetupFixtureDX12::SetupFixtureDX12()
+{
+    // because unit test run on CI, always use WARP
+    std::vector<std::string> shaderPaths = { "shaders" };
+
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
+}
+
+SetupFixtureDX12::~SetupFixtureDX12()
 {
     ninniku::Terminate();
 }

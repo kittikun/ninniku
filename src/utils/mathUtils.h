@@ -26,7 +26,7 @@
 
 namespace ninniku
 {
-    const bool IsPow2(const uint32_t x) noexcept;
-    NINNIKU_API const uint32_t CountMips(const uint32_t faceSize) noexcept;
-    const int NearestPow2Floor(const int x);
+    NINNIKU_API constexpr const bool IsPow2(const uint32_t x) noexcept;
+    NINNIKU_API constexpr const uint32_t CountMips(const uint32_t faceSize) noexcept;
+    NINNIKU_API constexpr const int NearestPow2Floor(const int x);
 } // namespace ninniku

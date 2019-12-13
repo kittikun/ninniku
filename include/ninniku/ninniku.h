@@ -42,7 +42,8 @@ namespace ninniku
     {
         RENDERER_DX11,
         RENDERER_DX12,
-        RENDERER_WARP
+        RENDERER_WARP_DX11,
+        RENDERER_WARP_DX12
     };
 
     /// <summary>

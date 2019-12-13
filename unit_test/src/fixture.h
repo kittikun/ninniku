@@ -20,8 +20,18 @@
 
 #pragma once
 
-struct SetupFixture
+#include <boost/mpl/vector.hpp>
+
+struct SetupFixtureDX11
 {
-    SetupFixture();
-    ~SetupFixture();
+    SetupFixtureDX11();
+    ~SetupFixtureDX11();
 };
+
+struct SetupFixtureDX12
+{
+    SetupFixtureDX12();
+    ~SetupFixtureDX12();
+};
+
+typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> Fixtures;

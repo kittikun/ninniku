@@ -26,7 +26,7 @@
 
 namespace ninniku
 {
-    const uint32_t DXGIFormatToNinnikuTF(uint32_t fmt)
+    constexpr const uint32_t DXGIFormatToNinnikuTF(uint32_t fmt)
     {
         ETextureFormat res = TF_UNKNOWN;
 
@@ -70,7 +70,7 @@ namespace ninniku
         return res;
     }
 
-    const uint32_t NinnikuTFToDXGIFormat(uint32_t fmt)
+    constexpr const uint32_t NinnikuTFToDXGIFormat(uint32_t fmt)
     {
         DXGI_FORMAT res = DXGI_FORMAT_UNKNOWN;
 

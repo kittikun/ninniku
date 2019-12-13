@@ -22,5 +22,3 @@
 
 #define BOOST_TEST_MODULE ninniku
 #include <boost/test/included/unit_test.hpp>
-
-BOOST_GLOBAL_FIXTURE(SetupFixture);

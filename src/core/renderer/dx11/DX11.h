@@ -31,8 +31,6 @@ namespace ninniku
     class DX11 : public RenderDevice
     {
     public:
-        DX11() = default;
-
         // RenderDevice
         virtual ERenderer GetType() const override { return ERenderer::RENDERER_DX11; }
 

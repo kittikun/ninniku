@@ -37,7 +37,9 @@ namespace ninniku
         virtual ~NonCopyableBase() = default;
     };
 
-    NINNIKU_API const uint32_t CountMips(const uint32_t faceSize) noexcept;
-    NINNIKU_API const uint32_t DXGIFormatToNinnikuTF(uint32_t);
-    NINNIKU_API const uint32_t NinnikuTFToDXGIFormat(uint32_t);
+    NINNIKU_API constexpr const bool IsPow2(const uint32_t x) noexcept;
+    NINNIKU_API constexpr const uint32_t CountMips(const uint32_t faceSize) noexcept;
+    NINNIKU_API constexpr const int NearestPow2Floor(const int x);
+    NINNIKU_API constexpr const uint32_t DXGIFormatToNinnikuTF(uint32_t);
+    NINNIKU_API constexpr const uint32_t NinnikuTFToDXGIFormat(uint32_t);
 } // namespace ninniku

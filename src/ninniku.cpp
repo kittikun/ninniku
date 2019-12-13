@@ -84,13 +84,13 @@ namespace ninniku
         LoadRenderDoc();
 #endif
 
-        if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP)) {
+        if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP_DX11)) {
             sRenderer.reset(new DX11());
 
             auto dx11 = static_cast<DX11*>(sRenderer.get());
 
             // since CI is running test, we must use warp driver
-            if (!dx11->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP)) {
+            if (!dx11->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP_DX11)) {
                 LOGE << "DX11App::Initialize failed";
                 return false;
             }

@@ -21,6 +21,7 @@
 #include "../shaders/cbuffers.h"
 #include "../check.h"
 #include "../common.h"
+#include "../fixture.h"
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/core/renderer/renderdevice.h>
@@ -33,7 +34,7 @@
 
 BOOST_AUTO_TEST_SUITE(Shader)
 
-BOOST_AUTO_TEST_CASE(shader_colorMips)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, Fixtures, T)
 {
     auto& dx = ninniku::GetRenderer();
     auto resTex = GenerateColoredMips(dx);
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(shader_colorMips)
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x91086088d369be49, 0x74d54476510012cc);
 }
 
-BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, Fixtures, T)
 {
     auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("CubemapDirToArray");
@@ -116,7 +117,7 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
     BOOST_TEST(memcmp(srcHash, dstHash, sizeof(uint64_t) * 2) == 0);
 }
 
-BOOST_AUTO_TEST_CASE(shader_genMips)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, Fixtures, T)
 {
     auto& dx = ninniku::GetRenderer();
     auto image = std::make_unique<ninniku::ddsImage>();
@@ -134,7 +135,7 @@ BOOST_AUTO_TEST_CASE(shader_genMips)
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xc85514693c51df6f, 0xd10b1b7b4175a5ff);
 }
 
-BOOST_AUTO_TEST_CASE(shader_resize)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, Fixtures, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE(shader_resize)
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xb3ba50ac382fe166, 0xdd1bda49f1b43409);
 }
 
-BOOST_AUTO_TEST_CASE(shader_structuredBuffer)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, Fixtures, T)
 {
     auto& dx = ninniku::GetRenderer();
     auto params = ninniku::BufferParam::Create();

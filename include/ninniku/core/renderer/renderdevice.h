@@ -25,7 +25,7 @@
 
 namespace ninniku
 {
-    class RenderDevice
+    class RenderDevice : NonCopyableBase
     {
         // no copy of any kind allowed
         RenderDevice(const RenderDevice&) = delete;

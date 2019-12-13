@@ -186,6 +186,7 @@
     <ClCompile Include="src\core\image\image_impl.cpp" />
     <ClCompile Include="src\core\renderer\dx11\DX11.cpp" />
     <ClCompile Include="src\core\renderer\dx11\DX11Types.cpp" />
+    <ClCompile Include="src\core\renderer\dx12\DX12.cpp" />
     <ClCompile Include="src\ninniku.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
