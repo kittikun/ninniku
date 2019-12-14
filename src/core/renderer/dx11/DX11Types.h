@@ -1,3 +1,23 @@
+// Copyright(c) 2018-2019 Kitti Vongsay
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #pragma once
 
 #include "ninniku/core/renderer/types.h"
@@ -24,19 +44,19 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11 Shader Resources
     //////////////////////////////////////////////////////////////////////////
-    class DX11ShaderResourceView : public ShaderResourceView
+    class DX11ShaderResourceView final : public ShaderResourceView
     {
     public:
         DX11SRV _resource;
     };
 
-    class DX11UnorderedAccessView : public UnorderedAccessView
+    class DX11UnorderedAccessView final : public UnorderedAccessView
     {
     public:
         DX11UAV _resource;
     };
 
-    class DX11SamplerState : public SamplerState
+    class DX11SamplerState final : public SamplerState
     {
     public:
         DX11SS _resource;
@@ -45,7 +65,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11BufferObject
     //////////////////////////////////////////////////////////////////////////
-    class DX11BufferObject : public BufferObject
+    class DX11BufferObject final : public BufferObject
     {
     public:
         DX11BufferObject() = default;
@@ -70,7 +90,7 @@ namespace ninniku
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
 
-    class DX11DebugMarker : public DebugMarker
+    class DX11DebugMarker final : public DebugMarker
     {
     public:
         DX11DebugMarker(const DX11Marker& marker, const std::string& name);
@@ -99,7 +119,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11TextureObject
     //////////////////////////////////////////////////////////////////////////
-    class DX11TextureObject : public TextureObject
+    class DX11TextureObject final : public TextureObject
     {
     public:
         DX11TextureObject() = default;
@@ -137,7 +157,7 @@ namespace ninniku
     // GPU to CPU readback
     //////////////////////////////////////////////////////////////////////////
 
-    class DX11MappedResource : public MappedResource
+    class DX11MappedResource final : public MappedResource
     {
     public:
         DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);

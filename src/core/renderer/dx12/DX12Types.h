@@ -18,14 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ninniku/ninniku.h>
-#include <ninniku/core/renderer/renderdevice.h>
+#pragma once
 
-int main()
+#include <d3d12.h>
+
+namespace ninniku
 {
-    std::vector<std::string> shaderPaths = { "..\\simple\\shaders", "..\\unit_test\\shaders" };
-
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
-
-    ninniku::Terminate();
-}
+    using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
+} // name

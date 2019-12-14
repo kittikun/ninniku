@@ -18,14 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ninniku/ninniku.h>
-#include <ninniku/core/renderer/renderdevice.h>
+#include "pch.h"
+#include "DXCommon.h"
 
-int main()
+namespace ninniku
 {
-    std::vector<std::string> shaderPaths = { "..\\simple\\shaders", "..\\unit_test\\shaders" };
+    bool DXCommon::GetDXGIFactory(IDXGIFactory1** pFactory)
+    {
+        if (!pFactory)
+            return false;
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
+        *pFactory = nullptr;
 
-    ninniku::Terminate();
-}
+        typedef HRESULT(WINAPI * pfn_CreateDXGIFactory1)(REFIID riid, _Out_ void** ppFactory);
+
+        static pfn_CreateDXGIFactory1 s_CreateDXGIFactory1 = nullptr;
+
+        if (!s_CreateDXGIFactory1) {
+            auto hModDXGI = LoadLibrary(L"dxgi.dll");
+            if (!hModDXGI)
+                return false;
+
+            s_CreateDXGIFactory1 = reinterpret_cast<pfn_CreateDXGIFactory1>(reinterpret_cast<void*>(GetProcAddress(hModDXGI, "CreateDXGIFactory1")));
+
+            if (!s_CreateDXGIFactory1)
+                return false;
+        }
+
+        return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
+    }
+} // namespace ninniku

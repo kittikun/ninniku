@@ -28,7 +28,7 @@
 
 namespace ninniku
 {
-    class DX11 : public RenderDevice
+    class DX11 final : public RenderDevice
     {
     public:
         // RenderDevice
@@ -63,7 +63,6 @@ namespace ninniku
         };
 
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
-        bool GetDXGIFactory(IDXGIFactory1** pFactory);
         bool LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path);
         bool LoadShaders(const std::string& shaderPath);
         bool MakeTextureSRV(const TextureSRVParams& params);

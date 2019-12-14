@@ -85,6 +85,12 @@
     <ClCompile Include="src\core\renderer\dx12\DX12.cpp">
       <Filter>Source Files\core\renderer\dx12</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\renderer\dx12\DX12Types.cpp">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\DXCommon.cpp">
+      <Filter>Source Files\core\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -155,6 +161,12 @@
     </ClInclude>
     <ClInclude Include="src\core\renderer\dx12\DX12.h">
       <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx12\DX12Types.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\DXCommon.h">
+      <Filter>Source Files\core\renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -29,9 +29,10 @@
 #include <variant>
 #include <vector>
 
-// DX11/WIN
+// DX/WIN
 #include <wrl/client.h>
 #include <d3d11_1.h>
+#include <d3d12.h>
 
 // BOOST
 #include <boost/filesystem.hpp>

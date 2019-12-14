@@ -22,27 +22,36 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
+#include "DX12Types.h"
+
 namespace ninniku
 {
-    class DX12 : public RenderDevice
+    class DX12 final : public RenderDevice
     {
     public:
-        virtual ERenderer GetType() const { return ERenderer::RENDERER_DX12; }
+        ERenderer GetType() const override { return ERenderer::RENDERER_DX12; }
 
-        virtual void CopyBufferResource(const CopyBufferSubresourceParam& params) const;
-        virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const;
-        virtual BufferHandle CreateBuffer(const BufferParamHandle& params);
-        virtual BufferHandle CreateBuffer(const BufferHandle& src);
-        virtual CommandHandle CreateCommand() const;
-        virtual DebugMarkerHandle CreateDebugMarker(const std::string& name) const;
-        virtual TextureHandle CreateTexture(const TextureParamHandle& params);
-        virtual bool Dispatch(const CommandHandle& cmd) const;
-        virtual bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp);
-        virtual bool LoadShader(const std::string& name, const void* pData, const size_t size);
-        virtual MappedResourceHandle MapBuffer(const BufferHandle& bObj);
-        virtual MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index);
-        virtual bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size);
+        void CopyBufferResource(const CopyBufferSubresourceParam& params) const override;
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
+        BufferHandle CreateBuffer(const BufferParamHandle& params) override;
+        BufferHandle CreateBuffer(const BufferHandle& src) override;
+        CommandHandle CreateCommand() const override;
+        DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
+        TextureHandle CreateTexture(const TextureParamHandle& params) override;
+        bool Dispatch(const CommandHandle& cmd) const override;
+        bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;
+        bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
+        MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
+        MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) override;
+        bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) override;
 
-        virtual const SamplerState* GetSampler(ESamplerState sampler) const;
+        const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
+
+    private:
+        bool CreateDevice(int adapter);
+
+    private:
+        DX12Device _device;
+        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
     };
 } // namespace ninniku

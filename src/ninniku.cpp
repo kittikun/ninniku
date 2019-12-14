@@ -23,6 +23,7 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 #include "core/renderer/dx11/DX11.h"
+#include "core/renderer/dx12/DX12.h"
 #include "utils/log.h"
 #include "utils/misc.h"
 
@@ -84,28 +85,42 @@ namespace ninniku
         LoadRenderDoc();
 #endif
 
-        if ((renderer == ERenderer::RENDERER_DX11) || (renderer == ERenderer::RENDERER_WARP_DX11)) {
-            sRenderer.reset(new DX11());
+        switch (renderer) {
+            case ERenderer::RENDERER_DX11:
+            case ERenderer::RENDERER_WARP_DX11:
+            {
+                sRenderer.reset(new DX11());
+            }
+            break;
 
-            auto dx11 = static_cast<DX11*>(sRenderer.get());
+            case ERenderer::RENDERER_DX12:
+            case ERenderer::RENDERER_WARP_DX12:
+            {
+                sRenderer.reset(new DX12());
+            }
+            break;
 
-            // since CI is running test, we must use warp driver
-            if (!dx11->Initialize(shaderPaths, renderer == ERenderer::RENDERER_WARP_DX11)) {
-                LOGE << "DX11App::Initialize failed";
+            default:
+                LOGE << "Unknown renderer requested";
                 return false;
-            }
-
-#if defined(_USE_RENDERDOC)
-            if (gRenderDocApi != nullptr) {
-                gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
-                gRenderDocApi->StartFrameCapture(nullptr, nullptr);
-            }
-#endif
-
-            return true;
         }
 
-        return false;
+        auto isWarp = (renderer == ERenderer::RENDERER_WARP_DX11) || (renderer == ERenderer::RENDERER_WARP_DX12);
+
+        // since CI is running test, we must use warp driver
+        if (!sRenderer->Initialize(shaderPaths, isWarp)) {
+            LOGE << "RenderDevice::Initialize failed";
+            return false;
+        }
+
+#if defined(_USE_RENDERDOC)
+        if (gRenderDocApi != nullptr) {
+            gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
+            gRenderDocApi->StartFrameCapture(nullptr, nullptr);
+        }
+#endif
+
+        return true;
     }
 
     bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)

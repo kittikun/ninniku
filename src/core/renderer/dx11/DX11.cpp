@@ -26,6 +26,7 @@
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
 #include "../../../utils/VectorSet.h"
+#include "../DXCommon.h"
 
 #include <comdef.h>
 #include <d3dcompiler.h>
@@ -224,19 +225,13 @@ namespace ninniku
                 return false;
         }
 
-        UINT createDeviceFlags = 0;
-
-#ifdef _DEBUG
-        createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
-
         Microsoft::WRL::ComPtr<IDXGIAdapter> pAdapter;
         D3D_DRIVER_TYPE driverType;
 
         if (adapter >= 0) {
             Microsoft::WRL::ComPtr<IDXGIFactory1> dxgiFactory;
 
-            if (GetDXGIFactory(dxgiFactory.GetAddressOf())) {
+            if (DXCommon::GetDXGIFactory(dxgiFactory.GetAddressOf())) {
                 if (FAILED(dxgiFactory->EnumAdapters(adapter, pAdapter.GetAddressOf()))) {
                     auto fmt = boost::format("Invalid GPU adapter index (%1%)!") % adapter;
                     LOGE << boost::str(fmt);
@@ -249,6 +244,12 @@ namespace ninniku
             driverType = D3D_DRIVER_TYPE_WARP;
         }
 
+        UINT createDeviceFlags = 0;
+
+#ifdef _DEBUG
+        createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
         std::array<D3D_FEATURE_LEVEL, 1> featureLevels = { D3D_FEATURE_LEVEL_11_1 };
 
         D3D_FEATURE_LEVEL fl;
@@ -259,28 +260,17 @@ namespace ninniku
                                              D3D11_SDK_VERSION, pDevice, &fl, nullptr);
 
         if (SUCCEEDED(hr)) {
-            Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
-
-            hr = (*pDevice)->QueryInterface(IID_PPV_ARGS(dxgiDevice.GetAddressOf()));
+            DXGI_ADAPTER_DESC desc;
+            hr = pAdapter->GetDesc(&desc);
 
             if (SUCCEEDED(hr)) {
-                hr = dxgiDevice->GetAdapter(pAdapter.ReleaseAndGetAddressOf());
-
-                if (SUCCEEDED(hr)) {
-                    DXGI_ADAPTER_DESC desc;
-
-                    hr = pAdapter->GetDesc(&desc);
-
-                    if (SUCCEEDED(hr)) {
-                        auto fmt = boost::wformat(L"Using DirectCompute on %1%") % desc.Description;
-                        LOGD << boost::str(fmt);
-                    }
-                }
+                auto fmt = boost::wformat(L"Using DirectCompute on %1%") % desc.Description;
+                LOGD << boost::str(fmt);
+                return true;
             }
+        }
 
-            return true;
-        } else
-            return false;
+        return false;
     }
 
     TextureHandle DX11::CreateTexture(const TextureParamHandle& params)
@@ -553,31 +543,6 @@ namespace ninniku
         _context->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
         _context->Flush();
         return true;
-    }
-
-    bool DX11::GetDXGIFactory(IDXGIFactory1** pFactory)
-    {
-        if (!pFactory)
-            return false;
-
-        *pFactory = nullptr;
-
-        typedef HRESULT(WINAPI * pfn_CreateDXGIFactory1)(REFIID riid, _Out_ void** ppFactory);
-
-        static pfn_CreateDXGIFactory1 s_CreateDXGIFactory1 = nullptr;
-
-        if (!s_CreateDXGIFactory1) {
-            auto hModDXGI = LoadLibrary(L"dxgi.dll");
-            if (!hModDXGI)
-                return false;
-
-            s_CreateDXGIFactory1 = reinterpret_cast<pfn_CreateDXGIFactory1>(reinterpret_cast<void*>(GetProcAddress(hModDXGI, "CreateDXGIFactory1")));
-
-            if (!s_CreateDXGIFactory1)
-                return false;
-        }
-
-        return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
     bool DX11::Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp)

@@ -36,8 +36,10 @@ namespace keywords = boost::log::keywords;
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
 
-namespace ninniku {
-    namespace Log {
+namespace ninniku
+{
+    namespace Log
+    {
         BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", BoostLogLevel);
 
         //////////////////////////////////////////////////////////////////////////
@@ -80,7 +82,8 @@ namespace ninniku {
 
             static void consume(boost::log::record_view const& rec, string_type const& formatted_string)
             {
-                auto getColor = [](BoostLogLevel level) {
+                auto getColor = [](BoostLogLevel level)
+                {
                     // default is white
                     WORD res = 7;
 
@@ -116,7 +119,7 @@ namespace ninniku {
         std::ostream& operator<<(std::ostream& strm, BoostLogLevel level)
         {
             constexpr const char* strings[] = {
-                "dx11",
+                "dx",
                 "core",
                 "warn",
                 "ERRO"
