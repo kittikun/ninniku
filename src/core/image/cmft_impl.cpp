@@ -29,12 +29,11 @@
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 
-#include <boost/filesystem.hpp>
-
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr/tinyexr.h>
 
 #include <array>
+#include <filesystem>
 
 namespace ninniku
 {
@@ -102,16 +101,14 @@ namespace ninniku
         return res;
     }
 
-    cmft::ImageFileType::Enum cmftImageImpl::GetFiletypeFromFilename(const std::string& path)
+    cmft::ImageFileType::Enum cmftImageImpl::GetFiletypeFromFilename(const std::filesystem::path& path)
     {
         auto res = cmft::ImageFileType::Count;
 
-        boost::filesystem::path p{ path };
-
-        if (!p.has_extension())
+        if (!path.has_extension())
             LOGE << "Path passed to SaveImage must contain an extension";
 
-        auto ext = p.extension();
+        auto ext = path.extension();
 
         if (ext == ".dds")
             res = cmft::ImageFileType::Enum::DDS;
@@ -149,13 +146,13 @@ namespace ninniku
         return res;
     }
 
-    bool cmftImageImpl::LoadEXR(const std::string& path)
+    bool cmftImageImpl::LoadEXR(const std::filesystem::path& path)
     {
         int width, height;
         float* rgba;
         const char* err;
 
-        int ret = ::LoadEXR(&rgba, &width, &height, path.c_str(), &err);
+        int ret = ::LoadEXR(&rgba, &width, &height, path.string().c_str(), &err);
         if (ret != TINYEXR_SUCCESS) {
             auto fmt = boost::format("cmftImageImpl::LoadEXR failed with: %1%") % err;
             LOG << boost::str(fmt);
@@ -212,7 +209,7 @@ namespace ninniku
 
         bool imageLoaded = false;
 
-        if (boost::filesystem::path{ path }.extension() == ".exr")
+        if (std::filesystem::path{ path }.extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
             imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
@@ -336,7 +333,7 @@ namespace ninniku
         return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
     }
 
-    bool cmftImageImpl::SaveImage(const std::string& path, cmftImage::SaveType type)
+    bool cmftImageImpl::SaveImage(const std::filesystem::path& path, cmftImage::SaveType type)
     {
         auto cmftFileType = GetFiletypeFromFilename(path);
 
@@ -373,7 +370,10 @@ namespace ninniku
                 break;
         }
 
-        return cmft::imageSave(_image, removeFileExtension(path).c_str(), cmftFileType, cmftType, cmftFormat, true);
+        // because path is const
+        auto pathCopy = path;
+
+        return cmft::imageSave(_image, pathCopy.replace_extension().string().c_str(), cmftFileType, cmftType, cmftFormat, true);
     }
 
     void cmftImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)

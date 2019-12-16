@@ -21,7 +21,6 @@
 #include "pch.h"
 #include "misc.h"
 
-#include <boost/filesystem/convenience.hpp>
 #include <windows.h>
 
 namespace ninniku
@@ -141,10 +140,5 @@ namespace ninniku
         }
 
         return res;
-    }
-
-    const std::string removeFileExtension(const std::string& fileName)
-    {
-        return boost::filesystem::change_extension(fileName, "").string();
     }
 } // namespace ninniku

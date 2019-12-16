@@ -24,6 +24,8 @@
 
 #include "DX12Types.h"
 
+struct IDXGIFactory4;
+
 namespace ninniku
 {
     class DX12 final : public RenderDevice
@@ -49,6 +51,7 @@ namespace ninniku
 
     private:
         bool CreateDevice(int adapter);
+        bool GetDXGIFactory(IDXGIFactory4** pFactory);
 
     private:
         DX12Device _device;

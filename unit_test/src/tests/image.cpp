@@ -31,6 +31,7 @@
 #include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 #include <ninniku/utils.h>
+#include <filesystem>
 
 BOOST_AUTO_TEST_SUITE(Image)
 
@@ -106,7 +107,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_cubemap)
     std::string filename = "cmft_saveImage_cubemap.dds";
 
     BOOST_TEST(image->SaveImage(filename, ninniku::cmftImage::SaveType::Cubemap));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0xd390897a261c6e6d, 0xa7c0fc8663cf6756);
 }
@@ -132,7 +133,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
     for (auto i = 0; i < suffixes.size(); ++i) {
         auto filename = "cmft_saveImageFace_" + suffixes[i] + ".dds";
 
-        BOOST_TEST(boost::filesystem::exists(filename));
+        BOOST_TEST(std::filesystem::exists(filename));
         CheckFileMD5(filename, hashes[i * 2], hashes[i * 2 + 1]);
     }
 }
@@ -153,7 +154,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, Fixtures, T)
     std::string filename = "cmft_saveImage_longlat.hdr";
 
     BOOST_TEST(res->SaveImage(filename, ninniku::cmftImage::SaveType::LatLong));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x0e595ac204b6395f, 0x40389132a20d31db);
 }
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_vcross)
     std::string filename = "cmft_saveImage_vcross.dds";
 
     BOOST_TEST(image->SaveImage(filename, ninniku::cmftImage::SaveType::VCross));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x7b301fd498ff0aaf, 0x10cfb2d95c6fbb22);
 }
@@ -246,7 +247,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, Fixtures, T)
     std::string filename = "dds_saveImage_raw_mips.dds";
 
     BOOST_TEST(res->SaveImage(filename));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x90d2840de5fc390c, 0xaafa055284578053);
 }
@@ -262,7 +263,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, Fixtures, T)
     std::string filename = "dds_saveImage_raw_cube_mips.dds";
 
     BOOST_TEST(res->SaveImage(filename));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x96fc6f64b6361b46, 0xbb4679a507b22fe8);
 }
@@ -285,7 +286,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, Fixtures, T)
     std::string filename = "dds_saveImage_bc1.dds";
 
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC1_UNORM));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
 }
@@ -308,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, Fixtures, T)
     std::string filename = "dds_saveImage_bc3.dds";
 
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC3_UNORM));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
 }
@@ -331,7 +332,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, Fixtures, T)
     std::string filename = "dds_saveImage_bc3.dds";
 
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC4_UNORM));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     // for some reason BC4 leads to different results between debug and release builds
 #ifdef _DEBUG
@@ -380,7 +381,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, Fixtures, T)
 
     res->InitializeFromTextureObject(dx, dst);
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
 #ifdef _DEBUG
     CheckFileMD5(filename, 0x8338717097b81c8f, 0x96d43528fdcca03a);
@@ -429,7 +430,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, Fixtures, T)
 
     res->InitializeFromTextureObject(dx, dst);
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
 #ifdef _DEBUG
     CheckFileMD5(filename, 0x41be141dec6447ee, 0xb881f3768608f0e1);
@@ -454,7 +455,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, Fixtures, T)
     std::string filename = "dds_saveImage_bc6h.dds";
 
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC6H_UF16));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
 }
@@ -477,7 +478,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, Fixtures, T)
     std::string filename = "dds_saveImage_bc7.dds";
 
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC7_UNORM));
-    BOOST_TEST(boost::filesystem::exists(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
 }

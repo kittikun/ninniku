@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <filesystem>
 
 // DX/WIN
 #include <wrl/client.h>
@@ -35,7 +36,6 @@
 #include <d3d12.h>
 
 // BOOST
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>

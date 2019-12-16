@@ -63,9 +63,9 @@ namespace ninniku
 
     bool ImageImpl::Load(const std::string& path)
     {
-        auto validPath = boost::filesystem::path{ path };
+        auto validPath = std::filesystem::path{ path };
 
-        if (!boost::filesystem::exists(validPath)) {
+        if (!std::filesystem::exists(validPath)) {
             auto fmt = boost::format("Could not find file \"%1%\"") % path;
             LOGE << boost::str(fmt);
 

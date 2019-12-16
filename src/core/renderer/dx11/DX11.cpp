@@ -231,7 +231,7 @@ namespace ninniku
         if (adapter >= 0) {
             Microsoft::WRL::ComPtr<IDXGIFactory1> dxgiFactory;
 
-            if (DXCommon::GetDXGIFactory(dxgiFactory.GetAddressOf())) {
+            if (DXCommon::GetDXGIFactory<IDXGIFactory1>(dxgiFactory.GetAddressOf())) {
                 if (FAILED(dxgiFactory->EnumAdapters(adapter, pAdapter.GetAddressOf()))) {
                     auto fmt = boost::format("Invalid GPU adapter index (%1%)!") % adapter;
                     LOGE << boost::str(fmt);
@@ -260,14 +260,26 @@ namespace ninniku
                                              D3D11_SDK_VERSION, pDevice, &fl, nullptr);
 
         if (SUCCEEDED(hr)) {
-            DXGI_ADAPTER_DESC desc;
-            hr = pAdapter->GetDesc(&desc);
+            Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
+
+            hr = (*pDevice)->QueryInterface(IID_PPV_ARGS(dxgiDevice.GetAddressOf()));
 
             if (SUCCEEDED(hr)) {
-                auto fmt = boost::wformat(L"Using DirectCompute on %1%") % desc.Description;
-                LOGD << boost::str(fmt);
-                return true;
+                hr = dxgiDevice->GetAdapter(pAdapter.ReleaseAndGetAddressOf());
+
+                if (SUCCEEDED(hr)) {
+                    DXGI_ADAPTER_DESC desc;
+
+                    hr = pAdapter->GetDesc(&desc);
+
+                    if (SUCCEEDED(hr)) {
+                        auto fmt = boost::wformat(L"Using DirectCompute on %1%") % desc.Description;
+                        LOGD << boost::str(fmt);
+                    }
+                }
             }
+
+            return true;
         }
 
         return false;
@@ -683,7 +695,7 @@ namespace ninniku
     bool DX11::LoadShaders(const std::string& shaderPath)
     {
         // check if directory is valid
-        if (!boost::filesystem::is_directory(shaderPath)) {
+        if (!std::filesystem::is_directory(shaderPath)) {
             auto fmt = boost::format("Failed to open directory: %1%") % shaderPath;
             LOGE << boost::str(fmt);
 
@@ -693,9 +705,9 @@ namespace ninniku
         std::string ext{ ".cso" };
 
         // Count the number of .cso found
-        boost::filesystem::directory_iterator begin(shaderPath), end;
+        std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const boost::filesystem::directory_entry & d)
+        auto fileCounter = [&](const std::filesystem::directory_entry & d)
         {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
@@ -705,7 +717,7 @@ namespace ninniku
 
         LOGD << boost::str(fmt);
 
-        for (auto& iter : boost::filesystem::recursive_directory_iterator(shaderPath)) {
+        for (auto& iter : std::filesystem::recursive_directory_iterator(shaderPath)) {
             if (iter.path().extension() == ext) {
                 auto path = iter.path().string();
 

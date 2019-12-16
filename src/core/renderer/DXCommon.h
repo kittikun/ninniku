@@ -24,11 +24,35 @@ namespace ninniku
 {
     class DXCommon
     {
-        // not supposed to be newed
+        // not supposed to be instanced
         DXCommon() = delete;
         ~DXCommon() = delete;
 
     public:
-        static bool GetDXGIFactory(IDXGIFactory1** pFactory);
+        template<typename T>
+        static bool GetDXGIFactory(T** pFactory)
+        {
+            if (!pFactory)
+                return false;
+
+            *pFactory = nullptr;
+
+            typedef HRESULT(WINAPI * pfn_CreateDXGIFactory1)(REFIID riid, _Out_ void** ppFactory);
+
+            static pfn_CreateDXGIFactory1 s_CreateDXGIFactory1 = nullptr;
+
+            if (!s_CreateDXGIFactory1) {
+                auto hModDXGI = LoadLibrary(L"dxgi.dll");
+                if (!hModDXGI)
+                    return false;
+
+                s_CreateDXGIFactory1 = reinterpret_cast<pfn_CreateDXGIFactory1>(reinterpret_cast<void*>(GetProcAddress(hModDXGI, "CreateDXGIFactory1")));
+
+                if (!s_CreateDXGIFactory1)
+                    return false;
+            }
+
+            return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
+        }
     };
 } // namespace ninniku

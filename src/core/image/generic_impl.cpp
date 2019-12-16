@@ -28,8 +28,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-#include <boost/filesystem.hpp>
 #include <array>
+#include <filesystem>
 #include <DirectXPackedVector.h>
 
 namespace ninniku

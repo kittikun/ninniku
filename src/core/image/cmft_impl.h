@@ -47,7 +47,7 @@ namespace ninniku
 
         bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
 
-        bool SaveImage(const std::string& path, cmftImage::SaveType type);
+        bool SaveImage(const std::filesystem::path& path, cmftImage::SaveType type);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
@@ -61,9 +61,9 @@ namespace ninniku
     private:
         void AllocateMemory();
         bool AssembleCubemap();
-        bool LoadEXR(const std::string& path);
+        bool LoadEXR(const std::filesystem::path& path);
         cmft::TextureFormat::Enum GetFormatFromNinnikuFormat(uint32_t format) const;
-        cmft::ImageFileType::Enum GetFiletypeFromFilename(const std::string& path);
+        cmft::ImageFileType::Enum GetFiletypeFromFilename(const std::filesystem::path& path);
         uint32_t GetBPPFromFormat(cmft::TextureFormat::Enum format) const;
 
     private:

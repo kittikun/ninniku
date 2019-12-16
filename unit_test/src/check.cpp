@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <openssl/md5.h>
 #include <array>
-#include <iostream>
+#include <fstream>
 
 unsigned char* GetMD5(uint8_t* data, uint32_t size)
 {
@@ -39,7 +39,7 @@ void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b)
     BOOST_TEST(memcmp(hash, wanted.data(), wanted.size()) == 0);
 }
 
-void CheckFileMD5(boost::filesystem::path path, uint64_t a, uint64_t b)
+void CheckFileMD5(std::filesystem::path path, uint64_t a, uint64_t b)
 {
     std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
     std::ifstream::pos_type pos = ifs.tellg();

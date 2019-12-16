@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
 #include <cstdint>
+#include <filesystem>
 
 unsigned char* GetMD5(uint8_t* data, uint32_t size);
 void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b);
-void CheckFileMD5(boost::filesystem::path path, uint64_t a, uint64_t b);
+void CheckFileMD5(std::filesystem::path path, uint64_t a, uint64_t b);

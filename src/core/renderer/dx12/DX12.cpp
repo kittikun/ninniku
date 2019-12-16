@@ -24,7 +24,7 @@
 #include "../../../utils/log.h"
 #include "../DXCommon.h"
 
-#include <dxgi1_3.h>
+#include <dxgi1_4.h>
 
 namespace ninniku
 {
@@ -62,14 +62,15 @@ namespace ninniku
     {
         LOGD << "Creating ID3D12Device..";
 
+        auto hModD3D12 = LoadLibrary(L"d3d12.dll");
+
+        if (!hModD3D12)
+            return false;
+
 #if defined(_DEBUG)
         static PFN_D3D12_GET_DEBUG_INTERFACE s_DynamicD3D12GetDebugInterface = nullptr;
 
         if (!s_DynamicD3D12GetDebugInterface) {
-            HMODULE hModD3D12 = LoadLibrary(L"d3d12.dll");
-            if (!hModD3D12)
-                return false;
-
             s_DynamicD3D12GetDebugInterface = reinterpret_cast<PFN_D3D12_GET_DEBUG_INTERFACE>(reinterpret_cast<void*>(GetProcAddress(hModD3D12, "D3D12GetDebugInterface")));
             if (!s_DynamicD3D12GetDebugInterface)
                 return false;
@@ -90,10 +91,6 @@ namespace ninniku
         static PFN_D3D12_CREATE_DEVICE s_DynamicD3D12CreateDevice = nullptr;
 
         if (!s_DynamicD3D12CreateDevice) {
-            HMODULE hModD3D12 = LoadLibrary(L"d3d12.dll");
-            if (!hModD3D12)
-                return false;
-
             s_DynamicD3D12CreateDevice = reinterpret_cast<PFN_D3D12_CREATE_DEVICE>(reinterpret_cast<void*>(GetProcAddress(hModD3D12, "D3D12CreateDevice")));
             if (!s_DynamicD3D12CreateDevice)
                 return false;
@@ -102,20 +99,30 @@ namespace ninniku
         Microsoft::WRL::ComPtr<IDXGIAdapter> pAdapter;
         D3D_DRIVER_TYPE driverType;
 
-        if (adapter >= 0) {
-            Microsoft::WRL::ComPtr<IDXGIFactory1> dxgiFactory;
+        Microsoft::WRL::ComPtr<IDXGIFactory4> dxgiFactory;
 
-            if (DXCommon::GetDXGIFactory(dxgiFactory.GetAddressOf())) {
+        if (DXCommon::GetDXGIFactory<IDXGIFactory4>(dxgiFactory.GetAddressOf())) {
+            if (adapter < 0) {
+                // WARP
+                if (FAILED(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pAdapter)))) {
+                    LOGE << "Failed to Enumerate WARP adapter";
+                    return false;
+                }
+
+                driverType = D3D_DRIVER_TYPE_WARP;
+            } else {
                 if (FAILED(dxgiFactory->EnumAdapters(adapter, pAdapter.GetAddressOf()))) {
+                    // HW
                     auto fmt = boost::format("Invalid GPU adapter index (%1%)!") % adapter;
                     LOGE << boost::str(fmt);
                     return false;
                 }
-            }
 
-            driverType = (pAdapter) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
+                driverType = (pAdapter) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
+            }
         } else {
-            driverType = D3D_DRIVER_TYPE_WARP;
+            LOGE << "Failed to to create IDXGIFactory4";
+            return false;
         }
 
         auto minFeatureLevel = D3D_FEATURE_LEVEL_12_0;
