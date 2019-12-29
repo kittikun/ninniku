@@ -123,7 +123,7 @@
     <PostBuildEvent>
       <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
 xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
-exit 0</Command>
+</Command>
       <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
     <PreBuildEvent>
