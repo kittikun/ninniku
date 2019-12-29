@@ -7,6 +7,7 @@ out/
 bin/
 *.rdc
 *.cso
+*.dxco
 unit_test/*.dds
 unit_test/*.hdr
 simple/*.dds

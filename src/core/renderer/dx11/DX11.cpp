@@ -29,10 +29,10 @@
 #include "../DXCommon.h"
 
 #include <comdef.h>
+#include <d3d11shader.h>
 #include <d3dcompiler.h>
 
-namespace ninniku
-{
+namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     void DX11::CopyBufferResource(const CopyBufferSubresourceParam& params) const
     {
@@ -486,8 +486,7 @@ namespace ninniku
         static std::function<ID3D11UnorderedAccessView*(const UnorderedAccessView*)> uavCast = &DX11::castGenericResourceToDX11Resource<UnorderedAccessView, DX11UnorderedAccessView, ID3D11UnorderedAccessView>;
         static std::function<ID3D11SamplerState*(const SamplerState*)> ssCast = &DX11::castGenericResourceToDX11Resource<SamplerState, DX11SamplerState, ID3D11SamplerState>;
 
-        auto lambda = [&](auto kvp, auto & container, auto castFn)
-        {
+        auto lambda = [&](auto kvp, auto & container, auto castFn) {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -664,7 +663,7 @@ namespace ninniku
             return false;
         }
 
-        auto bindings = ParseShaderResources(desc, reflect);
+        auto bindings = ParseShaderResources(desc.BoundResources, reflect);
 
         // create shader
         DX11CS shader;
@@ -707,8 +706,7 @@ namespace ninniku
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d)
-        {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 
@@ -738,7 +736,8 @@ namespace ninniku
 
                 auto name = iter.path().stem().string();
 
-                LoadShader(name, blob, path);
+                if (!LoadShader(name, blob, path))
+                    return false;
             }
         }
 
@@ -749,8 +748,7 @@ namespace ninniku
     {
         auto obj = static_cast<DX11TextureObject*>(params.obj);
 
-        auto lambda = [&](auto srvDesc, auto srv, auto name)
-        {
+        auto lambda = [&](auto srvDesc, auto srv, auto name) {
         };
 
         if (params.isCubeArray) {
@@ -938,20 +936,28 @@ namespace ninniku
         return res;
     }
 
-    std::unordered_map<std::string, uint32_t> DX11::ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection)
+    std::unordered_map<std::string, uint32_t> DX11::ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection)
     {
-        std::unordered_map<std::string, uint32_t> resMap;
+        std::unordered_map<std::string, uint32_t> res;
 
         // parse parameter bind slots
-        for (uint32_t i = 0; i < desc.BoundResources; ++i) {
-            D3D11_SHADER_INPUT_BIND_DESC res;
+        for (uint32_t i = 0; i < numBoundResources; ++i) {
+            D3D11_SHADER_INPUT_BIND_DESC bindDesc;
 
-            auto hr = reflection->GetResourceBindingDesc(i, &res);
-            std::string restypeStr = "UNKNOWN";
+            auto hr = reflection->GetResourceBindingDesc(i, &bindDesc);
 
-            switch (res.Type) {
+            if (FAILED(hr)) {
+                LOGE << "Failed to ID3D11ShaderReflection::GetResourceBindingDesc with:";
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
+                return res;
+            }
+
+            std::string restypeStr;
+
+            switch (bindDesc.Type) {
                 case D3D_SIT_CBUFFER:
-                    restypeStr = "D3D10_SIT_CBUFFER";
+                    restypeStr = "D3D_SIT_CBUFFER";
                     break;
 
                 case D3D_SIT_SAMPLER:
@@ -973,21 +979,24 @@ namespace ninniku
                 case D3D_SIT_UAV_RWSTRUCTURED:
                     restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
                     break;
+
+                default:
+                    throw new std::exception("DX11::ParseShaderResources unsupported type");
             }
 
-            auto fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % res.Name % restypeStr % res.BindPoint;
+            auto fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;
 
             LOGD << boost::str(fmt);
 
             // if the texture is a constant buffer, we want to create it a slot in the map
-            if (res.Type == D3D_SIT_CBUFFER) {
-                _cBuffers.insert(std::make_pair(res.Name, DX11Buffer{}));
+            if (bindDesc.Type == D3D_SIT_CBUFFER) {
+                _cBuffers.insert(std::make_pair(bindDesc.Name, DX11Buffer{}));
             }
 
-            resMap.insert(std::make_pair(res.Name, res.BindPoint));
+            res.insert(std::make_pair(bindDesc.Name, bindDesc.BindPoint));
         }
 
-        return resMap;
+        return res;
     }
 
     bool DX11::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)

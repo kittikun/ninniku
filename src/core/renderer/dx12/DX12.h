@@ -24,10 +24,10 @@
 
 #include "DX12Types.h"
 
-struct IDXGIFactory4;
+struct IDxcBlobEncoding;
+struct ID3D12ShaderReflection;
 
-namespace ninniku
-{
+namespace ninniku {
     class DX12 final : public RenderDevice
     {
     public:
@@ -51,7 +51,9 @@ namespace ninniku
 
     private:
         bool CreateDevice(int adapter);
-        bool GetDXGIFactory(IDXGIFactory4** pFactory);
+        bool LoadShader(const std::string& name, IDxcBlobEncoding* pBlob, const std::string& path);
+        bool LoadShaders(const std::string& shaderPath);
+        std::unordered_map<std::string, uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
         DX12Device _device;

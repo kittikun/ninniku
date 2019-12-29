@@ -21,13 +21,19 @@
 #include "pch.h"
 #include "DX12.h"
 
+#pragma comment(lib, "dxcompiler.lib")
+
 #include "../../../utils/log.h"
+#include "../../../utils/misc.h"
 #include "../DXCommon.h"
 
+#include <comdef.h>
+#include <d3d12shader.h>
 #include <dxgi1_4.h>
+#include <dxc/dxcapi.h>
+#include <dxc/DxilContainer/DxilContainer.h>
 
-namespace ninniku
-{
+namespace ninniku {
     void DX12::CopyBufferResource(const CopyBufferSubresourceParam& params) const
     {
         throw std::exception("not implemented");
@@ -167,12 +173,185 @@ namespace ninniku
             return false;
         }
 
+        if ((shaderPaths.size() > 0)) {
+            for (auto& path : shaderPaths) {
+                if (!LoadShaders(path)) {
+                    auto fmt = boost::format("Failed to load shaders in: %1%") % path;
+                    LOGE << boost::str(fmt);
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
     bool DX12::LoadShader(const std::string& name, const void* pData, const size_t size)
     {
         throw std::exception("not implemented");
+    }
+
+    bool DX12::LoadShader(const std::string& name, IDxcBlobEncoding* pBlob, const std::string& path)
+    {
+        Microsoft::WRL::ComPtr<IDxcContainerReflection> pContainerReflection;
+
+        auto hr = DxcCreateInstance(CLSID_DxcContainerReflection, __uuidof(IDxcContainerReflection), (void**)&pContainerReflection);
+
+        if (FAILED(hr)) {
+            LOGE << "DxcCreateInstance for CLSID_DxcContainerReflection failed with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
+
+        hr = pContainerReflection->Load(pBlob);
+
+        if (FAILED(hr)) {
+            LOGE << "IDxcContainerReflection::Load failed with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
+
+        uint32_t partCount;
+
+        hr = pContainerReflection->GetPartCount(&partCount);
+
+        if (FAILED(hr)) {
+            LOGE << "IDxcContainerReflection::GetPartCount failed with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
+
+        for (uint32_t i = 0; i < partCount; ++i) {
+            uint32_t partKind;
+
+            hr = pContainerReflection->GetPartKind(i, &partKind);
+
+            if (FAILED(hr)) {
+                LOGE << "IDxcContainerReflection::GetPartKind failed with:";
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
+                return false;
+            }
+
+            if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_DXIL)) {
+                IDxcBlob* pBlob;
+                hr = pContainerReflection->GetPartContent(i, &pBlob);
+
+                if (FAILED(hr)) {
+                    LOGE << "IDxcContainerReflection::GetPartContent failed with:";
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
+                    return false;
+                }
+
+                auto pHeader = reinterpret_cast<const hlsl::DxilProgramHeader*>(pBlob->GetBufferPointer());
+
+#if _DEBUG
+                // we can probably afford to only run this in debug
+                if (!IsValidDxilProgramHeader(pHeader, static_cast<uint32_t>(pBlob->GetBufferSize()))) {
+                    LOGE << "DXIL program header is invalid";
+                    return false;
+                }
+#endif
+
+                auto shaderKind = hlsl::GetVersionShaderType(pHeader->ProgramVersion);
+
+                Microsoft::WRL::ComPtr<ID3D12ShaderReflection> pShaderReflection;
+
+                hr = pContainerReflection->GetPartReflection(i, IID_PPV_ARGS(&pShaderReflection));
+
+                if (FAILED(hr)) {
+                    LOGE << "IDxcContainerReflection::GetPartReflection failed with:";
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
+                    return false;
+                }
+
+                D3D12_SHADER_DESC pShaderDesc;
+                hr = pShaderReflection->GetDesc(&pShaderDesc);
+
+                if (FAILED(hr)) {
+                    LOGE << "ID3D12ShaderReflection::GetDesc failed with:";
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
+                    return false;
+                }
+
+                ParseShaderResources(pShaderDesc.BoundResources, pShaderReflection.Get());
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Load all shaders in /data
+    /// </summary>
+    bool DX12::LoadShaders(const std::string& shaderPath)
+    {
+        // check if directory is valid
+        if (!std::filesystem::is_directory(shaderPath)) {
+            auto fmt = boost::format("Failed to open directory: %1%") % shaderPath;
+            LOGE << boost::str(fmt);
+
+            return false;
+        }
+
+        std::string ext{ ".dxco" };
+
+        // Count the number of .cso found
+        std::filesystem::directory_iterator begin(shaderPath), end;
+
+        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
+            return (!is_directory(d.path()) && (d.path().extension() == ext));
+        };
+
+        auto numFiles = std::count_if(begin, end, fileCounter);
+        auto fmt = boost::format("Found %1% compiled shaders in /%2%") % numFiles % shaderPath;
+
+        LOGD << boost::str(fmt);
+
+        IDxcLibrary* pLibrary = nullptr;
+
+        auto hr = DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary);
+
+        if (FAILED(hr)) {
+            LOGE << "DxcCreateInstance for CLSID_DxcLibrary failed with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
+
+        for (auto& iter : std::filesystem::recursive_directory_iterator(shaderPath)) {
+            if (iter.path().extension() == ext) {
+                auto path = iter.path().string();
+
+                fmt = boost::format("Loading %1%..") % path;
+
+                LOG_INDENT_START << boost::str(fmt);
+
+                Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
+
+                hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path).c_str(), nullptr, &pBlob);
+
+                if (FAILED(hr)) {
+                    LOGE << "Failed to IDxcLibrary::CreateBlobFromFile with:";
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
+                    return false;
+                }
+
+                auto name = iter.path().stem().string();
+
+                if (!LoadShader(name, pBlob.Get(), path))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     MappedResourceHandle DX12::MapBuffer(const BufferHandle& bObj)
@@ -183,6 +362,64 @@ namespace ninniku
     MappedResourceHandle DX12::MapTexture(const TextureHandle& tObj, const uint32_t index)
     {
         throw std::exception("not implemented");
+    }
+
+    std::unordered_map<std::string, uint32_t> DX12::ParseShaderResources(uint32_t numBoundResources, ID3D12ShaderReflection* pReflection)
+    {
+        std::unordered_map<std::string, uint32_t> res;
+
+        // parse parameter bind slots
+        for (uint32_t i = 0; i < numBoundResources; ++i) {
+            D3D12_SHADER_INPUT_BIND_DESC bindDesc;
+
+            auto hr = pReflection->GetResourceBindingDesc(i, &bindDesc);
+
+            if (FAILED(hr)) {
+                LOGE << "Failed to ID3D12ShaderReflection::GetResourceBindingDesc with:";
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
+                return res;
+            }
+
+            std::string restypeStr;
+
+            switch (bindDesc.Type) {
+                case D3D_SIT_CBUFFER:
+                    restypeStr = "D3D_SIT_SAMPLER";
+                    break;
+
+                case D3D_SIT_SAMPLER:
+                    restypeStr = "D3D_SIT_SAMPLER";
+                    break;
+
+                case D3D_SIT_STRUCTURED:
+                    restypeStr = "D3D_SIT_STRUCTURED";
+                    break;
+
+                case D3D_SIT_TEXTURE:
+                    restypeStr = "D3D_SIT_TEXTURE";
+                    break;
+
+                case D3D_SIT_UAV_RWTYPED:
+                    restypeStr = "D3D_SIT_UAV_RWTYPED";
+                    break;
+
+                case D3D_SIT_UAV_RWSTRUCTURED:
+                    restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
+                    break;
+
+                default:
+                    throw new std::exception("DX12::ParseShaderResources unsupported type");
+            }
+
+            auto fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;
+
+            LOGD << boost::str(fmt);
+
+            res.insert(std::make_pair(bindDesc.Name, bindDesc.BindPoint));
+        }
+
+        return res;
     }
 
     bool DX12::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)

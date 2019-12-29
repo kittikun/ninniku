@@ -24,10 +24,9 @@
 
 #include "DX11Types.h"
 
-#include <d3d11shader.h>
+struct ID3D11ShaderReflection;
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11 final : public RenderDevice
     {
     public:
@@ -66,7 +65,7 @@ namespace ninniku
         bool LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path);
         bool LoadShaders(const std::string& shaderPath);
         bool MakeTextureSRV(const TextureSRVParams& params);
-        std::unordered_map<std::string, uint32_t> ParseShaderResources(const D3D11_SHADER_DESC& desc, ID3D11ShaderReflection* reflection);
+        std::unordered_map<std::string, uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
 
         // Helper to cast into the correct shader resource type
         template<typename SourceType, typename DestType, typename ReturnType>

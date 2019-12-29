@@ -23,7 +23,7 @@
 
 int main()
 {
-    std::vector<std::string> shaderPaths = { "..\\simple\\shaders", "..\\unit_test\\shaders" };
+    std::vector<std::string> shaderPaths = { "..\\simple\\shaders" };
 
     ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
 

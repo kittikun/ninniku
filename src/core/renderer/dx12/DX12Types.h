@@ -22,7 +22,6 @@
 
 #include <d3d12.h>
 
-namespace ninniku
-{
+namespace ninniku {
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
 } // name

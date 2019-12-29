@@ -98,7 +98,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;_USE_RENDERDOC;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -108,6 +108,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(ProjectDir)external\dxc\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderType>Compute</ShaderType>
@@ -120,13 +121,18 @@
       <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
     <PostBuildEvent>
-      <Command>(robocopy $(ProjectDir)external\renderdoc $(OutDir) renderdoc.dll /njh /njs /ndl /nc /ns) ^&amp; IF %ERRORLEVEL% LEQ 1 exit 0</Command>
-      <Message>Copying RenderDoc DLL..</Message>
+      <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
+xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)</Command>
+      <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -151,7 +157,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -164,6 +170,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(ProjectDir)external\dxc\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderType>Compute</ShaderType>
@@ -175,6 +182,13 @@
       <ObjectFileOutput>$(SolutionDir)data\%(Filename).cso</ObjectFileOutput>
       <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\core\image\cmft.cpp" />
