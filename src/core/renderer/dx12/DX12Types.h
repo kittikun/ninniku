@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -22,6 +22,8 @@
 
 #include <d3d12.h>
 
-namespace ninniku {
+namespace ninniku
+{
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
+    using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
 } // name

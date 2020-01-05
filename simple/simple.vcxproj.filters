@@ -18,8 +18,6 @@
     <None Include="common.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\fillBuffer.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
+    <CustomBuild Include="shaders\fillBuffer.hlsl" />
   </ItemGroup>
 </Project>
