@@ -39,6 +39,7 @@ namespace ninniku {
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override;
         DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
+		RootSignatureHandle CreateRootSignature() const override { return std::make_unique<RootSignature>(); }
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) const override;
         bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;

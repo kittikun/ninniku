@@ -285,6 +285,11 @@ namespace ninniku {
         return false;
     }
 
+	RootSignatureHandle DX11::CreateRootSignature() const
+	{
+		throw std::exception("not implemented");
+	}
+
     TextureHandle DX11::CreateTexture(const TextureParamHandle& params)
     {
         auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;

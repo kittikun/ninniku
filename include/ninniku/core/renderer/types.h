@@ -32,19 +32,19 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Shader Resources
     //////////////////////////////////////////////////////////////////////////
-    class ShaderResourceView : private NonCopyableBase
+	struct ShaderResourceView : NonCopyable
     {
     };
 
     using SRVHandle = std::unique_ptr<ShaderResourceView>;
 
-    class UnorderedAccessView : private NonCopyableBase
+	struct UnorderedAccessView : NonCopyable
     {
     };
 
     using UAVHandle = std::unique_ptr<UnorderedAccessView>;
 
-    class SamplerState : private NonCopyableBase
+    struct SamplerState : NonCopyable
     {
     };
 
@@ -53,9 +53,8 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Buffers
     //////////////////////////////////////////////////////////////////////////
-    class BufferObject : private NonCopyableBase
+    struct BufferObject : NonCopyable
     {
-    public:
         // This will only be filled when copied from another buffer (they are mapped)
         // Add support for initial data later
         virtual const std::vector<uint32_t>& GetData() const = 0;
@@ -63,7 +62,6 @@ namespace ninniku
         virtual const ShaderResourceView* GetSRV() const = 0;
         virtual const UnorderedAccessView* GetUAV() const = 0;
 
-    public:
         // Initial desc that was used to create the resource
         std::shared_ptr<const BufferParam> desc;
     };
@@ -74,7 +72,7 @@ namespace ninniku
     // Debug
     //////////////////////////////////////////////////////////////////////////
 
-    class NINNIKU_API DebugMarker : private NonCopyableBase
+    struct NINNIKU_API DebugMarker : NonCopyable
     {
     };
 
@@ -84,9 +82,8 @@ namespace ninniku
     // Commands
     //////////////////////////////////////////////////////////////////////////
 
-    class Command : private NonCopyableBase
+    struct Command : NonCopyable
     {
-    public:
         std::string shader;
         std::string cbufferStr;
         std::array<uint32_t, 3> dispatch;
@@ -97,19 +94,26 @@ namespace ninniku
 
     using CommandHandle = std::unique_ptr<Command>;
 
+	//////////////////////////////////////////////////////////////////////////
+	// Root Signature
+	//////////////////////////////////////////////////////////////////////////
+	struct RootSignature : NonCopyable
+	{
+	};
+
+	using RootSignatureHandle = std::unique_ptr<const RootSignature>;
+
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
-    class TextureObject : private NonCopyableBase
+    struct TextureObject : NonCopyable
     {
-    public:
         virtual const ShaderResourceView* GetSRVDefault() const = 0;
         virtual const ShaderResourceView* GetSRVCube() const = 0;
         virtual const ShaderResourceView* GetSRVCubeArray() const = 0;
         virtual const ShaderResourceView* GetSRVArray(uint32_t index) const = 0;
         virtual const UnorderedAccessView* GetUAV(uint32_t index) const = 0;
 
-    public:
         // Initial desc that was used to create the resource
         std::shared_ptr<const TextureParam> desc;
     };
@@ -120,9 +124,8 @@ namespace ninniku
     // GPU to CPU readback
     //////////////////////////////////////////////////////////////////////////
 
-    class MappedResource : private NonCopyableBase
+    struct MappedResource : NonCopyable
     {
-    public:
         virtual void* GetData() const = 0;
         virtual uint32_t GetRowPitch() const = 0;
     };

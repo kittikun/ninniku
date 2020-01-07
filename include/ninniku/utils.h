@@ -22,8 +22,22 @@
 
 #include "export.h"
 
+#include <stdint.h>
+
 namespace ninniku
 {
+	struct NINNIKU_API NonCopyable
+	{
+		// no copy of any kind allowed
+		NonCopyable(const NonCopyable&) = delete;
+		NonCopyable& operator=(NonCopyable&) = delete;
+		NonCopyable(NonCopyable&&) = delete;
+		NonCopyable& operator=(NonCopyable&&) = delete;
+
+		NonCopyable() = default;
+		virtual ~NonCopyable() = default;
+	};
+
     class NINNIKU_API NonCopyableBase
     {
         // no copy of any kind allowed

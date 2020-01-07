@@ -21,6 +21,7 @@
 #pragma once
 
 #include "export.h"
+#include "utils.h"
 
 #include <cstdint>
 #include <memory>
@@ -30,22 +31,14 @@ namespace ninniku
 {
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
-    class BufferObject;
-    class TextureObject;
+    struct BufferObject;
+	struct TextureObject;
 
     //////////////////////////////////////////////////////////////////////////
     // Buffers Params
     //////////////////////////////////////////////////////////////////////////
-    struct BufferParam
+    struct BufferParam : NonCopyable
     {
-        // no copy of any kind allowed, use Duplicate for that
-        BufferParam(const BufferParam&) = delete;
-        BufferParam& operator=(BufferParam&) = delete;
-        BufferParam(BufferParam&&) = delete;
-        BufferParam& operator=(BufferParam&&) = delete;
-    public:
-        BufferParam() = default;
-
         uint32_t numElements;
         uint32_t elementSize;        // If != 0, this will create a StructuredBuffer, otherwise a ByteAddressBuffer will be created
         uint8_t viewflags;
@@ -67,26 +60,14 @@ namespace ninniku
         RV_CPU_READ = 1 << 2
     };
 
-    struct CopyBufferSubresourceParam
+    struct CopyBufferSubresourceParam : NonCopyable
     {
-        // no copy of any kind allowed
-        CopyBufferSubresourceParam(const CopyBufferSubresourceParam&) = delete;
-        CopyBufferSubresourceParam& operator=(CopyBufferSubresourceParam&) = delete;
-        CopyBufferSubresourceParam(CopyBufferSubresourceParam&&) = delete;
-        CopyBufferSubresourceParam& operator=(CopyBufferSubresourceParam&&) = delete;
-
         const BufferObject* src;
         const BufferObject* dst;
     };
 
-    struct CopyTextureSubresourceParam
+    struct CopyTextureSubresourceParam : NonCopyable
     {
-        // no copy of any kind allowed
-        CopyTextureSubresourceParam(const CopyTextureSubresourceParam&) = delete;
-        CopyTextureSubresourceParam& operator=(CopyTextureSubresourceParam&) = delete;
-        CopyTextureSubresourceParam(CopyTextureSubresourceParam&&) = delete;
-        CopyTextureSubresourceParam& operator=(CopyTextureSubresourceParam&&) = delete;
-
         const TextureObject* src;
         uint32_t srcFace;
         uint32_t srcMip;
@@ -116,6 +97,10 @@ namespace ninniku
         SS_Count
     };
 
+	//////////////////////////////////////////////////////////////////////////
+	// Root Signature
+	//////////////////////////////////////////////////////////////////////////
+
     //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
@@ -134,20 +119,11 @@ namespace ninniku
         TF_R32G32B32A32_FLOAT
     };
 
-    class TextureParam
+    struct TextureParam : NonCopyable
     {
-        // no copy of any kind allowed, use Duplicate for that
-        TextureParam(const TextureParam&) = delete;
-        TextureParam& operator=(TextureParam&) = delete;
-        TextureParam(TextureParam&&) = delete;
-        TextureParam& operator=(TextureParam&&) = delete;
-    public:
-        TextureParam() = default;
-
         static NINNIKU_API std::shared_ptr<TextureParam> Create();
         NINNIKU_API std::shared_ptr<TextureParam> Duplicate() const;
 
-    public:
         uint32_t numMips;
         uint32_t arraySize;
         uint32_t width;

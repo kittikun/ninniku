@@ -44,19 +44,19 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11 Shader Resources
     //////////////////////////////////////////////////////////////////////////
-    class DX11ShaderResourceView final : public ShaderResourceView
+    struct DX11ShaderResourceView final : public ShaderResourceView
     {
     public:
         DX11SRV _resource;
     };
 
-    class DX11UnorderedAccessView final : public UnorderedAccessView
+    struct DX11UnorderedAccessView final : public UnorderedAccessView
     {
     public:
         DX11UAV _resource;
     };
 
-    class DX11SamplerState final : public SamplerState
+    struct DX11SamplerState final : public SamplerState
     {
     public:
         DX11SS _resource;
@@ -65,7 +65,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11BufferObject
     //////////////////////////////////////////////////////////////////////////
-    class DX11BufferObject final : public BufferObject
+	struct DX11BufferObject final : public BufferObject
     {
     public:
         DX11BufferObject() = default;
@@ -90,7 +90,7 @@ namespace ninniku
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
 
-    class DX11DebugMarker final : public DebugMarker
+	struct DX11DebugMarker final : public DebugMarker
     {
     public:
         DX11DebugMarker(const DX11Marker& marker, const std::string& name);
@@ -119,7 +119,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11TextureObject
     //////////////////////////////////////////////////////////////////////////
-    class DX11TextureObject final : public TextureObject
+	struct DX11TextureObject final : public TextureObject
     {
     public:
         DX11TextureObject() = default;
@@ -157,7 +157,7 @@ namespace ninniku
     // GPU to CPU readback
     //////////////////////////////////////////////////////////////////////////
 
-    class DX11MappedResource final : public MappedResource
+	struct DX11MappedResource final : public MappedResource
     {
     public:
         DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);
