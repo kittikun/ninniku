@@ -233,11 +233,13 @@
 
 #define E_ABORT (HRESULT)0x80004004
 #define E_ACCESSDENIED (HRESULT)0x80070005
+#define E_BOUNDS  (HRESULT)0x8000000B
 #define E_FAIL (HRESULT)0x80004005
 #define E_HANDLE (HRESULT)0x80070006
 #define E_INVALIDARG (HRESULT)0x80070057
 #define E_NOINTERFACE (HRESULT)0x80004002
 #define E_NOTIMPL (HRESULT)0x80004001
+#define E_NOT_VALID_STATE (HRESULT)0x8007139F
 #define E_OUTOFMEMORY (HRESULT)0x8007000E
 #define E_POINTER (HRESULT)0x80004003
 #define E_UNEXPECTED (HRESULT)0x8000FFFF
@@ -268,6 +270,7 @@
 #define _In_count_(size)
 #define _In_range_(lb, ub)
 #define _In_bytecount_(size)
+#define _In_opt_bytecount_(size)
 #define _In_NLS_string_(size)
 #define __in_bcount(size)
 
@@ -333,6 +336,7 @@
 #define _COM_Outptr_
 #define _COM_Outptr_opt_
 #define _COM_Outptr_result_maybenull_
+#define _COM_Outptr_opt_result_maybenull_
 
 #define _Null_
 #define _Notnull_
@@ -588,6 +592,7 @@ template <typename T> inline void **IID_PPV_ARGS_Helper(T **pp) {
 //===--------------------- COM Interfaces ---------------------------------===//
 
 struct __declspec(uuid("00000000-0000-0000-C000-000000000046")) IUnknown {
+  IUnknown() : m_count(0) {};
   virtual HRESULT QueryInterface(REFIID riid, void **ppvObject) = 0;
   virtual ULONG AddRef();
   virtual ULONG Release();

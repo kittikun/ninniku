@@ -39,7 +39,6 @@ namespace ninniku {
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override;
         DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
-		RootSignatureHandle CreateRootSignature() const override { return std::make_unique<RootSignature>(); }
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) const override;
         bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;
@@ -52,12 +51,18 @@ namespace ninniku {
 
     private:
         bool CreateDevice(int adapter);
-        bool LoadShader(const std::string& name, IDxcBlobEncoding* pBlob, const std::string& path);
+        bool LoadShader(const std::string& name, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::string& shaderPath);
-        std::unordered_map<std::string, uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
+
+        bool ParseRootSignature(const std::string& name, IDxcBlobEncoding* pBlob);
+        bool ParseShaderResources(const std::string& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
         DX12Device _device;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
+        std::unordered_map<std::string, DX12RootSignature> _rootSignatures;
+
+        using MapNameSlot = std::unordered_map<std::string, uint32_t>;
+        std::unordered_map<std::string, MapNameSlot> _resourceBindings;
     };
 } // namespace ninniku

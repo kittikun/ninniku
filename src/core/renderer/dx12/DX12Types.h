@@ -24,18 +24,7 @@
 
 #include <d3d12.h>
 
-namespace ninniku
-{
+namespace ninniku {
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
-    using DX12RS = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
-
-	//////////////////////////////////////////////////////////////////////////
-	// DX12 Root Signature
-	//////////////////////////////////////////////////////////////////////////
-	struct DX12RootSignature final : public RootSignature
-	{
-	public:
-		DX12RS _signature;
-	};
-
+    using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
 } // namespace ninniku

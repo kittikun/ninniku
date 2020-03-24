@@ -217,6 +217,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -DHLSL %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Outputs>
+      <SetRootSignature Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">RS</SetRootSignature>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -27,11 +27,14 @@ class LLVMContext;
 class DiagnosticInfo;
 class Value;
 class Instruction;
+class CallInst;
 class BasicBlock;
 class raw_ostream;
 class ModulePass;
 class PassRegistry;
+class DebugInfoFinder;
 class DebugLoc;
+class DIGlobalVariable;
 
 ModulePass *createDxilLoadMetadataPass();
 void initializeDxilLoadMetadataPass(llvm::PassRegistry&);
@@ -40,12 +43,14 @@ void initializeDxilLoadMetadataPass(llvm::PassRegistry&);
 namespace hlsl {
 
 class DxilFieldAnnotation;
+class DxilModule;
 class DxilTypeSystem;
+class OP;
 
 namespace dxilutil {
   extern const char ManglingPrefix[];
   extern const char EntryPrefix[];
-  extern const llvm::StringRef kResourceMapErrorMsg;
+  extern const char *kResourceMapErrorMsg;
 
   unsigned
   GetLegacyCBufferFieldElementSize(DxilFieldAnnotation &fieldAnnotation,
@@ -67,7 +72,17 @@ namespace dxilutil {
   bool IsSharedMemoryGlobal(llvm::GlobalVariable *GV);
   bool RemoveUnusedFunctions(llvm::Module &M, llvm::Function *EntryFunc,
                              llvm::Function *PatchConstantFunc, bool IsLib);
-  void EmitErrorOnInstruction(llvm::Instruction *I, llvm::StringRef Msg);
+
+  llvm::DIGlobalVariable *FindGlobalVariableDebugInfo(llvm::GlobalVariable *GV,
+                                                llvm::DebugInfoFinder &DbgInfoFinder);
+
+  void EmitErrorOnInstruction(llvm::Instruction *I, llvm::Twine Msg);
+  void EmitWarningOnInstruction(llvm::Instruction *I, llvm::Twine Msg);
+  void EmitErrorOnFunction(llvm::Function *F, llvm::Twine Msg);
+  void EmitWarningOnFunction(llvm::Function *F, llvm::Twine Msg);
+  void EmitErrorOnGlobalVariable(llvm::GlobalVariable *GV, llvm::Twine Msg);
+  void EmitWarningOnGlobalVariable(llvm::GlobalVariable *GV, llvm::Twine Msg);
+
   void EmitResMappingError(llvm::Instruction *Res);
   std::string FormatMessageAtLocation(const llvm::DebugLoc &DL, const llvm::Twine& Msg);
   llvm::Twine FormatMessageWithoutLocation(const llvm::Twine& Msg);
@@ -110,10 +125,23 @@ namespace dxilutil {
   bool IsHLSLResourceType(llvm::Type *Ty);
   bool IsHLSLObjectType(llvm::Type *Ty);
   bool IsHLSLRayQueryType(llvm::Type *Ty);
+  bool IsHLSLResourceDescType(llvm::Type *Ty);
+  bool IsResourceSingleComponent(llvm::Type *Ty);
   bool IsSplat(llvm::ConstantDataVector *cdv);
 
   llvm::Type* StripArrayTypes(llvm::Type *Ty, llvm::SmallVectorImpl<unsigned> *OuterToInnerLengths = nullptr);
   llvm::Type* WrapInArrayTypes(llvm::Type *Ty, llvm::ArrayRef<unsigned> OuterToInnerLengths);
+
+  llvm::CallInst *TranslateCallRawBufferLoadToBufferLoad(
+    llvm::CallInst *CI, llvm::Function *newFunction, hlsl::OP *op);
+  void ReplaceRawBufferLoadWithBufferLoad(llvm::Function *F, hlsl::OP *op);
+
+  llvm::CallInst *TranslateCallRawBufferStoreToBufferStore(
+    llvm::CallInst *CI, llvm::Function *newFunction, hlsl::OP *op);
+  void ReplaceRawBufferStoreWithBufferStore(llvm::Function *F, hlsl::OP *op);
+
+  void ReplaceRawBufferLoad64Bit(llvm::Function *F, llvm::Type *EltTy, hlsl::OP *hlslOP);
+  void ReplaceRawBufferStore64Bit(llvm::Function *F, llvm::Type *ETy, hlsl::OP *hlslOP);
 }
 
 }

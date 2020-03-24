@@ -31,10 +31,9 @@
 #include <renderdoc/renderdoc_app.h>
 #endif
 
-namespace ninniku
-{
+namespace ninniku {
 #if defined(_USE_RENDERDOC)
-    RENDERDOC_API_1_1_2* gRenderDocApi = nullptr;
+    RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
 #endif
 
     void RenderDeviceDeleter::operator()(RenderDevice* value)
@@ -61,7 +60,7 @@ namespace ninniku
             return;
         } else {
             pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(hInst, "RENDERDOC_GetAPI");
-            int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&gRenderDocApi);
+            int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_1, (void**)&gRenderDocApi);
 
             if (ret != 1) {
                 LOGE << "Failed to get function pointer to RenderDoc API";
@@ -87,15 +86,13 @@ namespace ninniku
 
         switch (renderer) {
             case ERenderer::RENDERER_DX11:
-            case ERenderer::RENDERER_WARP_DX11:
-            {
+            case ERenderer::RENDERER_WARP_DX11: {
                 sRenderer.reset(new DX11());
             }
             break;
 
             case ERenderer::RENDERER_DX12:
-            case ERenderer::RENDERER_WARP_DX12:
-            {
+            case ERenderer::RENDERER_WARP_DX12: {
                 sRenderer.reset(new DX12());
             }
             break;

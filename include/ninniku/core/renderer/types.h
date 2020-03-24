@@ -27,18 +27,17 @@
 #include <memory>
 #include <unordered_map>
 
-namespace ninniku
-{
+namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // Shader Resources
     //////////////////////////////////////////////////////////////////////////
-	struct ShaderResourceView : NonCopyable
+    struct ShaderResourceView : NonCopyable
     {
     };
 
     using SRVHandle = std::unique_ptr<ShaderResourceView>;
 
-	struct UnorderedAccessView : NonCopyable
+    struct UnorderedAccessView : NonCopyable
     {
     };
 
@@ -93,15 +92,6 @@ namespace ninniku
     };
 
     using CommandHandle = std::unique_ptr<Command>;
-
-	//////////////////////////////////////////////////////////////////////////
-	// Root Signature
-	//////////////////////////////////////////////////////////////////////////
-	struct RootSignature : NonCopyable
-	{
-	};
-
-	using RootSignatureHandle = std::unique_ptr<const RootSignature>;
 
     //////////////////////////////////////////////////////////////////////////
     // Textures

@@ -24,8 +24,7 @@
 #include "../../types.h"
 #include "types.h"
 
-namespace ninniku
-{
+namespace ninniku {
     class RenderDevice : NonCopyableBase
     {
         // no copy of any kind allowed
@@ -45,8 +44,7 @@ namespace ninniku
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
         virtual CommandHandle CreateCommand() const = 0;
         virtual DebugMarkerHandle CreateDebugMarker(const std::string& name) const = 0;
-		virtual RootSignatureHandle CreateRootSignature() const = 0;
-		virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
+        virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
         virtual bool Dispatch(const CommandHandle& cmd) const = 0;
         virtual bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) = 0;
         virtual bool LoadShader(const std::string& name, const void* pData, const size_t size) = 0;

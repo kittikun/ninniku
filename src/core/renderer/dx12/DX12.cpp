@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -22,6 +22,7 @@
 #include "DX12.h"
 
 #pragma comment(lib, "dxcompiler.lib")
+#pragma comment(lib, "d3d12.lib")
 
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
@@ -82,14 +83,22 @@ namespace ninniku {
                 return false;
         }
 
-        Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+        Microsoft::WRL::ComPtr<ID3D12Debug> debugInterface;
 
         // if an exception if thrown here, you might need to install the graphics tools
         // https://msdn.microsoft.com/en-us/library/mt125501.aspx
-        if (SUCCEEDED(s_DynamicD3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
-            debugController->EnableDebugLayer();
+        if (SUCCEEDED(s_DynamicD3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)))) {
+            debugInterface->EnableDebugLayer();
+
+            Microsoft::WRL::ComPtr<ID3D12Debug1> debugInterface1;
+            if (SUCCEEDED(debugInterface->QueryInterface(IID_PPV_ARGS(&debugInterface1)))) {
+                debugInterface1->SetEnableGPUBasedValidation(true);
+            } else {
+                LOGE << "CreateDevice failed to get ID3D12Debug1";
+                return false;
+            }
         } else {
-            LOGE << "CreateDevice failed to get the debug controller";
+            LOGE << "CreateDevice failed to get ID3D12Debug";
             return false;
         }
 #endif
@@ -191,7 +200,7 @@ namespace ninniku {
         throw std::exception("not implemented");
     }
 
-    bool DX12::LoadShader(const std::string& name, IDxcBlobEncoding* pBlob, const std::string& path)
+    bool DX12::LoadShader(const std::string& name, IDxcBlobEncoding* pBlob)
     {
         Microsoft::WRL::ComPtr<IDxcContainerReflection> pContainerReflection;
 
@@ -237,8 +246,9 @@ namespace ninniku {
             }
 
             if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_DXIL)) {
-                IDxcBlob* pBlob;
-                hr = pContainerReflection->GetPartContent(i, &pBlob);
+#if _DEBUG
+                IDxcBlob* pShaderBlob;
+                hr = pContainerReflection->GetPartContent(i, &pShaderBlob);
 
                 if (FAILED(hr)) {
                     LOGE << "IDxcContainerReflection::GetPartContent failed with:";
@@ -247,17 +257,14 @@ namespace ninniku {
                     return false;
                 }
 
-                auto pHeader = reinterpret_cast<const hlsl::DxilProgramHeader*>(pBlob->GetBufferPointer());
+                auto pHeader = reinterpret_cast<const hlsl::DxilProgramHeader*>(pShaderBlob->GetBufferPointer());
 
-#if _DEBUG
                 // we can probably afford to only run this in debug
-                if (!IsValidDxilProgramHeader(pHeader, static_cast<uint32_t>(pBlob->GetBufferSize()))) {
+                if (!IsValidDxilProgramHeader(pHeader, static_cast<uint32_t>(pShaderBlob->GetBufferSize()))) {
                     LOGE << "DXIL program header is invalid";
                     return false;
                 }
 #endif
-
-                auto shaderKind = hlsl::GetVersionShaderType(pHeader->ProgramVersion);
 
                 Microsoft::WRL::ComPtr<ID3D12ShaderReflection> pShaderReflection;
 
@@ -280,7 +287,23 @@ namespace ninniku {
                     return false;
                 }
 
-                ParseShaderResources(pShaderDesc.BoundResources, pShaderReflection.Get());
+                if (!ParseShaderResources(name, pShaderDesc.BoundResources, pShaderReflection.Get()))
+                    return false;
+            } else if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_RootSignature)) {
+#if _DEBUG
+                // not really necessary but as an extra precaution
+                Microsoft::WRL::ComPtr<IDxcBlob> pRSBlob;
+                hr = pContainerReflection->GetPartContent(i, &pRSBlob);
+
+                if (FAILED(hr)) {
+                    LOGE << "IDxcContainerReflection::GetPartContent failed with:";
+                    _com_error err(hr);
+                    LOGE << err.ErrorMessage();
+                    return false;
+                }
+#endif
+                if (!ParseRootSignature(name, pBlob))
+                    return false;
             }
         }
 
@@ -346,7 +369,7 @@ namespace ninniku {
 
                 auto name = iter.path().stem().string();
 
-                if (!LoadShader(name, pBlob.Get(), path))
+                if (!LoadShader(name, pBlob.Get()))
                     return false;
             }
         }
@@ -364,11 +387,35 @@ namespace ninniku {
         throw std::exception("not implemented");
     }
 
-    std::unordered_map<std::string, uint32_t> DX12::ParseShaderResources(uint32_t numBoundResources, ID3D12ShaderReflection* pReflection)
+    bool DX12::ParseRootSignature(const std::string& name, IDxcBlobEncoding* pBlob)
     {
-        std::unordered_map<std::string, uint32_t> res;
+        DX12RootSignature rootSignature;
 
+        auto hr = _device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+
+        if (FAILED(hr)) {
+            LOGE << "Failed to CreateRootSignature from blob with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
+
+        LOGD << "Found a root signature";
+
+        _rootSignatures.insert(std::make_pair(name, rootSignature));
+
+        return true;
+    }
+
+    bool DX12::ParseShaderResources(const std::string& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection)
+    {
         // parse parameter bind slots
+        auto fmt = boost::format("Found %1% resources") % numBoundResources;
+
+        LOGD_INDENT_START << boost::str(fmt);
+
+        std::unordered_map<std::string, uint32_t> bindings;
+
         for (uint32_t i = 0; i < numBoundResources; ++i) {
             D3D12_SHADER_INPUT_BIND_DESC bindDesc;
 
@@ -378,7 +425,7 @@ namespace ninniku {
                 LOGE << "Failed to ID3D12ShaderReflection::GetResourceBindingDesc with:";
                 _com_error err(hr);
                 LOGE << err.ErrorMessage();
-                return res;
+                return false;
             }
 
             std::string restypeStr;
@@ -416,10 +463,14 @@ namespace ninniku {
 
             LOGD << boost::str(fmt);
 
-            res.insert(std::make_pair(bindDesc.Name, bindDesc.BindPoint));
+            bindings.insert(std::make_pair(bindDesc.Name, bindDesc.BindPoint));
         }
 
-        return res;
+        _resourceBindings.insert(std::make_pair(name, bindings));
+
+        LOGD_INDENT_END;
+
+        return true;
     }
 
     bool DX12::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)

@@ -12,6 +12,7 @@
 #pragma once
 
 #include "dxc/DXIL/DxilConstants.h"
+#include "llvm/ADT/ArrayRef.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -21,6 +22,7 @@ class LLVMContext;
 class Module;
 class Function;
 class Instruction;
+class DbgDeclareInst;
 class Value;
 class MDOperand;
 class Metadata;
@@ -53,6 +55,14 @@ class RootSignatureHandle;
 struct DxilFunctionProps;
 class DxilSubobjects;
 class DxilSubobject;
+
+// Additional debug information for SROA'ed array variables,
+// where adjacent elements in DXIL might not have been adjacent
+// in the original user variable.
+struct DxilDIArrayDim {
+  unsigned StrideInBits;
+  unsigned NumElements;
+};
 
 /// Use this class to manipulate DXIL-spcific metadata.
 // In our code, only DxilModule and HLModule should use this class.
@@ -217,6 +227,12 @@ public:
   // NonUniform attribute.
   static const char kDxilNonUniformAttributeMDName[];
 
+  // Variable debug layout metadata.
+  static const char kDxilVariableDebugLayoutMDName[];
+
+  // Indication of temporary storage metadata.
+  static const char kDxilTempAllocaMDName[];
+
   // Validator version.
   static const char kDxilValidatorVersionMDName[];
   // Validator version uses the same constants for fields as kDxilVersion*
@@ -299,6 +315,7 @@ public:
   public:
     unsigned m_ValMajor, m_ValMinor;        // Reported validation version in DXIL
     unsigned m_MinValMajor, m_MinValMinor;  // Minimum validation version dictated by shader model
+    bool m_bExtraMetadata;
   };
 
 public:
@@ -411,6 +428,9 @@ public:
   llvm::Metadata *EmitSubobject(const DxilSubobject &obj);
   void LoadSubobject(const llvm::MDNode &MDO, DxilSubobjects &Subobjects);
 
+  // Extra metadata present
+  bool HasExtraMetadata() { return m_bExtraMetadata; }
+
   // Shader specific.
 private:
   llvm::MDTuple *EmitDxilGSState(DXIL::InputPrimitive Primitive, unsigned MaxVertexCount, 
@@ -484,6 +504,11 @@ public:
   static void MarkPrecise(llvm::Instruction *inst);
   static bool IsMarkedNonUniform(const llvm::Instruction *inst);
   static void MarkNonUniform(llvm::Instruction *inst);
+  static bool GetVariableDebugLayout(llvm::DbgDeclareInst *inst,
+    unsigned &StartOffsetInBits, std::vector<DxilDIArrayDim> &ArrayDims);
+  static void SetVariableDebugLayout(llvm::DbgDeclareInst *inst,
+    unsigned StartOffsetInBits, const std::vector<DxilDIArrayDim> &ArrayDims);
+  static void CopyMetadata(llvm::Instruction &I, llvm::Instruction &SrcInst, llvm::ArrayRef<unsigned>WL = llvm::ArrayRef<unsigned>());
 
 private:
   llvm::LLVMContext &m_Ctx;
@@ -492,6 +517,10 @@ private:
   std::unique_ptr<ExtraPropertyHelper> m_ExtraPropertyHelper;
   unsigned m_ValMajor, m_ValMinor;        // Reported validation version in DXIL
   unsigned m_MinValMajor, m_MinValMinor;  // Minimum validation version dictated by shader model
+
+  // Non-fatal if extra metadata is found, but will fail validation.
+  // This is how metadata can be exteneded.
+  bool m_bExtraMetadata;
 };
 
 

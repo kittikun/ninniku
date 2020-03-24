@@ -157,11 +157,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ninniku.vcxproj">
-      <Project>{ad7ce19b-0383-4590-8ced-f0ea6ebdc8af}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="src\check.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\fixture.h" />
@@ -240,6 +235,11 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
       <FileType>Document</FileType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ninniku.vcxproj">
+      <Project>{ad7ce19b-0383-4590-8ced-f0ea6ebdc8af}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
