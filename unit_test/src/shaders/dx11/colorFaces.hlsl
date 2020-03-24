@@ -18,18 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "cbuffers.h"
+#include "../cbuffers.h"
 #include "color20.hlsl"
 
 RWTexture2DArray<float4> dstTex;
 
-[numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
+[numthreads(COLORFACES_NUMTHREAD_X, COLORFACES_NUMTHREAD_Y, COLORFACES_NUMTHREAD_Z)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
-    uint w, h, elems;
-
-    dstTex.GetDimensions(w, h, elems);
-
-    if (all(DTI.xy < uint2(w, h)))
-        dstTex[DTI] = float4(color20[targetMip], 1);
+    // we can skip bound checks because we use a fixed size of 512
+    // If you use a numthread that is not a power of 2, you might want to add one
+    dstTex[DTI] = float4(color20[DTI.z], 1);
 }

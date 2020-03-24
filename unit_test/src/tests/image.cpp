@@ -338,7 +338,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, Fixtures, T)
 #ifdef _DEBUG
     CheckFileMD5(filename, 0x397286da7060fabd, 0xb36a91e9ee1c3620);
 #else
-    CheckFileMD5(filename, 0x7131b97822cbd2e5, 0x9b68b7bc18d5a9fe);
+    CheckFileMD5(filename, 0x9935add6cf01cfb2, 0xf1cd1f43812c2962);
 #endif
 }
 
@@ -386,8 +386,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, Fixtures, T)
 #ifdef _DEBUG
     CheckFileMD5(filename, 0x8338717097b81c8f, 0x96d43528fdcca03a);
 #else
-
-    CheckFileMD5(filename, 0x1d2f7456159cd181, 0xc1b06bff0beb41ef);
+    CheckFileMD5(filename, 0x8338717097b81c8f, 0x96d43528fdcca03a);
 #endif
 }
 
@@ -435,7 +434,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, Fixtures, T)
 #ifdef _DEBUG
     CheckFileMD5(filename, 0x41be141dec6447ee, 0xb881f3768608f0e1);
 #else
-    CheckFileMD5(filename, 0xde0f2a29efd9bbe6, 0xbad3cdbbde9f3e22);
+    CheckFileMD5(filename, 0xfea9a5d1d0b1ec98, 0xcaf351a85cecc7cc);
 #endif
 }
 

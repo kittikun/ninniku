@@ -94,7 +94,10 @@
       <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <FxCompile>
-      <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput>$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>5.0</ShaderModel>
+      <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
     <Link>
       <SubSystem>
@@ -142,7 +145,10 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <FxCompile>
-      <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput>$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ShaderType>Compute</ShaderType>
+      <ShaderModel>5.0</ShaderModel>
+      <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -160,86 +166,48 @@
     <ClInclude Include="src\check.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\fixture.h" />
-    <ClInclude Include="src\shaders\cbuffers.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\shaders\color20.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <FileType>Document</FileType>
-    </None>
-    <FxCompile Include="src\shaders\colorFaces.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-    </FxCompile>
-    <FxCompile Include="src\shaders\colorMips.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-    </FxCompile>
-    <FxCompile Include="src\shaders\dirToFaces.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-    </FxCompile>
-    <FxCompile Include="src\shaders\downsample.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-    </FxCompile>
-    <FxCompile Include="src\shaders\fillBuffer.hlsl">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-    </FxCompile>
-    <FxCompile Include="src\shaders\packNormals.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-    </FxCompile>
-    <FxCompile Include="src\shaders\resize.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-    </FxCompile>
-    <None Include="src\shaders\utility.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <FileType>Document</FileType>
-    </None>
+    <None Include="src\shaders\cbuffers.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ninniku.vcxproj">
       <Project>{ad7ce19b-0383-4590-8ced-f0ea6ebdc8af}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shaders\dx11\color20.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <FxCompile Include="src\shaders\dx11\colorFaces.hlsl">
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\colorMips.hlsl">
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\dirToFaces.hlsl">
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\downsample.hlsl">
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\fillBuffer.hlsl">
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\packNormals.hlsl">
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\resize.hlsl">
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <None Include="src\shaders\dx11\utility.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -11,6 +11,9 @@
     <Filter Include="Source Files\shaders">
       <UniqueIdentifier>{95317c23-655c-4d54-9b9e-937332ceb1fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\shaders\dx11">
+      <UniqueIdentifier>{77e38d00-6c2c-4bd9-be68-ac63d982a312}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\fixture.cpp">
@@ -34,12 +37,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="src\shaders\color20.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="src\shaders\utility.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\check.h">
@@ -56,26 +53,32 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\shaders\colorFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\color20.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\colorMips.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\colorFaces.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\dirToFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\colorMips.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\downsample.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\dirToFaces.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\resize.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\downsample.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\packNormals.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\fillBuffer.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\fillBuffer.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\packNormals.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\resize.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\utility.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

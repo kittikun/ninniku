@@ -15,9 +15,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="common.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="shaders\fillBuffer.hlsl" />
   </ItemGroup>
 </Project>

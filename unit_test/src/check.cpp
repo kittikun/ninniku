@@ -20,6 +20,8 @@
 
 #include "check.h"
 
+#pragma comment(lib, "libcrypto.lib")
+
 #include <boost/test/unit_test.hpp>
 #include <openssl/md5.h>
 #include <array>

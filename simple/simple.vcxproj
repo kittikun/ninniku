@@ -116,6 +116,12 @@
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+    <CustomBuild>
+      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Outputs>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -153,6 +159,12 @@
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+    <CustomBuild>
+      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -Od -Zi -Qembed_debug -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>$(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Outputs>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -186,38 +198,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="common.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="shaders\fillBuffer.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.3</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.3</ShaderModel>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HLSL</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HLSL</PreprocessorDefinitions>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -Od -Zi -Qembed_debug -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -DHLSL %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Outputs>
-      <SetRootSignature Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">RS</SetRootSignature>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -Od -Zi -Qembed_debug -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

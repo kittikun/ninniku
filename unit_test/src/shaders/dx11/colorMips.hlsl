@@ -18,25 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "cbuffers.h"
-#include "utility.hlsl"
+#include "../cbuffers.h"
+#include "color20.hlsl"
 
-TextureCube srcTex;
 RWTexture2DArray<float4> dstTex;
-SamplerState ssPoint;
 
-[numthreads(DIRTOFACE_NUMTHREAD_X, DIRTOFACE_NUMTHREAD_Y, DIRTOFACE_NUMTHREAD_Z)]
-void main(int3 DTI : SV_DispatchThreadID)
+[numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
+void main(uint3 DTI : SV_DispatchThreadID)
 {
-    float w, dummy1, dummy2;
+    uint w, h, elems;
 
-    dstTex.GetDimensions(w, dummy1, dummy2);
+    dstTex.GetDimensions(w, h, elems);
 
-    float2 uv = (float2(DTI.xy) + (float2)0.5f) * rcp(w);
-    float3 dir = uvToVec(float3(uv, DTI.z));
-
-    float3 uv3 = vecToUv(dir);
-    uint3 pos = uint3(uv3.xy * w, uv3.z);
-
-    dstTex[pos] = srcTex.SampleLevel(ssPoint, dir.xyz, 0);
+    if (all(DTI.xy < uint2(w, h)))
+        dstTex[DTI] = float4(color20[targetMip], 1);
 }

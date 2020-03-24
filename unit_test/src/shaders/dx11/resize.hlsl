@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "cbuffers.h"
+#include "../cbuffers.h"
 
 Texture2DArray<float4> srcTex;
 RWTexture2DArray<float4> dstTex;

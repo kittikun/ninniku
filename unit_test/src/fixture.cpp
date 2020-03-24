@@ -25,7 +25,11 @@
 SetupFixtureDX11::SetupFixtureDX11()
 {
     // because unit test run on CI, always use WARP
-    std::vector<std::string> shaderPaths = { "shaders" };
+#if _DEBUG
+    std::vector<std::string> shaderPaths = { "bin\\Debug\\dx11" };
+#else
+    std::vector<std::string> shaderPaths = { "bin\\Release\\dx11" };
+#endif
 
     ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
 }
@@ -38,8 +42,11 @@ SetupFixtureDX11::~SetupFixtureDX11()
 SetupFixtureDX12::SetupFixtureDX12()
 {
     // because unit test run on CI, always use WARP
-    std::vector<std::string> shaderPaths = { "shaders" };
-
+#if _DEBUG
+    std::vector<std::string> shaderPaths = { "bin\\Debug\\dx12" };
+#else
+    std::vector<std::string> shaderPaths = { "bin\\Release\\dx12" };
+#endif
     ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
 }
 
