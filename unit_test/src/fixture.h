@@ -34,4 +34,5 @@ struct SetupFixtureDX12
     ~SetupFixtureDX12();
 };
 
-typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> Fixtures;
+//typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> Fixtures;
+typedef boost::mpl::vector<SetupFixtureDX11> Fixtures;
