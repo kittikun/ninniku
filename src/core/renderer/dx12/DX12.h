@@ -27,7 +27,8 @@
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
 
-namespace ninniku {
+namespace ninniku
+{
     class DX12 final : public RenderDevice
     {
     public:
@@ -51,18 +52,23 @@ namespace ninniku {
 
     private:
         bool CreateDevice(int adapter);
+        bool InitializeHeaps();
         bool LoadShader(const std::string& name, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::string& shaderPath);
-
         bool ParseRootSignature(const std::string& name, IDxcBlobEncoding* pBlob);
         bool ParseShaderResources(const std::string& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
+        static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 8;
         DX12Device _device;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
         std::unordered_map<std::string, DX12RootSignature> _rootSignatures;
 
         using MapNameSlot = std::unordered_map<std::string, uint32_t>;
         std::unordered_map<std::string, MapNameSlot> _resourceBindings;
+
+        DX12DescriptorHeap _srvUAVHeap;
+        uint32_t _srvUAVIndex;
+        uint32_t _srvUAVDescriptorSize;
     };
 } // namespace ninniku

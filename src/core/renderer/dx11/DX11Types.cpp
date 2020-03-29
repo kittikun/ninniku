@@ -23,7 +23,8 @@
 
 #include "../../../utils/misc.h"
 
-namespace ninniku {
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
@@ -64,7 +65,7 @@ namespace ninniku {
     // DX11MappedResource
     //////////////////////////////////////////////////////////////////////////
     DX11MappedResource::DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
-        : _bufferObj{ Empty_BufferHandle }
+        : _bufferObj{ Empty_BufferHandleDX11 }
         , _context{ context }
         , _texObj{ texObj }
         , _index{ index }

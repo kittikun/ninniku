@@ -33,8 +33,10 @@
 #include <dxgi1_4.h>
 #include <dxc/dxcapi.h>
 #include <dxc/DxilContainer/DxilContainer.h>
+#include <dxc/Support/d3dx12.h>
 
-namespace ninniku {
+namespace ninniku
+{
     void DX12::CopyBufferResource(const CopyBufferSubresourceParam& params) const
     {
         throw std::exception("not implemented");
@@ -47,7 +49,58 @@ namespace ninniku {
 
     BufferHandle DX12::CreateBuffer(const BufferParamHandle& params)
     {
-        throw std::exception("not implemented");
+        auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
+        auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
+        auto bufferSize = params->numElements * params->elementSize;
+
+        auto fmt = boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize;
+        LOGD << boost::str(fmt);
+
+        D3D12_RESOURCE_STATES flags;
+
+        if (isUAV)
+            flags = D3D12_RESOURCE_STATE_COPY_DEST;
+
+        auto res = std::make_unique<DX12BufferObject>();
+
+        auto hr = _device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), flags, nullptr, IID_PPV_ARGS(res->_buffer.GetAddressOf()));
+
+        if (FAILED(hr)) {
+            LOGE << "Failed to CreateCommittedResource with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return BufferHandle();
+        }
+
+        if (isSRV) {
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+            srvDesc.Buffer.FirstElement = 0;
+            srvDesc.Buffer.NumElements = params->numElements;
+            srvDesc.Buffer.StructureByteStride = params->elementSize;
+            srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize);
+            _device->CreateShaderResourceView(res->_srv.Get(), &srvDesc, srvHandle);
+        }
+
+        if (isUAV) {
+            D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+            uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+            uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+            uavDesc.Buffer.FirstElement = 0;
+            uavDesc.Buffer.NumElements = params->numElements;
+            uavDesc.Buffer.StructureByteStride = params->elementSize;
+            uavDesc.Buffer.CounterOffsetInBytes = 0;
+            uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+            CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize);
+            _device->CreateUnorderedAccessView(res->_uav.Get(), nullptr, &uavDesc, uavHandle);
+        }
+
+        return res;
     }
 
     BufferHandle DX12::CreateBuffer(const BufferHandle& src)
@@ -192,6 +245,32 @@ namespace ninniku {
             }
         }
 
+        if (!InitializeHeaps())
+            return false;
+
+        return true;
+    }
+
+    bool DX12::InitializeHeaps()
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
+        srvUavHeapDesc.NumDescriptors = MAX_DESCRIPTOR_COUNT;
+        srvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+        HRESULT hr;
+
+        hr = _device->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&_srvUAVHeap));
+
+        if (FAILED(hr)) {
+            LOGE << "CreateDescriptorHeap failed with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
+
+        _srvUAVDescriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
         return true;
     }
 
@@ -328,7 +407,8 @@ namespace ninniku {
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 

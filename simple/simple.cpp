@@ -23,9 +23,19 @@
 
 int main()
 {
+    // corresponding test: shader_structuredBuffer
     std::vector<std::string> shaderPaths = { "..\\simple\\shaders" };
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
+
+    auto& dx = ninniku::GetRenderer();
+    auto params = ninniku::BufferParam::Create();
+
+    params->numElements = 16;
+    params->elementSize = sizeof(uint32_t);
+    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+
+    auto srcBuffer = dx->CreateBuffer(params);
 
     ninniku::Terminate();
 }

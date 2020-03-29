@@ -65,7 +65,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11BufferObject
     //////////////////////////////////////////////////////////////////////////
-	struct DX11BufferObject final : public BufferObject
+    struct DX11BufferObject final : public BufferObject
     {
     public:
         DX11BufferObject() = default;
@@ -84,13 +84,13 @@ namespace ninniku
         std::vector<uint32_t> _data;
     };
 
-    static BufferHandle Empty_BufferHandle;
+    static BufferHandle Empty_BufferHandleDX11;
 
     //////////////////////////////////////////////////////////////////////////
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
 
-	struct DX11DebugMarker final : public DebugMarker
+    struct DX11DebugMarker final : public DebugMarker
     {
     public:
         DX11DebugMarker(const DX11Marker& marker, const std::string& name);
@@ -119,7 +119,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX11TextureObject
     //////////////////////////////////////////////////////////////////////////
-	struct DX11TextureObject final : public TextureObject
+    struct DX11TextureObject final : public TextureObject
     {
     public:
         DX11TextureObject() = default;
@@ -157,7 +157,7 @@ namespace ninniku
     // GPU to CPU readback
     //////////////////////////////////////////////////////////////////////////
 
-	struct DX11MappedResource final : public MappedResource
+    struct DX11MappedResource final : public MappedResource
     {
     public:
         DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index);

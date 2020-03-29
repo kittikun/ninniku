@@ -24,7 +24,34 @@
 
 #include <d3d12.h>
 
-namespace ninniku {
+namespace ninniku
+{
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
     using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
+    using DX12Resource = Microsoft::WRL::ComPtr<ID3D12Resource>;
+    using DX12DescriptorHeap = Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12BufferObject
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12BufferObject final : public BufferObject
+    {
+    public:
+        DX12BufferObject() = default;
+
+        // BufferObject
+        const std::vector<uint32_t>& GetData() const override { return _data; }
+        const ShaderResourceView* GetSRV() const override { return nullptr; }
+        const UnorderedAccessView* GetUAV() const override { return nullptr; }
+
+    public:
+        DX12Resource _buffer;
+        DX12Resource _srv;
+        DX12Resource _uav;
+
+        // leave data here to support update later on
+        std::vector<uint32_t> _data;
+    };
+
+    static BufferHandle Empty_BufferHandleDX12;
 } // namespace ninniku
