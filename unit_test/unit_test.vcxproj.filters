@@ -37,6 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="src\shaders\cbuffers.h" />
+    <None Include="src\shaders\dx11\utility.hlsl" />
+    <None Include="src\shaders\dx11\colors.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\check.h">
@@ -45,17 +48,11 @@
     <ClInclude Include="src\fixture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\shaders\cbuffers.h">
-      <Filter>Source Files\shaders</Filter>
-    </ClInclude>
     <ClInclude Include="src\common.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\shaders\dx11\color20.hlsl">
-      <Filter>Source Files\shaders\dx11</Filter>
-    </FxCompile>
     <FxCompile Include="src\shaders\dx11\colorFaces.hlsl">
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
@@ -77,7 +74,10 @@
     <FxCompile Include="src\shaders\dx11\resize.hlsl">
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\dx11\utility.hlsl">
+    <FxCompile Include="src\shaders\dx11\colorCubeArrayMip.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
+    </FxCompile>
+    <FxCompile Include="src\shaders\dx11\color20.hlsl">
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
   </ItemGroup>

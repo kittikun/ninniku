@@ -319,7 +319,7 @@ namespace ninniku
 
         uint32_t miscFlags = 0;
 
-        if (isCube)
+        if (isCube || isCubeArray)
             miscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
         uint32_t cpuFlags = 0;
@@ -751,17 +751,13 @@ namespace ninniku
     {
         auto obj = static_cast<DX11TextureObject*>(params.obj);
 
-        auto lambda = [&](auto srvDesc, auto srv, auto name)
-        {
-        };
-
         if (params.isCubeArray) {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
             srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBEARRAY;
             srvDesc.TextureCubeArray.MipLevels = params.texParams->numMips;
-            srvDesc.TextureCubeArray.NumCubes = params.texParams->arraySize % CUBEMAP_NUM_FACES;
+            srvDesc.TextureCubeArray.NumCubes = params.texParams->arraySize / CUBEMAP_NUM_FACES;
 
             auto srv = new DX11ShaderResourceView();
 

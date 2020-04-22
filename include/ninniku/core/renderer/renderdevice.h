@@ -24,7 +24,8 @@
 #include "../../types.h"
 #include "types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class RenderDevice : NonCopyableBase
     {
         // no copy of any kind allowed
@@ -58,13 +59,7 @@ namespace ninniku {
         RenderDevice() = default;
     };
 
-    // This is just used for Renderdoc
-    struct RenderDeviceDeleter
-    {
-        void operator()(RenderDevice* value);
-    };
-
-    using RenderDeviceHandle = std::unique_ptr<RenderDevice, RenderDeviceDeleter>;
+    using RenderDeviceHandle = std::unique_ptr<RenderDevice>;
 
     NINNIKU_API RenderDeviceHandle& GetRenderer();
 } // namespace ninniku

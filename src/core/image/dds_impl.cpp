@@ -143,9 +143,6 @@ namespace ninniku
         _meta.mipLevels = srcTex->desc->numMips;
         _meta.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcTex->desc->format));
 
-        auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
-        LOG << boost::str(fmt);
-
         if (_meta.depth > 1) {
             _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;
         } else if (_meta.height > 1) {
@@ -155,13 +152,16 @@ namespace ninniku
         }
 
         // assume that an arraysize of 6 == cubemap
-        if ((_meta.arraySize == CUBEMAP_NUM_FACES) && (_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE2D))
+        if ((_meta.arraySize % CUBEMAP_NUM_FACES == 0) && (_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE2D))
             _meta.miscFlags |= DirectX::TEX_MISC_TEXTURECUBE;
+
+        auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%, IsCubemap=%6%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels % ((_meta.miscFlags & DirectX::TEX_MISC_TEXTURECUBE) != 0);
+        LOG << boost::str(fmt);
 
         auto hr = _scratch.Initialize(_meta);
 
         if (FAILED(hr)) {
-            auto fmt = boost::format("Failed to create DDS with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5% with:") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels;
+            auto fmt = boost::format("Failed to create DDS with:");
             LOGE << boost::str(fmt);
             _com_error err(hr);
             LOGE << err.ErrorMessage();

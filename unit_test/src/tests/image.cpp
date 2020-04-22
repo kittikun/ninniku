@@ -268,6 +268,30 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, Fixtures, T)
     CheckFileMD5(filename, 0x96fc6f64b6361b46, 0xbb4679a507b22fe8);
 }
 
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, Fixtures, T)
+{
+    auto& dx = ninniku::GetRenderer();
+    auto resTex = GenerateColoredCubeArrayMips(dx);
+    auto res = std::make_unique<ninniku::ddsImage>();
+
+    res->InitializeFromTextureObject(dx, resTex);
+
+    std::string filename = "dds_saveImage_raw_cube_array__mips.dds";
+
+    // check we can save
+    BOOST_TEST(res->SaveImage(filename));
+    BOOST_TEST(std::filesystem::exists(filename));
+
+    CheckFileMD5(filename, 0x38e5f5708ca8f166, 0x3cb321201074c3f7);
+
+    // and reload
+    BOOST_TEST(res->Load(filename));
+
+    auto& data = res->GetData();
+
+    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3d6bccfb68bfe11f, 0x764deda9ade288b4);
+}
+
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, Fixtures, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
@@ -480,6 +504,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, Fixtures, T)
     BOOST_TEST(std::filesystem::exists(filename));
 
     CheckFileMD5(filename, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_cube_array, T, Fixtures, T)
+{
 }
 
 BOOST_AUTO_TEST_CASE(generic_load)

@@ -63,6 +63,44 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)
     return resTex;
 }
 
+ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle& dx)
+{
+    auto param = ninniku::TextureParam::Create();
+    param->format = ninniku::TF_R8G8B8A8_UNORM;
+    param->width = param->height = 512;
+    param->depth = 1;
+    param->numMips = ninniku::CountMips(std::min(param->width, param->height));
+    param->arraySize = ninniku::CUBEMAP_NUM_FACES * 8;
+    param->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
+
+    auto marker = dx->CreateDebugMarker("ColorCubeArrayMip");
+    auto resTex = dx->CreateTexture(param);
+
+    for (uint32_t i = 0; i < param->numMips; ++i) {
+        // dispatch
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "colorCubeArrayMip";
+        cmd->cbufferStr = "CBGlobal";
+
+        static_assert((COLORCUBEARRAYMIPS_NUMTHREAD_X == COLORCUBEARRAYMIPS_NUMTHREAD_Y) && (COLORCUBEARRAYMIPS_NUMTHREAD_Z == 1));
+        cmd->dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
+        cmd->dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
+        cmd->dispatch[2] = param->arraySize / COLORMIPS_NUMTHREAD_Z;
+
+        cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
+
+        // constant buffer
+        CBGlobal cb = {};
+
+        cb.targetMip = i;
+        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
+
+        dx->Dispatch(cmd);
+    }
+
+    return resTex;
+}
+
 ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, const ninniku::Image* image)
 {
     auto marker = dx->CreateDebugMarker("CommonGenerateMips");

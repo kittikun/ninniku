@@ -31,17 +31,11 @@
 #include <renderdoc/renderdoc_app.h>
 #endif
 
-namespace ninniku {
+namespace ninniku
+{
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
 #endif
-
-    void RenderDeviceDeleter::operator()(RenderDevice* value)
-    {
-        Terminate();
-
-        delete value;
-    }
 
     static RenderDeviceHandle sRenderer;
 
@@ -86,13 +80,15 @@ namespace ninniku {
 
         switch (renderer) {
             case ERenderer::RENDERER_DX11:
-            case ERenderer::RENDERER_WARP_DX11: {
+            case ERenderer::RENDERER_WARP_DX11:
+            {
                 sRenderer.reset(new DX11());
             }
             break;
 
             case ERenderer::RENDERER_DX12:
-            case ERenderer::RENDERER_WARP_DX12: {
+            case ERenderer::RENDERER_WARP_DX12:
+            {
                 sRenderer.reset(new DX12());
             }
             break;
@@ -139,5 +135,7 @@ namespace ninniku {
             gRenderDocApi->EndFrameCapture(nullptr, nullptr);
         }
 #endif
+
+        sRenderer.release();
     }
 }
