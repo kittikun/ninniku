@@ -58,6 +58,9 @@ namespace ninniku
             case DXGI_FORMAT_R16G16B16A16_UNORM:
                 res = TF_R16G16B16A16_UNORM;
                 break;
+            case DXGI_FORMAT_R32_FLOAT:
+                res = TF_R32_FLOAT;
+                break;
             case DXGI_FORMAT_R32G32B32A32_FLOAT:
                 res = TF_R32G32B32A32_FLOAT;
                 break;

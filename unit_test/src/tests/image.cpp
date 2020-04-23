@@ -506,10 +506,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, Fixtures, T)
     CheckFileMD5(filename, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_cube_array, T, Fixtures, T)
-{
-}
-
 BOOST_AUTO_TEST_CASE(generic_load)
 {
     auto image = std::make_unique<ninniku::genericImage>();
