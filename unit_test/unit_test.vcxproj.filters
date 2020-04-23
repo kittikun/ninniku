@@ -39,7 +39,7 @@
     <None Include="packages.config" />
     <None Include="src\shaders\cbuffers.h" />
     <None Include="src\shaders\dx11\utility.hlsl" />
-    <None Include="src\shaders\dx11\colors.hlsl" />
+    <None Include="src\shaders\dx11\color20.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\check.h">
@@ -72,12 +72,6 @@
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
     <FxCompile Include="src\shaders\dx11\resize.hlsl">
-      <Filter>Source Files\shaders\dx11</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\dx11\colorCubeArrayMip.hlsl">
-      <Filter>Source Files\shaders\dx11</Filter>
-    </FxCompile>
-    <FxCompile Include="src\shaders\dx11\color20.hlsl">
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
   </ItemGroup>

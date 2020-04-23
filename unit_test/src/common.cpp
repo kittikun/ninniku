@@ -79,7 +79,7 @@ ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle&
     for (uint32_t i = 0; i < param->numMips; ++i) {
         // dispatch
         auto cmd = dx->CreateCommand();
-        cmd->shader = "colorCubeArrayMip";
+        cmd->shader = "colorMips";
         cmd->cbufferStr = "CBGlobal";
 
         static_assert((COLORCUBEARRAYMIPS_NUMTHREAD_X == COLORCUBEARRAYMIPS_NUMTHREAD_Y) && (COLORCUBEARRAYMIPS_NUMTHREAD_Z == 1));
