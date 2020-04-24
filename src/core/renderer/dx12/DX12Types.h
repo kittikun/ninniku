@@ -24,8 +24,9 @@
 
 #include <d3d12.h>
 
-namespace ninniku
-{
+namespace ninniku {
+    using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
+    using DX12CommandList = Microsoft::WRL::ComPtr<ID3D12CommandList>;
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
     using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
     using DX12Resource = Microsoft::WRL::ComPtr<ID3D12Resource>;
@@ -54,4 +55,30 @@ namespace ninniku
     };
 
     static BufferHandle Empty_BufferHandleDX12;
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12Command
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12Command final : public Command
+    {
+    public:
+        DX12Command(const DX12Device& device, const DX12CommandAllocator& commandAllocator);
+        ~DX12Command() override;
+    private:
+        DX12CommandList _cmdList;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12DebugMarker
+    //////////////////////////////////////////////////////////////////////////
+
+    struct DX12DebugMarker final : public DebugMarker
+    {
+    public:
+        DX12DebugMarker(const std::string& name);
+        ~DX12DebugMarker() override;
+
+    private:
+        static std::atomic<uint8_t> _colorIdx;
+    };
 } // namespace ninniku

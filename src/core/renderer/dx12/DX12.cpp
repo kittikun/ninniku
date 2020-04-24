@@ -27,6 +27,7 @@
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
 #include "../DXCommon.h"
+#include "pix3.h"
 
 #include <comdef.h>
 #include <d3d12shader.h>
@@ -35,8 +36,7 @@
 #include <dxc/DxilContainer/DxilContainer.h>
 #include <dxc/Support/d3dx12.h>
 
-namespace ninniku
-{
+namespace ninniku {
     void DX12::CopyBufferResource(const CopyBufferSubresourceParam& params) const
     {
         throw std::exception("not implemented");
@@ -110,12 +110,12 @@ namespace ninniku
 
     CommandHandle DX12::CreateCommand() const
     {
-        throw std::exception("not implemented");
+        return std::make_unique<DX12Command>(_device, _commandAllocator);
     }
 
     DebugMarkerHandle DX12::CreateDebugMarker(const std::string& name) const
     {
-        throw std::exception("not implemented");
+        return std::make_unique<DX12DebugMarker>(name);
     }
 
     bool DX12::CreateDevice(int adapter)
@@ -247,6 +247,16 @@ namespace ninniku
 
         if (!InitializeHeaps())
             return false;
+
+        // Create command allocator (only for compute for now)
+        auto hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocator));
+
+        if (FAILED(hr)) {
+            LOGE << "CreateCommandAllocator failed with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            return false;
+        }
 
         return true;
     }
@@ -407,8 +417,7 @@ namespace ninniku
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d)
-        {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 

@@ -32,8 +32,7 @@
 #include <d3d11shader.h>
 #include <d3dcompiler.h>
 
-namespace ninniku
-{
+namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     void DX11::CopyBufferResource(const CopyBufferSubresourceParam& params) const
     {
@@ -61,7 +60,6 @@ namespace ninniku
         DX11Marker marker;
 #ifdef _USE_RENDERDOC
         _context->QueryInterface(IID_PPV_ARGS(marker.GetAddressOf()));
-
 #endif
 
         return std::make_unique<DX11DebugMarker>(marker, name);
@@ -487,8 +485,7 @@ namespace ninniku
         static std::function<ID3D11UnorderedAccessView*(const UnorderedAccessView*)> uavCast = &DX11::castGenericResourceToDX11Resource<UnorderedAccessView, DX11UnorderedAccessView, ID3D11UnorderedAccessView>;
         static std::function<ID3D11SamplerState*(const SamplerState*)> ssCast = &DX11::castGenericResourceToDX11Resource<SamplerState, DX11SamplerState, ID3D11SamplerState>;
 
-        auto lambda = [&](auto kvp, auto & container, auto castFn)
-        {
+        auto lambda = [&](auto kvp, auto & container, auto castFn) {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -708,8 +705,7 @@ namespace ninniku
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d)
-        {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 

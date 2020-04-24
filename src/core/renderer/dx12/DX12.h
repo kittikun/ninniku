@@ -27,8 +27,7 @@
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
 
-namespace ninniku
-{
+namespace ninniku {
     class DX12 final : public RenderDevice
     {
     public:
@@ -61,6 +60,7 @@ namespace ninniku
     private:
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 8;
         DX12Device _device;
+        DX12CommandAllocator _commandAllocator;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
         std::unordered_map<std::string, DX12RootSignature> _rootSignatures;
 

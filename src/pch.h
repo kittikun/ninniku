@@ -23,6 +23,7 @@
 // STL
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <memory>
 #include <string>

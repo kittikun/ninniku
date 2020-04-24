@@ -261,6 +261,7 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
     <Import Project="packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets" Condition="Exists('packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets')" />
     <Import Project="packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets" Condition="Exists('packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets')" />
     <Import Project="packages\directxtex_desktop_win10.2020.2.15.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('packages\directxtex_desktop_win10.2020.2.15.1\build\native\directxtex_desktop_win10.targets')" />
+    <Import Project="packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets" Condition="Exists('packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -276,5 +277,6 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
     <Error Condition="!Exists('packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc141.1.71.0.0\build\boost_thread-vc141.targets'))" />
     <Error Condition="!Exists('packages\directxtex_desktop_win10.2020.2.15.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtex_desktop_win10.2020.2.15.1\build\native\directxtex_desktop_win10.targets'))" />
+    <Error Condition="!Exists('packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets'))" />
   </Target>
 </Project>

@@ -37,5 +37,21 @@ int main()
 
     auto srcBuffer = dx->CreateBuffer(params);
 
+    // fill structured buffer
+    {
+        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
+
+        // dispatch
+        auto cmd = dx->CreateCommand();
+
+        cmd->shader = "fillBuffer";
+
+        cmd->dispatch[0] = cmd->dispatch[1] = cmd->dispatch[2] = 1;
+
+        cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
+
+        dx->Dispatch(cmd);
+    }
+
     ninniku::Terminate();
 }

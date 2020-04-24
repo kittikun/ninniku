@@ -21,6 +21,53 @@
 #include "pch.h"
 #include "DX12Types.h"
 
-namespace ninniku
-{
+#include "../../../utils/log.h"
+#include "pix3.h"
+
+#include <comdef.h>
+
+namespace ninniku {
+    //////////////////////////////////////////////////////////////////////////
+    // DX12Command
+    //////////////////////////////////////////////////////////////////////////
+    DX12Command::DX12Command(const DX12Device& device, const DX12CommandAllocator& commandAllocator)
+    {
+        // only support a single GPU for now
+        // we also only support compute for now
+        auto hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
+
+        if (FAILED(hr)) {
+            LOGE << "CreateCommandList failed with:";
+            _com_error err(hr);
+            LOGE << err.ErrorMessage();
+            throw new std::exception("CreateCommandList failed");
+        }
+    }
+
+    DX12Command::~DX12Command()
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12DebugMarker
+    //////////////////////////////////////////////////////////////////////////
+    std::atomic<uint8_t> DX12DebugMarker::_colorIdx = 0;
+
+    DX12DebugMarker::DX12DebugMarker(const std::string& name)
+    {
+#ifdef _USE_RENDERDOC
+        // https://devblogs.microsoft.com/pix/winpixeventruntime/
+        // says a ID3D12CommandList/ID3D12CommandQueue should be used but cannot find that override
+
+        auto color = PIX_COLOR_INDEX(_colorIdx++);
+        PIXBeginEvent(color, name.c_str());
+#endif
+    }
+
+    DX12DebugMarker::~DX12DebugMarker()
+    {
+#ifdef _USE_RENDERDOC
+        PIXEndEvent();
+#endif
+    }
 } // namespace ninniku
