@@ -128,6 +128,7 @@ namespace ninniku
         const ShaderResourceView* GetSRVCube() const { return srvCube.get(); }
         const ShaderResourceView* GetSRVCubeArray() const { return srvCubeArray.get(); }
         const ShaderResourceView* GetSRVArray(uint32_t index) const { return srvArray[index].get(); }
+		const ShaderResourceView* GetSRVArrayWithMips() const { return srvArrayWithMips.get(); }
         const UnorderedAccessView* GetUAV(uint32_t index) const { return uav[index].get(); }
 
         ID3D11Resource* GetResource() const;
