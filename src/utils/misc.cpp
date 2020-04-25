@@ -21,10 +21,25 @@
 #include "pch.h"
 #include "misc.h"
 
+#include "log.h"
+
+#include <comdef.h>
 #include <windows.h>
 
-namespace ninniku
-{
+namespace ninniku {
+    bool CheckAPIFailed(HRESULT hr, const std::string& apiName)
+    {
+        if (FAILED(hr)) {
+            _com_error err(hr);
+            auto fmt = boost::format("Failed to %1% with: %2%") % apiName % err.ErrorMessage();
+            LOGE << boost::str(fmt);
+
+            return true;
+        }
+
+        return false;
+    }
+
     constexpr const uint32_t DXGIFormatToNinnikuTF(uint32_t fmt)
     {
         ETextureFormat res = TF_UNKNOWN;

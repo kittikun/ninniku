@@ -24,8 +24,7 @@
 #include "../../types.h"
 #include "types.h"
 
-namespace ninniku
-{
+namespace ninniku {
     class RenderDevice : NonCopyableBase
     {
         // no copy of any kind allowed

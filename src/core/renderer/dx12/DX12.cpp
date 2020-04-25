@@ -65,12 +65,8 @@ namespace ninniku {
 
         auto hr = _device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), flags, nullptr, IID_PPV_ARGS(res->_buffer.GetAddressOf()));
 
-        if (FAILED(hr)) {
-            LOGE << "Failed to CreateCommittedResource with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
-        }
 
         if (isSRV) {
             D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -106,11 +102,6 @@ namespace ninniku {
     BufferHandle DX12::CreateBuffer(const BufferHandle& src)
     {
         throw std::exception("not implemented");
-    }
-
-    CommandHandle DX12::CreateCommand() const
-    {
-        return std::make_unique<DX12Command>(_device, _commandAllocator);
     }
 
     DebugMarkerHandle DX12::CreateDebugMarker(const std::string& name) const
@@ -220,6 +211,43 @@ namespace ninniku {
 
     bool DX12::Dispatch(const CommandHandle& cmd) const
     {
+        DX12Command* dxCmd = static_cast<DX12Command*>(cmd.get());
+
+        if (!dxCmd->IsInitialized()) {
+            auto foundShader = _shaders.find(cmd->shader);
+
+            if (foundShader == _shaders.end()) {
+                auto fmt = boost::format("Dispatch error: could not find shader \"%1%\"") % cmd->shader;
+                LOGE << boost::str(fmt);
+                return false;
+            }
+
+            auto foundRS = _rootSignatures.find(cmd->shader);
+
+            if (foundRS == _rootSignatures.end()) {
+                auto fmt = boost::format("Dispatch error: could not find the root signature for shader \"%1%\"") % cmd->shader;
+                LOGE << boost::str(fmt);
+                return false;
+            }
+
+            if (!dxCmd->Initialize(_device, _commandAllocator, foundShader->second, foundRS->second)) {
+                return false;
+            }
+        }
+
+        // resource bindings for this shader
+        auto foundBindings = _resourceBindings.find(cmd->shader);
+
+        if (foundBindings == _resourceBindings.end()) {
+            auto fmt = boost::format("Dispatch error: could not find resource bindings for shader \"%1%\"") % cmd->shader;
+            LOGE << boost::str(fmt);
+            return false;
+        }
+
+        for (auto& kvp : cmd->uavBindings) {
+            int i = 0;
+        }
+
         throw std::exception("not implemented");
     }
 
@@ -251,12 +279,8 @@ namespace ninniku {
         // Create command allocator (only for compute for now)
         auto hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocator));
 
-        if (FAILED(hr)) {
-            LOGE << "CreateCommandAllocator failed with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator"))
             return false;
-        }
 
         return true;
     }
@@ -272,12 +296,8 @@ namespace ninniku {
 
         hr = _device->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&_srvUAVHeap));
 
-        if (FAILED(hr)) {
-            LOGE << "CreateDescriptorHeap failed with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap"))
             return false;
-        }
 
         _srvUAVDescriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -295,56 +315,36 @@ namespace ninniku {
 
         auto hr = DxcCreateInstance(CLSID_DxcContainerReflection, __uuidof(IDxcContainerReflection), (void**)&pContainerReflection);
 
-        if (FAILED(hr)) {
-            LOGE << "DxcCreateInstance for CLSID_DxcContainerReflection failed with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "DxcCreateInstance for CLSID_DxcContainerReflection"))
             return false;
-        }
 
         hr = pContainerReflection->Load(pBlob);
 
-        if (FAILED(hr)) {
-            LOGE << "IDxcContainerReflection::Load failed with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "IDxcContainerReflection::Load"))
             return false;
-        }
 
         uint32_t partCount;
 
         hr = pContainerReflection->GetPartCount(&partCount);
 
-        if (FAILED(hr)) {
-            LOGE << "IDxcContainerReflection::GetPartCount failed with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartCount"))
             return false;
-        }
 
         for (uint32_t i = 0; i < partCount; ++i) {
             uint32_t partKind;
 
             hr = pContainerReflection->GetPartKind(i, &partKind);
 
-            if (FAILED(hr)) {
-                LOGE << "IDxcContainerReflection::GetPartKind failed with:";
-                _com_error err(hr);
-                LOGE << err.ErrorMessage();
+            if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartKind"))
                 return false;
-            }
 
             if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_DXIL)) {
 #if _DEBUG
                 IDxcBlob* pShaderBlob;
                 hr = pContainerReflection->GetPartContent(i, &pShaderBlob);
 
-                if (FAILED(hr)) {
-                    LOGE << "IDxcContainerReflection::GetPartContent failed with:";
-                    _com_error err(hr);
-                    LOGE << err.ErrorMessage();
+                if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartContent"))
                     return false;
-                }
 
                 auto pHeader = reinterpret_cast<const hlsl::DxilProgramHeader*>(pShaderBlob->GetBufferPointer());
 
@@ -359,22 +359,14 @@ namespace ninniku {
 
                 hr = pContainerReflection->GetPartReflection(i, IID_PPV_ARGS(&pShaderReflection));
 
-                if (FAILED(hr)) {
-                    LOGE << "IDxcContainerReflection::GetPartReflection failed with:";
-                    _com_error err(hr);
-                    LOGE << err.ErrorMessage();
+                if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartReflection"))
                     return false;
-                }
 
                 D3D12_SHADER_DESC pShaderDesc;
                 hr = pShaderReflection->GetDesc(&pShaderDesc);
 
-                if (FAILED(hr)) {
-                    LOGE << "ID3D12ShaderReflection::GetDesc failed with:";
-                    _com_error err(hr);
-                    LOGE << err.ErrorMessage();
+                if (CheckAPIFailed(hr, "ID3D12ShaderReflection::GetDesc"))
                     return false;
-                }
 
                 if (!ParseShaderResources(name, pShaderDesc.BoundResources, pShaderReflection.Get()))
                     return false;
@@ -384,17 +376,16 @@ namespace ninniku {
                 Microsoft::WRL::ComPtr<IDxcBlob> pRSBlob;
                 hr = pContainerReflection->GetPartContent(i, &pRSBlob);
 
-                if (FAILED(hr)) {
-                    LOGE << "IDxcContainerReflection::GetPartContent failed with:";
-                    _com_error err(hr);
-                    LOGE << err.ErrorMessage();
+                if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartContent"))
                     return false;
-                }
 #endif
                 if (!ParseRootSignature(name, pBlob))
                     return false;
             }
         }
+
+        // store shader
+        _shaders.insert(std::make_pair(name, CD3DX12_SHADER_BYTECODE(pBlob->GetBufferPointer(), pBlob->GetBufferSize())));
 
         return true;
     }
@@ -430,12 +421,8 @@ namespace ninniku {
 
         auto hr = DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary);
 
-        if (FAILED(hr)) {
-            LOGE << "DxcCreateInstance for CLSID_DxcLibrary failed with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "DxcCreateInstance for CLSID_DxcLibrary"))
             return false;
-        }
 
         for (auto& iter : std::filesystem::recursive_directory_iterator(shaderPath)) {
             if (iter.path().extension() == ext) {
@@ -449,12 +436,8 @@ namespace ninniku {
 
                 hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path).c_str(), nullptr, &pBlob);
 
-                if (FAILED(hr)) {
-                    LOGE << "Failed to IDxcLibrary::CreateBlobFromFile with:";
-                    _com_error err(hr);
-                    LOGE << err.ErrorMessage();
+                if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile"))
                     return false;
-                }
 
                 auto name = iter.path().stem().string();
 
@@ -482,15 +465,12 @@ namespace ninniku {
 
         auto hr = _device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 
-        if (FAILED(hr)) {
-            LOGE << "Failed to CreateRootSignature from blob with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateRootSignature"))
             return false;
-        }
 
         LOGD << "Found a root signature";
 
+        // for now create a root signature per shader
         _rootSignatures.insert(std::make_pair(name, rootSignature));
 
         return true;
@@ -510,12 +490,8 @@ namespace ninniku {
 
             auto hr = pReflection->GetResourceBindingDesc(i, &bindDesc);
 
-            if (FAILED(hr)) {
-                LOGE << "Failed to ID3D12ShaderReflection::GetResourceBindingDesc with:";
-                _com_error err(hr);
-                LOGE << err.ErrorMessage();
+            if (CheckAPIFailed(hr, "ID3D12ShaderReflection::GetResourceBindingDesc"))
                 return false;
-            }
 
             std::string restypeStr;
 

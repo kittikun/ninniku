@@ -23,11 +23,12 @@
 #include <ninniku/types.h>
 #include <string>
 
-namespace ninniku
-{
+namespace ninniku {
     NINNIKU_API constexpr const uint32_t DXGIFormatToNinnikuTF(uint32_t);
     NINNIKU_API constexpr const uint32_t NinnikuTFToDXGIFormat(uint32_t);
 
     const std::wstring strToWStr(const std::string&);
     const std::string wstrToStr(const std::wstring&);
+
+    bool CheckAPIFailed(HRESULT hr, const std::string& apiName);
 } // namespace ninniku

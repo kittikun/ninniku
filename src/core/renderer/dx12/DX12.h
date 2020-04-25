@@ -37,7 +37,7 @@ namespace ninniku {
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
-        CommandHandle CreateCommand() const override;
+        CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) const override;
@@ -63,6 +63,7 @@ namespace ninniku {
         DX12CommandAllocator _commandAllocator;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
         std::unordered_map<std::string, DX12RootSignature> _rootSignatures;
+        std::unordered_map<std::string, D3D12_SHADER_BYTECODE> _shaders;
 
         using MapNameSlot = std::unordered_map<std::string, uint32_t>;
         std::unordered_map<std::string, MapNameSlot> _resourceBindings;

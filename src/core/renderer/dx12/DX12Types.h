@@ -28,6 +28,7 @@ namespace ninniku {
     using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
     using DX12CommandList = Microsoft::WRL::ComPtr<ID3D12CommandList>;
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
+    using DX12PipelineState = Microsoft::WRL::ComPtr<ID3D12PipelineState>;
     using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
     using DX12Resource = Microsoft::WRL::ComPtr<ID3D12Resource>;
     using DX12DescriptorHeap = Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>;
@@ -62,10 +63,14 @@ namespace ninniku {
     struct DX12Command final : public Command
     {
     public:
-        DX12Command(const DX12Device& device, const DX12CommandAllocator& commandAllocator);
-        ~DX12Command() override;
+        bool IsInitialized() const { return _isInitialized; }
+        bool Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shader, const DX12RootSignature& rootSignature);
+
     private:
+        bool _isInitialized = false;
         DX12CommandList _cmdList;
+        DX12PipelineState _pso;
+        DX12RootSignature _rootSignature;
     };
 
     //////////////////////////////////////////////////////////////////////////

@@ -22,30 +22,34 @@
 #include "DX12Types.h"
 
 #include "../../../utils/log.h"
+#include "../../../utils/misc.h"
 #include "pix3.h"
-
-#include <comdef.h>
 
 namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
-    DX12Command::DX12Command(const DX12Device& device, const DX12CommandAllocator& commandAllocator)
+    bool DX12Command::Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shader, const DX12RootSignature& rootSignature)
     {
         // only support a single GPU for now
         // we also only support compute for now
         auto hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
 
-        if (FAILED(hr)) {
-            LOGE << "CreateCommandList failed with:";
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
-            throw new std::exception("CreateCommandList failed");
-        }
-    }
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
+            return false;
 
-    DX12Command::~DX12Command()
-    {
+        D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
+        desc.CS = shader;
+        desc.pRootSignature = rootSignature.Get();
+
+        hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pso));
+
+        // keep a reference on the root signature
+        _rootSignature = rootSignature;
+
+        _isInitialized = true;
+
+        return true;
     }
 
     //////////////////////////////////////////////////////////////////////////
