@@ -569,7 +569,8 @@ namespace ninniku {
                     break;
 
                 default:
-                    throw new std::exception("DX12::ParseShaderResources unsupported type");
+                    LOG << "DX12::ParseShaderResources unsupported type";
+                    return false;
             }
 
             fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;

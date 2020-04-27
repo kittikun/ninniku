@@ -61,7 +61,7 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     std::atomic<uint8_t> DX12DebugMarker::_colorIdx = 0;
 
-    DX12DebugMarker::DX12DebugMarker(const std::string& name)
+    DX12DebugMarker::DX12DebugMarker([[maybe_unused]]const std::string& name)
     {
 #ifdef _USE_RENDERDOC
         // https://devblogs.microsoft.com/pix/winpixeventruntime/
