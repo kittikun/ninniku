@@ -31,8 +31,7 @@
 #include <renderdoc/renderdoc_app.h>
 #endif
 
-namespace ninniku
-{
+namespace ninniku {
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
 #endif
@@ -75,20 +74,21 @@ namespace ninniku
         LOG << "ninniku HLSL compute shader framework";
 
 #if defined(_USE_RENDERDOC)
-        LoadRenderDoc();
+        // renderdoc doesn't support DXIL at the moment
+        // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
+        if ((renderer != ERenderer::RENDERER_DX12) && (renderer != ERenderer::RENDERER_WARP_DX12))
+            LoadRenderDoc();
 #endif
 
         switch (renderer) {
             case ERenderer::RENDERER_DX11:
-            case ERenderer::RENDERER_WARP_DX11:
-            {
+            case ERenderer::RENDERER_WARP_DX11: {
                 sRenderer.reset(new DX11());
             }
             break;
 
             case ERenderer::RENDERER_DX12:
-            case ERenderer::RENDERER_WARP_DX12:
-            {
+            case ERenderer::RENDERER_WARP_DX12: {
                 sRenderer.reset(new DX12());
             }
             break;

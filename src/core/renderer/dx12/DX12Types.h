@@ -26,7 +26,7 @@
 
 namespace ninniku {
     using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
-    using DX12CommandList = Microsoft::WRL::ComPtr<ID3D12CommandList>;
+    using DX12GraphicsCommandList = Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>;
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
     using DX12PipelineState = Microsoft::WRL::ComPtr<ID3D12PipelineState>;
     using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
@@ -43,13 +43,13 @@ namespace ninniku {
 
         // BufferObject
         const std::vector<uint32_t>& GetData() const override { return _data; }
-        const ShaderResourceView* GetSRV() const override { return nullptr; }
-        const UnorderedAccessView* GetUAV() const override { return nullptr; }
+        const ShaderResourceView* GetSRV() const override { return _srv.get(); }
+        const UnorderedAccessView* GetUAV() const override { return _uav.get(); }
 
     public:
         DX12Resource _buffer;
-        DX12Resource _srv;
-        DX12Resource _uav;
+        SRVHandle _srv;
+        UAVHandle _uav;
 
         // leave data here to support update later on
         std::vector<uint32_t> _data;
@@ -63,12 +63,11 @@ namespace ninniku {
     struct DX12Command final : public Command
     {
     public:
-        bool IsInitialized() const { return _isInitialized; }
         bool Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shader, const DX12RootSignature& rootSignature);
 
-    private:
+    public:
         bool _isInitialized = false;
-        DX12CommandList _cmdList;
+        DX12GraphicsCommandList _cmdList;
         DX12PipelineState _pso;
         DX12RootSignature _rootSignature;
     };
@@ -85,5 +84,22 @@ namespace ninniku {
 
     private:
         static std::atomic<uint8_t> _colorIdx;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12 Shader Resources
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12ShaderResourceView final : public ShaderResourceView
+    {
+    public:
+        DX12Resource _resource;
+        int32_t _srvUAVIndex;
+    };
+
+    struct DX12UnorderedAccessView final : public UnorderedAccessView
+    {
+    public:
+        DX12Resource _resource;
+        int32_t _srvUAVIndex;
     };
 } // namespace ninniku

@@ -56,14 +56,17 @@ namespace ninniku {
         auto fmt = boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize;
         LOGD << boost::str(fmt);
 
-        D3D12_RESOURCE_STATES flags;
+        D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
 
         if (isUAV)
-            flags = D3D12_RESOURCE_STATE_COPY_DEST;
+            flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
         auto res = std::make_unique<DX12BufferObject>();
 
-        auto hr = _device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), flags, nullptr, IID_PPV_ARGS(res->_buffer.GetAddressOf()));
+        auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
+
+        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, nullptr, IID_PPV_ARGS(res->_buffer.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
@@ -78,8 +81,15 @@ namespace ninniku {
             srvDesc.Buffer.StructureByteStride = params->elementSize;
             srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize);
-            _device->CreateShaderResourceView(res->_srv.Get(), &srvDesc, srvHandle);
+            auto srv = new DX12ShaderResourceView();
+
+            srv->_srvUAVIndex = _srvUAVIndex++;
+
+            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), srv->_srvUAVIndex, _srvUAVDescriptorSize);
+
+            _device->CreateShaderResourceView(res->_buffer.Get(), &srvDesc, srvHandle);
+
+            res->_srv.reset(srv);
         }
 
         if (isUAV) {
@@ -92,8 +102,16 @@ namespace ninniku {
             uavDesc.Buffer.CounterOffsetInBytes = 0;
             uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-            CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize);
-            _device->CreateUnorderedAccessView(res->_uav.Get(), nullptr, &uavDesc, uavHandle);
+            auto uav = new DX12UnorderedAccessView();
+
+            uav->_srvUAVIndex = _srvUAVIndex++;
+
+            CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle{ _srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), uav->_srvUAVIndex, _srvUAVDescriptorSize };
+
+            _device->CreateUnorderedAccessView(res->_buffer.Get(), nullptr, &uavDesc, uavHandle);
+
+            uav->_resource = res->_buffer;
+            res->_uav.reset(uav);
         }
 
         return res;
@@ -213,7 +231,7 @@ namespace ninniku {
     {
         DX12Command* dxCmd = static_cast<DX12Command*>(cmd.get());
 
-        if (!dxCmd->IsInitialized()) {
+        if (!dxCmd->_isInitialized) {
             auto foundShader = _shaders.find(cmd->shader);
 
             if (foundShader == _shaders.end()) {
@@ -235,6 +253,12 @@ namespace ninniku {
             }
         }
 
+        dxCmd->_cmdList->SetPipelineState(dxCmd->_pso.Get());
+        dxCmd->_cmdList->SetComputeRootSignature(dxCmd->_rootSignature.Get());
+
+        ID3D12DescriptorHeap* ppHeaps[] = { _srvUAVHeap.Get() };
+        dxCmd->_cmdList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
         // resource bindings for this shader
         auto foundBindings = _resourceBindings.find(cmd->shader);
 
@@ -244,7 +268,26 @@ namespace ninniku {
             return false;
         }
 
+        auto& bindings = foundBindings->second;
+
         for (auto& kvp : cmd->uavBindings) {
+            auto found = bindings.find(kvp.first);
+
+            if (found == bindings.end()) {
+                auto fmt = boost::format("Dispatch error: could not find resource bindings for \"%1%\" in \"%2%\"") % kvp.first % cmd->shader;
+                LOGE << boost::str(fmt);
+                return false;
+            }
+
+            auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
+
+            dxCmd->_cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
+            CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle{ _srvUAVHeap->GetGPUDescriptorHandleForHeapStart(), dxUAV->_srvUAVIndex, _srvUAVDescriptorSize };
+            dxCmd->_cmdList->SetComputeRootDescriptorTable(0, uavHandle);
+            dxCmd->_cmdList->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
+
+            dxCmd->_cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
             int i = 0;
         }
 

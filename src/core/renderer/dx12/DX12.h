@@ -69,7 +69,7 @@ namespace ninniku {
         std::unordered_map<std::string, MapNameSlot> _resourceBindings;
 
         DX12DescriptorHeap _srvUAVHeap;
-        uint32_t _srvUAVIndex;
+        int32_t _srvUAVIndex;
         uint32_t _srvUAVDescriptorSize;
     };
 } // namespace ninniku

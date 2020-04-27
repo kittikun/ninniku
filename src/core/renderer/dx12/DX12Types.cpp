@@ -31,21 +31,28 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     bool DX12Command::Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shader, const DX12RootSignature& rootSignature)
     {
-        // only support a single GPU for now
-        // we also only support compute for now
-        auto hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
-
-        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
-            return false;
-
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
         desc.CS = shader;
         desc.pRootSignature = rootSignature.Get();
 
-        hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pso));
+        auto hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pso));
 
         // keep a reference on the root signature
         _rootSignature = rootSignature;
+
+        // only support a single GPU for now
+        // we also only support compute for now and don't expect any pipeline state changes for now
+        hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), _pso.Get(), IID_PPV_ARGS(&_cmdList));
+
+        if (hr == DXGI_ERROR_DEVICE_REMOVED) {
+            auto test = device->GetDeviceRemovedReason();
+
+            CheckAPIFailed(test, "ID3D12Device::GetDeviceRemovedReason");
+            int i = 0;
+        }
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
+            return false;
 
         _isInitialized = true;
 

@@ -31,8 +31,14 @@ namespace ninniku {
     {
         if (FAILED(hr)) {
             _com_error err(hr);
-            auto fmt = boost::format("Failed to %1% with: %2%") % apiName % err.ErrorMessage();
+            auto fmt = boost::format("Failed to %1% with: %2%") % apiName % wstrToStr(err.ErrorMessage());
             LOGE << boost::str(fmt);
+
+            //if (hr == DXGI_ERROR_DEVICE_REMOVED) {
+            //    hr = device->GetDeviceRemovedReason();
+
+            //    CheckAPIFailed(test, "ID3D12Device::GetDeviceRemovedReason");
+            //}
 
             return true;
         }
