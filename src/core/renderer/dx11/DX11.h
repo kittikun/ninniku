@@ -50,15 +50,16 @@ namespace ninniku {
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
     private:
-        struct TextureSRVParams
+        struct alignas(8) TextureSRVParams
         {
             TextureObject* obj;
             TextureParamHandle texParams;
-            bool is1d;
-            bool is2d;
-            bool is3d;
-            bool isCube;
-            bool isCubeArray;
+            uint8_t is1d : 1;
+            uint8_t is2d : 1;
+            uint8_t is3d : 1;
+            uint8_t isCube : 1;
+            uint8_t isCubeArray : 1;
+            uint8_t padding : 3;
         };
 
         bool CreateDevice(int adapter, ID3D11Device** pDevice);

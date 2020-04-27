@@ -35,8 +35,7 @@
 #include <array>
 #include <filesystem>
 
-namespace ninniku
-{
+namespace ninniku {
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -209,7 +208,7 @@ namespace ninniku
 
         bool imageLoaded = false;
 
-        if (std::filesystem::path{ path }.extension() == ".exr")
+        if (std::filesystem::path{ path } .extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
             imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
@@ -271,8 +270,8 @@ namespace ninniku
         _image.m_width = srcTex->desc->width;
         _image.m_height = srcTex->desc->height;
         _image.m_format = GetFormatFromNinnikuFormat(srcTex->desc->format);
-        _image.m_numFaces = srcTex->desc->arraySize;
-        _image.m_numMips = srcTex->desc->numMips;
+        _image.m_numFaces = (uint8_t)srcTex->desc->arraySize;
+        _image.m_numMips = (uint8_t)srcTex->desc->numMips;
 
         auto fmt = boost::format("cmftImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % _image.m_width % _image.m_height % (int)_image.m_numFaces % (int)_image.m_numMips;
         LOG << boost::str(fmt);
@@ -347,10 +346,12 @@ namespace ninniku
             case cmft::ImageFileType::TGA:
                 cmftFormat = cmft::TextureFormat::Enum::RGBA32F;
                 break;
-
             case cmft::ImageFileType::HDR:
                 cmftFormat = cmft::TextureFormat::Enum::RGBE;
                 break;
+            default:
+                LOGE << "Unsupported cmft file type";
+                return false;
         }
 
         cmft::OutputType::Enum cmftType;
@@ -368,6 +369,9 @@ namespace ninniku
             case ninniku::cmftImage::SaveType::VCross:
                 cmftType = cmft::OutputType::VCross;
                 break;
+            default:
+                LOGE << "Unsupported cmft type";
+                return false;
         }
 
         // because path is const

@@ -62,10 +62,8 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     struct DX12Command final : public Command
     {
-    public:
-        bool Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shader, const DX12RootSignature& rootSignature);
+        bool Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shaderCode, const DX12RootSignature& rootSignature);
 
-    public:
         bool _isInitialized = false;
         DX12GraphicsCommandList _cmdList;
         DX12PipelineState _pso;

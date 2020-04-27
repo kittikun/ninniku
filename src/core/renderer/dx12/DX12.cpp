@@ -27,7 +27,11 @@
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
 #include "../DXCommon.h"
+
+#pragma warning(push)
+#pragma warning(disable:4100)
 #include "pix3.h"
+#pragma warning(pop)
 
 #include <comdef.h>
 #include <d3d12shader.h>
@@ -37,12 +41,12 @@
 #include <dxc/Support/d3dx12.h>
 
 namespace ninniku {
-    void DX12::CopyBufferResource(const CopyBufferSubresourceParam& params) const
+    void DX12::CopyBufferResource([[maybe_unused]]const CopyBufferSubresourceParam& params) const
     {
         throw std::exception("not implemented");
     }
 
-    std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresource(const CopyTextureSubresourceParam& params) const
+    std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresource([[maybe_unused]]const CopyTextureSubresourceParam& params) const
     {
         throw std::exception("not implemented");
     }
@@ -117,7 +121,7 @@ namespace ninniku {
         return res;
     }
 
-    BufferHandle DX12::CreateBuffer(const BufferHandle& src)
+    BufferHandle DX12::CreateBuffer([[maybe_unused]]const BufferHandle& src)
     {
         throw std::exception("not implemented");
     }
@@ -222,7 +226,7 @@ namespace ninniku {
         return false;
     }
 
-    TextureHandle DX12::CreateTexture(const TextureParamHandle& params)
+    TextureHandle DX12::CreateTexture([[maybe_unused]]const TextureParamHandle& params)
     {
         throw std::exception("not implemented");
     }
@@ -281,14 +285,15 @@ namespace ninniku {
 
             auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
 
-            dxCmd->_cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+            CD3DX12_RESOURCE_BARRIER pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            dxCmd->_cmdList->ResourceBarrier(1, &pushBarrier);
 
             CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle{ _srvUAVHeap->GetGPUDescriptorHandleForHeapStart(), dxUAV->_srvUAVIndex, _srvUAVDescriptorSize };
             dxCmd->_cmdList->SetComputeRootDescriptorTable(0, uavHandle);
             dxCmd->_cmdList->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
 
-            dxCmd->_cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
-            int i = 0;
+            CD3DX12_RESOURCE_BARRIER popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            dxCmd->_cmdList->ResourceBarrier(1, &popBarrier);
         }
 
         throw std::exception("not implemented");
@@ -347,7 +352,7 @@ namespace ninniku {
         return true;
     }
 
-    bool DX12::LoadShader(const std::string& name, const void* pData, const size_t size)
+    bool DX12::LoadShader([[maybe_unused]]const std::string& name, [[maybe_unused]]const void* pData, [[maybe_unused]]const size_t size)
     {
         throw std::exception("not implemented");
     }
@@ -492,12 +497,12 @@ namespace ninniku {
         return true;
     }
 
-    MappedResourceHandle DX12::MapBuffer(const BufferHandle& bObj)
+    MappedResourceHandle DX12::MapBuffer([[maybe_unused]]const BufferHandle& bObj)
     {
         throw std::exception("not implemented");
     }
 
-    MappedResourceHandle DX12::MapTexture(const TextureHandle& tObj, const uint32_t index)
+    MappedResourceHandle DX12::MapTexture([[maybe_unused]]const TextureHandle& tObj, [[maybe_unused]]const uint32_t index)
     {
         throw std::exception("not implemented");
     }
@@ -567,7 +572,7 @@ namespace ninniku {
                     throw new std::exception("DX12::ParseShaderResources unsupported type");
             }
 
-            auto fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;
+            fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;
 
             LOGD << boost::str(fmt);
 
@@ -581,7 +586,7 @@ namespace ninniku {
         return true;
     }
 
-    bool DX12::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
+    bool DX12::UpdateConstantBuffer([[maybe_unused]]const std::string& name, [[maybe_unused]]void* data, [[maybe_unused]]const uint32_t size)
     {
         throw std::exception("not implemented");
     }

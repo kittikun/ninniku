@@ -375,7 +375,8 @@ namespace ninniku {
             res->texture.emplace<DX11Tex1D>();
             hr = _device->CreateTexture1D(&desc, initialData.data(), std::get<DX11Tex1D>(res->texture).GetAddressOf());
             apiName = "ID3D11Device::CreateTexture1D";
-        } else if (is3d) {
+        } else {
+            // is3d
             D3D11_TEXTURE3D_DESC desc = {};
 
             desc.Width = params->width;
@@ -774,13 +775,13 @@ namespace ninniku {
                 srvDesc.Texture2DArray.MostDetailedMip = i;
                 srvDesc.Texture2DArray.MipLevels = 1;
 
-                auto srv = new DX11ShaderResourceView();
-                auto hr = _device->CreateShaderResourceView(obj->GetResource(), &srvDesc, srv->_resource.GetAddressOf());
+                auto srvArray = new DX11ShaderResourceView();
+                hr = _device->CreateShaderResourceView(obj->GetResource(), &srvDesc, srvArray->_resource.GetAddressOf());
 
                 if (CheckAPIFailed(hr, "ID3D11Device::CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURE2DARRAY")) {
                     return false;
                 } else {
-                    obj->srvArray[i].reset(srv);
+                    obj->srvArray[i].reset(srvArray);
                 }
             }
 

@@ -102,7 +102,7 @@ namespace ninniku {
         virtual const ShaderResourceView* GetSRVCube() const = 0;
         virtual const ShaderResourceView* GetSRVCubeArray() const = 0;
         virtual const ShaderResourceView* GetSRVArray(uint32_t index) const = 0;
-		virtual const ShaderResourceView* GetSRVArrayWithMips() const = 0;
+        virtual const ShaderResourceView* GetSRVArrayWithMips() const = 0;
         virtual const UnorderedAccessView* GetUAV(uint32_t index) const = 0;
 
         // Initial desc that was used to create the resource

@@ -29,8 +29,7 @@
 
 #include <comdef.h>
 
-namespace ninniku
-{
+namespace ninniku {
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {
@@ -127,7 +126,7 @@ namespace ninniku
         return true;
     }
 
-    bool ddsImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    bool ddsImageImpl::LoadRaw([[maybe_unused]]const void* pData, [[maybe_unused]]const size_t size, [[maybe_unused]]const uint32_t width, [[maybe_unused]]const uint32_t height, [[maybe_unused]]const int32_t format)
     {
         throw std::exception("not implemented");
     }
@@ -161,7 +160,7 @@ namespace ninniku
         auto hr = _scratch.Initialize(_meta);
 
         if (FAILED(hr)) {
-            auto fmt = boost::format("Failed to create DDS with:");
+            fmt = boost::format("Failed to create DDS with:");
             LOGE << boost::str(fmt);
             _com_error err(hr);
             LOGE << err.ErrorMessage();

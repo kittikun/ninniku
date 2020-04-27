@@ -32,8 +32,7 @@
 #include <filesystem>
 #include <DirectXPackedVector.h>
 
-namespace ninniku
-{
+namespace ninniku {
     genericImage::genericImage()
         : _impl{ new genericImageImpl() }
     {
@@ -153,7 +152,7 @@ namespace ninniku
         return true;
     }
 
-    bool genericImageImpl::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    bool genericImageImpl::LoadRaw([[maybe_unused]]const void* pData, [[maybe_unused]]const size_t size, [[maybe_unused]]const uint32_t width, [[maybe_unused]]const uint32_t height, [[maybe_unused]]const int32_t format)
     {
         throw std::exception("not implemented");
     }
@@ -190,7 +189,7 @@ namespace ninniku
         return res;
     }
 
-    void genericImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    void genericImageImpl::InitializeFromTextureObject([[maybe_unused]]RenderDeviceHandle& dx, [[maybe_unused]]const TextureHandle& srcTex)
     {
         throw std::exception("not implemented");
     }
@@ -210,7 +209,7 @@ namespace ninniku
         }
     }
 
-    void genericImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
+    void genericImageImpl::UpdateSubImage([[maybe_unused]]const uint32_t dstFace, [[maybe_unused]]const uint32_t dstMip, [[maybe_unused]]const uint8_t* newData, [[maybe_unused]]const uint32_t newRowPitch)
     {
         throw std::exception("not implemented");
     }

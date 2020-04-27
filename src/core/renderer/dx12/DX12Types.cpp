@@ -23,16 +23,20 @@
 
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
+
+#pragma warning(push)
+#pragma warning(disable:4100)
 #include "pix3.h"
+#pragma warning(pop)
 
 namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
-    bool DX12Command::Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shader, const DX12RootSignature& rootSignature)
+    bool DX12Command::Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shaderCode, const DX12RootSignature& rootSignature)
     {
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-        desc.CS = shader;
+        desc.CS = shaderCode;
         desc.pRootSignature = rootSignature.Get();
 
         auto hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pso));
@@ -43,13 +47,6 @@ namespace ninniku {
         // only support a single GPU for now
         // we also only support compute for now and don't expect any pipeline state changes for now
         hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), _pso.Get(), IID_PPV_ARGS(&_cmdList));
-
-        if (hr == DXGI_ERROR_DEVICE_REMOVED) {
-            auto test = device->GetDeviceRemovedReason();
-
-            CheckAPIFailed(test, "ID3D12Device::GetDeviceRemovedReason");
-            int i = 0;
-        }
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
             return false;
