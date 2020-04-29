@@ -76,8 +76,11 @@ namespace ninniku {
 #if defined(_USE_RENDERDOC)
         // renderdoc doesn't support DXIL at the moment
         // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
-        if ((renderer != ERenderer::RENDERER_DX12) && (renderer != ERenderer::RENDERER_WARP_DX12))
+        if ((renderer != ERenderer::RENDERER_DX12) && (renderer != ERenderer::RENDERER_WARP_DX12)) {
             LoadRenderDoc();
+        } else {
+            LOGW << "Renderdoc doesn't support DXIL so disabling it";
+        }
 #endif
 
         switch (renderer) {
@@ -136,6 +139,7 @@ namespace ninniku {
         }
 #endif
 
+        sRenderer->Finalize();
         sRenderer.release();
     }
 }
