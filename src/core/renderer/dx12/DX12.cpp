@@ -87,9 +87,9 @@ namespace ninniku {
 
             auto srv = new DX12ShaderResourceView();
 
-            srv->_srvUAVIndex = _srvUAVIndex++;
+            srv->_resource = res->_buffer;
 
-            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), srv->_srvUAVIndex, _srvUAVDescriptorSize);
+            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize);
 
             _device->CreateShaderResourceView(res->_buffer.Get(), &srvDesc, srvHandle);
 
@@ -108,9 +108,9 @@ namespace ninniku {
 
             auto uav = new DX12UnorderedAccessView();
 
-            uav->_srvUAVIndex = _srvUAVIndex++;
+            uav->_resource = res->_buffer;
 
-            CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle{ _srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), uav->_srvUAVIndex, _srvUAVDescriptorSize };
+            CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle{ _srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize };
 
             _device->CreateUnorderedAccessView(res->_buffer.Get(), nullptr, &uavDesc, uavHandle);
 
@@ -231,7 +231,7 @@ namespace ninniku {
         throw std::exception("not implemented");
     }
 
-    bool DX12::Dispatch(const CommandHandle& cmd) const
+    bool DX12::Dispatch(const CommandHandle& cmd)
     {
         DX12Command* dxCmd = static_cast<DX12Command*>(cmd.get());
 
@@ -257,7 +257,7 @@ namespace ninniku {
             }
         }
 
-        dxCmd->_cmdList->SetPipelineState(dxCmd->_pso.Get());
+        dxCmd->_cmdList->SetPipelineState(dxCmd->_pipelineState.Get());
         dxCmd->_cmdList->SetComputeRootSignature(dxCmd->_rootSignature.Get());
 
         ID3D12DescriptorHeap* ppHeaps[] = { _srvUAVHeap.Get() };
@@ -288,15 +288,44 @@ namespace ninniku {
             CD3DX12_RESOURCE_BARRIER pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
             dxCmd->_cmdList->ResourceBarrier(1, &pushBarrier);
 
-            CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle{ _srvUAVHeap->GetGPUDescriptorHandleForHeapStart(), dxUAV->_srvUAVIndex, _srvUAVDescriptorSize };
-            dxCmd->_cmdList->SetComputeRootDescriptorTable(0, uavHandle);
+            dxCmd->_cmdList->SetComputeRootUnorderedAccessView(found->second, dxUAV->_resource->GetGPUVirtualAddress());
             dxCmd->_cmdList->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
 
             CD3DX12_RESOURCE_BARRIER popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             dxCmd->_cmdList->ResourceBarrier(1, &popBarrier);
         }
 
-        throw std::exception("not implemented");
+        auto hr = dxCmd->_cmdList->Close();
+
+        if (CheckAPIFailed(hr, "ID3D12GraphicsCommandList::Close"))
+            return false;
+
+        // for now we can to execute the command list right away
+        ID3D12CommandList* pCommandLists[] = { dxCmd->_cmdList.Get() };
+
+        _commandQueue->ExecuteCommandLists(1, pCommandLists);
+
+        uint64_t fenceValue = InterlockedIncrement(&_fenceValue);
+        hr = _commandQueue->Signal(_fence.Get(), fenceValue);
+
+        if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
+            return false;
+
+        hr = _fence->SetEventOnCompletion(fenceValue, _fenceEvent);
+
+        if (CheckAPIFailed(hr, "ID3D12Fence::SetEventOnCompletion"))
+            return false;
+
+        WaitForSingleObject(_fenceEvent, INFINITE);
+
+        return true;
+    }
+
+    void DX12::Finalize()
+    {
+        // wait in case the gpu is still running something
+        WaitForSingleObject(_fenceEvent, INFINITE);
+        CloseHandle(_fenceEvent);
     }
 
     bool DX12::Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp)
@@ -321,20 +350,7 @@ namespace ninniku {
             }
         }
 
-        if (!InitializeHeaps())
-            return false;
-
-        // Create command allocator (only for compute for now)
-        auto hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocator));
-
-        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator"))
-            return false;
-
-        return true;
-    }
-
-    bool DX12::InitializeHeaps()
-    {
+        // heap
         D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
         srvUavHeapDesc.NumDescriptors = MAX_DESCRIPTOR_COUNT;
         srvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -348,6 +364,33 @@ namespace ninniku {
             return false;
 
         _srvUAVDescriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+        // Create command allocator (only for compute for now)
+        hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocator));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator"))
+            return false;
+
+        // command queue
+        D3D12_COMMAND_QUEUE_DESC queueDesc = { D3D12_COMMAND_LIST_TYPE_COMPUTE, 0, D3D12_COMMAND_QUEUE_FLAG_NONE };
+
+        hr = _device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_commandQueue));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandQueue"))
+            return false;
+
+        // fence
+        hr = _device->CreateFence(0, D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS(&_fence));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateFence"))
+            return false;
+
+        // fence event
+        _fenceEvent = CreateEvent(nullptr, false, false, L"Ninniku Fence Event");
+        if (_fenceEvent == nullptr) {
+            LOGE << "Failed to create fence event";
+            return false;
+        }
 
         return true;
     }

@@ -26,8 +26,10 @@
 
 namespace ninniku {
     using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
+    using DX12CommandQueue = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
     using DX12GraphicsCommandList = Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>;
     using DX12Device = Microsoft::WRL::ComPtr<ID3D12Device>;
+    using DX12Fence = Microsoft::WRL::ComPtr<ID3D12Fence>;
     using DX12PipelineState = Microsoft::WRL::ComPtr<ID3D12PipelineState>;
     using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
     using DX12Resource = Microsoft::WRL::ComPtr<ID3D12Resource>;
@@ -66,7 +68,7 @@ namespace ninniku {
 
         bool _isInitialized = false;
         DX12GraphicsCommandList _cmdList;
-        DX12PipelineState _pso;
+        DX12PipelineState _pipelineState;
         DX12RootSignature _rootSignature;
     };
 
@@ -91,13 +93,11 @@ namespace ninniku {
     {
     public:
         DX12Resource _resource;
-        int32_t _srvUAVIndex;
     };
 
     struct DX12UnorderedAccessView final : public UnorderedAccessView
     {
     public:
         DX12Resource _resource;
-        int32_t _srvUAVIndex;
     };
 } // namespace ninniku

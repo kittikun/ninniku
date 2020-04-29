@@ -444,7 +444,7 @@ namespace ninniku {
         return TextureHandle(std::move(res));
     }
 
-    bool DX11::Dispatch(const CommandHandle& cmd) const
+    bool DX11::Dispatch(const CommandHandle& cmd)
     {
         auto found = _shaders.find(cmd->shader);
 

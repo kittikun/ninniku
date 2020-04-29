@@ -39,14 +39,17 @@ namespace ninniku {
         desc.CS = shaderCode;
         desc.pRootSignature = rootSignature.Get();
 
-        auto hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pso));
+        auto hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pipelineState));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
+            return false;
 
         // keep a reference on the root signature
         _rootSignature = rootSignature;
 
         // only support a single GPU for now
         // we also only support compute for now and don't expect any pipeline state changes for now
-        hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), _pso.Get(), IID_PPV_ARGS(&_cmdList));
+        hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), _pipelineState.Get(), IID_PPV_ARGS(&_cmdList));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
             return false;

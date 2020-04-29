@@ -40,7 +40,8 @@ namespace ninniku {
         CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
-        bool Dispatch(const CommandHandle& cmd) const override;
+        bool Dispatch(const CommandHandle& cmd) override;
+        void Finalize() override;
         bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;
         bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
         MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
@@ -51,7 +52,6 @@ namespace ninniku {
 
     private:
         bool CreateDevice(int adapter);
-        bool InitializeHeaps();
         bool LoadShader(const std::string& name, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::string& shaderPath);
         bool ParseRootSignature(const std::string& name, IDxcBlobEncoding* pBlob);
@@ -61,6 +61,10 @@ namespace ninniku {
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 8;
         DX12Device _device;
         DX12CommandAllocator _commandAllocator;
+        DX12CommandQueue _commandQueue;
+        DX12Fence _fence;
+        uint64_t volatile _fenceValue;
+        volatile HANDLE _fenceEvent;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
         std::unordered_map<std::string, DX12RootSignature> _rootSignatures;
         std::unordered_map<std::string, D3D12_SHADER_BYTECODE> _shaders;

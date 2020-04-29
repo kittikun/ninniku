@@ -45,7 +45,8 @@ namespace ninniku {
         virtual CommandHandle CreateCommand() const = 0;
         virtual DebugMarkerHandle CreateDebugMarker(const std::string& name) const = 0;
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
-        virtual bool Dispatch(const CommandHandle& cmd) const = 0;
+        virtual bool Dispatch(const CommandHandle& cmd) = 0;
+        virtual void Finalize() = 0;
         virtual bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) = 0;
         virtual bool LoadShader(const std::string& name, const void* pData, const size_t size) = 0;
         virtual MappedResourceHandle MapBuffer(const BufferHandle& bObj) = 0;
