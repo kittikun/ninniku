@@ -62,9 +62,18 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
+    struct DX12CommandInitDesc
+    {
+        const DX12Device& device;
+        const DX12CommandAllocator& commandAllocator;
+        const D3D12_SHADER_BYTECODE& shaderCode;
+        const DX12RootSignature& rootSignature;
+        bool isWarp;
+    };
+
     struct DX12Command final : public Command
     {
-        bool Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shaderCode, const DX12RootSignature& rootSignature);
+        bool Initialize(const DX12CommandInitDesc& initDesc);
 
         bool _isInitialized = false;
         DX12GraphicsCommandList _cmdList;
@@ -99,5 +108,25 @@ namespace ninniku {
     {
     public:
         DX12Resource _resource;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // GPU to CPU readback
+    //////////////////////////////////////////////////////////////////////////
+
+    struct DX12MappedResource final : public MappedResource
+    {
+    public:
+        DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data);
+        ~DX12MappedResource() override;
+
+        void* GetData() const override { return _data; }
+        uint32_t GetRowPitch() const override { return 0; }
+
+    private:
+        DX12Resource _resource;
+        uint32_t _subresource;
+        const D3D12_RANGE* _range;
+        void* _data;
     };
 } // namespace ninniku

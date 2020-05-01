@@ -18,27 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
+                       "DENY_HULL_SHADER_ROOT_ACCESS | " \
+                       "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
+                       "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
+                       "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
+            "UAV(u0)"
 
-#include <boost/mpl/vector.hpp>
+RWStructuredBuffer<uint> dstBuffer : register(u0);
 
-struct SetupFixtureDX11
+[numthreads(16, 1, 1)]
+void main(uint3 DTI : SV_DispatchThreadID)
 {
-    SetupFixtureDX11();
-    ~SetupFixtureDX11();
-};
-
-struct SetupFixtureDX12
-{
-    SetupFixtureDX12();
-    ~SetupFixtureDX12();
-};
-
-// there is a weird error when trying to create a pipeline state object in release only so disable for now
-#if _DEBUG
-typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesAll;
-#else
-typedef boost::mpl::vector<SetupFixtureDX11> FixturesAll;
-#endif
-
-typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
+    dstBuffer[DTI.x] = DTI.x;
+}

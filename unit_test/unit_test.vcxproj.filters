@@ -14,6 +14,9 @@
     <Filter Include="Source Files\shaders\dx11">
       <UniqueIdentifier>{77e38d00-6c2c-4bd9-be68-ac63d982a312}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\shaders\dx12">
+      <UniqueIdentifier>{53d43b84-f152-44c8-bc96-7b40bec58335}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\fixture.cpp">
@@ -74,5 +77,10 @@
     <FxCompile Include="src\shaders\dx11\resize.hlsl">
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="src\shaders\dx12\fillBuffer.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

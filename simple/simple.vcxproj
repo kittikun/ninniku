@@ -200,8 +200,8 @@
   <ItemGroup>
     <CustomBuild Include="shaders\fillBuffer.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -Od -Zi -Qembed_debug -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -Od -Zi -Qembed_debug -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

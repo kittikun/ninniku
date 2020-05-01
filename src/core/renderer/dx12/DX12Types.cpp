@@ -33,23 +33,26 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
-    bool DX12Command::Initialize(const DX12Device& device, const DX12CommandAllocator& commandAllocator, const D3D12_SHADER_BYTECODE& shaderCode, const DX12RootSignature& rootSignature)
+    bool DX12Command::Initialize(const DX12CommandInitDesc& initDesc)
     {
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-        desc.CS = shaderCode;
-        desc.pRootSignature = rootSignature.Get();
+        desc.CS = initDesc.shaderCode;
+        desc.pRootSignature = initDesc.rootSignature.Get();
 
-        auto hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pipelineState));
+        if (initDesc.isWarp)
+            desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
+
+        auto hr = initDesc.device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pipelineState));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
             return false;
 
         // keep a reference on the root signature
-        _rootSignature = rootSignature;
+        _rootSignature = initDesc.rootSignature;
 
         // only support a single GPU for now
         // we also only support compute for now and don't expect any pipeline state changes for now
-        hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocator.Get(), _pipelineState.Get(), IID_PPV_ARGS(&_cmdList));
+        hr = initDesc.device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, initDesc.commandAllocator.Get(), _pipelineState.Get(), IID_PPV_ARGS(&_cmdList));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
             return false;
@@ -80,5 +83,21 @@ namespace ninniku {
 #ifdef _USE_RENDERDOC
         PIXEndEvent();
 #endif
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12MappedResource
+    //////////////////////////////////////////////////////////////////////////
+    DX12MappedResource::DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data)
+        : _resource{ resource }
+        , _subresource{ subresource }
+        , _range{ range }
+        , _data{ data }
+    {
+    }
+
+    DX12MappedResource::~DX12MappedResource()
+    {
+        _resource->Unmap(_subresource, _range);
     }
 } // namespace ninniku

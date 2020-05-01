@@ -30,10 +30,12 @@ namespace ninniku {
     class DX11 final : public RenderDevice
     {
     public:
-        // RenderDevice
-        virtual ERenderer GetType() const override { return ERenderer::RENDERER_DX11; }
+        DX11(ERenderer type);
 
-        void CopyBufferResource(const CopyBufferSubresourceParam& params) const override;
+        // RenderDevice
+        virtual ERenderer GetType() const override { return _type; }
+
+        void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
@@ -42,7 +44,7 @@ namespace ninniku {
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override {}
-        bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;
+        bool Initialize(const std::vector<std::string>& shaderPaths) override;
         bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
         MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
         MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) override;
@@ -78,6 +80,7 @@ namespace ninniku {
         }
 
     private:
+        ERenderer _type;
         DX11Device _device;
         DX11Context _context;
         std::unordered_map<std::string, ComputeShader> _shaders;

@@ -33,8 +33,12 @@
 #include <d3dcompiler.h>
 
 namespace ninniku {
-    //////////////////////////////////////////////////////////////////////////
-    void DX11::CopyBufferResource(const CopyBufferSubresourceParam& params) const
+    DX11::DX11(ERenderer type)
+        : _type{ type }
+    {
+    }
+
+    void DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
         auto src = static_cast<const DX11BufferObject*>(params.src);
         auto dst = static_cast<const DX11BufferObject*>(params.dst);
@@ -168,10 +172,10 @@ namespace ninniku {
         // allocate memory
         res->_data.resize(stride * src->desc->numElements);
 
-        auto fmt = boost::format("cmftImageImpl::InitializeFromBufferObject with ElementSize=%1%, NumElements=%2%") % src->desc->elementSize % src->desc->numElements;
+        auto fmt = boost::format("DX11::CreateBuffer from BufferHandle with ElementSize=%1%, NumElements=%2%") % src->desc->elementSize % src->desc->numElements;
         LOG << boost::str(fmt);
 
-        auto marker = CreateDebugMarker("InitializeFromBufferObject");
+        auto marker = CreateDebugMarker("CreateBufferFromBufferObject");
 
         // create a temporary object
         auto params = src->desc->Duplicate();
@@ -541,11 +545,11 @@ namespace ninniku {
         return true;
     }
 
-    bool DX11::Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp)
+    bool DX11::Initialize(const std::vector<std::string>& shaderPaths)
     {
         auto adapter = 0;
 
-        if (isWarp)
+        if (_type & ERenderer::RENDERER_WARP)
             adapter = -1;
 
         if (!CreateDevice(adapter, _device.GetAddressOf())) {

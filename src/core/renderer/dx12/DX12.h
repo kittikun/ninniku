@@ -31,9 +31,11 @@ namespace ninniku {
     class DX12 final : public RenderDevice
     {
     public:
-        ERenderer GetType() const override { return ERenderer::RENDERER_DX12; }
+        DX12(ERenderer type);
 
-        void CopyBufferResource(const CopyBufferSubresourceParam& params) const override;
+        ERenderer GetType() const override { return _type; }
+
+        void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
@@ -42,7 +44,7 @@ namespace ninniku {
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
-        bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) override;
+        bool Initialize(const std::vector<std::string>& shaderPaths) override;
         bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
         MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
         MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) override;
@@ -52,6 +54,7 @@ namespace ninniku {
 
     private:
         bool CreateDevice(int adapter);
+        bool ExecuteCommand(const DX12GraphicsCommandList& cmdList);
         bool LoadShader(const std::string& name, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::string& shaderPath);
         bool ParseRootSignature(const std::string& name, IDxcBlobEncoding* pBlob);
@@ -59,12 +62,22 @@ namespace ninniku {
 
     private:
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 8;
+        ERenderer _type;
+
         DX12Device _device;
-        DX12CommandAllocator _commandAllocator;
+
+        // commands and fences
+        DX12CommandAllocator _commandAllocatorCompute;
+        DX12CommandAllocator _commandAllocatorCopy;
         DX12CommandQueue _commandQueue;
         DX12Fence _fence;
         uint64_t volatile _fenceValue;
         volatile HANDLE _fenceEvent;
+
+        // copy
+        DX12GraphicsCommandList _copyCmdList;
+
+        // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
         std::unordered_map<std::string, DX12RootSignature> _rootSignatures;
         std::unordered_map<std::string, D3D12_SHADER_BYTECODE> _shaders;
@@ -72,6 +85,7 @@ namespace ninniku {
         using MapNameSlot = std::unordered_map<std::string, uint32_t>;
         std::unordered_map<std::string, MapNameSlot> _resourceBindings;
 
+        // heap
         DX12DescriptorHeap _srvUAVHeap;
         int32_t _srvUAVIndex;
         uint32_t _srvUAVDescriptorSize;

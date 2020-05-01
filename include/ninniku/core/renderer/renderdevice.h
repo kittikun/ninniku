@@ -38,7 +38,7 @@ namespace ninniku {
 
         virtual ERenderer GetType() const = 0;
 
-        virtual void CopyBufferResource(const CopyBufferSubresourceParam& params) const = 0;
+        virtual void CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
         virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const = 0;
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
@@ -47,7 +47,7 @@ namespace ninniku {
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
         virtual bool Dispatch(const CommandHandle& cmd) = 0;
         virtual void Finalize() = 0;
-        virtual bool Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp) = 0;
+        virtual bool Initialize(const std::vector<std::string>& shaderPaths) = 0;
         virtual bool LoadShader(const std::string& name, const void* pData, const size_t size) = 0;
         virtual MappedResourceHandle MapBuffer(const BufferHandle& bObj) = 0;
         virtual MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) = 0;

@@ -255,7 +255,7 @@ namespace ninniku {
         if (bc6hbc7) {
             HRESULT hr;
 
-            if (dx->GetType() == ERenderer::RENDERER_DX11) {
+            if ((dx->GetType() & ERenderer::RENDERER_WARP) == 0) {
                 LOGD_INDENT_START << "DirectXTex GPU Compression";
                 auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
                 auto dx11 = static_cast<DX11*>(dx.get());

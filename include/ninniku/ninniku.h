@@ -26,8 +26,7 @@
 #include <string>
 #include <vector>
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11;
 
     enum class ELogLevel : uint8_t
@@ -38,12 +37,13 @@ namespace ninniku
         LL_FULL
     };
 
-    enum class ERenderer : uint8_t
+    enum ERenderer : uint8_t
     {
-        RENDERER_DX11,
-        RENDERER_DX12,
-        RENDERER_WARP_DX11,
-        RENDERER_WARP_DX12
+        RENDERER_WARP = 0x1,
+        RENDERER_DX11 = 0x2,
+        RENDERER_DX12 = 0x4,
+        RENDERER_WARP_DX11 = RENDERER_WARP | RENDERER_DX11,
+        RENDERER_WARP_DX12 = RENDERER_WARP | RENDERER_DX12
     };
 
     /// <summary>

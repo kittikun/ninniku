@@ -41,9 +41,31 @@
 #include <dxc/Support/d3dx12.h>
 
 namespace ninniku {
-    void DX12::CopyBufferResource([[maybe_unused]]const CopyBufferSubresourceParam& params) const
+    DX12::DX12(ERenderer type)
+        : _type{ type }
     {
-        throw std::exception("not implemented");
+    }
+
+    void DX12::CopyBufferResource(const CopyBufferSubresourceParam& params)
+    {
+        auto dxSrc = static_cast<const DX12BufferObject*>(params.src);
+        auto dxDst = static_cast<const DX12BufferObject*>(params.dst);
+        _copyCmdList->Close();
+        _copyCmdList->Reset(_commandAllocatorCopy.Get(), nullptr);
+
+        CD3DX12_RESOURCE_BARRIER pushBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(dxSrc->_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+        // we assume that dst is already in D3D12_RESOURCE_STATE_COPY_DEST
+        _copyCmdList->ResourceBarrier(1, &pushBarrierSrc);
+        _copyCmdList->CopyResource(dxDst->_buffer.Get(), dxSrc->_buffer.Get());
+
+        CD3DX12_RESOURCE_BARRIER popBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(dxSrc->_buffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
+
+        _copyCmdList->ResourceBarrier(1, &popBarrierSrc);
+
+        _copyCmdList->Close();
+
+        ExecuteCommand(_copyCmdList);
     }
 
     std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresource([[maybe_unused]]const CopyTextureSubresourceParam& params) const
@@ -55,22 +77,32 @@ namespace ninniku {
     {
         auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
         auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
+        auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
         auto bufferSize = params->numElements * params->elementSize;
 
         auto fmt = boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize;
         LOGD << boost::str(fmt);
 
-        D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
-
-        if (isUAV)
-            flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
         auto res = std::make_unique<DX12BufferObject>();
 
-        auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-        auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
+        res->desc = params;
 
-        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, nullptr, IID_PPV_ARGS(res->_buffer.GetAddressOf()));
+        D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE;
+        D3D12_RESOURCE_STATES resState = D3D12_RESOURCE_STATE_COMMON;
+        D3D12_HEAP_TYPE heapFlags = D3D12_HEAP_TYPE_DEFAULT;
+
+        if (isUAV)
+            resFlags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+        if (isCPURead) {
+            resState = D3D12_RESOURCE_STATE_COPY_DEST;
+            heapFlags = D3D12_HEAP_TYPE_READBACK;
+        }
+
+        auto heapProperties = CD3DX12_HEAP_PROPERTIES(heapFlags);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, resFlags);
+
+        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, resState, nullptr, IID_PPV_ARGS(res->_buffer.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
@@ -121,9 +153,42 @@ namespace ninniku {
         return res;
     }
 
-    BufferHandle DX12::CreateBuffer([[maybe_unused]]const BufferHandle& src)
+    BufferHandle DX12::CreateBuffer(const BufferHandle& src)
     {
-        throw std::exception("not implemented");
+        assert(src->desc->elementSize % 4 == 0);
+
+        auto res = std::make_unique<DX12BufferObject>();
+
+        auto stride = src->desc->elementSize / 4;
+
+        // allocate memory
+        res->_data.resize(stride * src->desc->numElements);
+
+        auto fmt = boost::format("DX12::CreateBuffer from BufferHandle with ElementSize=%1%, NumElements=%2%") % src->desc->elementSize % src->desc->numElements;
+        LOG << boost::str(fmt);
+
+        auto marker = CreateDebugMarker("CreateBufferFromBufferObject");
+
+        // create a temporary object
+        auto params = src->desc->Duplicate();
+
+        params->viewflags = RV_CPU_READ;
+
+        auto dst = CreateBuffer(params);
+
+        CopyBufferSubresourceParam copyParams = {};
+
+        copyParams.src = src.get();
+        copyParams.dst = dst.get();
+
+        CopyBufferResource(copyParams);
+
+        auto mapped = MapBuffer(dst);
+        uint32_t dstPitch = static_cast<uint32_t>(res->_data.size() * sizeof(uint32_t));
+
+        memcpy_s(&res->_data.front(), dstPitch, mapped->GetData(), dstPitch);
+
+        return res;
     }
 
     DebugMarkerHandle DX12::CreateDebugMarker(const std::string& name) const
@@ -252,9 +317,14 @@ namespace ninniku {
                 return false;
             }
 
-            if (!dxCmd->Initialize(_device, _commandAllocator, foundShader->second, foundRS->second)) {
+            bool isWarp = _type & ERenderer::RENDERER_WARP;
+            DX12CommandInitDesc initDesc = { _device, _commandAllocatorCompute, foundShader->second, foundRS->second, isWarp };
+
+            if (!dxCmd->Initialize(initDesc)) {
                 return false;
             }
+        } else {
+            dxCmd->_cmdList->Reset(_commandAllocatorCompute.Get(), dxCmd->_pipelineState.Get());
         }
 
         dxCmd->_cmdList->SetPipelineState(dxCmd->_pipelineState.Get());
@@ -285,13 +355,13 @@ namespace ninniku {
 
             auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
 
-            CD3DX12_RESOURCE_BARRIER pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            CD3DX12_RESOURCE_BARRIER pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
             dxCmd->_cmdList->ResourceBarrier(1, &pushBarrier);
 
             dxCmd->_cmdList->SetComputeRootUnorderedAccessView(found->second, dxUAV->_resource->GetGPUVirtualAddress());
             dxCmd->_cmdList->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
 
-            CD3DX12_RESOURCE_BARRIER popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            CD3DX12_RESOURCE_BARRIER popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(dxUAV->_resource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
             dxCmd->_cmdList->ResourceBarrier(1, &popBarrier);
         }
 
@@ -300,13 +370,20 @@ namespace ninniku {
         if (CheckAPIFailed(hr, "ID3D12GraphicsCommandList::Close"))
             return false;
 
+        ExecuteCommand(dxCmd->_cmdList);
+
+        return true;
+    }
+
+    bool DX12::ExecuteCommand(const DX12GraphicsCommandList& cmdList)
+    {
         // for now we can to execute the command list right away
-        ID3D12CommandList* pCommandLists[] = { dxCmd->_cmdList.Get() };
+        ID3D12CommandList* pCommandLists[] = { cmdList.Get() };
 
         _commandQueue->ExecuteCommandLists(1, pCommandLists);
 
         uint64_t fenceValue = InterlockedIncrement(&_fenceValue);
-        hr = _commandQueue->Signal(_fence.Get(), fenceValue);
+        auto hr = _commandQueue->Signal(_fence.Get(), fenceValue);
 
         if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
             return false;
@@ -323,16 +400,19 @@ namespace ninniku {
 
     void DX12::Finalize()
     {
-        // wait in case the gpu is still running something
-        WaitForSingleObject(_fenceEvent, INFINITE);
-        CloseHandle(_fenceEvent);
+        // there seems to be a problem here when using the WARP renderer, so ignoring for now
+        if ((_type & ERenderer::RENDERER_WARP) == 0) {
+            // wait in case the gpu is still running something
+            WaitForSingleObject(_fenceEvent, INFINITE);
+            CloseHandle(_fenceEvent);
+        }
     }
 
-    bool DX12::Initialize(const std::vector<std::string>& shaderPaths, const bool isWarp)
+    bool DX12::Initialize(const std::vector<std::string>& shaderPaths)
     {
         auto adapter = 0;
 
-        if (isWarp)
+        if (_type & ERenderer::RENDERER_WARP)
             adapter = -1;
 
         if (!CreateDevice(adapter)) {
@@ -365,10 +445,15 @@ namespace ninniku {
 
         _srvUAVDescriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-        // Create command allocator (only for compute for now)
-        hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocator));
+        // Create command allocators
+        hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocatorCompute));
 
-        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator"))
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator (compute)"))
+            return false;
+
+        hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&_commandAllocatorCopy));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator (copy)"))
             return false;
 
         // command queue
@@ -391,6 +476,13 @@ namespace ninniku {
             LOGE << "Failed to create fence event";
             return false;
         }
+
+        // copy command list
+        // only support a single GPU for now
+        hr = _device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, _commandAllocatorCopy.Get(), nullptr, IID_PPV_ARGS(&_copyCmdList));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList (copy)"))
+            return false;
 
         return true;
     }
@@ -504,7 +596,7 @@ namespace ninniku {
         };
 
         auto numFiles = std::count_if(begin, end, fileCounter);
-        auto fmt = boost::format("Found %1% compiled shaders in /%2%") % numFiles % shaderPath;
+        auto fmt = boost::format("Found %1% compiled shaders in %2%") % numFiles % shaderPath;
 
         LOGD << boost::str(fmt);
 
@@ -540,9 +632,17 @@ namespace ninniku {
         return true;
     }
 
-    MappedResourceHandle DX12::MapBuffer([[maybe_unused]]const BufferHandle& bObj)
+    MappedResourceHandle DX12::MapBuffer(const BufferHandle& bObj)
     {
-        throw std::exception("not implemented");
+        auto obj = static_cast<const DX12BufferObject*>(bObj.get());
+        void* data = nullptr;
+
+        auto hr = obj->_buffer->Map(0, nullptr, &data);
+
+        if (CheckAPIFailed(hr, "ID3D12Resource::Map"))
+            return std::unique_ptr<MappedResource>();
+
+        return std::make_unique<DX12MappedResource>(obj->_buffer, nullptr, 0, data);
     }
 
     MappedResourceHandle DX12::MapTexture([[maybe_unused]]const TextureHandle& tObj, [[maybe_unused]]const uint32_t index)

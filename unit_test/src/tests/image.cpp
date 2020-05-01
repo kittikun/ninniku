@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(cmft_load)
     CheckMD5(std::get<0>(data2), std::get<1>(data2), 0x7df5652cbaf3a5af, 0xf758a4c5d9f5b418);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::ddsImage>();
 
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(dds_texture_param)
     BOOST_TEST(param->width == 512);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -232,7 +232,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, Fixtures, T)
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xe4b0b9443383639a, 0x1236acd08f0a5de7);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesDX11, T)
 {
     auto& dx = ninniku::GetRenderer();
     auto image = std::make_unique<ninniku::ddsImage>();
@@ -252,7 +252,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, Fixtures, T)
     CheckFileMD5(filename, 0x90d2840de5fc390c, 0xaafa055284578053);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesDX11, T)
 {
     auto& dx = ninniku::GetRenderer();
     auto resTex = GenerateColoredMips(dx);
@@ -268,7 +268,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, Fixtures, T)
     CheckFileMD5(filename, 0x96fc6f64b6361b46, 0xbb4679a507b22fe8);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesDX11, T)
 {
     auto& dx = ninniku::GetRenderer();
     auto resTex = GenerateColoredCubeArrayMips(dx);
@@ -292,7 +292,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, Fixtures,
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x3d6bccfb68bfe11f, 0x764deda9ade288b4);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -315,7 +315,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, Fixtures, T)
     CheckFileMD5(filename, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -338,7 +338,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, Fixtures, T)
     CheckFileMD5(filename, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -366,7 +366,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, Fixtures, T)
 #endif
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -414,7 +414,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, Fixtures, T)
 #endif
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -462,7 +462,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, Fixtures, T)
 #endif
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -483,7 +483,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, Fixtures, T)
     CheckFileMD5(filename, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, Fixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
