@@ -95,14 +95,14 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     std::atomic<uint8_t> DX12DebugMarker::_colorIdx = 0;
 
-    DX12DebugMarker::DX12DebugMarker([[maybe_unused]]const std::string& name)
+    DX12DebugMarker::DX12DebugMarker([[maybe_unused]]const std::string_view& name)
     {
 #ifdef _USE_RENDERDOC
         // https://devblogs.microsoft.com/pix/winpixeventruntime/
         // says a ID3D12CommandList/ID3D12CommandQueue should be used but cannot find that override
 
         auto color = PIX_COLOR_INDEX(_colorIdx++);
-        PIXBeginEvent(color, name.c_str());
+        PIXBeginEvent(color, name.data());
 #endif
     }
 

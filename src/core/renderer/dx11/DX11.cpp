@@ -66,7 +66,7 @@ namespace ninniku {
         return std::make_tuple(srcSub, dstSub);
     }
 
-    DebugMarkerHandle DX11::CreateDebugMarker(const std::string& name) const
+    DebugMarkerHandle DX11::CreateDebugMarker(const std::string_view& name) const
     {
         DX11Marker marker;
 #ifdef _USE_RENDERDOC
@@ -84,7 +84,7 @@ namespace ninniku {
 
         // let's only support default for now
         D3D11_USAGE usage = isCPURead ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
-        std::string usageStr = isCPURead ? "D3D11_USAGE_STAGING" : "D3D11_USAGE_DEFAULT";
+        std::string_view usageStr = isCPURead ? "D3D11_USAGE_STAGING" : "D3D11_USAGE_DEFAULT";
 
         auto fmt = boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Usage=%3%") % params->elementSize % params->numElements % usageStr;
 
@@ -314,7 +314,7 @@ namespace ninniku {
         auto isCubeArray = is2d && (params->arraySize > CUBEMAP_NUM_FACES) && ((params->arraySize % CUBEMAP_NUM_FACES) == 0);
 
         D3D11_USAGE usage;
-        std::string usageStr;
+        std::string_view usageStr;
 
         if ((params->imageDatas.size() > 0) && (!isUAV)) {
             // this for original data
@@ -371,7 +371,7 @@ namespace ninniku {
         auto res = std::make_unique<DX11TextureImpl>(impl);
 
         HRESULT hr;
-        std::string apiName;
+        std::string_view apiName;
 
         if (is2d) {
             D3D11_TEXTURE2D_DESC desc = {};
@@ -576,7 +576,7 @@ namespace ninniku {
         ObjectTracker::Instance().ReleaseObjects();
     }
 
-    bool DX11::Initialize(const std::vector<std::string>& shaderPaths)
+    bool DX11::Initialize(const std::vector<std::string_view>& shaderPaths)
     {
         auto adapter = 0;
 
@@ -641,7 +641,7 @@ namespace ninniku {
         return true;
     }
 
-    bool DX11::LoadShader(const std::string& name, const void* pData, const size_t size)
+    bool DX11::LoadShader(const std::string_view& name, const void* pData, const size_t size)
     {
         ID3DBlob* pBlob = nullptr;
         const auto hr = D3DCreateBlob(size, &pBlob);
@@ -656,7 +656,7 @@ namespace ninniku {
         return LoadShader(name, pBlob, "");
     }
 
-    bool DX11::LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path)
+    bool DX11::LoadShader(const std::string_view& name, ID3DBlob* pBlob, const std::string_view& path)
     {
         // reflection
         ID3D11ShaderReflection* reflect = nullptr;
@@ -707,7 +707,7 @@ namespace ninniku {
     /// <summary>
     /// Load all shaders in /data
     /// </summary>
-    bool DX11::LoadShaders(const std::string& shaderPath)
+    bool DX11::LoadShaders(const std::string_view& shaderPath)
     {
         // check if directory is valid
         if (!std::filesystem::is_directory(shaderPath)) {
@@ -717,7 +717,7 @@ namespace ninniku {
             return false;
         }
 
-        std::string ext{ ".cso" };
+        std::string_view ext{ ".cso" };
 
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
@@ -928,9 +928,9 @@ namespace ninniku {
         return res;
     }
 
-    std::unordered_map<std::string, uint32_t> DX11::ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection)
+    std::unordered_map<std::string_view, uint32_t> DX11::ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection)
     {
-        std::unordered_map<std::string, uint32_t> res;
+        std::unordered_map<std::string_view, uint32_t> res;
 
         // parse parameter bind slots
         for (uint32_t i = 0; i < numBoundResources; ++i) {
@@ -941,7 +941,7 @@ namespace ninniku {
             if (CheckAPIFailed(hr, "ID3D11ShaderReflection::GetResourceBindingDesc"))
                 return res;
 
-            std::string restypeStr;
+            std::string_view restypeStr;
 
             switch (bindDesc.Type) {
                 case D3D_SIT_CBUFFER:
@@ -988,7 +988,7 @@ namespace ninniku {
         return res;
     }
 
-    bool DX11::UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size)
+    bool DX11::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)
     {
         auto found = _cBuffers.find(name);
 

@@ -22,6 +22,8 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
+#include "../../../utils/stringMap.h"
+
 #include "DX11Types.h"
 
 struct ID3D11ShaderReflection;
@@ -40,15 +42,15 @@ namespace ninniku {
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
-        DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
+        DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
-        bool Initialize(const std::vector<std::string>& shaderPaths) override;
-        bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
+        bool Initialize(const std::vector<std::string_view>& shaderPaths) override;
+        bool LoadShader(const std::string_view& name, const void* pData, const size_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
-        bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) override;
+        bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
@@ -68,10 +70,10 @@ namespace ninniku {
         };
 
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
-        bool LoadShader(const std::string& name, ID3DBlob* pBlob, const std::string& path);
-        bool LoadShaders(const std::string& shaderPath);
+        bool LoadShader(const std::string_view& name, ID3DBlob* pBlob, const std::string_view& path);
+        bool LoadShaders(const std::string_view& shaderPath);
         bool MakeTextureSRV(const TextureSRVParams& params);
-        std::unordered_map<std::string, uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
+        std::unordered_map<std::string_view, uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
 
         // Helper to cast into the correct shader resource type
         template<typename SourceType, typename DestType, typename ReturnType>
@@ -85,8 +87,8 @@ namespace ninniku {
         ERenderer _type;
         DX11Device _device;
         DX11Context _context;
-        std::unordered_map<std::string, DX11ComputeShader> _shaders;
-        std::unordered_map<std::string, DX11Buffer> _cBuffers;
+        StringMap<DX11ComputeShader> _shaders;
+        StringMap<DX11Buffer> _cBuffers;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
     };
 } // namespace ninniku

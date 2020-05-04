@@ -26,8 +26,7 @@
 
 #include <cmft/image.h>
 
-namespace ninniku
-{
+namespace ninniku {
     class cmftImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -54,9 +53,9 @@ namespace ninniku
         uint32_t GetHeight() const override { return _image.m_height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return _image.m_width; }
-        bool LoadInternal(const std::string& path) override;
+        bool LoadInternal(const std::string_view& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
-        bool ValidateExtension(const std::string& ext) const override;
+        bool ValidateExtension(const std::string_view& ext) const override;
 
     private:
         void AllocateMemory();

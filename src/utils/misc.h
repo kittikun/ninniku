@@ -27,8 +27,8 @@ namespace ninniku {
     NINNIKU_API constexpr const uint32_t DXGIFormatToNinnikuTF(uint32_t);
     NINNIKU_API constexpr const uint32_t NinnikuTFToDXGIFormat(uint32_t);
 
-    const std::wstring strToWStr(const std::string&);
+    const std::wstring strToWStr(const std::string_view&);
     const std::string wstrToStr(const std::wstring&);
 
-    bool CheckAPIFailed(HRESULT hr, const std::string& apiName);
+    bool CheckAPIFailed(HRESULT hr, const std::string_view& apiName);
 } // namespace ninniku

@@ -61,7 +61,7 @@ namespace ninniku
         return std::make_tuple(res, tx, ty);
     }
 
-    bool ImageImpl::Load(const std::string& path)
+    bool ImageImpl::Load(const std::string_view& path)
     {
         auto validPath = std::filesystem::path{ path };
 

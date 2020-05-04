@@ -18,40 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "pch.h"
-#include "ninniku/core/image/generic.h"
+#pragma once
 
-#include "generic_impl.h"
-
-namespace ninniku
-{
-    TextureParamHandle genericImage::CreateTextureParam(const EResourceViews viewFlags) const
+namespace ninniku {
+    template<typename ValueType>
+    class StringMap : public std::unordered_map<std::string, ValueType>
     {
-        return _impl->CreateTextureParam(viewFlags);
-    }
+    public:
 
-    bool genericImage::Load(const std::string_view& path)
-    {
-        return _impl->Load(path);
-    }
+        typename std::unordered_map<std::string, ValueType>::iterator find(const std::string_view& str)
+        {
+            _tmp.reserve(str.size());
+            _tmp.assign(str.data(), str.size());
+            return std::unordered_map<std::string, ValueType>::find(_tmp);
+        }
 
-    bool genericImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-    {
-        return _impl->LoadRaw(pData, size, width, height, format);
-    }
+        ValueType& operator[](const std::string_view& str)
+        {
+            _tmp.reserve(str.size());
+            _tmp.assign(str.data(), str.size());
 
-    const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
-    {
-        return _impl->GetData();
-    }
+            return std::unordered_map<std::string, ValueType>::operator [](_tmp);
+        }
 
-    void genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
-    {
-        return _impl->InitializeFromTextureObject(dx, srcTex);
-    }
+    private:
+        thread_local static std::string _tmp;
+    };
 
-    const SizeFixResult genericImage::IsRequiringFix() const
-    {
-        return _impl->IsRequiringFix();
-    }
+    template<typename ValueType>
+    thread_local std::string StringMap<ValueType>::_tmp;
 } // namespace ninniku

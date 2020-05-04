@@ -50,7 +50,7 @@ namespace ninniku {
     {
         LOG << "Loading RenderDoc..";
 
-        std::string path = "renderdoc.dll";
+        std::string_view path = "renderdoc.dll";
         auto hInst = LoadLibrary(ninniku::strToWStr(path).c_str());
 
         if (hInst == nullptr) {
@@ -74,7 +74,7 @@ namespace ninniku {
         return sRenderer;
     }
 
-    bool _Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
+    bool _Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, const ELogLevel logLevel)
     {
         ninniku::Log::Initialize(logLevel);
 
@@ -84,7 +84,11 @@ namespace ninniku {
         // renderdoc doesn't support DXIL at the moment
         // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
         if ((renderer & ERenderer::RENDERER_DX12) == 0) {
+            //if ((renderer & ERenderer::RENDERER_WARP) == 0) {
             LoadRenderDoc();
+            //} else {
+            //    LOGW << "Disabling Renderdoc for WARP devices";
+            //}
         } else {
             LOGW << "Renderdoc doesn't support DXIL so disabling it";
         }
@@ -124,14 +128,14 @@ namespace ninniku {
         return true;
     }
 
-    bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, const ELogLevel logLevel)
     {
         return _Initialize(renderer, shaderPaths, logLevel);
     }
 
     bool Initialize(const ERenderer renderer, const ELogLevel logLevel)
     {
-        std::vector<std::string> shaderPaths;
+        std::vector<std::string_view> shaderPaths;
 
         return _Initialize(renderer, shaderPaths, logLevel);
     }

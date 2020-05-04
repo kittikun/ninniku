@@ -27,7 +27,7 @@
 #include <windows.h>
 
 namespace ninniku {
-    bool CheckAPIFailed(HRESULT hr, const std::string& apiName)
+    bool CheckAPIFailed(HRESULT hr, const std::string_view& apiName)
     {
         if (FAILED(hr)) {
             _com_error err(hr);
@@ -152,7 +152,7 @@ namespace ninniku {
         return res;
     }
 
-    const std::wstring strToWStr(const std::string& str)
+    const std::wstring strToWStr(const std::string_view& str)
     {
         std::wstring res;
 

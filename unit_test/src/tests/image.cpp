@@ -498,7 +498,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesDX11, T)
 
     res->InitializeFromTextureObject(dx, resized);
 
-    std::string filename = "dds_saveImage_bc7.dds";
+    std::string_view filename = "dds_saveImage_bc7.dds";
 
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC7_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));

@@ -23,14 +23,13 @@
 
 #include "cmft_impl.h"
 
-namespace ninniku
-{
+namespace ninniku {
     TextureParamHandle cmftImage::CreateTextureParam(const EResourceViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    bool cmftImage::Load(const std::string& path)
+    bool cmftImage::Load(const std::string_view& path)
     {
         return _impl->Load(path);
     }
@@ -55,7 +54,7 @@ namespace ninniku
         return _impl->IsRequiringFix();
     }
 
-    bool cmftImage::SaveImage(const std::string& path, SaveType type)
+    bool cmftImage::SaveImage(const std::string_view& path, SaveType type)
     {
         return _impl->SaveImage(path, type);
     }

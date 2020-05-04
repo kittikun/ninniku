@@ -71,12 +71,12 @@ namespace ninniku {
 
     struct Command : NonCopyable
     {
-        std::string shader;
-        std::string cbufferStr;
+        std::string_view shader;
+        std::string_view cbufferStr;
         std::array<uint32_t, 3> dispatch;
-        std::unordered_map<std::string, const ShaderResourceView*> srvBindings;
-        std::unordered_map<std::string, const UnorderedAccessView*> uavBindings;
-        std::unordered_map<std::string, const SamplerState*> ssBindings;
+        std::unordered_map<std::string_view, const ShaderResourceView*> srvBindings;
+        std::unordered_map<std::string_view, const UnorderedAccessView*> uavBindings;
+        std::unordered_map<std::string_view, const SamplerState*> ssBindings;
     };
 
     using CommandHandle = std::unique_ptr<Command>;

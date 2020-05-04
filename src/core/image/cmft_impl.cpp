@@ -201,7 +201,7 @@ namespace ninniku {
         return true;
     }
 
-    bool cmftImageImpl::LoadInternal(const std::string& path)
+    bool cmftImageImpl::LoadInternal(const std::string_view& path)
     {
         auto fmt = boost::format("cmftImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -211,7 +211,7 @@ namespace ninniku {
         if (std::filesystem::path{ path } .extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
-            imageLoaded = imageLoad(_image, path.c_str(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.c_str(), cmft::TextureFormat::RGBA32F);
+            imageLoaded = imageLoad(_image, path.data(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.data(), cmft::TextureFormat::RGBA32F);
 
         if (!imageLoaded) {
             LOGE << "Failed to load file";
@@ -421,9 +421,9 @@ namespace ninniku {
         }
     }
 
-    bool cmftImageImpl::ValidateExtension(const std::string& ext) const
+    bool cmftImageImpl::ValidateExtension(const std::string_view& ext) const
     {
-        const std::array<std::string, 5> valid = { ".dds", ".exr", ".ktx", ".hdr", ".tga" };
+        const std::array<std::string_view, 5> valid = { ".dds", ".exr", ".ktx", ".hdr", ".tga" };
 
         for (auto& validExt : valid)
             if (ext == validExt)

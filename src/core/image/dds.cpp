@@ -30,7 +30,7 @@ namespace ninniku
         return _impl->CreateTextureParam(viewFlags);
     }
 
-    bool ddsImage::Load(const std::string& path)
+    bool ddsImage::Load(const std::string_view& path)
     {
         return _impl->Load(path);
     }
@@ -60,12 +60,12 @@ namespace ninniku
         return _impl->IsRequiringFix();
     }
 
-    bool ddsImage::SaveImage(const std::string& path)
+    bool ddsImage::SaveImage(const std::string_view& path)
     {
         return _impl->SaveImage(path);
     }
 
-    bool ddsImage::SaveCompressedImage(const std::string& path, RenderDeviceHandle& dx, DXGI_FORMAT format)
+    bool ddsImage::SaveCompressedImage(const std::string_view& path, RenderDeviceHandle& dx, DXGI_FORMAT format)
     {
         return _impl->SaveCompressedImage(path, dx, format);
     }

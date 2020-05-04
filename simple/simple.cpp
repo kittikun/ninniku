@@ -24,7 +24,7 @@
 int main()
 {
     // corresponding test: shader_structuredBuffer
-    std::vector<std::string> shaderPaths = { "..\\simple\\shaders" };
+    std::vector<std::string_view> shaderPaths = { "..\\simple\\shaders" };
 
     ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
 

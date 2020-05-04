@@ -248,6 +248,7 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
     <ClInclude Include="src\utils\mathUtils.h" />
     <ClInclude Include="src\utils\misc.h" />
     <ClInclude Include="src\utils\objectTracker.h" />
+    <ClInclude Include="src\utils\stringMap.h" />
     <ClInclude Include="src\utils\vectorSet.h" />
   </ItemGroup>
   <ItemGroup>

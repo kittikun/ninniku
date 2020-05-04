@@ -131,17 +131,17 @@ namespace ninniku {
         return res;
     }
 
-    bool genericImageImpl::LoadInternal(const std::string& path)
+    bool genericImageImpl::LoadInternal(const std::string_view& path)
     {
         auto fmt = boost::format("genericImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
 
         Reset();
 
-        if (stbi_is_16_bit(path.c_str()))
-            _data16 = stbi_load_16(path.c_str(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
+        if (stbi_is_16_bit(path.data()))
+            _data16 = stbi_load_16(path.data(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
         else
-            _data8 = stbi_load(path.c_str(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
+            _data8 = stbi_load(path.data(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
 
         if (_bpp == 3) {
             // we must convert from RGB to R11G11B10 since there is no R8G8B8 formats
@@ -214,9 +214,9 @@ namespace ninniku {
         throw std::exception("not implemented");
     }
 
-    bool genericImageImpl::ValidateExtension(const std::string& ext) const
+    bool genericImageImpl::ValidateExtension(const std::string_view& ext) const
     {
-        const std::array<std::string, 9> valid = { ".jpg", ".png", ".tga", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
+        const std::array<std::string_view, 9> valid = { ".jpg", ".png", ".tga", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
 
         for (auto& validExt : valid)
             if (ext == validExt)

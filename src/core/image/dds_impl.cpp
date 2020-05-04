@@ -87,7 +87,7 @@ namespace ninniku {
         return res;
     }
 
-    bool ddsImageImpl::LoadInternal(const std::string& path)
+    bool ddsImageImpl::LoadInternal(const std::string_view& path)
     {
         auto fmt = boost::format("ddsImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -209,7 +209,7 @@ namespace ninniku {
         }
     }
 
-    bool ddsImageImpl::SaveImage(const std::string& path)
+    bool ddsImageImpl::SaveImage(const std::string_view& path)
     {
         auto hr = DirectX::SaveToDDSFile(_scratch.GetImage(0, 0, 0), _scratch.GetImageCount(), _meta, DirectX::DDS_FLAGS_FORCE_DX10_EXT, ninniku::strToWStr(path).c_str());
 
@@ -221,7 +221,7 @@ namespace ninniku {
         return true;
     }
 
-    bool ddsImageImpl::SaveCompressedImage(const std::string& path, RenderDeviceHandle& dx, DXGI_FORMAT format)
+    bool ddsImageImpl::SaveCompressedImage(const std::string_view& path, RenderDeviceHandle& dx, DXGI_FORMAT format)
     {
         auto fmt = boost::format("Saving DDS with ddsImageImpl file \"%1%\"") % path;
         LOG << boost::str(fmt);
@@ -329,7 +329,7 @@ namespace ninniku {
         }
     }
 
-    bool ddsImageImpl::ValidateExtension(const std::string& ext) const
+    bool ddsImageImpl::ValidateExtension(const std::string_view& ext) const
     {
         if (ext == ".dds")
             return true;

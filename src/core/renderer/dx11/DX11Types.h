@@ -113,7 +113,7 @@ namespace ninniku {
         DX11ComputeShader& operator=(DX11ComputeShader&&) = delete;
 
         DX11CS shader;
-        std::unordered_map<std::string, uint32_t> bindSlots;
+        std::unordered_map<std::string_view, uint32_t> bindSlots;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -123,7 +123,7 @@ namespace ninniku {
     struct DX11DebugMarker final : public DebugMarker
     {
     public:
-        DX11DebugMarker(const DX11Marker& marker, const std::string& name);
+        DX11DebugMarker(const DX11Marker& marker, const std::string_view& name);
         ~DX11DebugMarker() override;
 
     private:

@@ -45,17 +45,17 @@ namespace ninniku
         bool LoadRaw(const void* pData, const size_t size);
         bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
 
-        bool SaveImage(const std::string&);
-        bool SaveCompressedImage(const std::string&, RenderDeviceHandle& dx, DXGI_FORMAT format);
+        bool SaveImage(const std::string_view&);
+        bool SaveCompressedImage(const std::string_view&, RenderDeviceHandle& dx, DXGI_FORMAT format);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
         uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }
-        bool LoadInternal(const std::string& path) override;
+        bool LoadInternal(const std::string_view& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
-        bool ValidateExtension(const std::string& ext) const override;
+        bool ValidateExtension(const std::string_view& ext) const override;
 
     private:
         DirectX::TexMetadata _meta;

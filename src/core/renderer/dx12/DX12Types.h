@@ -96,7 +96,7 @@ namespace ninniku {
     struct DX12DebugMarker final : public DebugMarker
     {
     public:
-        DX12DebugMarker(const std::string& name);
+        DX12DebugMarker(const std::string_view& name);
         ~DX12DebugMarker() override;
 
     private:

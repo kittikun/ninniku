@@ -40,7 +40,7 @@ namespace ninniku
         Image() = default;
         virtual ~Image() = default;
 
-        virtual bool Load(const std::string&) = 0;
+        virtual bool Load(const std::string_view&) = 0;
         virtual bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) = 0;
         virtual TextureParamHandle CreateTextureParam(const EResourceViews viewFlags) const = 0;
 

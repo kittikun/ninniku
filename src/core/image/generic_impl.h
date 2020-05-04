@@ -44,16 +44,16 @@ namespace ninniku
         bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        bool SaveImage(const std::string&);
+        bool SaveImage(const std::string_view&);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
         uint32_t GetHeight() const override { return _height; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
         uint32_t GetWidth() const override { return _width; }
-        bool LoadInternal(const std::string& path) override;
+        bool LoadInternal(const std::string_view& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
-        bool ValidateExtension(const std::string& ext) const override;
+        bool ValidateExtension(const std::string_view& ext) const override;
 
     private:
         void ConvertToR11G11B10();

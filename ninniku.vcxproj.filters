@@ -171,5 +171,8 @@
     <ClInclude Include="src\utils\objectTracker.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\stringMap.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

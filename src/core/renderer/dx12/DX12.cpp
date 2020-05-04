@@ -217,7 +217,7 @@ namespace ninniku {
         return dst;
     }
 
-    DebugMarkerHandle DX12::CreateDebugMarker(const std::string& name) const
+    DebugMarkerHandle DX12::CreateDebugMarker(const std::string_view& name) const
     {
         return std::make_unique<DX12DebugMarker>(name);
     }
@@ -432,7 +432,7 @@ namespace ninniku {
         ObjectTracker::Instance().ReleaseObjects();
     }
 
-    bool DX12::Initialize(const std::vector<std::string>& shaderPaths)
+    bool DX12::Initialize(const std::vector<std::string_view>& shaderPaths)
     {
         auto adapter = 0;
 
@@ -511,12 +511,12 @@ namespace ninniku {
         return true;
     }
 
-    bool DX12::LoadShader([[maybe_unused]]const std::string& name, [[maybe_unused]]const void* pData, [[maybe_unused]]const size_t size)
+    bool DX12::LoadShader([[maybe_unused]]const std::string_view& name, [[maybe_unused]]const void* pData, [[maybe_unused]]const size_t size)
     {
         throw std::exception("not implemented");
     }
 
-    bool DX12::LoadShader(const std::string& name, IDxcBlobEncoding* pBlob)
+    bool DX12::LoadShader(const std::string_view& name, IDxcBlobEncoding* pBlob)
     {
         Microsoft::WRL::ComPtr<IDxcContainerReflection> pContainerReflection;
 
@@ -595,7 +595,7 @@ namespace ninniku {
     /// <summary>
     /// Load all shaders in /data
     /// </summary>
-    bool DX12::LoadShaders(const std::string& shaderPath)
+    bool DX12::LoadShaders(const std::string_view& shaderPath)
     {
         // check if directory is valid
         if (!std::filesystem::is_directory(shaderPath)) {
@@ -605,7 +605,7 @@ namespace ninniku {
             return false;
         }
 
-        std::string ext{ ".dxco" };
+        std::string_view ext{ ".dxco" };
 
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
@@ -671,7 +671,7 @@ namespace ninniku {
         throw std::exception("not implemented");
     }
 
-    bool DX12::ParseRootSignature(const std::string& name, IDxcBlobEncoding* pBlob)
+    bool DX12::ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob)
     {
         DX12RootSignature rootSignature;
 
@@ -688,14 +688,14 @@ namespace ninniku {
         return true;
     }
 
-    bool DX12::ParseShaderResources(const std::string& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection)
+    bool DX12::ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection)
     {
         // parse parameter bind slots
         auto fmt = boost::format("Found %1% resources") % numBoundResources;
 
         LOGD_INDENT_START << boost::str(fmt);
 
-        std::unordered_map<std::string, uint32_t> bindings;
+        StringMap<uint32_t> bindings;
 
         for (uint32_t i = 0; i < numBoundResources; ++i) {
             D3D12_SHADER_INPUT_BIND_DESC bindDesc;
@@ -705,7 +705,7 @@ namespace ninniku {
             if (CheckAPIFailed(hr, "ID3D12ShaderReflection::GetResourceBindingDesc"))
                 return false;
 
-            std::string restypeStr;
+            std::string_view restypeStr;
 
             switch (bindDesc.Type) {
                 case D3D_SIT_CBUFFER:
@@ -751,7 +751,7 @@ namespace ninniku {
         return true;
     }
 
-    bool DX12::UpdateConstantBuffer([[maybe_unused]]const std::string& name, [[maybe_unused]]void* data, [[maybe_unused]]const uint32_t size)
+    bool DX12::UpdateConstantBuffer([[maybe_unused]]const std::string_view& name, [[maybe_unused]]void* data, [[maybe_unused]]const uint32_t size)
     {
         throw std::exception("not implemented");
     }

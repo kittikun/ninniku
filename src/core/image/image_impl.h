@@ -44,15 +44,15 @@ namespace ninniku
 
         const SizeFixResult IsRequiringFix() const override;
 
-        bool Load(const std::string& path) override;
+        bool Load(const std::string_view& path) override;
 
     protected:
         virtual TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const = 0;
         virtual uint32_t GetHeight() const = 0;
         virtual const std::vector<SubresourceParam> GetInitializationData() const = 0;
         virtual uint32_t GetWidth() const = 0;
-        virtual bool LoadInternal(const std::string& path) = 0;
+        virtual bool LoadInternal(const std::string_view& path) = 0;
         virtual void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) = 0;
-        virtual bool ValidateExtension(const std::string& ext) const = 0;
+        virtual bool ValidateExtension(const std::string_view& ext) const = 0;
     };
 } // namespace ninniku

@@ -50,7 +50,7 @@ namespace ninniku {
     /// Initialize ninniku framework
     /// shaderPaths must point to compiled .cso folders
     /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Initialize ninniku framework

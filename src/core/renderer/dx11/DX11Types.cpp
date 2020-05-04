@@ -55,7 +55,7 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
-    DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, [[maybe_unused]]const std::string& name)
+    DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, [[maybe_unused]]const std::string_view& name)
         : _marker{ marker }
     {
 #ifdef _USE_RENDERDOC

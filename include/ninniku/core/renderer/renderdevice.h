@@ -43,15 +43,15 @@ namespace ninniku {
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
         virtual CommandHandle CreateCommand() const = 0;
-        virtual DebugMarkerHandle CreateDebugMarker(const std::string& name) const = 0;
+        virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
         virtual bool Dispatch(const CommandHandle& cmd) = 0;
         virtual void Finalize() = 0;
-        virtual bool Initialize(const std::vector<std::string>& shaderPaths) = 0;
-        virtual bool LoadShader(const std::string& name, const void* pData, const size_t size) = 0;
+        virtual bool Initialize(const std::vector<std::string_view>& shaderPaths) = 0;
+        virtual bool LoadShader(const std::string_view& name, const void* pData, const size_t size) = 0;
         virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
         virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
-        virtual bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) = 0;
+        virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
 
         virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;
 

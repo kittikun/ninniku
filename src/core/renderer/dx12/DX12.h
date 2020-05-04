@@ -22,6 +22,7 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
+#include "../../../utils/stringMap.h"
 #include "DX12Types.h"
 
 struct IDxcBlobEncoding;
@@ -40,15 +41,15 @@ namespace ninniku {
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
-        DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
+        DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
-        bool Initialize(const std::vector<std::string>& shaderPaths) override;
-        bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
+        bool Initialize(const std::vector<std::string_view>& shaderPaths) override;
+        bool LoadShader(const std::string_view& name, const void* pData, const size_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
-        bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) override;
+        bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
@@ -57,10 +58,10 @@ namespace ninniku {
     private:
         bool CreateDevice(int adapter);
         bool ExecuteCommand(const DX12GraphicsCommandList& cmdList);
-        bool LoadShader(const std::string& name, IDxcBlobEncoding* pBlob);
-        bool LoadShaders(const std::string& shaderPath);
-        bool ParseRootSignature(const std::string& name, IDxcBlobEncoding* pBlob);
-        bool ParseShaderResources(const std::string& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
+        bool LoadShader(const std::string_view& name, IDxcBlobEncoding* pBlob);
+        bool LoadShaders(const std::string_view& shaderPath);
+        bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
+        bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 8;
@@ -81,11 +82,11 @@ namespace ninniku {
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
-        std::unordered_map<std::string, DX12RootSignature> _rootSignatures;
-        std::unordered_map<std::string, D3D12_SHADER_BYTECODE> _shaders;
+        StringMap<DX12RootSignature> _rootSignatures;
+        StringMap<D3D12_SHADER_BYTECODE> _shaders;
 
-        using MapNameSlot = std::unordered_map<std::string, uint32_t>;
-        std::unordered_map<std::string, MapNameSlot> _resourceBindings;
+        using MapNameSlot = StringMap<uint32_t>;
+        StringMap<MapNameSlot> _resourceBindings;
 
         // heap
         DX12DescriptorHeap _srvUAVHeap;
