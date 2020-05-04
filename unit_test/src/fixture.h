@@ -34,6 +34,5 @@ struct SetupFixtureDX12
     ~SetupFixtureDX12();
 };
 
-// there is a weird error when trying to create a pipeline state object in release only so disable for now
 typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesAll;
 typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
