@@ -31,6 +31,13 @@
 #include <renderdoc/renderdoc_app.h>
 #endif
 
+#ifdef _DEBUG
+#pragma comment(lib, "dxgi.lib")
+
+#include <dxgi1_4.h>
+#include <dxgidebug.h>
+#endif
+
 namespace ninniku {
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
@@ -76,7 +83,7 @@ namespace ninniku {
 #if defined(_USE_RENDERDOC)
         // renderdoc doesn't support DXIL at the moment
         // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
-        if ((renderer & ERenderer::RENDERER_WARP) == 0) {
+        if ((renderer & ERenderer::RENDERER_DX12) == 0) {
             LoadRenderDoc();
         } else {
             LOGW << "Renderdoc doesn't support DXIL so disabling it";
@@ -131,13 +138,27 @@ namespace ninniku {
 
     void Terminate()
     {
+        LOG << "Shutting down..";
+
 #if defined(_USE_RENDERDOC)
         if (gRenderDocApi != nullptr) {
             gRenderDocApi->EndFrameCapture(nullptr, nullptr);
+            gRenderDocApi->Shutdown();
+            gRenderDocApi = nullptr;
         }
 #endif
 
         sRenderer->Finalize();
-        sRenderer.release();
+        sRenderer.reset();
+
+#ifdef _DEBUG
+        Microsoft::WRL::ComPtr<IDXGIDebug1> dxgiDebug;
+        if (!CheckAPIFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug)), "DXGIGetDebugInterface1")) {
+            LOG << "Reporting live objects";
+            dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+        }
+#endif
+
+        LOG << "Shutdown complete";
     }
 }

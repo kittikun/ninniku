@@ -43,17 +43,19 @@ namespace ninniku {
         DebugMarkerHandle CreateDebugMarker(const std::string& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
-        void Finalize() override {}
+        void Finalize() override;
         bool Initialize(const std::vector<std::string>& shaderPaths) override;
         bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
-        MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
-        MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) override;
+        MappedResourceHandle Map(const BufferHandle& bObj) override;
+        MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
         bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) override;
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
+        ID3D11Device* GetDevice() const { return _device.Get(); }
+
     private:
-        struct alignas(8) TextureSRVParams
+        struct TextureSRVParams
         {
             TextureObject* obj;
             TextureParamHandle texParams;
@@ -83,10 +85,8 @@ namespace ninniku {
         ERenderer _type;
         DX11Device _device;
         DX11Context _context;
-        std::unordered_map<std::string, ComputeShader> _shaders;
+        std::unordered_map<std::string, DX11ComputeShader> _shaders;
         std::unordered_map<std::string, DX11Buffer> _cBuffers;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
-
-        friend class ddsImageImpl;
     };
 } // namespace ninniku

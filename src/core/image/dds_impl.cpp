@@ -26,6 +26,7 @@
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 #include "../renderer/dx11/DX11.h"
+#include "../renderer/dx12/DX12.h"
 
 #include <comdef.h>
 
@@ -135,12 +136,12 @@ namespace ninniku {
     {
         // DirectXTex
         _meta = DirectX::TexMetadata{};
-        _meta.width = srcTex->desc->width;
-        _meta.height = srcTex->desc->height;
-        _meta.depth = srcTex->desc->depth;
-        _meta.arraySize = srcTex->desc->arraySize;
-        _meta.mipLevels = srcTex->desc->numMips;
-        _meta.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcTex->desc->format));
+        _meta.width = srcTex->GetDesc()->width;
+        _meta.height = srcTex->GetDesc()->height;
+        _meta.depth = srcTex->GetDesc()->depth;
+        _meta.arraySize = srcTex->GetDesc()->arraySize;
+        _meta.mipLevels = srcTex->GetDesc()->numMips;
+        _meta.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcTex->GetDesc()->format));
 
         if (_meta.depth > 1) {
             _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;
@@ -174,9 +175,9 @@ namespace ninniku {
         for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
             auto param = std::make_shared<ninniku::TextureParam>();
 
-            param->width = srcTex->desc->width >> mip;
-            param->height = srcTex->desc->height >> mip;
-            param->format = srcTex->desc->format;
+            param->width = srcTex->GetDesc()->width >> mip;
+            param->height = srcTex->GetDesc()->height >> mip;
+            param->format = srcTex->GetDesc()->format;
             param->numMips = 1;
             param->arraySize = 1;
             param->viewflags = ninniku::RV_CPU_READ;
@@ -193,9 +194,17 @@ namespace ninniku {
                 params.srcFace = face;
 
                 auto indexes = dx->CopyTextureSubresource(params);
-                auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
+                auto mapped = dx->Map(readBack, std::get<1>(indexes));
 
-                UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
+                // do we really need this ?
+                uint32_t rowPitch = std::numeric_limits<uint32_t>::max();
+                if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
+                    auto dx11Mapped = static_cast<const DX11MappedResource*>(mapped.get());
+
+                    rowPitch = dx11Mapped->GetRowPitch();
+                }
+
+                UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), rowPitch);
             }
         }
     }
@@ -255,12 +264,13 @@ namespace ninniku {
         if (bc6hbc7) {
             HRESULT hr;
 
-            if ((dx->GetType() & ERenderer::RENDERER_WARP) == 0) {
+            // DirectXTex only support DX11
+            if (dx->GetType() & ERenderer::RENDERER_DX11) {
                 LOGD_INDENT_START << "DirectXTex GPU Compression";
                 auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
                 auto dx11 = static_cast<DX11*>(dx.get());
 
-                hr = DirectX::Compress(dx11->_device.Get(), img, nimg, _meta, format, flags, 1.f, *resImageImpl);
+                hr = DirectX::Compress(dx11->GetDevice(), img, nimg, _meta, format, flags, 1.f, *resImageImpl);
             } else {
                 LOGD_INDENT_START << "DirectXTex CPU Compression";
 

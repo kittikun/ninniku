@@ -105,6 +105,9 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnablePREfast>true</EnablePREfast>
+      <RuntimeTypeInfo>
+      </RuntimeTypeInfo>
+      <StructMemberAlignment>8Bytes</StructMemberAlignment>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -166,6 +169,7 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
       <TreatWarningAsError>true</TreatWarningAsError>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnablePREfast>true</EnablePREfast>
+      <StructMemberAlignment>8Bytes</StructMemberAlignment>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -212,6 +216,7 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
     <ClCompile Include="src\utils\log.cpp" />
     <ClCompile Include="src\utils\mathUtils.cpp" />
     <ClCompile Include="src\utils\misc.cpp" />
+    <ClCompile Include="src\utils\objectTracker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -242,6 +247,7 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
     <ClInclude Include="src\utils\log.h" />
     <ClInclude Include="src\utils\mathUtils.h" />
     <ClInclude Include="src\utils\misc.h" />
+    <ClInclude Include="src\utils\objectTracker.h" />
     <ClInclude Include="src\utils\vectorSet.h" />
   </ItemGroup>
   <ItemGroup>

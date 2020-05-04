@@ -49,8 +49,8 @@ namespace ninniku {
         virtual void Finalize() = 0;
         virtual bool Initialize(const std::vector<std::string>& shaderPaths) = 0;
         virtual bool LoadShader(const std::string& name, const void* pData, const size_t size) = 0;
-        virtual MappedResourceHandle MapBuffer(const BufferHandle& bObj) = 0;
-        virtual MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) = 0;
+        virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
+        virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
         virtual bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) = 0;
 
         virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;

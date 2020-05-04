@@ -23,9 +23,11 @@
 
 #pragma comment(lib, "dxcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
 
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
+#include "../../../utils/objectTracker.h"
 #include "../DXCommon.h"
 
 #pragma warning(push)
@@ -48,24 +50,27 @@ namespace ninniku {
 
     void DX12::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
-        auto dxSrc = static_cast<const DX12BufferObject*>(params.src);
-        auto dxDst = static_cast<const DX12BufferObject*>(params.dst);
-        _copyCmdList->Close();
-        _copyCmdList->Reset(_commandAllocatorCopy.Get(), nullptr);
+        auto srcImpl = static_cast<const DX12BufferImpl*>(params.src);
+        auto srcInternal = srcImpl->_impl.lock();
 
-        CD3DX12_RESOURCE_BARRIER pushBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(dxSrc->_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        auto dstImpl = static_cast<const DX12BufferImpl*>(params.dst);
+        auto dstInternal = dstImpl->_impl.lock();
+
+        CD3DX12_RESOURCE_BARRIER pushBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
         // we assume that dst is already in D3D12_RESOURCE_STATE_COPY_DEST
         _copyCmdList->ResourceBarrier(1, &pushBarrierSrc);
-        _copyCmdList->CopyResource(dxDst->_buffer.Get(), dxSrc->_buffer.Get());
+        _copyCmdList->CopyResource(dstInternal->_buffer.Get(), srcInternal->_buffer.Get());
 
-        CD3DX12_RESOURCE_BARRIER popBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(dxSrc->_buffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
+        CD3DX12_RESOURCE_BARRIER popBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_buffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
 
         _copyCmdList->ResourceBarrier(1, &popBarrierSrc);
 
         _copyCmdList->Close();
 
         ExecuteCommand(_copyCmdList);
+
+        _copyCmdList->Reset(_commandAllocatorCopy.Get(), nullptr);
     }
 
     std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresource([[maybe_unused]]const CopyTextureSubresourceParam& params) const
@@ -83,9 +88,11 @@ namespace ninniku {
         auto fmt = boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize;
         LOGD << boost::str(fmt);
 
-        auto res = std::make_unique<DX12BufferObject>();
+        auto impl = std::make_shared<DX12BufferInternal>();
 
-        res->desc = params;
+        ObjectTracker::Instance().RegisterObject(impl);
+
+        impl->_desc = params;
 
         D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE;
         D3D12_RESOURCE_STATES resState = D3D12_RESOURCE_STATE_COMMON;
@@ -102,7 +109,13 @@ namespace ninniku {
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(heapFlags);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, resFlags);
 
-        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, resState, nullptr, IID_PPV_ARGS(res->_buffer.GetAddressOf()));
+        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, resState, nullptr, IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
+
+        if (hr == DXGI_ERROR_DEVICE_REMOVED) {
+            hr = _device->GetDeviceRemovedReason();
+
+            CheckAPIFailed(hr, "ID3D12Device::GetDeviceRemovedReason");
+        }
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
@@ -119,13 +132,13 @@ namespace ninniku {
 
             auto srv = new DX12ShaderResourceView();
 
-            srv->_resource = res->_buffer;
+            srv->_resource = impl->_buffer;
 
             CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(_srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize);
 
-            _device->CreateShaderResourceView(res->_buffer.Get(), &srvDesc, srvHandle);
+            _device->CreateShaderResourceView(impl->_buffer.Get(), &srvDesc, srvHandle);
 
-            res->_srv.reset(srv);
+            impl->_srv.reset(srv);
         }
 
         if (isUAV) {
@@ -140,55 +153,68 @@ namespace ninniku {
 
             auto uav = new DX12UnorderedAccessView();
 
-            uav->_resource = res->_buffer;
+            uav->_resource = impl->_buffer;
 
             CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle{ _srvUAVHeap->GetCPUDescriptorHandleForHeapStart(), _srvUAVIndex++, _srvUAVDescriptorSize };
 
-            _device->CreateUnorderedAccessView(res->_buffer.Get(), nullptr, &uavDesc, uavHandle);
+            _device->CreateUnorderedAccessView(impl->_buffer.Get(), nullptr, &uavDesc, uavHandle);
 
-            uav->_resource = res->_buffer;
-            res->_uav.reset(uav);
+            uav->_resource = impl->_buffer;
+            impl->_uav.reset(uav);
         }
 
-        return res;
+        return std::make_unique<DX12BufferImpl>(impl);
     }
 
     BufferHandle DX12::CreateBuffer(const BufferHandle& src)
     {
-        assert(src->desc->elementSize % 4 == 0);
+        auto implSrc = static_cast<const DX12BufferImpl*>(src.get());
+        auto internalSrc = implSrc->_impl.lock();
 
-        auto res = std::make_unique<DX12BufferObject>();
-
-        auto stride = src->desc->elementSize / 4;
-
-        // allocate memory
-        res->_data.resize(stride * src->desc->numElements);
-
-        auto fmt = boost::format("DX12::CreateBuffer from BufferHandle with ElementSize=%1%, NumElements=%2%") % src->desc->elementSize % src->desc->numElements;
-        LOG << boost::str(fmt);
+        assert(internalSrc->_desc->elementSize % 4 == 0);
 
         auto marker = CreateDebugMarker("CreateBufferFromBufferObject");
 
-        // create a temporary object
-        auto params = src->desc->Duplicate();
+        auto dst = CreateBuffer(internalSrc->_desc);
+        auto implDst = static_cast<const DX12BufferImpl*>(dst.get());
+        auto internalDst = implDst->_impl.lock();
 
+        // copy src to dst
+        {
+            CopyBufferSubresourceParam copyParams = {};
+
+            copyParams.src = src.get();
+            copyParams.dst = dst.get();
+
+            CopyBufferResource(copyParams);
+        }
+
+        // create a temporary object readable from CPU to fill internalDst->_data with a map
+        auto stride = internalSrc->_desc->elementSize / 4;
+        auto params = internalSrc->_desc->Duplicate();
+
+        // allocate memory
+        internalDst->_data.resize(stride * internalSrc->_desc->numElements);
         params->viewflags = RV_CPU_READ;
 
-        auto dst = CreateBuffer(params);
+        auto temp = CreateBuffer(params);
 
-        CopyBufferSubresourceParam copyParams = {};
+        // copy src to temp
+        {
+            CopyBufferSubresourceParam copyParams = {};
 
-        copyParams.src = src.get();
-        copyParams.dst = dst.get();
+            copyParams.src = src.get();
+            copyParams.dst = temp.get();
 
-        CopyBufferResource(copyParams);
+            CopyBufferResource(copyParams);
+        }
 
-        auto mapped = MapBuffer(dst);
-        uint32_t dstPitch = static_cast<uint32_t>(res->_data.size() * sizeof(uint32_t));
+        auto mapped = Map(temp);
+        uint32_t dstPitch = static_cast<uint32_t>(internalDst->_data.size() * sizeof(uint32_t));
 
-        memcpy_s(&res->_data.front(), dstPitch, mapped->GetData(), dstPitch);
+        memcpy_s(&internalDst->_data.front(), dstPitch, mapped->GetData(), dstPitch);
 
-        return res;
+        return dst;
     }
 
     DebugMarkerHandle DX12::CreateDebugMarker(const std::string& name) const
@@ -205,7 +231,6 @@ namespace ninniku {
         if (!hModD3D12)
             return false;
 
-#if defined(_DEBUG)
         static PFN_D3D12_GET_DEBUG_INTERFACE s_DynamicD3D12GetDebugInterface = nullptr;
 
         if (!s_DynamicD3D12GetDebugInterface) {
@@ -218,21 +243,24 @@ namespace ninniku {
 
         // if an exception if thrown here, you might need to install the graphics tools
         // https://msdn.microsoft.com/en-us/library/mt125501.aspx
-        if (SUCCEEDED(s_DynamicD3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)))) {
-            debugInterface->EnableDebugLayer();
+        auto hr = s_DynamicD3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
 
-            Microsoft::WRL::ComPtr<ID3D12Debug1> debugInterface1;
-            if (SUCCEEDED(debugInterface->QueryInterface(IID_PPV_ARGS(&debugInterface1)))) {
-                debugInterface1->SetEnableGPUBasedValidation(true);
-            } else {
-                LOGE << "CreateDevice failed to get ID3D12Debug1";
-                return false;
-            }
-        } else {
-            LOGE << "CreateDevice failed to get ID3D12Debug";
+        if (CheckAPIFailed(hr, "D3D12GetDebugInterface"))
             return false;
-        }
-#endif
+
+        debugInterface->EnableDebugLayer();
+
+        // GPU based validation
+        Microsoft::WRL::ComPtr<ID3D12Debug1> debugInterface1;
+        hr = debugInterface->QueryInterface(IID_PPV_ARGS(&debugInterface1));
+
+        if (CheckAPIFailed(hr, "ID3D12Debug1::QueryInterface"))
+            return false;
+
+        // TODO: once we can use a windows SDK at least 10.0.17134.12, also add support for DRED
+        // https://docs.microsoft.com/en-us/windows/win32/direct3d12/use-dred
+
+        debugInterface1->SetEnableGPUBasedValidation(true);
 
         static PFN_D3D12_CREATE_DEVICE s_DynamicD3D12CreateDevice = nullptr;
 
@@ -243,37 +271,30 @@ namespace ninniku {
         }
 
         Microsoft::WRL::ComPtr<IDXGIAdapter> pAdapter;
-        D3D_DRIVER_TYPE driverType;
 
         Microsoft::WRL::ComPtr<IDXGIFactory4> dxgiFactory;
 
         if (DXCommon::GetDXGIFactory<IDXGIFactory4>(dxgiFactory.GetAddressOf())) {
             if (adapter < 0) {
                 // WARP
-                if (FAILED(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pAdapter)))) {
-                    LOGE << "Failed to Enumerate WARP adapter";
-                    return false;
-                }
+                hr = dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pAdapter));
 
-                driverType = D3D_DRIVER_TYPE_WARP;
+                if (CheckAPIFailed(hr, "IDXGIFactory4::EnumWarpAdapter"))
+                    return false;
             } else {
-                if (FAILED(dxgiFactory->EnumAdapters(adapter, pAdapter.GetAddressOf()))) {
-                    // HW
-                    auto fmt = boost::format("Invalid GPU adapter index (%1%)!") % adapter;
-                    LOGE << boost::str(fmt);
-                    return false;
-                }
+                hr = dxgiFactory->EnumAdapters(adapter, pAdapter.GetAddressOf());
 
-                driverType = (pAdapter) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
+                if (CheckAPIFailed(hr, "IDXGIFactory4::EnumAdapters"))
+                    return false;
             }
         } else {
             LOGE << "Failed to to create IDXGIFactory4";
             return false;
         }
 
-        auto minFeatureLevel = D3D_FEATURE_LEVEL_12_0;
+        auto minFeatureLevel = D3D_FEATURE_LEVEL_11_0;
 
-        auto hr = s_DynamicD3D12CreateDevice(pAdapter.Get(), minFeatureLevel, IID_PPV_ARGS(&_device));
+        hr = s_DynamicD3D12CreateDevice(pAdapter.Get(), minFeatureLevel, IID_PPV_ARGS(&_device));
 
         Microsoft::WRL::ComPtr<IDXGIDevice3> dxgiDevice;
 
@@ -317,8 +338,13 @@ namespace ninniku {
                 return false;
             }
 
-            bool isWarp = _type & ERenderer::RENDERER_WARP;
-            DX12CommandInitDesc initDesc = { _device, _commandAllocatorCompute, foundShader->second, foundRS->second, isWarp };
+            DX12CommandInitDesc initDesc = {
+                _device,
+                _commandAllocatorCompute,
+                foundShader->second,
+                foundRS->second,
+                (_type & ERenderer::RENDERER_WARP) != 0
+            };
 
             if (!dxCmd->Initialize(initDesc)) {
                 return false;
@@ -400,19 +426,17 @@ namespace ninniku {
 
     void DX12::Finalize()
     {
-        // there seems to be a problem here when using the WARP renderer, so ignoring for now
-        if ((_type & ERenderer::RENDERER_WARP) == 0) {
-            // wait in case the gpu is still running something
-            WaitForSingleObject(_fenceEvent, INFINITE);
-            CloseHandle(_fenceEvent);
-        }
+        WaitForSingleObject(_fenceEvent, 5000);
+        CloseHandle(_fenceEvent);
+
+        ObjectTracker::Instance().ReleaseObjects();
     }
 
     bool DX12::Initialize(const std::vector<std::string>& shaderPaths)
     {
         auto adapter = 0;
 
-        if (_type & ERenderer::RENDERER_WARP)
+        if ((_type & ERenderer::RENDERER_WARP) != 0)
             adapter = -1;
 
         if (!CreateDevice(adapter)) {
@@ -522,7 +546,6 @@ namespace ninniku {
                 return false;
 
             if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_DXIL)) {
-#if _DEBUG
                 IDxcBlob* pShaderBlob;
                 hr = pContainerReflection->GetPartContent(i, &pShaderBlob);
 
@@ -531,12 +554,10 @@ namespace ninniku {
 
                 auto pHeader = reinterpret_cast<const hlsl::DxilProgramHeader*>(pShaderBlob->GetBufferPointer());
 
-                // we can probably afford to only run this in debug
                 if (!IsValidDxilProgramHeader(pHeader, static_cast<uint32_t>(pShaderBlob->GetBufferSize()))) {
                     LOGE << "DXIL program header is invalid";
                     return false;
                 }
-#endif
 
                 Microsoft::WRL::ComPtr<ID3D12ShaderReflection> pShaderReflection;
 
@@ -554,14 +575,12 @@ namespace ninniku {
                 if (!ParseShaderResources(name, pShaderDesc.BoundResources, pShaderReflection.Get()))
                     return false;
             } else if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_RootSignature)) {
-#if _DEBUG
-                // not really necessary but as an extra precaution
                 Microsoft::WRL::ComPtr<IDxcBlob> pRSBlob;
                 hr = pContainerReflection->GetPartContent(i, &pRSBlob);
 
                 if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartContent"))
                     return false;
-#endif
+
                 if (!ParseRootSignature(name, pBlob))
                     return false;
             }
@@ -632,20 +651,22 @@ namespace ninniku {
         return true;
     }
 
-    MappedResourceHandle DX12::MapBuffer(const BufferHandle& bObj)
+    MappedResourceHandle DX12::Map(const BufferHandle& bObj)
     {
-        auto obj = static_cast<const DX12BufferObject*>(bObj.get());
+        auto impl = static_cast<const DX12BufferImpl*>(bObj.get());
+        auto internal = impl->_impl.lock();
+
         void* data = nullptr;
 
-        auto hr = obj->_buffer->Map(0, nullptr, &data);
+        auto hr = internal->_buffer->Map(0, nullptr, &data);
 
         if (CheckAPIFailed(hr, "ID3D12Resource::Map"))
             return std::unique_ptr<MappedResource>();
 
-        return std::make_unique<DX12MappedResource>(obj->_buffer, nullptr, 0, data);
+        return std::make_unique<DX12MappedResource>(internal->_buffer, nullptr, 0, data);
     }
 
-    MappedResourceHandle DX12::MapTexture([[maybe_unused]]const TextureHandle& tObj, [[maybe_unused]]const uint32_t index)
+    MappedResourceHandle DX12::Map([[maybe_unused]]const TextureHandle& tObj, [[maybe_unused]]const uint32_t index)
     {
         throw std::exception("not implemented");
     }

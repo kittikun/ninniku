@@ -25,7 +25,7 @@
 #include "ninniku/core/renderer/types.h"
 #include "ninniku/core/image/cmft.h"
 
-//#include "../../renderer/dx11/DX11_impl.h"
+#include "../renderer/dx11/DX11Types.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 
@@ -264,14 +264,14 @@ namespace ninniku {
     void cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         // we want to enforce 1:1 for now
-        assert(srcTex->desc->width == srcTex->desc->height);
+        assert(srcTex->GetDesc()->width == srcTex->GetDesc()->height);
 
         // allocate memory
-        _image.m_width = srcTex->desc->width;
-        _image.m_height = srcTex->desc->height;
-        _image.m_format = GetFormatFromNinnikuFormat(srcTex->desc->format);
-        _image.m_numFaces = (uint8_t)srcTex->desc->arraySize;
-        _image.m_numMips = (uint8_t)srcTex->desc->numMips;
+        _image.m_width = srcTex->GetDesc()->width;
+        _image.m_height = srcTex->GetDesc()->height;
+        _image.m_format = GetFormatFromNinnikuFormat(srcTex->GetDesc()->format);
+        _image.m_numFaces = (uint8_t)srcTex->GetDesc()->arraySize;
+        _image.m_numMips = (uint8_t)srcTex->GetDesc()->numMips;
 
         auto fmt = boost::format("cmftImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % _image.m_width % _image.m_height % (int)_image.m_numFaces % (int)_image.m_numMips;
         LOG << boost::str(fmt);
@@ -281,12 +281,12 @@ namespace ninniku {
         auto marker = dx->CreateDebugMarker("ImageFromTextureObject");
 
         // we have to copy each mip with a read back texture or the same size for each face
-        for (uint32_t mip = 0; mip < srcTex->desc->numMips; ++mip) {
+        for (uint32_t mip = 0; mip < srcTex->GetDesc()->numMips; ++mip) {
             auto param = std::make_shared<TextureParam>();
 
-            param->width = srcTex->desc->width >> mip;
-            param->height = srcTex->desc->height >> mip;
-            param->format = srcTex->desc->format;
+            param->width = srcTex->GetDesc()->width >> mip;
+            param->height = srcTex->GetDesc()->height >> mip;
+            param->format = srcTex->GetDesc()->format;
             param->numMips = 1;
             param->arraySize = 1;
             param->viewflags = EResourceViews::RV_CPU_READ;
@@ -302,9 +302,17 @@ namespace ninniku {
                 params.srcFace = face;
 
                 auto indexes = dx->CopyTextureSubresource(params);
-                auto mapped = dx->MapTexture(readBack, std::get<1>(indexes));
+                auto mapped = dx->Map(readBack, std::get<1>(indexes));
 
-                UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), mapped->GetRowPitch());
+                // do we really need this ?
+                uint32_t rowPitch = std::numeric_limits<uint32_t>::max();
+                if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
+                    auto dx11Mapped = static_cast<const DX11MappedResource*>(mapped.get());
+
+                    rowPitch = dx11Mapped->GetRowPitch();
+                }
+
+                UpdateSubImage(face, mip, static_cast<uint8_t*>(mapped->GetData()), rowPitch);
             }
         }
     }

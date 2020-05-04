@@ -46,11 +46,13 @@ namespace ninniku {
         void Finalize() override;
         bool Initialize(const std::vector<std::string>& shaderPaths) override;
         bool LoadShader(const std::string& name, const void* pData, const size_t size) override;
-        MappedResourceHandle MapBuffer(const BufferHandle& bObj) override;
-        MappedResourceHandle MapTexture(const TextureHandle& tObj, const uint32_t index) override;
+        MappedResourceHandle Map(const BufferHandle& bObj) override;
+        MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
         bool UpdateConstantBuffer(const std::string& name, void* data, const uint32_t size) override;
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
+
+        ID3D12Device* GetDevice() const { return _device.Get(); }
 
     private:
         bool CreateDevice(int adapter);

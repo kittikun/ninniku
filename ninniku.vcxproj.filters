@@ -88,6 +88,9 @@
     <ClCompile Include="src\core\renderer\dx12\DX12Types.cpp">
       <Filter>Source Files\core\renderer\dx12</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\objectTracker.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -164,6 +167,9 @@
     </ClInclude>
     <ClInclude Include="src\core\renderer\DXCommon.h">
       <Filter>Source Files\core\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\objectTracker.h">
+      <Filter>Source Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

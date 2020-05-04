@@ -152,7 +152,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesDX11, T)
     auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = newSize;
     dstParam->height = newSize;
-    dstParam->format = srcTex->desc->format;
+    dstParam->format = srcTex->GetDesc()->format;
     dstParam->numMips = 1;
     dstParam->arraySize = 6;
     dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;

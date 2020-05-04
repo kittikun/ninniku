@@ -54,7 +54,6 @@ namespace ninniku {
             case DXGI_FORMAT_UNKNOWN:
                 res = TF_UNKNOWN;
                 break;
-
             case DXGI_FORMAT_R8_UNORM:
                 res = TF_R8_UNORM;
                 break;
@@ -101,7 +100,6 @@ namespace ninniku {
             case TF_UNKNOWN:
                 res = DXGI_FORMAT_UNKNOWN;
                 break;
-
             case TF_R8_UNORM:
                 res = DXGI_FORMAT_R8_UNORM;
                 break;
@@ -123,7 +121,6 @@ namespace ninniku {
             case TF_R16G16B16A16_FLOAT:
                 res = DXGI_FORMAT_R16G16B16A16_FLOAT;
                 break;
-
             case TF_R16G16B16A16_UNORM:
                 res = DXGI_FORMAT_R16G16B16A16_UNORM;
                 break;

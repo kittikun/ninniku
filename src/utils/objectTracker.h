@@ -20,20 +20,32 @@
 
 #pragma once
 
-#include <boost/mpl/vector.hpp>
+#include "ninniku/core/renderer/types.h"
 
-struct SetupFixtureDX11
-{
-    SetupFixtureDX11();
-    ~SetupFixtureDX11();
-};
+namespace ninniku {
+    //////////////////////////////////////////////////////////////////////////
+    // Track objects externally so we can free them when Terminate() is called
+    //////////////////////////////////////////////////////////////////////////
+    struct TrackedObject
+    {
+        virtual ~TrackedObject() = default;
+    };
 
-struct SetupFixtureDX12
-{
-    SetupFixtureDX12();
-    ~SetupFixtureDX12();
-};
+    //////////////////////////////////////////////////////////////////////////
+    // ObjectTracker
+    //////////////////////////////////////////////////////////////////////////
+    class ObjectTracker : NonCopyable
+    {
+    public:
+        ObjectTracker();
 
-// there is a weird error when trying to create a pipeline state object in release only so disable for now
-typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesAll;
-typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
+        static ObjectTracker& Instance() { return _instance; }
+
+        void RegisterObject(const std::shared_ptr<TrackedObject>& obj);
+        void ReleaseObjects();
+
+    private:
+        std::vector<std::shared_ptr<TrackedObject>> _objects;
+        static ObjectTracker _instance;
+    };
+} // namespace ninniku

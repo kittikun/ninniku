@@ -168,10 +168,10 @@ ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninnik
     auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = std::get<1>(fixRes);
     dstParam->height = std::get<2>(fixRes);
-    dstParam->depth = srcTex->desc->depth;
-    dstParam->format = srcTex->desc->format;
-    dstParam->numMips = srcTex->desc->numMips;
-    dstParam->arraySize = srcTex->desc->arraySize;
+    dstParam->depth = srcTex->GetDesc()->depth;
+    dstParam->format = srcTex->GetDesc()->format;
+    dstParam->numMips = srcTex->GetDesc()->numMips;
+    dstParam->arraySize = srcTex->GetDesc()->arraySize;
     dstParam->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
 
     auto dst = dx->CreateTexture(dstParam);

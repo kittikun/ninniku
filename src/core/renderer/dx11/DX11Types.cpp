@@ -25,6 +25,34 @@
 
 namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
+    // DX11BufferImpl
+    //////////////////////////////////////////////////////////////////////////
+    DX11BufferImpl::DX11BufferImpl(const std::shared_ptr<DX11BufferInternal>& impl)
+        : _impl{ impl }
+    {
+    }
+
+    const std::vector<uint32_t>& DX11BufferImpl::GetData() const
+    {
+        return _impl.lock()->_data;
+    }
+
+    const BufferParam* DX11BufferImpl::GetDesc() const
+    {
+        return _impl.lock()->_desc.get();
+    }
+
+    const ShaderResourceView* DX11BufferImpl::GetSRV() const
+    {
+        return _impl.lock()->_srv.get();
+    }
+
+    const UnorderedAccessView* DX11BufferImpl::GetUAV() const
+    {
+        return _impl.lock()->_uav.get();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
     DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, [[maybe_unused]]const std::string& name)
@@ -43,59 +71,100 @@ namespace ninniku {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // DX11TextureObject
-    //////////////////////////////////////////////////////////////////////////
-
-    ID3D11Resource* DX11TextureObject::GetResource() const
-    {
-        ID3D11Resource* res = nullptr;
-
-        if (std::holds_alternative<DX11Tex2D>(texture))
-            res = std::get<DX11Tex2D>(texture).Get();
-        else if (std::holds_alternative<DX11Tex1D>(texture))
-            res = std::get<DX11Tex1D>(texture).Get();
-        else if (std::holds_alternative<DX11Tex3D>(texture))
-            res = std::get<DX11Tex3D>(texture).Get();
-
-        return res;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     // DX11MappedResource
     //////////////////////////////////////////////////////////////////////////
     DX11MappedResource::DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
-        : _bufferObj{ Empty_BufferHandleDX11 }
-        , _context{ context }
-        , _texObj{ texObj }
+        : _context{ context }
         , _index{ index }
         , _mapped{}
     {
+        auto impl = static_cast<const DX11TextureImpl*>(texObj.get());
+        auto internal = impl->_impl.lock();
+
+        _resource = static_cast<const DX11TextureInternal*>(internal.get());
     }
 
     DX11MappedResource::DX11MappedResource(const DX11Context& context, const BufferHandle& bufObj)
-        : _bufferObj{ bufObj }
-        , _context{ context }
-        , _texObj{ Empty_TextureHandle }
-        , _index{ }
+        : _context{ context }
+        , _index{}
         , _mapped{}
     {
+        auto impl = static_cast<const DX11BufferImpl*>(bufObj.get());
+        auto internal = impl->_impl.lock();
+
+        _resource = static_cast<const DX11BufferInternal*>(internal.get());
     }
 
     DX11MappedResource::~DX11MappedResource()
     {
-        if (_bufferObj) {
-            auto obj = static_cast<const DX11BufferObject*>(_bufferObj.get());
+        if (std::holds_alternative<const DX11BufferInternal*>(_resource)) {
+            auto obj = std::get<const DX11BufferInternal*>(_resource);
 
             _context->Unmap(obj->_buffer.Get(), 0);
         } else {
-            auto obj = static_cast<const DX11TextureObject*>(_texObj.get());
+            auto obj = std::get<const DX11TextureInternal*>(_resource);
 
             _context->Unmap(obj->GetResource(), _index);
         }
     }
 
-    uint32_t DX11MappedResource::GetRowPitch() const
+    //////////////////////////////////////////////////////////////////////////
+    // DX11TextureInternal
+    //////////////////////////////////////////////////////////////////////////
+    ID3D11Resource* DX11TextureInternal::GetResource() const
     {
-        return _mapped.RowPitch;
+        ID3D11Resource* res = nullptr;
+
+        if (std::holds_alternative<DX11Tex2D>(_texture))
+            res = std::get<DX11Tex2D>(_texture).Get();
+        else if (std::holds_alternative<DX11Tex1D>(_texture))
+            res = std::get<DX11Tex1D>(_texture).Get();
+        else if (std::holds_alternative<DX11Tex3D>(_texture))
+            res = std::get<DX11Tex3D>(_texture).Get();
+
+        return res;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX11TextureImpl
+    //////////////////////////////////////////////////////////////////////////
+    DX11TextureImpl::DX11TextureImpl(const std::shared_ptr<DX11TextureInternal>& impl)
+        : _impl{ impl }
+    {
+    }
+
+    const TextureParam* DX11TextureImpl::GetDesc() const
+    {
+        return _impl.lock()->_desc.get();
+    }
+
+    const ShaderResourceView* DX11TextureImpl::GetSRVDefault() const
+    {
+        return _impl.lock()->_srvDefault.get();
+    }
+
+    const ShaderResourceView* DX11TextureImpl::GetSRVCube() const
+    {
+        return _impl.lock()->_srvCube.get();
+    }
+
+    const ShaderResourceView* DX11TextureImpl::GetSRVCubeArray() const
+    {
+        return _impl.lock()->_srvCubeArray.get();
+    }
+
+    const ShaderResourceView* DX11TextureImpl::GetSRVArray(uint32_t index) const
+    {
+        return _impl.lock()->_srvArray[index].get();
+    }
+
+    const ShaderResourceView* DX11TextureImpl::GetSRVArrayWithMips() const
+    {
+        return _impl.lock()->_srvArrayWithMips.get();
+    }
+
+    const UnorderedAccessView* DX11TextureImpl::GetUAV(uint32_t index) const
+    {
+        return _impl.lock()->_uav[index].get();
     }
 } // namespace ninniku

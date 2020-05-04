@@ -22,6 +22,8 @@
 
 #include "ninniku/core/renderer/types.h"
 
+#include "../../../utils/objectTracker.h"
+
 #include <d3d12.h>
 
 namespace ninniku {
@@ -38,26 +40,33 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX12BufferObject
     //////////////////////////////////////////////////////////////////////////
-    struct DX12BufferObject final : public BufferObject
+    struct DX12BufferInternal final : TrackedObject
     {
-    public:
-        DX12BufferObject() = default;
-
-        // BufferObject
-        const std::vector<uint32_t>& GetData() const override { return _data; }
-        const ShaderResourceView* GetSRV() const override { return _srv.get(); }
-        const UnorderedAccessView* GetUAV() const override { return _uav.get(); }
-
-    public:
         DX12Resource _buffer;
         SRVHandle _srv;
         UAVHandle _uav;
 
         // leave data here to support update later on
         std::vector<uint32_t> _data;
+
+        // Initial desc that was used to create the resource
+        std::shared_ptr<const BufferParam> _desc;
     };
 
-    static BufferHandle Empty_BufferHandleDX12;
+    //////////////////////////////////////////////////////////////////////////
+    // DX12BufferImpl
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12BufferImpl : public BufferObject
+    {
+        DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl);
+
+        const std::vector<uint32_t>& GetData() const override;
+        const BufferParam* GetDesc() const override;
+        const ShaderResourceView* GetSRV() const override;
+        const UnorderedAccessView* GetUAV() const override;
+
+        std::weak_ptr<DX12BufferInternal> _impl;
+    };
 
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
@@ -84,7 +93,6 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX12DebugMarker
     //////////////////////////////////////////////////////////////////////////
-
     struct DX12DebugMarker final : public DebugMarker
     {
     public:
@@ -93,6 +101,24 @@ namespace ninniku {
 
     private:
         static std::atomic<uint8_t> _colorIdx;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12MappedResource
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12MappedResource final : public MappedResource
+    {
+    public:
+        DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data);
+        ~DX12MappedResource() override;
+
+        void* GetData() const override { return _data; }
+
+    private:
+        DX12Resource _resource;
+        uint32_t _subresource;
+        const D3D12_RANGE* _range;
+        void* _data;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -108,25 +134,5 @@ namespace ninniku {
     {
     public:
         DX12Resource _resource;
-    };
-
-    //////////////////////////////////////////////////////////////////////////
-    // GPU to CPU readback
-    //////////////////////////////////////////////////////////////////////////
-
-    struct DX12MappedResource final : public MappedResource
-    {
-    public:
-        DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data);
-        ~DX12MappedResource() override;
-
-        void* GetData() const override { return _data; }
-        uint32_t GetRowPitch() const override { return 0; }
-
-    private:
-        DX12Resource _resource;
-        uint32_t _subresource;
-        const D3D12_RANGE* _range;
-        void* _data;
     };
 } // namespace ninniku

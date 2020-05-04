@@ -31,6 +31,34 @@
 
 namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
+    // DX12BufferImpl
+    //////////////////////////////////////////////////////////////////////////
+    DX12BufferImpl::DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl)
+        : _impl{ impl }
+    {
+    }
+
+    const std::vector<uint32_t>& DX12BufferImpl::GetData() const
+    {
+        return _impl.lock()->_data;
+    }
+
+    const BufferParam* DX12BufferImpl::GetDesc() const
+    {
+        return _impl.lock()->_desc.get();
+    }
+
+    const ShaderResourceView* DX12BufferImpl::GetSRV() const
+    {
+        return _impl.lock()->_srv.get();
+    }
+
+    const UnorderedAccessView* DX12BufferImpl::GetUAV() const
+    {
+        return _impl.lock()->_uav.get();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
     bool DX12Command::Initialize(const DX12CommandInitDesc& initDesc)

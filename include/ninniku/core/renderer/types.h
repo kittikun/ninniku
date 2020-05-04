@@ -58,24 +58,12 @@ namespace ninniku {
         // Add support for initial data later
         virtual const std::vector<uint32_t>& GetData() const = 0;
 
+        virtual const BufferParam* GetDesc() const = 0;
         virtual const ShaderResourceView* GetSRV() const = 0;
         virtual const UnorderedAccessView* GetUAV() const = 0;
-
-        // Initial desc that was used to create the resource
-        std::shared_ptr<const BufferParam> desc;
     };
 
     using BufferHandle = std::unique_ptr<const BufferObject>;
-
-    //////////////////////////////////////////////////////////////////////////
-    // Debug
-    //////////////////////////////////////////////////////////////////////////
-
-    struct NINNIKU_API DebugMarker : NonCopyable
-    {
-    };
-
-    using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
 
     //////////////////////////////////////////////////////////////////////////
     // Commands
@@ -94,32 +82,39 @@ namespace ninniku {
     using CommandHandle = std::unique_ptr<Command>;
 
     //////////////////////////////////////////////////////////////////////////
+    // Debug
+    //////////////////////////////////////////////////////////////////////////
+
+    struct NINNIKU_API DebugMarker : NonCopyable
+    {
+    };
+
+    using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // MappedResource: GPU to CPU readback
+    //////////////////////////////////////////////////////////////////////////
+
+    struct MappedResource : NonCopyable
+    {
+        virtual void* GetData() const = 0;
+    };
+
+    using MappedResourceHandle = std::unique_ptr<const MappedResource>;
+
+    //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
     struct TextureObject : NonCopyable
     {
+        virtual const TextureParam* GetDesc() const = 0;
         virtual const ShaderResourceView* GetSRVDefault() const = 0;
         virtual const ShaderResourceView* GetSRVCube() const = 0;
         virtual const ShaderResourceView* GetSRVCubeArray() const = 0;
         virtual const ShaderResourceView* GetSRVArray(uint32_t index) const = 0;
         virtual const ShaderResourceView* GetSRVArrayWithMips() const = 0;
         virtual const UnorderedAccessView* GetUAV(uint32_t index) const = 0;
-
-        // Initial desc that was used to create the resource
-        std::shared_ptr<const TextureParam> desc;
     };
 
     using TextureHandle = std::unique_ptr<const TextureObject>;
-
-    //////////////////////////////////////////////////////////////////////////
-    // GPU to CPU readback
-    //////////////////////////////////////////////////////////////////////////
-
-    struct MappedResource : NonCopyable
-    {
-        virtual void* GetData() const = 0;
-        virtual uint32_t GetRowPitch() const = 0;
-    };
-
-    using MappedResourceHandle = std::unique_ptr<const MappedResource>;
 } // namespace ninniku
