@@ -35,7 +35,8 @@
 #include <array>
 #include <filesystem>
 
-namespace ninniku {
+namespace ninniku
+{
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -208,7 +209,7 @@ namespace ninniku {
 
         bool imageLoaded = false;
 
-        if (std::filesystem::path{ path } .extension() == ".exr")
+        if (std::filesystem::path{ path }.extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
             imageLoaded = imageLoad(_image, path.data(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.data(), cmft::TextureFormat::RGBA32F);
@@ -281,39 +282,40 @@ namespace ninniku {
         auto marker = dx->CreateDebugMarker("ImageFromTextureObject");
 
         // we have to copy each mip with a read back texture or the same size for each face
-        for (uint32_t mip = 0; mip < srcTex->GetDesc()->numMips; ++mip) {
-            auto param = std::make_shared<TextureParam>();
+        if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
+            // dx11 can read back from a texture
+            for (uint32_t mip = 0; mip < srcTex->GetDesc()->numMips; ++mip) {
+                auto param = TextureParam::Create();
 
-            param->width = srcTex->GetDesc()->width >> mip;
-            param->height = srcTex->GetDesc()->height >> mip;
-            param->format = srcTex->GetDesc()->format;
-            param->numMips = 1;
-            param->arraySize = 1;
-            param->viewflags = EResourceViews::RV_CPU_READ;
+                param->width = srcTex->GetDesc()->width >> mip;
+                param->height = srcTex->GetDesc()->height >> mip;
+                param->format = srcTex->GetDesc()->format;
+                param->numMips = 1;
+                param->arraySize = 1;
+                param->viewflags = EResourceViews::RV_CPU_READ;
 
-            auto readBack = dx->CreateTexture(param);
+                auto readBack = dx->CreateTexture(param);
 
-            CopyTextureSubresourceParam params = {};
-            params.src = srcTex.get();
-            params.srcMip = mip;
-            params.dst = readBack.get();
+                CopyTextureSubresourceParam params = {};
+                params.src = srcTex.get();
+                params.srcMip = mip;
+                params.dst = readBack.get();
 
-            for (uint32_t face = 0; face < CUBEMAP_NUM_FACES; ++face) {
-                params.srcFace = face;
+                for (uint32_t face = 0; face < CUBEMAP_NUM_FACES; ++face) {
+                    params.srcFace = face;
 
-                auto indexes = dx->CopyTextureSubresource(params);
-                auto mapped = dx->Map(readBack, std::get<1>(indexes));
-
-                // do we really need this ?
-                uint32_t rowPitch = std::numeric_limits<uint32_t>::max();
-                if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
+                    auto indexes = dx->CopyTextureSubresource(params);
+                    auto mapped = dx->Map(readBack, std::get<1>(indexes));
                     auto dx11Mapped = static_cast<const DX11MappedResource*>(mapped.get());
 
-                    rowPitch = dx11Mapped->GetRowPitch();
+                    UpdateSubImage(face, mip, static_cast<uint8_t*>(mapped->GetData()), dx11Mapped->GetRowPitch());
                 }
-
-                UpdateSubImage(face, mip, static_cast<uint8_t*>(mapped->GetData()), rowPitch);
             }
+        } else {
+            // dx12 needs to use an intermediate buffer
+            auto params = BufferParam::Create();
+
+            throw std::exception("not implemented");
         }
     }
 

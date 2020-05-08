@@ -181,7 +181,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco </Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -DHLSL -rootsig-define RS %(FullPath) -Fo $(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco</Command>
     </CustomBuild>
-    <None Include="src\shaders\dx11\color20.hlsl">
+    <None Include="src\shaders\color20.hlsl">
       <FileType>Document</FileType>
     </None>
     <FxCompile Include="src\shaders\dx11\colorFaces.hlsl">

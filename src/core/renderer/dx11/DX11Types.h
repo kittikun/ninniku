@@ -23,13 +23,15 @@
 #include "ninniku/core/renderer/types.h"
 
 #include "../../../utils/objectTracker.h"
+#include "../../../utils/stringMap.h"
 
 #include <wrl/client.h>
 #include <d3d11_1.h>
 #include <variant>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
     using DX11CS = Microsoft::WRL::ComPtr<ID3D11ComputeShader>;
@@ -41,27 +43,6 @@ namespace ninniku {
     using DX11SS = Microsoft::WRL::ComPtr<ID3D11SamplerState>;
     using DX11SRV = Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
     using DX11UAV = Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
-
-    //////////////////////////////////////////////////////////////////////////
-    // DX11 Shader Resources
-    //////////////////////////////////////////////////////////////////////////
-    struct DX11ShaderResourceView final : public ShaderResourceView
-    {
-    public:
-        DX11SRV _resource;
-    };
-
-    struct DX11UnorderedAccessView final : public UnorderedAccessView
-    {
-    public:
-        DX11UAV _resource;
-    };
-
-    struct DX11SamplerState final : public SamplerState
-    {
-    public:
-        DX11SS _resource;
-    };
 
     //////////////////////////////////////////////////////////////////////////
     // DX11BufferInternal
@@ -84,7 +65,7 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     struct DX11BufferImpl : public BufferObject
     {
-        DX11BufferImpl(const std::shared_ptr<DX11BufferInternal>& impl);
+        DX11BufferImpl(const std::shared_ptr<DX11BufferInternal>& impl) noexcept;
 
         const std::vector<uint32_t>& GetData() const override;
         const BufferParam* GetDesc() const override;
@@ -92,13 +73,6 @@ namespace ninniku {
         const UnorderedAccessView* GetUAV() const override;
 
         std::weak_ptr<DX11BufferInternal> _impl;
-    };
-
-    //////////////////////////////////////////////////////////////////////////
-    // DX11Command
-    //////////////////////////////////////////////////////////////////////////
-    struct DX11Command final : public Command
-    {
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -113,7 +87,7 @@ namespace ninniku {
         DX11ComputeShader& operator=(DX11ComputeShader&&) = delete;
 
         DX11CS shader;
-        std::unordered_map<std::string_view, uint32_t> bindSlots;
+        StringMap<uint32_t> bindSlots;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -154,6 +128,27 @@ namespace ninniku {
     };
 
     //////////////////////////////////////////////////////////////////////////
+    // DX11 Shader Resources
+    //////////////////////////////////////////////////////////////////////////
+    struct DX11ShaderResourceView final : public ShaderResourceView
+    {
+    public:
+        DX11SRV _resource;
+    };
+
+    struct DX11UnorderedAccessView final : public UnorderedAccessView
+    {
+    public:
+        DX11UAV _resource;
+    };
+
+    struct DX11SamplerState final : public SamplerState
+    {
+    public:
+        DX11SS _resource;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
     // DX11TextureInternal
     //////////////////////////////////////////////////////////////////////////
     struct DX11TextureInternal final : TrackedObject
@@ -186,7 +181,7 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     struct DX11TextureImpl final : public TextureObject
     {
-        DX11TextureImpl(const std::shared_ptr<DX11TextureInternal>& impl);
+        DX11TextureImpl(const std::shared_ptr<DX11TextureInternal>& impl) noexcept;
 
         const TextureParam* GetDesc() const override;
         const ShaderResourceView* GetSRVDefault() const override;
@@ -197,5 +192,20 @@ namespace ninniku {
         const UnorderedAccessView* GetUAV(uint32_t index) const override;
 
         std::weak_ptr<DX11TextureInternal> _impl;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // TextureSRVParams
+    //////////////////////////////////////////////////////////////////////////
+    struct TextureSRVParams : NonCopyable
+    {
+        TextureObject* obj;
+        TextureParamHandle texParams;
+        uint8_t is1d : 1;
+        uint8_t is2d : 1;
+        uint8_t is3d : 1;
+        uint8_t isCube : 1;
+        uint8_t isCubeArray : 1;
+        uint8_t padding : 3;
     };
 } // namespace ninniku

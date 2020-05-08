@@ -33,7 +33,8 @@
 #include <d3d11shader.h>
 #include <d3dcompiler.h>
 
-namespace ninniku {
+namespace ninniku
+{
     DX11::DX11(ERenderer type)
         : _type{ type }
     {
@@ -50,7 +51,7 @@ namespace ninniku {
         _context->CopyResource(dstInternal->_buffer.Get(), srcInternal->_buffer.Get());
     }
 
-    std::tuple<uint32_t, uint32_t> DX11::CopyTextureSubresource(const CopyTextureSubresourceParam& params) const
+    std::tuple<uint32_t, uint32_t> DX11::CopyTextureSubresource(const CopyTextureSubresourceParam& params)
     {
         auto srcImpl = static_cast<const DX11TextureImpl*>(params.src);
         auto srcInternal = srcImpl->_impl.lock();
@@ -122,7 +123,7 @@ namespace ninniku {
 
         auto impl = std::make_shared<DX11BufferInternal>();
 
-        ObjectTracker::Instance().RegisterObject(impl);
+        _tracker.RegisterObject(impl);
 
         impl->_desc = params;
 
@@ -290,7 +291,7 @@ namespace ninniku {
                     hr = pAdapter->GetDesc(&desc);
 
                     if (SUCCEEDED(hr)) {
-                        auto fmt = boost::wformat(L"Using DirectCompute on %1%") % desc.Description;
+                        auto fmt = boost::format("Using DirectCompute on %1%") % desc.Description;
                         LOGD << boost::str(fmt);
                     }
                 }
@@ -329,7 +330,7 @@ namespace ninniku {
             usageStr = "D3D11_USAGE_DEFAULT";
         }
 
-        auto fmt = boost::format("Creating Texture2D: Size=%1%x%2%, Mips=%3%, Usage=%4%") % params->width % params->height % params->numMips % usageStr;
+        auto fmt = boost::format("Creating Texture: Size=%1%x%2%, Mips=%3%, Usage=%4%") % params->width % params->height % params->numMips % usageStr;
 
         LOGD << boost::str(fmt);
 
@@ -364,7 +365,7 @@ namespace ninniku {
         // we want to use unique_ptr here so that the object is properly destroyed in case it fails before we return
         auto impl = std::make_shared<DX11TextureInternal>();
 
-        ObjectTracker::Instance().RegisterObject(impl);
+        _tracker.RegisterObject(impl);
 
         impl->_desc = params;
 
@@ -474,6 +475,46 @@ namespace ninniku {
         return res;
     }
 
+    std::string_view DX11::DxSRVDimensionToString(D3D_SRV_DIMENSION dimension)
+    {
+        std::string_view res;
+
+        switch (dimension) {
+            case D3D11_SRV_DIMENSION_BUFFER:
+                res = "D3D11_SRV_DIMENSION_BUFFER";
+                break;
+            case D3D11_SRV_DIMENSION_TEXTURE1D:
+                res = "D3D11_SRV_DIMENSION_TEXTURE1D";
+                break;
+            case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
+                res = "D3D11_SRV_DIMENSION_TEXTURE1DARRAY";
+                break;
+            case D3D11_SRV_DIMENSION_TEXTURE2D:
+                res = "D3D11_SRV_DIMENSION_TEXTURE2D";
+                break;
+            case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
+                res = "D3D11_SRV_DIMENSION_TEXTURE2DARRAY";
+                break;
+            case D3D11_SRV_DIMENSION_TEXTURE3D:
+                res = "D3D11_SRV_DIMENSION_TEXTURE3D";
+                break;
+            case D3D11_SRV_DIMENSION_TEXTURECUBE:
+                res = "D3D11_SRV_DIMENSION_TEXTURECUBE";
+                break;
+            case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:
+                res = "D3D11_SRV_DIMENSION_TEXTURECUBEARRAY";
+                break;
+            case D3D11_SRV_DIMENSION_BUFFEREX:
+                res = "D3D11_SRV_DIMENSION_BUFFEREX";
+                break;
+            default:
+                throw new std::exception("Unsupported view dimension");
+                break;
+        }
+
+        return res;
+    }
+
     bool DX11::Dispatch(const CommandHandle& cmd)
     {
         auto found = _shaders.find(cmd->shader);
@@ -501,7 +542,8 @@ namespace ninniku {
         static std::function<ID3D11UnorderedAccessView*(const UnorderedAccessView*)> uavCast = &DX11::castGenericResourceToDX11Resource<UnorderedAccessView, DX11UnorderedAccessView, ID3D11UnorderedAccessView>;
         static std::function<ID3D11SamplerState*(const SamplerState*)> ssCast = &DX11::castGenericResourceToDX11Resource<SamplerState, DX11SamplerState, ID3D11SamplerState>;
 
-        auto lambda = [&](auto & kvp, auto & container, auto castFn) {
+        auto lambda = [&](auto & kvp, auto & container, auto castFn)
+        {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -573,7 +615,7 @@ namespace ninniku {
 
     void DX11::Finalize()
     {
-        ObjectTracker::Instance().ReleaseObjects();
+        _tracker.ReleaseObjects();
     }
 
     bool DX11::Initialize(const std::vector<std::string_view>& shaderPaths)
@@ -696,7 +738,7 @@ namespace ninniku {
             auto fmt = boost::format("Adding CS: \"%1%\" to library") % name;
             LOGD << boost::str(fmt);
 
-            _shaders.insert(std::make_pair(name, DX11ComputeShader{ shader, bindings }));
+            _shaders.emplace(name, DX11ComputeShader{ shader, bindings });
         }
 
         LOG_INDENT_END;
@@ -722,7 +764,8 @@ namespace ninniku {
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 
@@ -765,136 +808,107 @@ namespace ninniku {
         auto impl = static_cast<DX11TextureImpl*>(params.obj);
         auto internal = impl->_impl.lock();
 
-        if (params.isCubeArray) {
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        auto lmbd = [&](ID3D11Resource * resource, D3D11_SHADER_RESOURCE_VIEW_DESC & desc, SRVHandle & target)
+        {
+            auto srv = new DX11ShaderResourceView();
+            auto hr = _device->CreateShaderResourceView(resource, &desc, srv->_resource.GetAddressOf());
 
-            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
+            auto fmt = boost::format("ID3D11Device::CreateShaderResourceView with %1%") % DxSRVDimensionToString(desc.ViewDimension);
+
+            if (CheckAPIFailed(hr, boost::str(fmt))) {
+                return false;
+            } else {
+                target.reset(srv);
+            }
+
+            return true;
+        };
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+        srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
+
+        if (params.isCubeArray) {
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBEARRAY;
+            srvDesc.TextureCubeArray = {};
             srvDesc.TextureCubeArray.MipLevels = params.texParams->numMips;
             srvDesc.TextureCubeArray.NumCubes = params.texParams->arraySize / CUBEMAP_NUM_FACES;
 
-            auto srv = new DX11ShaderResourceView();
-            auto hr = _device->CreateShaderResourceView(internal->GetResource(), &srvDesc, srv->_resource.GetAddressOf());
-
-            if (CheckAPIFailed(hr, "ID3D11Device::CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBEARRAY")) {
+            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvCubeArray))
                 return false;
-            } else {
-                internal->_srvCubeArray.reset(srv);
-            }
         }
 
         if (params.isCube) {
             // To sample texture as cubemap
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
+            srvDesc.TextureCube = {};
             srvDesc.TextureCube.MipLevels = params.texParams->numMips;
 
-            auto srv = new DX11ShaderResourceView();
-            auto hr = _device->CreateShaderResourceView(internal->GetResource(), &srvDesc, srv->_resource.GetAddressOf());
-
-            if (CheckAPIFailed(hr, "ID3D11Device::CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURECUBE")) {
+            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvCube))
                 return false;
-            } else {
-                internal->_srvCube.reset(srv);
-            }
 
             // To sample texture as array, one for each miplevel
             internal->_srvArray.resize(params.texParams->numMips);
 
             for (uint32_t i = 0; i < params.texParams->numMips; ++i) {
-                srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-                srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
                 srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
+                srvDesc.Texture2DArray = {};
                 srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
                 srvDesc.Texture2DArray.MostDetailedMip = i;
                 srvDesc.Texture2DArray.MipLevels = 1;
 
-                auto srvArray = new DX11ShaderResourceView();
-                hr = _device->CreateShaderResourceView(internal->GetResource(), &srvDesc, srvArray->_resource.GetAddressOf());
-
-                if (CheckAPIFailed(hr, "ID3D11Device::CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURE2DARRAY")) {
+                if (!lmbd(internal->GetResource(), srvDesc, internal->_srvArray[i]))
                     return false;
-                } else {
-                    internal->_srvArray[i].reset(srvArray);
-                }
             }
 
             // one for array with all mips
-            srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
+            srvDesc.Texture2DArray = {};
             srvDesc.Texture2DArray.ArraySize = CUBEMAP_NUM_FACES;
             srvDesc.Texture2DArray.MostDetailedMip = 0;
             srvDesc.Texture2DArray.MipLevels = params.texParams->numMips;
 
-            srv = new DX11ShaderResourceView();
-            hr = _device->CreateShaderResourceView(internal->GetResource(), &srvDesc, srv->_resource.GetAddressOf());
-
-            if (CheckAPIFailed(hr, "ID3D11Device::CreateShaderResourceView with D3D_SRV_DIMENSION_TEXTURE2DARRAY")) {
+            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvArrayWithMips))
                 return false;
-            } else {
-                internal->_srvArrayWithMips.reset(srv);
+        } else if (params.texParams->arraySize > 1) {
+            // one for each miplevel
+            internal->_srvArray.resize(params.texParams->numMips);
+
+            for (uint32_t i = 0; i < params.texParams->numMips; ++i) {
+                if (params.is1d) {
+                    srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1DARRAY;
+                    srvDesc.Texture1DArray = {};
+                    srvDesc.Texture1DArray.ArraySize = params.texParams->arraySize;
+                    srvDesc.Texture1DArray.MostDetailedMip = i;
+                    srvDesc.Texture1DArray.MipLevels = 1;
+                } else {
+                    srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
+                    srvDesc.Texture2DArray = {};
+                    srvDesc.Texture2DArray.ArraySize = params.texParams->arraySize;
+                    srvDesc.Texture2DArray.MostDetailedMip = i;
+                    srvDesc.Texture2DArray.MipLevels = 1;
+                }
+
+                if (!lmbd(internal->GetResource(), srvDesc, internal->_srvArray[i]))
+                    return false;
             }
         } else {
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-            srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
-
-            if (params.texParams->arraySize > 1) {
-                // one for each miplevel
-                internal->_srvArray.resize(params.texParams->numMips);
-
-                for (uint32_t i = 0; i < params.texParams->numMips; ++i) {
-                    if (params.is1d) {
-                        srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1DARRAY;
-                        srvDesc.Texture1DArray.ArraySize = params.texParams->arraySize;
-                        srvDesc.Texture1DArray.MostDetailedMip = i;
-                        srvDesc.Texture1DArray.MipLevels = 1;
-                    } else {
-                        srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
-                        srvDesc.Texture2DArray.ArraySize = params.texParams->arraySize;
-                        srvDesc.Texture2DArray.MostDetailedMip = i;
-                        srvDesc.Texture2DArray.MipLevels = 1;
-                    }
-
-                    auto srv = new DX11ShaderResourceView();
-
-                    auto hr = _device->CreateShaderResourceView(internal->GetResource(), &srvDesc, srv->_resource.GetAddressOf());
-                    if (FAILED(hr)) {
-                        _com_error err(hr);
-                        auto fmt = boost::format("Failed to CreateShaderResourceView with D3D_SRV_DIMENSION for Mip=%1% with Height=%2% with: %3%") % i % params.texParams->height % err.ErrorMessage();
-                        LOGE << boost::str(fmt);
-                        return false;
-                    } else {
-                        internal->_srvArray[i].reset(srv);
-                    }
-                }
+            if (params.is3d) {
+                srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE3D;
+                srvDesc.Texture3D = {};
+                srvDesc.Texture3D.MipLevels = params.texParams->numMips;
+            } else if (params.is1d) {
+                srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1D;
+                srvDesc.Texture1D = {};
+                srvDesc.Texture1D.MipLevels = params.texParams->numMips;
             } else {
-                if (params.is3d) {
-                    srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE3D;
-                    srvDesc.Texture3D.MipLevels = params.texParams->numMips;
-                } else if (params.is1d) {
-                    srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE1D;
-                    srvDesc.Texture1D.MipLevels = params.texParams->numMips;
-                } else {
-                    srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
-                    srvDesc.Texture2D.MipLevels = params.texParams->numMips;
-                }
-
-                auto srv = new DX11ShaderResourceView();
-
-                auto hr = _device->CreateShaderResourceView(internal->GetResource(), &srvDesc, srv->_resource.GetAddressOf());
-                if (FAILED(hr)) {
-                    _com_error err(hr);
-                    auto fmt = boost::format("Failed to CreateShaderResourceView with: Height=%1%, Depth=%2% with: %3%") % params.texParams->height % params.texParams->depth % err.ErrorMessage();
-                    LOGE << boost::str(fmt);
-                    return false;
-                } else {
-                    internal->_srvDefault.reset(srv);
-                }
+                srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Texture2D = {};
+                srvDesc.Texture2D.MipLevels = params.texParams->numMips;
             }
+
+            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvDefault))
+                return false;
         }
 
         return true;
@@ -928,9 +942,9 @@ namespace ninniku {
         return res;
     }
 
-    std::unordered_map<std::string_view, uint32_t> DX11::ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection)
+    StringMap<uint32_t> DX11::ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection)
     {
-        std::unordered_map<std::string_view, uint32_t> res;
+        StringMap<uint32_t> res;
 
         // parse parameter bind slots
         for (uint32_t i = 0; i < numBoundResources; ++i) {
@@ -977,12 +991,12 @@ namespace ninniku {
 
             LOGD << boost::str(fmt);
 
-            // if the texture is a constant buffer, we want to create it a slot in the map
+            // if the texture is a constant buffer, we want to create it a slot for it in the map
             if (bindDesc.Type == D3D_SIT_CBUFFER) {
-                _cBuffers.insert(std::make_pair(bindDesc.Name, DX11Buffer{}));
+                _cBuffers.emplace(bindDesc.Name, DX11Buffer{});
             }
 
-            res.insert(std::make_pair(bindDesc.Name, bindDesc.BindPoint));
+            res.emplace(bindDesc.Name, bindDesc.BindPoint);
         }
 
         return res;
@@ -1010,13 +1024,9 @@ namespace ninniku {
             initialData.pSysMem = data;
 
             auto hr = _device->CreateBuffer(&desc, &initialData, &_cBuffers[name]);
-            if (FAILED(hr)) {
-                auto fmt = boost::format("Failed to CreateBuffer constant buffer \"%1%\" with:") % name;
-                LOGE << boost::str(fmt);
-                _com_error err(hr);
-                LOGE << err.ErrorMessage();
+
+            if (CheckAPIFailed(hr, "ID3D11Device::CreateBuffer"))
                 return false;
-            }
         } else {
             // constant buffer already exists so just update it
 
@@ -1024,13 +1034,8 @@ namespace ninniku {
             auto src = _cBuffers[name].Get();
             auto hr = _context->Map(src, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 
-            if (FAILED(hr)) {
-                auto fmt = boost::format("Failed to map constant buffer \"%1%\" with:") % name;
-                LOGE << boost::str(fmt);
-                _com_error err(hr);
-                LOGE << err.ErrorMessage();
+            if (CheckAPIFailed(hr, "ID3D11DeviceContext::Map"))
                 return false;
-            }
 
             memcpy_s(mapped.pData, size, data, size);
             _context->Unmap(src, 0);

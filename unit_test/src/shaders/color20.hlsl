@@ -18,18 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../cbuffers.h"
-#include "../color20.hlsl"
-
-RWTexture2DArray<float4> dstTex;
-
-[numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
-void main(uint3 DTI : SV_DispatchThreadID)
-{
-    uint w, h, elems;
-
-    dstTex.GetDimensions(w, h, elems);
-
-    if (all(DTI.xy < uint2(w, h)))
-        dstTex[DTI] = float4(color20[targetMip], 1);
-}
+// 20 visually distinct colors
+// https://stackoverflow.com/a/20298027/1537817
+static const float3 color20[] = {
+    float3(0, 1, 0),
+    float3(0, 0, 1),
+    float3(1, 0, 0),
+    float3(0.003, 1, 0.996),
+    float3(1, 0.650, 0.996),
+    float3(1, 0.858, 0.4),
+    float3(0, 0.392, 0.003),
+    float3(0.003, 0, 0.403),
+    float3(0.584, 0, 0.227),
+    float3(0, 0.490, 0.709),
+    float3(1, 0, 0.964),
+    float3(1, 0.933, 0.909),
+    float3(0.466, 0.301, 0),
+    float3(0.564, 0.984, 0.572),
+    float3(0, 0.462, 1),
+    float3(0.835, 1, 0),
+    float3(1, 0.576, 0.494),
+    float3(0.415, 0.509, 0.423),
+    float3(1, 0.007, 0.615),
+    float3(0.996, 0.537, 0),
+    float3(0.478, 0.278, 0.509)
+};

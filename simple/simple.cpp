@@ -20,42 +20,55 @@
 
 #include <ninniku/ninniku.h>
 #include <ninniku/core/renderer/renderdevice.h>
+#include <ninniku/core/image/dds.h>
+
+#include "shaders/cbuffers.h"
 
 int main()
 {
-    // corresponding test: shader_structuredBuffer
+    // corresponding test: GenerateColoredMips
     std::vector<std::string_view> shaderPaths = { "..\\simple\\shaders" };
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
 
     auto& dx = ninniku::GetRenderer();
-    auto params = ninniku::BufferParam::Create();
 
-    params->numElements = 16;
-    params->elementSize = sizeof(uint32_t);
-    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+    auto param = ninniku::TextureParam::Create();
+    param->format = ninniku::TF_R32G32B32A32_FLOAT;
+    param->width = param->height = 512;
+    param->depth = 1;
+    param->numMips = ninniku::CountMips(std::min(param->width, param->height));
+    param->arraySize = ninniku::CUBEMAP_NUM_FACES;
+    param->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
 
-    auto srcBuffer = dx->CreateBuffer(params);
+    auto marker = dx->CreateDebugMarker("ColorMips");
+    auto resTex = dx->CreateTexture(param);
 
-    // fill structured buffer
-    {
-        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
-
+    for (uint32_t i = 0; i < param->numMips; ++i) {
         // dispatch
         auto cmd = dx->CreateCommand();
+        cmd->shader = "colorMips";
+        cmd->cbufferStr = "CBGlobal";
 
-        cmd->shader = "fillBuffer";
+        static_assert((COLORMIPS_NUMTHREAD_X == COLORMIPS_NUMTHREAD_Y) && (COLORMIPS_NUMTHREAD_Z == 1));
+        cmd->dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
+        cmd->dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
+        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORMIPS_NUMTHREAD_Z;
 
-        cmd->dispatch[0] = cmd->dispatch[1] = cmd->dispatch[2] = 1;
+        cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
 
-        cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
+        // constant buffer
+        CBGlobal cb = {};
+
+        cb.targetMip = i;
+        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
 
         dx->Dispatch(cmd);
+
+        auto res = std::make_unique<ninniku::ddsImage>();
+
+        res->InitializeFromTextureObject(dx, resTex);
     }
-
-    auto dstBuffer = dx->CreateBuffer(srcBuffer);
-
-    auto& data = dstBuffer->GetData();
 
     ninniku::Terminate();
 }

@@ -19,7 +19,7 @@
 // SOFTWARE.
 
 #include "../cbuffers.h"
-#include "color20.hlsl"
+#include "../color20.hlsl"
 
 RWTexture2DArray<float4> dstTex;
 

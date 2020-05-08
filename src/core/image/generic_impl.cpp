@@ -32,7 +32,8 @@
 #include <filesystem>
 #include <DirectXPackedVector.h>
 
-namespace ninniku {
+namespace ninniku
+{
     genericImage::genericImage()
         : _impl{ new genericImageImpl() }
     {
@@ -72,7 +73,7 @@ namespace ninniku {
 
     TextureParamHandle genericImageImpl::CreateTextureParamInternal(const EResourceViews viewFlags) const
     {
-        auto res = std::make_shared<TextureParam>();
+        auto res = TextureParam::Create();
 
         auto fmt = GetFormat();
 

@@ -18,18 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../cbuffers.h"
-#include "../color20.hlsl"
+#include "color20.hlsl"
+#include "cbuffers.h"
 
-RWTexture2DArray<float4> dstTex;
+#define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
+                       "DENY_HULL_SHADER_ROOT_ACCESS | " \
+                       "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
+                       "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
+                       "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
+                       "DescriptorTable(CBV(b0)," \
+                                       "UAV(u0))"
+
+RWTexture2DArray<float4> dstTex :
+register(u0);
 
 [numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
-void main(uint3 DTI : SV_DispatchThreadID)
+void main(uint16_t3 DTI : SV_DispatchThreadID)
 {
-    uint w, h, elems;
+    uint16_t w, h, elems;
 
     dstTex.GetDimensions(w, h, elems);
 
-    if (all(DTI.xy < uint2(w, h)))
+    if (all(DTI.xy < uint16_t2(w, h)))
         dstTex[DTI] = float4(color20[targetMip], 1);
 }

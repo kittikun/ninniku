@@ -40,9 +40,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="src\shaders\cbuffers.h" />
     <None Include="src\shaders\dx11\utility.hlsl" />
-    <None Include="src\shaders\dx11\color20.hlsl" />
+    <None Include="src\shaders\cbuffers.h">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\color20.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\check.h">

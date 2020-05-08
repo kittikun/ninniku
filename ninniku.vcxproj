@@ -103,7 +103,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;_USE_RENDERDOC;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <EnablePREfast>true</EnablePREfast>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
@@ -166,7 +166,7 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnablePREfast>true</EnablePREfast>
       <StructMemberAlignment>8Bytes</StructMemberAlignment>

@@ -24,7 +24,8 @@
 #include "../../types.h"
 #include "types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class RenderDevice : NonCopyableBase
     {
         // no copy of any kind allowed
@@ -39,7 +40,7 @@ namespace ninniku {
         virtual ERenderer GetType() const = 0;
 
         virtual void CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
-        virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const = 0;
+        virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
         virtual CommandHandle CreateCommand() const = 0;

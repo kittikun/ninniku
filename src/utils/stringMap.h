@@ -20,7 +20,8 @@
 
 #pragma once
 
-namespace ninniku {
+namespace ninniku
+{
     template<typename ValueType>
     class StringMap : public std::unordered_map<std::string, ValueType>
     {
@@ -33,12 +34,45 @@ namespace ninniku {
             return std::unordered_map<std::string, ValueType>::find(_tmp);
         }
 
+        typename std::unordered_map<std::string, ValueType>::const_iterator find(const std::string_view& str) const
+        {
+            _tmp.reserve(str.size());
+            _tmp.assign(str.data(), str.size());
+            return std::unordered_map<std::string, ValueType>::find(_tmp);
+        }
+
         ValueType& operator[](const std::string_view& str)
         {
             _tmp.reserve(str.size());
             _tmp.assign(str.data(), str.size());
 
             return std::unordered_map<std::string, ValueType>::operator [](_tmp);
+        }
+
+        const ValueType& operator[](const std::string_view& str) const
+        {
+            _tmp.reserve(str.size());
+            _tmp.assign(str.data(), str.size());
+
+            return std::unordered_map<std::string, ValueType>::operator [](_tmp);
+        }
+
+        void emplace(const std::string_view& str, const ValueType& value)
+        {
+            // discard return value since it is not needed
+            _tmp.reserve(str.size());
+            _tmp.assign(str.data(), str.size());
+
+            std::unordered_map<std::string, ValueType>::emplace(_tmp, value);
+        }
+
+        void emplace(const std::string_view& str, ValueType&& value)
+        {
+            // discard return value since it is not needed
+            _tmp.reserve(str.size());
+            _tmp.assign(str.data(), str.size());
+
+            std::unordered_map<std::string, ValueType>::emplace(_tmp, std::move(value));
         }
 
     private:

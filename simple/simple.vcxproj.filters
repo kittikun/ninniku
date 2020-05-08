@@ -18,5 +18,16 @@
     <CustomBuild Include="shaders\fillBuffer.hlsl">
       <Filter>Source Files\shaders</Filter>
     </CustomBuild>
+    <CustomBuild Include="shaders\colorMips.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\color20.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\cbuffers.h">
+      <Filter>Source Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

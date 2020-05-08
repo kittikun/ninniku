@@ -506,7 +506,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesDX11, T)
     CheckFileMD5(filename, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
 }
 
-BOOST_AUTO_TEST_CASE(generic_load)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_load, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(generic_load)
     CheckMD5(std::get<0>(data3), std::get<1>(data3), 0xbde7e6526b1c6f06, 0x87ac4825f91dc73b);
 }
 
-BOOST_AUTO_TEST_CASE(generic_need_resize)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_need_resize, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 

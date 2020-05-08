@@ -30,7 +30,8 @@
 
 #include <comdef.h>
 
-namespace ninniku {
+namespace ninniku
+{
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {
@@ -40,7 +41,7 @@ namespace ninniku {
 
     TextureParamHandle ddsImageImpl::CreateTextureParamInternal(const EResourceViews viewFlags) const
     {
-        auto res = std::make_shared<TextureParam>();
+        auto res = TextureParam::Create();
 
         res->arraySize = static_cast<uint32_t>(_meta.arraySize);
         res->depth = static_cast<uint32_t>(_meta.depth);
@@ -171,40 +172,65 @@ namespace ninniku {
 
         auto marker = dx->CreateDebugMarker("ddsFromTextureObject");
 
-        // we have to copy each mip with a read back texture or the same size for each face
-        for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
-            auto param = std::make_shared<ninniku::TextureParam>();
+        // we have to copy each mip with a read back texture of the same size for each face
+        if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
+            // dx11 can read back from a texture
+            for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
+                auto param = TextureParam::Create();
+                auto srcDesc = srcTex->GetDesc();
 
-            param->width = srcTex->GetDesc()->width >> mip;
-            param->height = srcTex->GetDesc()->height >> mip;
-            param->format = srcTex->GetDesc()->format;
-            param->numMips = 1;
-            param->arraySize = 1;
-            param->viewflags = ninniku::RV_CPU_READ;
-            param->depth = 1;
+                param->width = srcDesc->width >> mip;
+                param->height = srcDesc->height >> mip;
+                param->format = srcDesc->format;
+                param->numMips = 1;
+                param->arraySize = 1;
+                param->viewflags = EResourceViews::RV_CPU_READ;
+                param->depth = 1;
 
-            auto readBack = dx->CreateTexture(param);
+                auto readBack = dx->CreateTexture(param);
 
-            ninniku::CopyTextureSubresourceParam params = {};
-            params.src = srcTex.get();
-            params.srcMip = mip;
-            params.dst = readBack.get();
+                ninniku::CopyTextureSubresourceParam params = {};
+                params.src = srcTex.get();
+                params.srcMip = mip;
+                params.dst = readBack.get();
 
-            for (uint32_t face = 0; face < _meta.arraySize; ++face) {
-                params.srcFace = face;
+                for (uint32_t face = 0; face < _meta.arraySize; ++face) {
+                    params.srcFace = face;
 
-                auto indexes = dx->CopyTextureSubresource(params);
-                auto mapped = dx->Map(readBack, std::get<1>(indexes));
-
-                // do we really need this ?
-                uint32_t rowPitch = std::numeric_limits<uint32_t>::max();
-                if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
+                    auto indexes = dx->CopyTextureSubresource(params);
+                    auto mapped = dx->Map(readBack, std::get<1>(indexes));
                     auto dx11Mapped = static_cast<const DX11MappedResource*>(mapped.get());
 
-                    rowPitch = dx11Mapped->GetRowPitch();
+                    UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), dx11Mapped->GetRowPitch());
                 }
+            }
+        } else {
+            // dx12 needs to use an intermediate buffer
+            auto dx12 = static_cast<DX12*>(dx.get());
 
-                UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), rowPitch);
+            for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
+                auto param = BufferParam::Create();
+                auto srcDesc = srcTex->GetDesc();
+
+                param->elementSize = DXGIFormatToNumBytes(NinnikuTFToDXGIFormat(srcDesc->format));
+                param->numElements = (srcDesc->width >> mip) * (srcDesc->height >> mip);
+                param->viewflags = EResourceViews::RV_CPU_READ;
+
+                auto readback = dx->CreateBuffer(param);
+
+                CopyTextureSubresourceToBufferParam cpyParams = {};
+
+                cpyParams.tex = srcTex.get();
+                cpyParams.texMip = mip;
+                cpyParams.buffer = readback.get();
+
+                for (uint32_t face = 0; face < _meta.arraySize; ++face) {
+                    cpyParams.texFace = face;
+
+                    dx12->CopyTextureSubresourceToBuffer(cpyParams);
+
+                    //dx->Map(readback, )
+                }
             }
         }
     }

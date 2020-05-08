@@ -29,11 +29,12 @@
 #include "pix3.h"
 #pragma warning(pop)
 
-namespace ninniku {
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // DX12BufferImpl
     //////////////////////////////////////////////////////////////////////////
-    DX12BufferImpl::DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl)
+    DX12BufferImpl::DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl) noexcept
         : _impl{ impl }
     {
     }
@@ -59,35 +60,11 @@ namespace ninniku {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // DX12Command
+    // DX12CommandContext
     //////////////////////////////////////////////////////////////////////////
-    bool DX12Command::Initialize(const DX12CommandInitDesc& initDesc)
+    DX12CommandInternal::DX12CommandInternal(const std::string_view& name) noexcept
+        : _shaderName{ name }
     {
-        D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-        desc.CS = initDesc.shaderCode;
-        desc.pRootSignature = initDesc.rootSignature.Get();
-
-        if (initDesc.isWarp)
-            desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
-
-        auto hr = initDesc.device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&_pipelineState));
-
-        if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
-            return false;
-
-        // keep a reference on the root signature
-        _rootSignature = initDesc.rootSignature;
-
-        // only support a single GPU for now
-        // we also only support compute for now and don't expect any pipeline state changes for now
-        hr = initDesc.device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, initDesc.commandAllocator.Get(), _pipelineState.Get(), IID_PPV_ARGS(&_cmdList));
-
-        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
-            return false;
-
-        _isInitialized = true;
-
-        return true;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -116,16 +93,74 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX12MappedResource
     //////////////////////////////////////////////////////////////////////////
-    DX12MappedResource::DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data)
+    DX12MappedResource::DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data) noexcept
         : _resource{ resource }
         , _subresource{ subresource }
         , _range{ range }
-        , _data{ data }
-    {
+        , _data{ data } {
     }
 
     DX12MappedResource::~DX12MappedResource()
     {
         _resource->Unmap(_subresource, _range);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12ShaderResourceView
+    //////////////////////////////////////////////////////////////////////////
+    DX12ShaderResourceView::DX12ShaderResourceView(uint32_t index) noexcept
+        : _index{ index }
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12TextureImpl
+    //////////////////////////////////////////////////////////////////////////
+    DX12TextureImpl::DX12TextureImpl(const std::shared_ptr<DX12TextureInternal>& impl) noexcept
+        : _impl{ impl }
+    {
+    }
+
+    const TextureParam* DX12TextureImpl::GetDesc() const
+    {
+        return _impl.lock()->_desc.get();
+    }
+
+    const ShaderResourceView* DX12TextureImpl::GetSRVDefault() const
+    {
+        return _impl.lock()->_srvDefault.get();
+    }
+
+    const ShaderResourceView* DX12TextureImpl::GetSRVCube() const
+    {
+        return _impl.lock()->_srvCube.get();
+    }
+
+    const ShaderResourceView* DX12TextureImpl::GetSRVCubeArray() const
+    {
+        return _impl.lock()->_srvCubeArray.get();
+    }
+
+    const ShaderResourceView* DX12TextureImpl::GetSRVArray(uint32_t index) const
+    {
+        return _impl.lock()->_srvArray[index].get();
+    }
+
+    const ShaderResourceView* DX12TextureImpl::GetSRVArrayWithMips() const
+    {
+        return _impl.lock()->_srvArrayWithMips.get();
+    }
+
+    const UnorderedAccessView* DX12TextureImpl::GetUAV(uint32_t index) const
+    {
+        return _impl.lock()->_uav[index].get();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12UnorderedAccessView
+    //////////////////////////////////////////////////////////////////////////
+    DX12UnorderedAccessView::DX12UnorderedAccessView(uint32_t index) noexcept
+        : _index{ index }
+    {
     }
 } // namespace ninniku

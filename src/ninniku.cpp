@@ -38,7 +38,8 @@
 #include <dxgidebug.h>
 #endif
 
-namespace ninniku {
+namespace ninniku
+{
 #if defined(_USE_RENDERDOC)
     RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
 #endif
@@ -84,11 +85,11 @@ namespace ninniku {
         // renderdoc doesn't support DXIL at the moment
         // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
         if ((renderer & ERenderer::RENDERER_DX12) == 0) {
-            //if ((renderer & ERenderer::RENDERER_WARP) == 0) {
-            LoadRenderDoc();
-            //} else {
-            //    LOGW << "Disabling Renderdoc for WARP devices";
-            //}
+            if ((renderer & ERenderer::RENDERER_WARP) == 0) {
+                LoadRenderDoc();
+            } else {
+                LOGW << "Disabling Renderdoc for WARP devices";
+            }
         } else {
             LOGW << "Renderdoc doesn't support DXIL so disabling it";
         }
@@ -96,13 +97,15 @@ namespace ninniku {
 
         switch (renderer) {
             case ERenderer::RENDERER_DX11:
-            case ERenderer::RENDERER_WARP_DX11: {
+            case ERenderer::RENDERER_WARP_DX11:
+            {
                 sRenderer.reset(new DX11(renderer));
             }
             break;
 
             case ERenderer::RENDERER_DX12:
-            case ERenderer::RENDERER_WARP_DX12: {
+            case ERenderer::RENDERER_WARP_DX12:
+            {
                 sRenderer.reset(new DX12(renderer));
             }
             break;

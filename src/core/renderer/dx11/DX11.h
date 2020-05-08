@@ -28,7 +28,8 @@
 
 struct ID3D11ShaderReflection;
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11 final : public RenderDevice
     {
     public:
@@ -38,7 +39,7 @@ namespace ninniku {
         virtual ERenderer GetType() const override { return _type; }
 
         void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
-        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
@@ -57,23 +58,12 @@ namespace ninniku {
         ID3D11Device* GetDevice() const { return _device.Get(); }
 
     private:
-        struct TextureSRVParams
-        {
-            TextureObject* obj;
-            TextureParamHandle texParams;
-            uint8_t is1d : 1;
-            uint8_t is2d : 1;
-            uint8_t is3d : 1;
-            uint8_t isCube : 1;
-            uint8_t isCubeArray : 1;
-            uint8_t padding : 3;
-        };
-
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
+        std::string_view DxSRVDimensionToString(D3D_SRV_DIMENSION dimension);
         bool LoadShader(const std::string_view& name, ID3DBlob* pBlob, const std::string_view& path);
         bool LoadShaders(const std::string_view& shaderPath);
         bool MakeTextureSRV(const TextureSRVParams& params);
-        std::unordered_map<std::string_view, uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
+        StringMap<uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
 
         // Helper to cast into the correct shader resource type
         template<typename SourceType, typename DestType, typename ReturnType>
@@ -90,5 +80,8 @@ namespace ninniku {
         StringMap<DX11ComputeShader> _shaders;
         StringMap<DX11Buffer> _cBuffers;
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
+
+        // tracks allocated resources
+        ObjectTracker _tracker;
     };
 } // namespace ninniku

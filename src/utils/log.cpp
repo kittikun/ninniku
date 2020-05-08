@@ -22,6 +22,7 @@
 #include "log.h"
 
 #include "ninniku/ninniku.h"
+#include "ninniku/core/renderer/renderdevice.h"
 
 #include <boost/date_time.hpp>
 #include <boost/log/expressions.hpp>
@@ -36,8 +37,10 @@ namespace keywords = boost::log::keywords;
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
 
-namespace ninniku {
-    namespace Log {
+namespace ninniku
+{
+    namespace Log
+    {
         BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", BoostLogLevel);
 
         //////////////////////////////////////////////////////////////////////////
@@ -80,7 +83,8 @@ namespace ninniku {
 
             static void consume(boost::log::record_view const& rec, string_type const& formatted_string)
             {
-                auto getColor = [](BoostLogLevel level) {
+                auto getColor = [](BoostLogLevel level)
+                {
                     // default is white
                     WORD res = 7;
 
@@ -122,10 +126,21 @@ namespace ninniku {
                 "ERRO"
             };
 
-            if (static_cast<std::size_t>(level) < sizeof(strings) / sizeof(*strings))
-                strm << strings[level];
-            else
+            if (static_cast<std::size_t>(level) < (sizeof(strings) / sizeof(*strings))) {
+                // output version of dx
+                if (level == Log_DX) {
+                    auto& renderer = GetRenderer();
+
+                    if ((renderer->GetType() & ERenderer::RENDERER_DX12) != 0)
+                        strm << "dx12";
+                    else
+                        strm << "dx11";
+                } else {
+                    strm << strings[level];
+                }
+            } else {
                 strm << static_cast<int>(level);
+            }
 
             return strm;
         }

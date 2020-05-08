@@ -21,9 +21,8 @@
 #include "pch.h"
 #include "objectTracker.h"
 
-namespace ninniku {
-    ObjectTracker ObjectTracker::_instance;
-
+namespace ninniku
+{
     ObjectTracker::ObjectTracker()
     {
         _objects.reserve(16);

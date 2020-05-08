@@ -200,9 +200,32 @@
   <ItemGroup>
     <CustomBuild Include="shaders\fillBuffer.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -Od -Zi -Qembed_debug -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -Od -Zi -Qembed_debug -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="shaders\colorMips.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -Od -Zi -Qembed_debug -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\color20.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\cbuffers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

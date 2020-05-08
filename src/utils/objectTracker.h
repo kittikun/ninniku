@@ -22,7 +22,8 @@
 
 #include "ninniku/core/renderer/types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // Track objects externally so we can free them when Terminate() is called
     //////////////////////////////////////////////////////////////////////////
@@ -39,13 +40,10 @@ namespace ninniku {
     public:
         ObjectTracker();
 
-        static ObjectTracker& Instance() { return _instance; }
-
         void RegisterObject(const std::shared_ptr<TrackedObject>& obj);
         void ReleaseObjects();
 
     private:
         std::vector<std::shared_ptr<TrackedObject>> _objects;
-        static ObjectTracker _instance;
     };
 } // namespace ninniku

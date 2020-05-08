@@ -25,19 +25,24 @@
 #include "../../../utils/stringMap.h"
 #include "DX12Types.h"
 
+#include <d3d12shader.h>
+
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
 
-namespace ninniku {
+namespace ninniku
+{
     class DX12 final : public RenderDevice
     {
+        using MapNameSlot = StringMap<D3D12_SHADER_INPUT_BIND_DESC>;
+
     public:
         DX12(ERenderer type);
 
         ERenderer GetType() const override { return _type; }
 
         void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
-        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) const override;
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
@@ -53,44 +58,57 @@ namespace ninniku {
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
+        bool CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         ID3D12Device* GetDevice() const { return _device.Get(); }
 
     private:
+        bool CreateCommandContexts();
+        bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
-        bool ExecuteCommand(const DX12GraphicsCommandList& cmdList);
+        bool ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList);
+        bool InitializeCommandContext(DX12Command* cmd, const MapNameSlot& bindings);
         bool LoadShader(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::string_view& shaderPath);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
-        static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 8;
+        static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
         ERenderer _type;
 
         DX12Device _device;
 
         // commands and fences
         DX12CommandAllocator _commandAllocatorCompute;
-        DX12CommandAllocator _commandAllocatorCopy;
         DX12CommandQueue _commandQueue;
         DX12Fence _fence;
         uint64_t volatile _fenceValue;
         volatile HANDLE _fenceEvent;
 
         // copy
+        DX12CommandAllocator _copyCommandAllocator;
         DX12GraphicsCommandList _copyCmdList;
+
+        // resource transition
+        DX12CommandAllocator _transitionCommandAllocator;
+        DX12CommandQueue _transitionCommandQueue;
+        DX12GraphicsCommandList _transitionCmdList;
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
         StringMap<DX12RootSignature> _rootSignatures;
         StringMap<D3D12_SHADER_BYTECODE> _shaders;
+        StringMap<DX12ConstantBuffer> _cBuffers;
 
-        using MapNameSlot = StringMap<uint32_t>;
         StringMap<MapNameSlot> _resourceBindings;
 
+        StringMap<std::shared_ptr<DX12CommandInternal>> _commandContexts;
+
         // heap
-        DX12DescriptorHeap _srvUAVHeap;
-        int32_t _srvUAVIndex;
-        uint32_t _srvUAVDescriptorSize;
+        DX12DescriptorHeap _samplerHeap;
+        uint32_t _samplerHeapIncrementSize;;
+
+        // tracks allocated resources
+        ObjectTracker _tracker;
     };
 } // namespace ninniku
