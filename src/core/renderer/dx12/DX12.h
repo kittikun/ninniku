@@ -25,17 +25,12 @@
 #include "../../../utils/stringMap.h"
 #include "DX12Types.h"
 
-#include <d3d12shader.h>
-
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
 
-namespace ninniku
-{
+namespace ninniku {
     class DX12 final : public RenderDevice
     {
-        using MapNameSlot = StringMap<D3D12_SHADER_INPUT_BIND_DESC>;
-
     public:
         DX12(ERenderer type);
 
@@ -58,7 +53,9 @@ namespace ninniku
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
-        bool CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
+        // Not from RenderDevice
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
+        BufferHandle CreateBuffer(const TextureParamHandle& params);
         ID3D12Device* GetDevice() const { return _device.Get(); }
 
     private:
@@ -66,7 +63,6 @@ namespace ninniku
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
         bool ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList);
-        bool InitializeCommandContext(DX12Command* cmd, const MapNameSlot& bindings);
         bool LoadShader(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::string_view& shaderPath);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
@@ -87,6 +83,7 @@ namespace ninniku
 
         // copy
         DX12CommandAllocator _copyCommandAllocator;
+        DX12CommandQueue _copyCommandQueue;
         DX12GraphicsCommandList _copyCmdList;
 
         // resource transition
@@ -102,7 +99,7 @@ namespace ninniku
 
         StringMap<MapNameSlot> _resourceBindings;
 
-        StringMap<std::shared_ptr<DX12CommandInternal>> _commandContexts;
+        std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> _commandContexts;
 
         // heap
         DX12DescriptorHeap _samplerHeap;

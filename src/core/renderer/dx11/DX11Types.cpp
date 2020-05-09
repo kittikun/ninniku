@@ -23,13 +23,12 @@
 
 #include "../../../utils/misc.h"
 
-namespace ninniku
-{
+namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     // DX11BufferImpl
     //////////////////////////////////////////////////////////////////////////
     DX11BufferImpl::DX11BufferImpl(const std::shared_ptr<DX11BufferInternal>& impl) noexcept
-        : _impl{ impl }
+        : _impl { impl }
     {
     }
 
@@ -59,14 +58,14 @@ namespace ninniku
     DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, [[maybe_unused]]const std::string_view& name)
         : _marker{ marker }
     {
-#ifdef _USE_RENDERDOC
+#ifdef _DO_CAPTURE
         _marker->BeginEvent(strToWStr(name).c_str());
 #endif
     }
 
     DX11DebugMarker::~DX11DebugMarker()
     {
-#ifdef _USE_RENDERDOC
+#ifdef _DO_CAPTURE
         _marker->EndEvent();
 #endif
     }
@@ -130,7 +129,7 @@ namespace ninniku
     // DX11TextureImpl
     //////////////////////////////////////////////////////////////////////////
     DX11TextureImpl::DX11TextureImpl(const std::shared_ptr<DX11TextureInternal>& impl) noexcept
-        : _impl{ impl }
+        : _impl { impl }
     {
     }
 

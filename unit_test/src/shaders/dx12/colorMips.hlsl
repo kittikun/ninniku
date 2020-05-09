@@ -18,35 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "../color20.hlsl"
+#include "../cbuffers.h"
 
-#include "ninniku/core/renderer/types.h"
+#define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
+                       "DENY_HULL_SHADER_ROOT_ACCESS | " \
+                       "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
+                       "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
+                       "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
+                       "DescriptorTable(CBV(b0)," \
+                                       "UAV(u0))"
 
-namespace ninniku {
-    // TODO: we need to address the case were user owned objects like a command
-    // goes are destroyed and never re-used again. At the moment, ObjectTracker will
-    // hold dead references..
+RWTexture2DArray<float4> dstTex :
+register(u0);
 
-    //////////////////////////////////////////////////////////////////////////
-    // Track objects externally so we can free them when Terminate() is called
-    //////////////////////////////////////////////////////////////////////////
-    struct TrackedObject
-    {
-        virtual ~TrackedObject() = default;
-    };
+[numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
+void main(uint16_t3 DTI : SV_DispatchThreadID)
+{
+    uint16_t w, h, elems;
 
-    //////////////////////////////////////////////////////////////////////////
-    // ObjectTracker
-    //////////////////////////////////////////////////////////////////////////
-    class ObjectTracker : NonCopyable
-    {
-    public:
-        ObjectTracker();
+    dstTex.GetDimensions(w, h, elems);
 
-        void RegisterObject(const std::shared_ptr<TrackedObject>& obj);
-        void ReleaseObjects();
-
-    private:
-        std::vector<std::shared_ptr<TrackedObject>> _objects;
-    };
-} // namespace ninniku
+    if (all(DTI.xy < uint16_t2(w, h)))
+        dstTex[DTI] = float4(color20[targetMip], 1);
+}

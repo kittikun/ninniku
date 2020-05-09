@@ -25,8 +25,7 @@
                        "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
             "DescriptorTable( UAV(u0) )"
 
-RWStructuredBuffer<uint> dstBuffer :
-register(u0);
+RWStructuredBuffer<uint> dstBuffer : register(u0);
 
 [numthreads(16, 1, 1)]
 void main(uint16_t3 DTI : SV_DispatchThreadID)

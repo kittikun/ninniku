@@ -20,6 +20,7 @@
 
 #include <ninniku/ninniku.h>
 #include <ninniku/core/renderer/renderdevice.h>
+#include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
 
 #include "shaders/cbuffers.h"
@@ -33,41 +34,62 @@ int main()
 
     auto& dx = ninniku::GetRenderer();
 
+    auto image = std::make_unique<ninniku::ddsImage>();
+    image->Load("Cathedral01.dds");
+
+    auto marker = dx->CreateDebugMarker("CommonGenerateMips");
+    auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
+    auto srcTex = dx->CreateTexture(srcParam);
+
     auto param = ninniku::TextureParam::Create();
-    param->format = ninniku::TF_R32G32B32A32_FLOAT;
-    param->width = param->height = 512;
+    param->format = srcParam->format;
+    param->width = srcParam->width;
+    param->height = srcParam->height;
     param->depth = 1;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
     param->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
 
-    auto marker = dx->CreateDebugMarker("ColorMips");
     auto resTex = dx->CreateTexture(param);
 
-    for (uint32_t i = 0; i < param->numMips; ++i) {
-        // dispatch
-        auto cmd = dx->CreateCommand();
-        cmd->shader = "colorMips";
-        cmd->cbufferStr = "CBGlobal";
+    // copy srcTex mip 0 to resTex
+    {
+        auto subMarker = dx->CreateDebugMarker("Copy mip 0");
 
-        static_assert((COLORMIPS_NUMTHREAD_X == COLORMIPS_NUMTHREAD_Y) && (COLORMIPS_NUMTHREAD_Z == 1));
-        cmd->dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
-        cmd->dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
-        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORMIPS_NUMTHREAD_Z;
+        ninniku::CopyTextureSubresourceParam copyParams = {};
 
-        cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
+        copyParams.src = srcTex.get();
+        copyParams.dst = resTex.get();
 
-        // constant buffer
-        CBGlobal cb = {};
+        for (uint16_t i = 0; i < ninniku::CUBEMAP_NUM_FACES; ++i) {
+            copyParams.srcFace = i;
+            copyParams.dstFace = i;
 
-        cb.targetMip = i;
-        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
+            dx->CopyTextureSubresource(copyParams);
+        }
+    }
 
-        dx->Dispatch(cmd);
+    // mip generation
+    {
+        auto subMarker = dx->CreateDebugMarker("Generate remaining mips");
 
-        auto res = std::make_unique<ninniku::ddsImage>();
+        for (uint32_t srcMip = 0; srcMip < param->numMips - 1; ++srcMip) {
+            // dispatch
+            auto cmd = dx->CreateCommand();
+            cmd->shader = "downsample";
+            cmd->cbufferStr = "CBGlobal";
 
-        res->InitializeFromTextureObject(dx, resTex);
+            static_assert((DOWNSAMPLE_NUMTHREAD_X == DOWNSAMPLE_NUMTHREAD_Y) && (DOWNSAMPLE_NUMTHREAD_Z == 1));
+            cmd->dispatch[0] = std::max(1u, (param->width >> srcMip) / DOWNSAMPLE_NUMTHREAD_X);
+            cmd->dispatch[1] = std::max(1u, (param->height >> srcMip) / DOWNSAMPLE_NUMTHREAD_Y);
+            cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DOWNSAMPLE_NUMTHREAD_Z;
+
+            cmd->srvBindings.insert(std::make_pair("srcMip", resTex->GetSRVArray(srcMip)));
+            cmd->uavBindings.insert(std::make_pair("dstMipSlice", resTex->GetUAV(srcMip + 1)));
+            cmd->ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
+
+            dx->Dispatch(cmd);
+        }
     }
 
     ninniku::Terminate();

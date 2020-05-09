@@ -45,7 +45,7 @@ namespace ninniku
         return _impl->GetData();
     }
 
-    void genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }

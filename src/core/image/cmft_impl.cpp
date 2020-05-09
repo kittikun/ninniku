@@ -26,6 +26,7 @@
 #include "ninniku/core/image/cmft.h"
 
 #include "../renderer/dx11/DX11Types.h"
+#include "../renderer/dx12/DX12.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 
@@ -35,8 +36,7 @@
 #include <array>
 #include <filesystem>
 
-namespace ninniku
-{
+namespace ninniku {
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -209,7 +209,7 @@ namespace ninniku
 
         bool imageLoaded = false;
 
-        if (std::filesystem::path{ path }.extension() == ".exr")
+        if (std::filesystem::path{ path } .extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
             imageLoaded = imageLoad(_image, path.data(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.data(), cmft::TextureFormat::RGBA32F);
@@ -262,7 +262,7 @@ namespace ninniku
         return true;
     }
 
-    void cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         // we want to enforce 1:1 for now
         assert(srcTex->GetDesc()->width == srcTex->GetDesc()->height);
@@ -282,14 +282,16 @@ namespace ninniku
         auto marker = dx->CreateDebugMarker("ImageFromTextureObject");
 
         // we have to copy each mip with a read back texture or the same size for each face
+        auto srcDesc = srcTex->GetDesc();
+
         if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
             // dx11 can read back from a texture
-            for (uint32_t mip = 0; mip < srcTex->GetDesc()->numMips; ++mip) {
+            for (uint32_t mip = 0; mip < srcDesc->numMips; ++mip) {
                 auto param = TextureParam::Create();
 
-                param->width = srcTex->GetDesc()->width >> mip;
-                param->height = srcTex->GetDesc()->height >> mip;
-                param->format = srcTex->GetDesc()->format;
+                param->width = srcDesc->width >> mip;
+                param->height = srcDesc->height >> mip;
+                param->format = srcDesc->format;
                 param->numMips = 1;
                 param->arraySize = 1;
                 param->viewflags = EResourceViews::RV_CPU_READ;
@@ -313,10 +315,36 @@ namespace ninniku
             }
         } else {
             // dx12 needs to use an intermediate buffer
-            auto params = BufferParam::Create();
+            auto dx12 = static_cast<DX12*>(dx.get());
 
-            throw std::exception("not implemented");
+            for (uint32_t mip = 0; mip < srcDesc->numMips; ++mip) {
+                auto param = TextureParam::Create();
+
+                param->width = srcDesc->width >> mip;
+                param->height = srcDesc->height >> mip;
+                param->format = srcDesc->format;
+
+                auto readback = dx12->CreateBuffer(param);
+
+                CopyTextureSubresourceToBufferParam cpyParams = {};
+
+                cpyParams.tex = srcTex.get();
+                cpyParams.texMip = mip;
+                cpyParams.buffer = readback.get();
+
+                for (uint32_t face = 0; face < CUBEMAP_NUM_FACES; ++face) {
+                    cpyParams.texFace = face;
+
+                    auto cpyRes = dx12->CopyTextureSubresourceToBuffer(cpyParams);
+
+                    auto mapped = dx->Map(readback);
+
+                    UpdateSubImage(face, mip, static_cast<uint8_t*>(mapped->GetData()), std::get<0>(cpyRes));
+                }
+            }
         }
+
+        return true;
     }
 
     const std::vector<SubresourceParam> cmftImageImpl::GetInitializationData() const
@@ -413,13 +441,17 @@ namespace ninniku
 
         // row pitch from dx11 can be larger than for the image so we have to do each row manually
         uint32_t mipSize = size >> dstMip;
+        auto imgPitch = mipSize * bytesPerPixel;
 
-        for (uint32_t row = 0; row < mipSize; ++row) {
-            auto imgPitch = mipSize * bytesPerPixel;
-            auto imgOffset = imgPitch * row;
-            auto newOffset = newRowPitch * row;
+        if (newRowPitch != imgPitch) {
+            for (uint32_t row = 0; row < mipSize; ++row) {
+                auto imgOffset = imgPitch * row;
+                auto newOffset = newRowPitch * row;
 
-            memcpy_s(offset + imgOffset, imgPitch, newData + newOffset, std::min(newRowPitch, imgPitch));
+                memcpy_s(offset + imgOffset, imgPitch, newData + newOffset, std::min(newRowPitch, imgPitch));
+            }
+        } else {
+            memcpy_s(offset, imgPitch * mipSize, newData, imgPitch * mipSize);
         }
     }
 

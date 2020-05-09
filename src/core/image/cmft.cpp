@@ -23,7 +23,8 @@
 
 #include "cmft_impl.h"
 
-namespace ninniku {
+namespace ninniku
+{
     TextureParamHandle cmftImage::CreateTextureParam(const EResourceViews viewFlags) const
     {
         return _impl->CreateTextureParam(viewFlags);
@@ -44,7 +45,7 @@ namespace ninniku {
         return _impl->GetData();
     }
 
-    void cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }

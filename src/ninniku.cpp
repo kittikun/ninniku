@@ -27,8 +27,9 @@
 #include "utils/log.h"
 #include "utils/misc.h"
 
-#if defined(_USE_RENDERDOC)
+#if defined(_DO_CAPTURE)
 #include <renderdoc/renderdoc_app.h>
+#include <DXProgrammableCapture.h>
 #endif
 
 #ifdef _DEBUG
@@ -38,15 +39,14 @@
 #include <dxgidebug.h>
 #endif
 
-namespace ninniku
-{
-#if defined(_USE_RENDERDOC)
+namespace ninniku {
+#if defined(_DO_CAPTURE)
     RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
 #endif
 
     static RenderDeviceHandle sRenderer;
 
-#if defined(_USE_RENDERDOC)
+#if defined(_DO_CAPTURE)
     void LoadRenderDoc()
     {
         LOG << "Loading RenderDoc..";
@@ -68,6 +68,16 @@ namespace ninniku
             }
         }
     }
+
+    void LoadPIX()
+    {
+        LOG << "Loading PIX..";
+
+        Microsoft::WRL::ComPtr<IDXGraphicsAnalysis> ga;
+        if (!CheckAPIFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&ga)), "DXGIGetDebugInterface1")) {
+            ga->BeginCapture();
+        }
+    }
 #endif
 
     RenderDeviceHandle& GetRenderer()
@@ -81,7 +91,7 @@ namespace ninniku
 
         LOG << "ninniku HLSL compute shader framework";
 
-#if defined(_USE_RENDERDOC)
+#if defined(_DO_CAPTURE)
         // renderdoc doesn't support DXIL at the moment
         // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
         if ((renderer & ERenderer::RENDERER_DX12) == 0) {
@@ -91,21 +101,23 @@ namespace ninniku
                 LOGW << "Disabling Renderdoc for WARP devices";
             }
         } else {
-            LOGW << "Renderdoc doesn't support DXIL so disabling it";
+            if ((renderer & ERenderer::RENDERER_WARP) == 0) {
+                LoadPIX();
+            } else {
+                LOGW << "Disabling PIX for WARP devices";
+            }
         }
 #endif
 
         switch (renderer) {
             case ERenderer::RENDERER_DX11:
-            case ERenderer::RENDERER_WARP_DX11:
-            {
+            case ERenderer::RENDERER_WARP_DX11: {
                 sRenderer.reset(new DX11(renderer));
             }
             break;
 
             case ERenderer::RENDERER_DX12:
-            case ERenderer::RENDERER_WARP_DX12:
-            {
+            case ERenderer::RENDERER_WARP_DX12: {
                 sRenderer.reset(new DX12(renderer));
             }
             break;
@@ -121,7 +133,7 @@ namespace ninniku
             return false;
         }
 
-#if defined(_USE_RENDERDOC)
+#if defined(_DO_CAPTURE)
         if (gRenderDocApi != nullptr) {
             gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
             gRenderDocApi->StartFrameCapture(nullptr, nullptr);
@@ -147,11 +159,18 @@ namespace ninniku
     {
         LOG << "Shutting down..";
 
-#if defined(_USE_RENDERDOC)
-        if (gRenderDocApi != nullptr) {
-            gRenderDocApi->EndFrameCapture(nullptr, nullptr);
-            gRenderDocApi->Shutdown();
-            gRenderDocApi = nullptr;
+#if defined(_DO_CAPTURE)
+        if ((sRenderer->GetType() & ERenderer::RENDERER_DX11) != 0) {
+            if (gRenderDocApi != nullptr) {
+                gRenderDocApi->EndFrameCapture(nullptr, nullptr);
+                gRenderDocApi->Shutdown();
+                gRenderDocApi = nullptr;
+            }
+        } else if ((sRenderer->GetType() & ERenderer::RENDERER_WARP) == 0) {
+            Microsoft::WRL::ComPtr<IDXGraphicsAnalysis> ga;
+            if (!CheckAPIFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&ga)), "DXGIGetDebugInterface1")) {
+                ga->EndCapture();
+            }
         }
 #endif
 

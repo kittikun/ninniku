@@ -81,9 +81,15 @@
     <FxCompile Include="src\shaders\dx11\resize.hlsl">
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
+    <FxCompile Include="src\shaders\dx12\resize.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="src\shaders\dx12\fillBuffer.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\colorMips.hlsl">
       <Filter>Source Files\shaders\dx12</Filter>
     </CustomBuild>
   </ItemGroup>

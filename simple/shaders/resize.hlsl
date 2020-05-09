@@ -18,35 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "cbuffers.h"
 
-#include "ninniku/core/renderer/types.h"
+#define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
+                       "DENY_HULL_SHADER_ROOT_ACCESS | " \
+                       "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
+                       "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
+                       "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
+            "DescriptorTable( SRV(t0), " \
+                             "UAV(u0))," \
+            "DescriptorTable( Sampler(s0))"
 
-namespace ninniku {
-    // TODO: we need to address the case were user owned objects like a command
-    // goes are destroyed and never re-used again. At the moment, ObjectTracker will
-    // hold dead references..
+Texture2DArray<float4> srcTex;
+RWTexture2DArray<float4> dstTex;
+SamplerState ssLinear;
 
-    //////////////////////////////////////////////////////////////////////////
-    // Track objects externally so we can free them when Terminate() is called
-    //////////////////////////////////////////////////////////////////////////
-    struct TrackedObject
-    {
-        virtual ~TrackedObject() = default;
-    };
+[numthreads(RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_Z)]
+void main(uint16_t3 DTI : SV_DispatchThreadID)
+{
+    float w, h, dummy2;
 
-    //////////////////////////////////////////////////////////////////////////
-    // ObjectTracker
-    //////////////////////////////////////////////////////////////////////////
-    class ObjectTracker : NonCopyable
-    {
-    public:
-        ObjectTracker();
+    dstTex.GetDimensions(w, h, dummy2);
 
-        void RegisterObject(const std::shared_ptr<TrackedObject>& obj);
-        void ReleaseObjects();
+    float2 uv = rcp(float2(w, h)) * (float2(DTI.xy) + (float2)0.5);
 
-    private:
-        std::vector<std::shared_ptr<TrackedObject>> _objects;
-    };
-} // namespace ninniku
+    dstTex[DTI] = srcTex.SampleLevel(ssLinear, float3(uv, DTI.z), 0);
+}

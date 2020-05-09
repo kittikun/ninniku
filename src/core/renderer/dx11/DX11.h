@@ -55,6 +55,7 @@ namespace ninniku
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
+        // Not from RenderDevice
         ID3D11Device* GetDevice() const { return _device.Get(); }
 
     private:

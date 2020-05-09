@@ -36,3 +36,5 @@ struct SetupFixtureDX12
 
 typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesAll;
 typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
+
+bool IsAppVeyor();

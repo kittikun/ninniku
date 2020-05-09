@@ -103,6 +103,10 @@
       <SubSystem>
       </SubSystem>
     </Link>
+    <CustomBuild>
+      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -Od -Zi -Qembed_debug -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco</Command>
+      <Outputs>$(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco </Outputs>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -150,6 +154,10 @@
       <ShaderModel>5.0</ShaderModel>
       <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
+    <CustomBuild>
+      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco</Command>
+      <Outputs>$(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco </Outputs>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\check.cpp" />
@@ -176,10 +184,12 @@
   <ItemGroup>
     <CustomBuild Include="src\shaders\dx12\fillBuffer.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -Od -Zi -Qembed_debug -DHLSL -rootsig-define RS %(FullPath) -Fo $(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco </Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco </Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -DHLSL -rootsig-define RS %(FullPath) -Fo $(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco</Command>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\colorMips.hlsl">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\resize.hlsl">
+      <FileType>Document</FileType>
     </CustomBuild>
     <None Include="src\shaders\color20.hlsl">
       <FileType>Document</FileType>

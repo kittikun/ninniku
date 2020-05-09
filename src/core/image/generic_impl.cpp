@@ -190,7 +190,7 @@ namespace ninniku
         return res;
     }
 
-    void genericImageImpl::InitializeFromTextureObject([[maybe_unused]]RenderDeviceHandle& dx, [[maybe_unused]]const TextureHandle& srcTex)
+    bool genericImageImpl::InitializeFromTextureObject([[maybe_unused]]RenderDeviceHandle& dx, [[maybe_unused]]const TextureHandle& srcTex)
     {
         throw std::exception("not implemented");
     }

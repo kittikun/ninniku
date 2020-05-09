@@ -54,7 +54,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     enum EResourceViews : uint8_t
     {
-        RV_None = 0,            // Should not be used
+        RV_None = 0,                        // Should not be used
         RV_SRV = 1 << 0,
         RV_UAV = 1 << 1,
         RV_CPU_READ = 1 << 2

@@ -34,6 +34,16 @@
 
 namespace ninniku
 {
+    uint32_t Align(UINT uLocation, uint32_t uAlign)
+    {
+        // https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resources
+        if ((0 == uAlign) || (uAlign & (uAlign - 1))) {
+            throw std::exception("Non-pow2 alignment");
+        }
+
+        return ((uLocation + (uAlign - 1)) & ~(uAlign - 1));
+    }
+
     bool CheckAPIFailed(HRESULT hr, const std::string_view& apiName)
     {
         if (FAILED(hr)) {
@@ -83,6 +93,7 @@ namespace ninniku
 
     constexpr const uint32_t DXGIFormatToNumBytes(uint32_t format)
     {
+        // https://stackoverflow.com/questions/40339138/convert-dxgi-format-to-a-bpp
         uint32_t res = 0;
 
         switch (format) {

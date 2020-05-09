@@ -23,11 +23,12 @@
 #include "ninniku/core/renderer/types.h"
 
 #include "../../../utils/objectTracker.h"
+#include "../../../utils/stringMap.h"
 
 #include <d3d12.h>
+#include <d3d12shader.h>
 
-namespace ninniku
-{
+namespace ninniku {
     using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
     using DX12CommandQueue = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
     using DX12GraphicsCommandList = Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>;
@@ -37,6 +38,8 @@ namespace ninniku
     using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
     using DX12Resource = Microsoft::WRL::ComPtr<ID3D12Resource>;
     using DX12DescriptorHeap = Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>;
+
+    using MapNameSlot = StringMap<D3D12_SHADER_INPUT_BIND_DESC>;
 
     //////////////////////////////////////////////////////////////////////////
     // DX12BufferObject
@@ -72,24 +75,35 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
+    struct DX12CommandSubContext
+    {
+        DX12DescriptorHeap _descriptorHeap;
+
+        bool Initialize(const DX12Device& device, struct DX12Command* cmd, const MapNameSlot& bindings, const StringMap<struct DX12ConstantBuffer>& cbuffers);
+    };
+
     struct DX12CommandInternal
     {
-        DX12CommandInternal(const std::string_view& name) noexcept;
+        DX12CommandInternal(uint32_t shaderHash) noexcept;
 
         DX12RootSignature _rootSignature;
         DX12PipelineState _pipelineState;
-        DX12DescriptorHeap _descriptorHeap;
         DX12CommandAllocator _cmdAllocator;
         DX12GraphicsCommandList _cmdList;
-        bool _isInitialized = false;
-        uint32_t _descriptorSize;
 
         // user might change the bound shader so keep the last used one
-        std::string_view _shaderName;
+        uint32_t _contextShaderHash;
+
+        bool CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings);
+
+        std::unordered_map<uint32_t, DX12CommandSubContext> _subContexts;
     };
 
     struct DX12Command final : public Command
     {
+        uint32_t GetHashShader() const;
+        uint32_t GetHashBindings() const;
+
         std::weak_ptr<DX12CommandInternal> _impl;
     };
 
@@ -113,7 +127,7 @@ namespace ninniku
         ~DX12DebugMarker() override;
 
     private:
-        static std::atomic<uint8_t> _colorIdx;
+        static inline std::atomic<uint8_t> _colorIdx;
     };
 
     //////////////////////////////////////////////////////////////////////////

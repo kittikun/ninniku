@@ -24,6 +24,7 @@
 #pragma comment(lib, "dxcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxguid.lib")
 
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
@@ -41,9 +42,9 @@
 #include <dxc/dxcapi.h>
 #include <dxc/DxilContainer/DxilContainer.h>
 #include <dxc/Support/d3dx12.h>
+#include <boost/crc.hpp>
 
-namespace ninniku
-{
+namespace ninniku {
     DX12::DX12(ERenderer type)
         : _type{ type }
     {
@@ -108,7 +109,7 @@ namespace ninniku
         return std::make_tuple(srcSub, dstSub);
     }
 
-    bool DX12::CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params) const
+    std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params)
     {
         auto texImpl = static_cast<const DX12TextureImpl*>(params.tex);
         auto texInternal = texImpl->_impl.lock();
@@ -118,37 +119,32 @@ namespace ninniku
 
         auto bufferImpl = static_cast<const DX12BufferImpl*>(params.buffer);
         auto bufferInternal = bufferImpl->_impl.lock();
-        auto bufferDesc = params.buffer->GetDesc();
 
         // this one comes from DirectXTex
         auto format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(texDesc->format));
-        size_t rowPitch, slicePitch;
+        auto width = texDesc->width >> params.texMip;
+        auto height = texDesc->height >> params.texMip;
+        auto rowPitch = Align(DXGIFormatToNumBytes(format) * width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+
         uint32_t offset = 0;
-
-        for (uint32_t i = 0; i < params.texMip; ++i) {
-            auto hr = DirectX::ComputePitch(format, texDesc->width >> params.texMip, texDesc->height >> params.texMip, rowPitch, slicePitch);
-
-            if (CheckAPIFailed(hr, "DirectX::ComputePitch"))
-                return false;
-
-            offset += static_cast<uint32_t>(rowPitch) * texDesc->height >> i;
-        }
-
-        auto hr = DirectX::ComputePitch(format, texDesc->width >> params.texMip, texDesc->height >> params.texMip, rowPitch, slicePitch);
-
-        if (CheckAPIFailed(hr, "DirectX::ComputePitch"))
-            return false;
 
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint = {};
 
-        bufferFootprint.Footprint = CD3DX12_SUBRESOURCE_FOOTPRINT{ format, texDesc->width >> params.texMip, texDesc->height >> params.texMip, texDesc->depth, static_cast<uint32_t>(rowPitch) };
+        bufferFootprint.Footprint = CD3DX12_SUBRESOURCE_FOOTPRINT{ format, width, height, 1, rowPitch };
         bufferFootprint.Offset = offset;
 
-        auto bufferLoc = d3d12_copy(bufferInternal->_texture.Get(), bufferFootprint);
+        //auto bufferLoc = d3d12_copy(bufferInternal->_texture.Get(), bufferFootprint);
+        auto bufferLoc = CD3DX12_TEXTURE_COPY_LOCATION{ bufferInternal->_buffer.Get(), bufferFootprint };
 
-        _copyCmdList->CopyTextureRegion()
+        _copyCmdList->CopyTextureRegion(&bufferLoc, 0, 0, 0, &texLoc, nullptr);
 
-            return true;
+        _copyCmdList->Close();
+
+        ExecuteCommand(_copyCommandQueue, _copyCmdList);
+
+        _copyCmdList->Reset(_copyCommandAllocator.Get(), nullptr);
+
+        return std::make_tuple(rowPitch, offset);
     }
 
     BufferHandle DX12::CreateBuffer(const BufferParamHandle& params)
@@ -158,8 +154,7 @@ namespace ninniku
         auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
         auto bufferSize = params->numElements * params->elementSize;
 
-        auto fmt = boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize;
-        LOGD << boost::str(fmt);
+        LOGDF(boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize);
 
         auto impl = std::make_shared<DX12BufferInternal>();
 
@@ -201,6 +196,31 @@ namespace ninniku
             uav->_resource = impl;
             impl->_uav.reset(uav);
         }
+
+        return std::make_unique<DX12BufferImpl>(impl);
+    }
+
+    BufferHandle DX12::CreateBuffer(const TextureParamHandle& params)
+    {
+        // Special case because we cannot read back a texture from the GPU since dx12
+        // intended to be used with CopyTextureSubresourceToBuffer
+        auto bytesPPx = DXGIFormatToNumBytes(NinnikuTFToDXGIFormat(params->format));
+        auto rowPitch = Align(bytesPPx * params->width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+        auto bufferSize = rowPitch * params->height;
+
+        LOGDF(boost::format("Creating Buffer from Texture: Width=%1%, Height=%2%, Size=%3%") % params->width % params->height % bufferSize);
+
+        auto impl = std::make_shared<DX12BufferInternal>();
+
+        _tracker.RegisterObject(impl);
+
+        auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
+
+        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
+            return BufferHandle();
 
         return std::make_unique<DX12BufferImpl>(impl);
     }
@@ -259,7 +279,11 @@ namespace ninniku
     bool DX12::CreateCommandContexts()
     {
         for (auto& kvp : _resourceBindings) {
-            auto context = std::make_shared<DX12CommandInternal>(kvp.first);
+            boost::crc_32_type res;
+
+            res.process_bytes(kvp.first.c_str(), kvp.first.size());
+
+            auto context = std::make_shared<DX12CommandInternal>(res.checksum());
 
             // find the shader bytecode
             auto foundShader = _shaders.find(kvp.first);
@@ -301,21 +325,6 @@ namespace ninniku
 
             context->_pipelineState->SetName(strToWStr(kvp.first).c_str());
 
-            // Create descriptor heap
-            D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-            heapDesc.NumDescriptors = static_cast<uint32_t>(foundBindings->second.size());
-            heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-            heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-            hr = _device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&context->_descriptorHeap));
-
-            if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap"))
-                return false;
-
-            context->_descriptorHeap->SetName(strToWStr(kvp.first).c_str());
-
-            context->_descriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
             // Create command allocators
             hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&context->_cmdAllocator));
 
@@ -333,7 +342,7 @@ namespace ninniku
             context->_cmdList->SetName(strToWStr(kvp.first).c_str());
 
             // no need to track contexts because they will be released upon destruction anyway
-            _commandContexts.emplace(kvp.first, std::move(context));
+            _commandContexts.emplace(res.checksum(), std::move(context));
         }
 
         return true;
@@ -349,10 +358,10 @@ namespace ninniku
             return false;
         }
 
-        cbuffer._size = size;
+        cbuffer._size = Align(size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-        auto desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(cbuffer._size);
 
         auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(cbuffer._resource.GetAddressOf()));
 
@@ -373,12 +382,12 @@ namespace ninniku
 
         D3D12_SUBRESOURCE_DATA subdata = {};
         subdata.pData = data;
-        subdata.RowPitch = size;
+        subdata.RowPitch = cbuffer._size;
         subdata.SlicePitch = subdata.RowPitch;
 
         UpdateSubresources(_transitionCmdList.Get(), cbuffer._resource.Get(), cbuffer._upload.Get(), 0, 0, 1, &subdata);
 
-        auto transition = CD3DX12_RESOURCE_BARRIER::Transition(cbuffer._resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        auto transition = CD3DX12_RESOURCE_BARRIER::Transition(cbuffer._resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
         _transitionCmdList->ResourceBarrier(1, &transition);
 
@@ -479,7 +488,7 @@ namespace ninniku
             hr = pAdapter->GetDesc(&desc);
 
             if (SUCCEEDED(hr)) {
-                auto fmt = boost::format("Using DirectCompute on %1%") % desc.Description;
+                auto fmt = boost::wformat(L"Using DirectCompute on %1%") % desc.Description;
                 LOGD << boost::str(fmt);
                 return true;
             }
@@ -524,33 +533,33 @@ namespace ninniku
 
         if (is1d) {
             desc = CD3DX12_RESOURCE_DESC::Tex1D(
-                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
-                params->width,
-                static_cast<uint16_t>(params->arraySize),
-                static_cast<uint16_t>(params->numMips),
-                resFlags
-            );
+                       static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                       params->width,
+                       static_cast<uint16_t>(params->arraySize),
+                       static_cast<uint16_t>(params->numMips),
+                       resFlags
+                   );
         } else if (is2d) {
             desc = CD3DX12_RESOURCE_DESC::Tex2D(
-                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
-                params->width,
-                params->height,
-                static_cast<uint16_t>(params->arraySize),
-                static_cast<uint16_t>(params->numMips),
-                1,
-                0,
-                resFlags
-            );
+                       static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                       params->width,
+                       params->height,
+                       static_cast<uint16_t>(params->arraySize),
+                       static_cast<uint16_t>(params->numMips),
+                       1,
+                       0,
+                       resFlags
+                   );
         } else {
             // is3d
             desc = CD3DX12_RESOURCE_DESC::Tex3D(
-                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
-                params->width,
-                params->height,
-                static_cast<uint16_t>(params->depth),
-                static_cast<uint16_t>(params->numMips),
-                resFlags
-            );
+                       static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                       params->width,
+                       params->height,
+                       static_cast<uint16_t>(params->depth),
+                       static_cast<uint16_t>(params->numMips),
+                       resFlags
+                   );
         }
 
         auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, resState, nullptr, IID_PPV_ARGS(impl->_texture.GetAddressOf()));
@@ -559,8 +568,7 @@ namespace ninniku
             return TextureHandle();
 
         if (isSRV) {
-            auto lmbd = [&](const std::shared_ptr<DX12TextureInternal>& internal, SRVHandle & target, uint32_t arrayIndex)
-            {
+            auto lmbd = [&](const std::shared_ptr<DX12TextureInternal>& internal, SRVHandle & target, uint32_t arrayIndex) {
                 auto srv = new DX12ShaderResourceView(arrayIndex);
 
                 srv->_resource = internal;
@@ -614,14 +622,16 @@ namespace ninniku
     {
         DX12Command* dxCmd = static_cast<DX12Command*>(cmd.get());
 
-        // if the user changed the corresponding shader unbind it
-        if (!dxCmd->_impl.expired() && (dxCmd->_impl.lock()->_shaderName != cmd->shader)) {
+        auto shaderHash = dxCmd->GetHashShader();
+
+        // if the user changed the corresponding shader unbind iti
+        if (!dxCmd->_impl.expired() && (dxCmd->_impl.lock()->_contextShaderHash != shaderHash)) {
             dxCmd->_impl.reset();
         }
 
         if (dxCmd->_impl.expired()) {
             // find the appropriate context
-            auto foundContext = _commandContexts.find(cmd->shader);
+            auto foundContext = _commandContexts.find(shaderHash);
 
             if (foundContext == _commandContexts.end()) {
                 auto fmt = boost::format("Dispatch error: could not find command context for shader \"%1%\"") % cmd->shader;
@@ -638,21 +648,33 @@ namespace ninniku
         auto foundBindings = _resourceBindings.find(cmd->shader);
 
         if (foundBindings == _resourceBindings.end()) {
-            auto fmt = boost::format("Dispatch error: could not find resource bindings for shader \"%1%\"") % cmd->shader;
+            auto fmt = boost::format("Dispatch error: could not find resource binding table for shader \"%1%\"") % cmd->shader;
             LOGE << boost::str(fmt);
             return false;
         }
 
-        if (!context->_isInitialized) {
-            InitializeCommandContext(dxCmd, foundBindings->second);
+        auto hash = dxCmd->GetHashBindings();
+
+        // look for the subcontext
+        auto foundHash = context->_subContexts.find(hash);
+
+        DX12CommandSubContext* subContext = nullptr;
+
+        if (foundHash == context->_subContexts.end()) {
+            // create and initialize subcontext
+            if (!context->CreateSubContext(_device, hash, cmd->shader, static_cast<uint32_t>(foundBindings->second.size())))
+                return false;
+
+            subContext = &context->_subContexts[hash];
+            subContext->Initialize(_device, dxCmd, foundBindings->second, _cBuffers);
         } else {
-            context->_cmdList->Reset(_commandAllocatorCompute.Get(), context->_pipelineState.Get());
+            subContext = &foundHash->second;
         }
 
         context->_cmdList->SetPipelineState(context->_pipelineState.Get());
         context->_cmdList->SetComputeRootSignature(context->_rootSignature.Get());
-        context->_cmdList->SetDescriptorHeaps(1, context->_descriptorHeap.GetAddressOf());
-        context->_cmdList->SetComputeRootDescriptorTable(0, context->_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        context->_cmdList->SetDescriptorHeaps(1, subContext->_descriptorHeap.GetAddressOf());
+        context->_cmdList->SetComputeRootDescriptorTable(0, subContext->_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
         auto& bindings = foundBindings->second;
 
@@ -713,6 +735,8 @@ namespace ninniku
             return false;
 
         ExecuteCommand(_commandQueue, context->_cmdList);
+
+        context->_cmdList->Reset(_commandAllocatorCompute.Get(), context->_pipelineState.Get());
 
         return true;
     }
@@ -804,6 +828,13 @@ namespace ninniku
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandQueue"))
             return false;
 
+        queueDesc = { D3D12_COMMAND_LIST_TYPE_COPY, 0, D3D12_COMMAND_QUEUE_FLAG_NONE };
+
+        hr = _device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_copyCommandQueue));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandQueue (copy)"))
+            return false;
+
         queueDesc = { D3D12_COMMAND_LIST_TYPE_DIRECT, 0, D3D12_COMMAND_QUEUE_FLAG_NONE };
 
         hr = _device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_transitionCommandQueue));
@@ -849,235 +880,6 @@ namespace ninniku
                 }
             }
         }
-
-        return true;
-    }
-
-    bool DX12::InitializeCommandContext(DX12Command* cmd, const MapNameSlot& bindings)
-    {
-        auto cmdImpl = cmd->_impl.lock();
-
-        CD3DX12_CPU_DESCRIPTOR_HANDLE heapHandle(cmdImpl->_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
-
-        // samplers
-        {
-            //if (cmd->ssBindings.size() == 0) {
-            //    D3D12_SAMPLER_DESC ssDesc = {};
-
-            //    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(cmdImpl->_descriptorHeap->GetCPUDescriptorHandleForHeapStart(), 0, _srvUAVDescriptorSize);
-
-            //    _device->CreateSampler(&ssDesc, srvHandle)
-            //}
-        }
-
-        // create constant buffer view, just one supported at the moment
-        {
-            auto found = bindings.find(cmd->cbufferStr);
-
-            if (found == bindings.end()) {
-                LOGEF(boost::format("DX12CommandInternal::Initialize: could not find constant buffer binding \"%1%\"") % cmd->cbufferStr);
-                return false;
-            }
-
-            auto foundCB = _cBuffers.find(cmd->cbufferStr);
-
-            if (foundCB == _cBuffers.end()) {
-                LOGEF(boost::format("Constant buffer \"%1%\" was not found in any of the shaders parsed") % cmd->cbufferStr);
-                return false;
-            }
-
-            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-            cbvDesc.BufferLocation = foundCB->second._resource->GetGPUVirtualAddress();
-            cbvDesc.SizeInBytes = foundCB->second._size;
-
-            _device->CreateConstantBufferView(&cbvDesc, heapHandle);
-            heapHandle.Offset(cmdImpl->_descriptorSize);
-        }
-
-        // create srv bindings to the resource
-        for (auto& srv : cmd->srvBindings) {
-            auto dxSRV = static_cast<const DX12ShaderResourceView*>(srv.second);
-            auto found = bindings.find(srv.first);
-
-            if (found == bindings.end()) {
-                LOGEF(boost::format("DX12CommandInternal::Initialize: could not find SRV binding \"%1%\"") % srv.first);
-                return false;
-            }
-
-            if (found->second.Type == D3D_SIT_TEXTURE) {
-                if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxSRV->_resource)) {
-                    LOGEF(boost::format("SRV binding should have been a texture \"%1%\"") % found->first);
-                    return false;
-                }
-
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxSRV->_resource);
-                auto locked = weak.lock();
-
-                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->_desc->format));
-
-                if (found->second.Dimension == D3D_SRV_DIMENSION_BUFFEREX) {
-                    // might be dangerous is we intend those because they overlap
-                    // D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE or
-                    // D3D_SRV_DIMENSION_BUFFEREX
-                    throw new std::exception("potential overlap");
-                }
-
-                srvDesc.ViewDimension = static_cast<D3D12_SRV_DIMENSION>(found->second.Dimension);
-
-                switch (found->second.Dimension) {
-                    case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
-                    {
-                        srvDesc.TextureCubeArray = {};
-                        srvDesc.TextureCubeArray.MipLevels = locked->_desc->numMips;
-                        srvDesc.TextureCubeArray.NumCubes = locked->_desc->arraySize / CUBEMAP_NUM_FACES;
-                    }
-                    break;
-
-                    case D3D12_SRV_DIMENSION_TEXTURECUBE:
-                    {
-                        srvDesc.TextureCube = {};
-                        srvDesc.TextureCube.MipLevels = locked->_desc->numMips;
-                    }
-                    break;
-
-                    case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
-                    {
-                        srvDesc.Texture2DArray = {};
-
-                        if (dxSRV->_index != std::numeric_limits<uint32_t>::max()) {
-                            // one slice for a mip level
-                            srvDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
-                            srvDesc.Texture2DArray.MostDetailedMip = dxSRV->_index;
-                            srvDesc.Texture2DArray.MipLevels = 1;
-                        } else {
-                            // everything mips included
-                            srvDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
-                            srvDesc.Texture2DArray.MostDetailedMip = 0;
-                            srvDesc.Texture2DArray.MipLevels = locked->_desc->numMips;
-                        }
-                    }
-                    break;
-
-                    case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
-                    {
-                        srvDesc.Texture1DArray = {};
-                        srvDesc.Texture1DArray.ArraySize = locked->_desc->arraySize;
-                        srvDesc.Texture1DArray.MostDetailedMip = dxSRV->_index;
-                        srvDesc.Texture1DArray.MipLevels = 1;
-                    }
-                    break;
-
-                    case D3D12_SRV_DIMENSION_TEXTURE1D:
-                    {
-                        srvDesc.Texture1D = {};
-                        srvDesc.Texture1D.MipLevels = locked->_desc->numMips;
-                    }
-                    break;
-
-                    case D3D12_SRV_DIMENSION_TEXTURE2D:
-                    {
-                        srvDesc.Texture2D = {};
-                        srvDesc.Texture2D.MipLevels = locked->_desc->numMips;
-                    }
-                    break;
-
-                    case D3D12_SRV_DIMENSION_TEXTURE3D:
-                    {
-                        srvDesc.Texture3D = {};
-                        srvDesc.Texture3D.MipLevels = locked->_desc->numMips;
-                    }
-                    break;
-
-                    default:
-                        throw new std::exception("Unsupported SRV binding dimension");
-                }
-
-                _device->CreateShaderResourceView(locked->_texture.Get(), &srvDesc, heapHandle);
-                heapHandle.Offset(cmdImpl->_descriptorSize);
-            } else if (found->second.Type == D3D_SIT_STRUCTURED) {
-                if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->_resource)) {
-                    LOGEF(boost::format("SRV binding should have been a buffer \"%1%\"") % found->first);
-                    return false;
-                }
-
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxSRV->_resource);
-                auto locked = weak.lock();
-
-                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-                srvDesc.Buffer.FirstElement = 0;
-                srvDesc.Buffer.NumElements = locked->_desc->numElements;
-                srvDesc.Buffer.StructureByteStride = locked->_desc->elementSize;
-                srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
-                _device->CreateShaderResourceView(locked->_buffer.Get(), &srvDesc, heapHandle);
-                heapHandle.Offset(cmdImpl->_descriptorSize);
-            }
-        }
-
-        // create uav bindings to the resource
-        for (auto& uav : cmd->uavBindings) {
-            auto dxUAV = static_cast<const DX12UnorderedAccessView*>(uav.second);
-            auto found = bindings.find(uav.first);
-
-            if (found == bindings.end()) {
-                LOGEF(boost::format("DX12CommandInternal::Initialize: could not find UAV binding \"%1%\"") % uav.first);
-                return false;
-            }
-
-            if (found->second.Type == D3D_SIT_UAV_RWTYPED) {
-                if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource)) {
-                    LOGEF(boost::format("SRV binding should have been a texture \"%1%\"") % found->first);
-                    return false;
-                }
-
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
-
-                D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-                uavDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->_desc->format));
-
-                if (locked->_desc->arraySize > 1) {
-                    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-                    uavDesc.Texture2DArray.MipSlice = dxUAV->_index;
-                    uavDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
-                } else {
-                    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-                    uavDesc.Texture2D.MipSlice = dxUAV->_index;
-                }
-
-                //CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle{ cmdImpl->_descriptorHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<int32_t>(found->second.BindPoint), _srvUAVDescriptorSize };
-
-                _device->CreateUnorderedAccessView(locked->_texture.Get(), nullptr, &uavDesc, heapHandle);
-                heapHandle.Offset(cmdImpl->_descriptorSize);
-            } else if (found->second.Type == D3D_SIT_UAV_RWSTRUCTURED) {
-                if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
-                    LOGEF(boost::format("UAV binding should have been a buffer \"%1%\"") % found->first);
-                    return false;
-                }
-
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
-
-                D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-                uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-                uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-                uavDesc.Buffer.FirstElement = 0;
-                uavDesc.Buffer.NumElements = locked->_desc->numElements;
-                uavDesc.Buffer.StructureByteStride = locked->_desc->elementSize;
-                uavDesc.Buffer.CounterOffsetInBytes = 0;
-                uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-
-                _device->CreateUnorderedAccessView(locked->_buffer.Get(), nullptr, &uavDesc, heapHandle);
-                heapHandle.Offset(cmdImpl->_descriptorSize);
-            }
-        }
-
-        cmdImpl->_isInitialized = true;
 
         return true;
     }
@@ -1185,8 +987,7 @@ namespace ninniku
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d)
-        {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
             return (!is_directory(d.path()) && (d.path().extension() == ext));
         };
 
@@ -1231,7 +1032,6 @@ namespace ninniku
     {
         auto impl = static_cast<const DX12BufferImpl*>(bObj.get());
         auto internal = impl->_impl.lock();
-
         void* data = nullptr;
 
         auto hr = internal->_buffer->Map(0, nullptr, &data);
@@ -1346,8 +1146,7 @@ namespace ninniku
         }
 
         if (found->second._resource == nullptr) {
-            // Device requires SizeInBytes be a multiple of 256
-            if (!CreateConstantBuffer(found->second, name, data, (size + 255) & ~255))
+            if (!CreateConstantBuffer(found->second, name, data, size))
                 return false;
         } else {
             // constant buffer already exists so just update it
@@ -1357,13 +1156,13 @@ namespace ninniku
             subdata.RowPitch = size;
             subdata.SlicePitch = subdata.RowPitch;
 
-            auto pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(found->second._resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+            auto pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(found->second._resource.Get(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
 
             _transitionCmdList->ResourceBarrier(1, &pushBarrier);
 
             UpdateSubresources(_transitionCmdList.Get(), found->second._resource.Get(), found->second._upload.Get(), 0, 0, 1, &subdata);
 
-            auto popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(found->second._resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            auto popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(found->second._resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
             _transitionCmdList->ResourceBarrier(1, &popBarrier);
         }

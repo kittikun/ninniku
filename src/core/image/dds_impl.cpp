@@ -28,10 +28,10 @@
 #include "../renderer/dx11/DX11.h"
 #include "../renderer/dx12/DX12.h"
 
+#include <dxc/Support/d3dx12.h>
 #include <comdef.h>
 
-namespace ninniku
-{
+namespace ninniku {
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {
@@ -133,7 +133,7 @@ namespace ninniku
         throw std::exception("not implemented");
     }
 
-    void ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         // DirectXTex
         _meta = DirectX::TexMetadata{};
@@ -161,23 +161,18 @@ namespace ninniku
 
         auto hr = _scratch.Initialize(_meta);
 
-        if (FAILED(hr)) {
-            fmt = boost::format("Failed to create DDS with:");
-            LOGE << boost::str(fmt);
-            _com_error err(hr);
-            LOGE << err.ErrorMessage();
-
-            return;
-        }
+        if (CheckAPIFailed(hr, "DirectX::ScratchImage::Initialize"))
+            return false;
 
         auto marker = dx->CreateDebugMarker("ddsFromTextureObject");
 
         // we have to copy each mip with a read back texture of the same size for each face
+        auto srcDesc = srcTex->GetDesc();
+
         if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
             // dx11 can read back from a texture
-            for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
+            for (uint32_t mip = 0; mip < srcDesc->numMips; ++mip) {
                 auto param = TextureParam::Create();
-                auto srcDesc = srcTex->GetDesc();
 
                 param->width = srcDesc->width >> mip;
                 param->height = srcDesc->height >> mip;
@@ -194,29 +189,28 @@ namespace ninniku
                 params.srcMip = mip;
                 params.dst = readBack.get();
 
-                for (uint32_t face = 0; face < _meta.arraySize; ++face) {
+                for (uint32_t face = 0; face < srcDesc->arraySize; ++face) {
                     params.srcFace = face;
 
                     auto indexes = dx->CopyTextureSubresource(params);
                     auto mapped = dx->Map(readBack, std::get<1>(indexes));
                     auto dx11Mapped = static_cast<const DX11MappedResource*>(mapped.get());
 
-                    UpdateSubImage(face, mip, (uint8_t*)mapped->GetData(), dx11Mapped->GetRowPitch());
+                    UpdateSubImage(face, mip, static_cast<uint8_t*>(mapped->GetData()), dx11Mapped->GetRowPitch());
                 }
             }
         } else {
             // dx12 needs to use an intermediate buffer
             auto dx12 = static_cast<DX12*>(dx.get());
 
-            for (uint32_t mip = 0; mip < _meta.mipLevels; ++mip) {
-                auto param = BufferParam::Create();
-                auto srcDesc = srcTex->GetDesc();
+            for (uint32_t mip = 0; mip < srcDesc->numMips; ++mip) {
+                auto param = TextureParam::Create();
 
-                param->elementSize = DXGIFormatToNumBytes(NinnikuTFToDXGIFormat(srcDesc->format));
-                param->numElements = (srcDesc->width >> mip) * (srcDesc->height >> mip);
-                param->viewflags = EResourceViews::RV_CPU_READ;
+                param->width = srcDesc->width >> mip;
+                param->height = srcDesc->height >> mip;
+                param->format = srcDesc->format;
 
-                auto readback = dx->CreateBuffer(param);
+                auto readback = dx12->CreateBuffer(param);
 
                 CopyTextureSubresourceToBufferParam cpyParams = {};
 
@@ -224,15 +218,19 @@ namespace ninniku
                 cpyParams.texMip = mip;
                 cpyParams.buffer = readback.get();
 
-                for (uint32_t face = 0; face < _meta.arraySize; ++face) {
+                for (uint32_t face = 0; face < srcDesc->arraySize; ++face) {
                     cpyParams.texFace = face;
 
-                    dx12->CopyTextureSubresourceToBuffer(cpyParams);
+                    auto cpyRes = dx12->CopyTextureSubresourceToBuffer(cpyParams);
 
-                    //dx->Map(readback, )
+                    auto mapped = dx->Map(readback);
+
+                    UpdateSubImage(face, mip, static_cast<uint8_t*>(mapped->GetData()), std::get<0>(cpyRes));
                 }
             }
         }
+
+        return true;
     }
 
     bool ddsImageImpl::SaveImage(const std::string_view& path)
