@@ -49,12 +49,9 @@ SetupFixtureDX12::SetupFixtureDX12()
 #endif
 
     // There is a problem with the WARP renderer and DX12 so all tests are to be disabled for Appveyor now..
-    auto renderer = ninniku::ERenderer::RENDERER_DX11;
+    auto renderer = ninniku::ERenderer::RENDERER_WARP_DX12;
 
-    if (IsAppVeyor())
-        renderer = ninniku::ERenderer::RENDERER_DX11;
-
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(renderer, shaderPaths, ninniku::ELogLevel::LL_FULL);
 }
 
 SetupFixtureDX12::~SetupFixtureDX12()

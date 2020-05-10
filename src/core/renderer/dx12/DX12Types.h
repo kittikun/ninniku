@@ -77,9 +77,11 @@ namespace ninniku {
     //////////////////////////////////////////////////////////////////////////
     struct DX12CommandSubContext
     {
+        bool Initialize(const DX12Device& device, struct DX12Command* cmd, const MapNameSlot& bindings, const StringMap<struct DX12ConstantBuffer>& cbuffers);
+
         DX12DescriptorHeap _descriptorHeap;
 
-        bool Initialize(const DX12Device& device, struct DX12Command* cmd, const MapNameSlot& bindings, const StringMap<struct DX12ConstantBuffer>& cbuffers);
+        static inline std::array<uint32_t, 2> _heapIncrementSizes;
     };
 
     struct DX12CommandInternal
@@ -146,6 +148,16 @@ namespace ninniku {
         uint32_t _subresource;
         const D3D12_RANGE* _range;
         void* _data;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12SamplerState
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12SamplerState final : public SamplerState
+    {
+    public:
+        DX12DescriptorHeap _descriptorHeap;
+        D3D12_SAMPLER_DESC _desc;
     };
 
     //////////////////////////////////////////////////////////////////////////

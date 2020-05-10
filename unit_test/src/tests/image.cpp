@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::ddsImage>();
 
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(dds_texture_param)
     BOOST_TEST(param->width == 512);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -292,7 +292,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesD
     CheckMD5(std::get<0>(data), std::get<1>(data), 0x3d6bccfb68bfe11f, 0x764deda9ade288b4);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -312,10 +312,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesDX11, T)
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC1_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
+    // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
+    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
+        CheckFileMD5(filename, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
+    else
+        CheckFileMD5(filename, 0xcbe17bb0ce24e64d, 0x3a5b05ce702693b7);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -335,7 +339,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesDX11, T)
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC3_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
+    // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
+    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
+        CheckFileMD5(filename, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
+    else
+        CheckFileMD5(filename, 0xa19feec9971c1e04, 0xb13b6718693ef6e7);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesDX11, T)

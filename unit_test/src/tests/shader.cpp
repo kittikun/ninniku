@@ -53,10 +53,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesAll, T)
 {
-    // there is an error with the DX12 WARP renderer making it impossible to test on AppVeyor
-    if (IsAppVeyor())
-        return;
-
     auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("CubemapDirToArray");
 
@@ -139,13 +135,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesDX11, T)
 
     auto& data = res->GetData();
 
-    res->SaveImage("toto.hdr", ninniku::cmftImage::SaveType::LatLong);
-
     // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xc85514693c51df6f, 0xd10b1b7b4175a5ff);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -175,15 +169,13 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesDX11, T)
 
     auto& data = res->GetData();
 
+    res->SaveImage("toto.hdr", ninniku::cmftImage::SaveType::LatLong);
+
     CheckMD5(std::get<0>(data), std::get<1>(data), 0xb3ba50ac382fe166, 0xdd1bda49f1b43409);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 {
-    // there is an error with the DX12 WARP renderer making it impossible to test on AppVeyor
-    if (IsAppVeyor())
-        return;
-
     auto& dx = ninniku::GetRenderer();
     auto params = ninniku::BufferParam::Create();
 

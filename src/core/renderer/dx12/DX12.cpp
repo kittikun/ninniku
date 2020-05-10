@@ -58,21 +58,36 @@ namespace ninniku {
         auto dstImpl = static_cast<const DX12BufferImpl*>(params.dst);
         auto dstInternal = dstImpl->_impl.lock();
 
-        auto pushBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        auto dstReadback = (dstImpl->GetDesc()->viewflags & EResourceViews::RV_CPU_READ) != 0;
+
+        // dst is already D3D12_RESOURCE_STATE_COPY_DEST
+        auto barrierCount = dstReadback ? 1 : 2;
+
+        std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE),
+            CD3DX12_RESOURCE_BARRIER::Transition(dstInternal->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST)
+        };
 
         // we assume that dst is already in D3D12_RESOURCE_STATE_COPY_DEST
-        _copyCmdList->ResourceBarrier(1, &pushBarrierSrc);
+        _transitionCmdList->ResourceBarrier(barrierCount, barriers.data());
+        _transitionCmdList->Close();
+        ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
+        _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
+
         _copyCmdList->CopyResource(dstInternal->_buffer.Get(), srcInternal->_buffer.Get());
-
-        auto popBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_buffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
-
-        _copyCmdList->ResourceBarrier(1, &popBarrierSrc);
-
         _copyCmdList->Close();
-
-        ExecuteCommand(_transitionCommandQueue, _copyCmdList);
-
+        ExecuteCommand(_copyCommandQueue, _copyCmdList);
         _copyCmdList->Reset(_copyCommandAllocator.Get(), nullptr);
+
+        barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_buffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+            CD3DX12_RESOURCE_BARRIER::Transition(dstInternal->_buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+        };
+
+        _transitionCmdList->ResourceBarrier(barrierCount, barriers.data());
+        _transitionCmdList->Close();
+        ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
+        _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
     }
 
     std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresource(const CopyTextureSubresourceParam& params)
@@ -89,22 +104,42 @@ namespace ninniku {
         uint32_t dstSub = D3D12CalcSubresource(params.dstMip, params.dstFace, 0, dstDesc->numMips, dstDesc->arraySize);
         auto dstLoc = CD3DX12_TEXTURE_COPY_LOCATION(dstInternal->_texture.Get(), dstSub);
 
-        auto pushBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        auto pushBarrierDst = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-        std::array<D3D12_RESOURCE_BARRIER*, 2> pushBarriers = { &pushBarrierSrc, &pushBarrierDst };
+        // transitions states in
+        std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON),
+            CD3DX12_RESOURCE_BARRIER::Transition(dstInternal->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON)
+        };
 
-        _copyCmdList->ResourceBarrier(static_cast<uint32_t>(pushBarriers.size()), pushBarriers.front());
+        _transitionCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+        _transitionCmdList->Close();
+
+        ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
+        _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
+
+        // actual copy
+        barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE),
+            CD3DX12_RESOURCE_BARRIER::Transition(dstInternal->_texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)
+        };
+
+        _copyCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
         _copyCmdList->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
-
-        auto popBarrierSrc = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
-        auto popBarrierDst = CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
-        std::array<D3D12_RESOURCE_BARRIER*, 2> popBarriers = { &popBarrierSrc, &popBarrierDst };
-
         _copyCmdList->Close();
 
-        ExecuteCommand(_transitionCommandQueue, _copyCmdList);
-
+        ExecuteCommand(_copyCommandQueue, _copyCmdList);
         _copyCmdList->Reset(_copyCommandAllocator.Get(), nullptr);
+
+        // transitions states out
+        barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->_texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+            CD3DX12_RESOURCE_BARRIER::Transition(dstInternal->_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+        };
+
+        _transitionCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+        _transitionCmdList->Close();
+
+        ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
+        _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
 
         return std::make_tuple(srcSub, dstSub);
     }
@@ -120,7 +155,6 @@ namespace ninniku {
         auto bufferImpl = static_cast<const DX12BufferImpl*>(params.buffer);
         auto bufferInternal = bufferImpl->_impl.lock();
 
-        // this one comes from DirectXTex
         auto format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(texDesc->format));
         auto width = texDesc->width >> params.texMip;
         auto height = texDesc->height >> params.texMip;
@@ -133,16 +167,34 @@ namespace ninniku {
         bufferFootprint.Footprint = CD3DX12_SUBRESOURCE_FOOTPRINT{ format, width, height, 1, rowPitch };
         bufferFootprint.Offset = offset;
 
-        //auto bufferLoc = d3d12_copy(bufferInternal->_texture.Get(), bufferFootprint);
         auto bufferLoc = CD3DX12_TEXTURE_COPY_LOCATION{ bufferInternal->_buffer.Get(), bufferFootprint };
 
+        std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(texInternal->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON),
+        };
+
+        _transitionCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+        _transitionCmdList->Close();
+        ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
+        _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
+
+        auto common2src = CD3DX12_RESOURCE_BARRIER::Transition(texInternal->_texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+        _copyCmdList->ResourceBarrier(1, &common2src);
         _copyCmdList->CopyTextureRegion(&bufferLoc, 0, 0, 0, &texLoc, nullptr);
-
         _copyCmdList->Close();
-
         ExecuteCommand(_copyCommandQueue, _copyCmdList);
-
         _copyCmdList->Reset(_copyCommandAllocator.Get(), nullptr);
+
+        barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(texInternal->_texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+            //CD3DX12_RESOURCE_BARRIER::Transition(bufferInternal->_buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+        };
+
+        _transitionCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+        _transitionCmdList->Close();
+        ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
+        _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
 
         return std::make_tuple(rowPitch, offset);
     }
@@ -163,7 +215,7 @@ namespace ninniku {
         impl->_desc = params;
 
         D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE;
-        D3D12_RESOURCE_STATES resState = D3D12_RESOURCE_STATE_COMMON;
+        D3D12_RESOURCE_STATES resState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
         D3D12_HEAP_TYPE heapFlags = D3D12_HEAP_TYPE_DEFAULT;
 
         if (isUAV)
@@ -177,7 +229,13 @@ namespace ninniku {
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(heapFlags);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, resFlags);
 
-        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, resState, nullptr, IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
+        auto hr = _device->CreateCommittedResource(
+                      &heapProperties,
+                      D3D12_HEAP_FLAG_NONE,
+                      &desc,
+                      resState,
+                      nullptr,
+                      IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
@@ -217,7 +275,13 @@ namespace ninniku {
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
 
-        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
+        auto hr = _device->CreateCommittedResource(
+                      &heapProperties,
+                      D3D12_HEAP_FLAG_NONE,
+                      &desc,
+                      D3D12_RESOURCE_STATE_COPY_DEST,
+                      nullptr,
+                      IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
@@ -363,7 +427,13 @@ namespace ninniku {
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(cbuffer._size);
 
-        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(cbuffer._resource.GetAddressOf()));
+        auto hr = _device->CreateCommittedResource(
+                      &heapProperties,
+                      D3D12_HEAP_FLAG_NONE,
+                      &desc,
+                      D3D12_RESOURCE_STATE_COPY_DEST,
+                      nullptr,
+                      IID_PPV_ARGS(cbuffer._resource.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (resource)"))
             return false;
@@ -372,7 +442,13 @@ namespace ninniku {
         cbuffer._resource->SetName(strToWStr(boost::str(fmt)).c_str());
 
         heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(cbuffer._upload.GetAddressOf()));
+        hr = _device->CreateCommittedResource(
+                 &heapProperties,
+                 D3D12_HEAP_FLAG_NONE,
+                 &desc,
+                 D3D12_RESOURCE_STATE_GENERIC_READ,
+                 nullptr,
+                 IID_PPV_ARGS(cbuffer._upload.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (upload)"))
             return false;
@@ -497,6 +573,57 @@ namespace ninniku {
         return false;
     }
 
+    bool DX12::CreateSamplers()
+    {
+        // samplers, point first
+        auto sampler = new DX12SamplerState();
+
+        auto& desc = sampler->_desc;
+        desc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        desc.AddressV = desc.AddressW = desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        desc.MaxAnisotropy = 1;
+        desc.MinLOD = -D3D12_FLOAT32_MAX;
+        desc.MaxLOD = -D3D12_FLOAT32_MAX;
+        desc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+
+        // Create descriptor heap
+        D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+        heapDesc.NumDescriptors = 1;
+        heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+        heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+        auto hr = _device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&sampler->_descriptorHeap));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap (SS_Point)"))
+            return false;
+
+        sampler->_descriptorHeap->SetName(L"SS_Point");
+        _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Point)].reset(sampler);
+
+        // linear
+        sampler = new DX12SamplerState();
+
+        desc = sampler->_desc;
+        desc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        desc.AddressV = desc.AddressW = desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        desc.MaxAnisotropy = 1;
+        desc.MinLOD = -D3D12_FLOAT32_MAX;
+        desc.MaxLOD = -D3D12_FLOAT32_MAX;
+        desc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+
+        sampler->_desc = desc;
+
+        hr = _device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&sampler->_descriptorHeap));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap (SS_Linear)"))
+            return false;
+
+        sampler->_descriptorHeap->SetName(L"SS_Linear");
+        _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Linear)].reset(sampler);
+
+        return true;
+    }
+
     TextureHandle DX12::CreateTexture(const TextureParamHandle& params)
     {
         if ((params->viewflags & EResourceViews::RV_CPU_READ) != 0) {
@@ -511,8 +638,9 @@ namespace ninniku {
         auto is2d = (!is3d) && (!is1d);
         auto isCube = is2d && (params->arraySize == CUBEMAP_NUM_FACES);
         auto isCubeArray = is2d && (params->arraySize > CUBEMAP_NUM_FACES) && ((params->arraySize % CUBEMAP_NUM_FACES) == 0);
+        auto haveData = !params->imageDatas.empty();
 
-        auto fmt = boost::format("Creating Texture: Size=%1%x%2%, Mips=%3%") % params->width % params->height % params->numMips;
+        auto fmt = boost::format("Creating Texture: Size=%1%x%2%, Mips=%3% InitialData=%4%") % params->width % params->height % params->numMips % params->imageDatas.size();
         LOGD << boost::str(fmt);
 
         auto impl = std::make_shared<DX12TextureInternal>();
@@ -522,11 +650,14 @@ namespace ninniku {
         impl->_desc = params;
 
         D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE;
-        D3D12_RESOURCE_STATES resState = D3D12_RESOURCE_STATE_COMMON;
+        D3D12_RESOURCE_STATES resState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
         D3D12_HEAP_TYPE heapFlags = D3D12_HEAP_TYPE_DEFAULT;
 
         if (isUAV)
             resFlags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+        if (haveData)
+            resState = D3D12_RESOURCE_STATE_COMMON;
 
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(heapFlags);
         CD3DX12_RESOURCE_DESC desc;
@@ -562,10 +693,68 @@ namespace ninniku {
                    );
         }
 
-        auto hr = _device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc, resState, nullptr, IID_PPV_ARGS(impl->_texture.GetAddressOf()));
+        auto hr = _device->CreateCommittedResource(
+                      &heapProperties,
+                      D3D12_HEAP_FLAG_NONE,
+                      &desc,
+                      resState,
+                      nullptr,
+                      IID_PPV_ARGS(impl->_texture.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return TextureHandle();
+
+        if (haveData) {
+            DX12Resource upload;
+
+            auto numImageImpls = static_cast<uint32_t>(params->imageDatas.size());
+            auto reqSize = GetRequiredIntermediateSize(impl->_texture.Get(), 0, numImageImpls);
+
+            heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            desc = CD3DX12_RESOURCE_DESC::Buffer(reqSize);
+
+            hr = _device->CreateCommittedResource(
+                     &heapProperties,
+                     D3D12_HEAP_FLAG_NONE,
+                     &desc,
+                     D3D12_RESOURCE_STATE_GENERIC_READ,
+                     nullptr,
+                     IID_PPV_ARGS(upload.GetAddressOf()));
+
+            if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (texture upload buffer)"))
+                return TextureHandle();
+
+            upload->SetName(L"Texture Upload Buffer");
+
+            std::vector<D3D12_SUBRESOURCE_DATA> initialData(numImageImpls);
+
+            for (uint32_t i = 0; i < numImageImpls; ++i) {
+                auto& subParam = params->imageDatas[i];
+                auto& initData = initialData[i];
+
+                initData.pData = subParam.data;
+                initData.RowPitch = subParam.rowPitch;
+                initData.SlicePitch = subParam.depthPitch;
+            }
+
+            auto push = CD3DX12_RESOURCE_BARRIER::Transition(impl->_texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+
+            _copyCmdList->ResourceBarrier(1, &push);
+
+            UpdateSubresources(_copyCmdList.Get(), impl->_texture.Get(), upload.Get(), 0, 0, numImageImpls, initialData.data());
+
+            auto pop = CD3DX12_RESOURCE_BARRIER::Transition(impl->_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+            _transitionCmdList->ResourceBarrier(1, &pop);
+            _copyCmdList->Close();
+            _transitionCmdList->Close();
+
+            ExecuteCommand(_copyCommandQueue, _copyCmdList);
+            ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
+
+            _copyCmdList->Reset(_copyCommandAllocator.Get(), nullptr);
+            _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
+        }
 
         if (isSRV) {
             auto lmbd = [&](const std::shared_ptr<DX12TextureInternal>& internal, SRVHandle & target, uint32_t arrayIndex) {
@@ -648,11 +837,11 @@ namespace ninniku {
         auto foundBindings = _resourceBindings.find(cmd->shader);
 
         if (foundBindings == _resourceBindings.end()) {
-            auto fmt = boost::format("Dispatch error: could not find resource binding table for shader \"%1%\"") % cmd->shader;
-            LOGE << boost::str(fmt);
+            LOGEF(boost::format("Dispatch error: could not find resource binding table for shader \"%1%\"") % cmd->shader);
             return false;
         }
 
+        auto& bindings = foundBindings->second;
         auto hash = dxCmd->GetHashBindings();
 
         // look for the subcontext
@@ -662,21 +851,48 @@ namespace ninniku {
 
         if (foundHash == context->_subContexts.end()) {
             // create and initialize subcontext
-            if (!context->CreateSubContext(_device, hash, cmd->shader, static_cast<uint32_t>(foundBindings->second.size())))
+            if (!context->CreateSubContext(_device, hash, cmd->shader, static_cast<uint32_t>(bindings.size())))
                 return false;
 
             subContext = &context->_subContexts[hash];
-            subContext->Initialize(_device, dxCmd, foundBindings->second, _cBuffers);
+            subContext->Initialize(_device, dxCmd, bindings, _cBuffers);
         } else {
             subContext = &foundHash->second;
         }
 
         context->_cmdList->SetPipelineState(context->_pipelineState.Get());
         context->_cmdList->SetComputeRootSignature(context->_rootSignature.Get());
-        context->_cmdList->SetDescriptorHeaps(1, subContext->_descriptorHeap.GetAddressOf());
-        context->_cmdList->SetComputeRootDescriptorTable(0, subContext->_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
-        auto& bindings = foundBindings->second;
+        // At most we have 2 extra samplers
+        std::array<ID3D12DescriptorHeap*, 3> descriptorHeaps;
+
+        // order is fixed, context then samplers
+        auto descriptorHeapCount = 1u;
+        descriptorHeaps[0] = subContext->_descriptorHeap.Get();
+
+        if (!cmd->ssBindings.empty()) {
+            for (auto& ss : cmd->ssBindings) {
+                auto dxSS = static_cast<const DX12SamplerState*>(ss.second);
+                auto found = bindings.find(ss.first);
+
+                if (found == bindings.end()) {
+                    LOGEF(boost::format("DX12CommandInternal::Initialize: could not find SS binding \"%1%\"") % ss.first);
+                    return false;
+                }
+
+                auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE{ dxSS->_descriptorHeap->GetCPUDescriptorHandleForHeapStart() };
+
+                _device->CreateSampler(&dxSS->_desc, handle);
+
+                descriptorHeaps[descriptorHeapCount++] = dxSS->_descriptorHeap.Get();
+            }
+        }
+
+        context->_cmdList->SetDescriptorHeaps(descriptorHeapCount, descriptorHeaps.data());
+
+        for (auto i = 0u; i < descriptorHeapCount; ++i) {
+            context->_cmdList->SetComputeRootDescriptorTable(i, descriptorHeaps[i]->GetGPUDescriptorHandleForHeapStart());
+        }
 
         // resources view are bound in the descriptor heap but we still need to transition their states
         for (auto& kvp : cmd->uavBindings) {
@@ -693,14 +909,14 @@ namespace ninniku {
                 auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
                 auto locked = weak.lock();
 
-                auto pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+                auto pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
                 context->_cmdList->ResourceBarrier(1, &pushBarrier);
             } else {
                 // DX12TextureInternal
                 auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
                 auto locked = weak.lock();
 
-                auto pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+                auto pushBarrier = CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
                 context->_cmdList->ResourceBarrier(1, &pushBarrier);
             }
         }
@@ -717,15 +933,23 @@ namespace ninniku {
                 auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
                 auto locked = weak.lock();
 
-                auto popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
-                context->_cmdList->ResourceBarrier(1, &popBarrier);
+                std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
+                    CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
+                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+                };
+
+                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
             } else {
                 // DX12TextureInternal
                 auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
                 auto locked = weak.lock();
 
-                auto popBarrier = CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
-                context->_cmdList->ResourceBarrier(1, &popBarrier);
+                std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
+                    CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
+                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+                };
+
+                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
             }
         }
 
@@ -802,8 +1026,6 @@ namespace ninniku {
         if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap"))
             return false;
 
-        _samplerHeapIncrementSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-
         // Create command allocators
         hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocatorCompute));
 
@@ -864,11 +1086,15 @@ namespace ninniku {
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList (copy)"))
             return false;
 
+        _copyCmdList->SetName(L"Copy Command List");
+
         // resource transition
         hr = _device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _transitionCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&_transitionCmdList));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList (transition)"))
             return false;
+
+        _copyCmdList->SetName(L"Transition Command List");
 
         // parse shaders
         if ((shaderPaths.size() > 0)) {
@@ -880,6 +1106,9 @@ namespace ninniku {
                 }
             }
         }
+
+        if (!CreateSamplers())
+            return false;
 
         return true;
     }

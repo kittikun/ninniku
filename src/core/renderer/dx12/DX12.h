@@ -62,6 +62,7 @@ namespace ninniku {
         bool CreateCommandContexts();
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
+        bool CreateSamplers();
         bool ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList);
         bool LoadShader(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::string_view& shaderPath);
@@ -103,7 +104,6 @@ namespace ninniku {
 
         // heap
         DX12DescriptorHeap _samplerHeap;
-        uint32_t _samplerHeapIncrementSize;;
 
         // tracks allocated resources
         ObjectTracker _tracker;

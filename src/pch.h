@@ -40,6 +40,11 @@
 #include <d3d12.h>
 
 // BOOST
+#pragma warning(push)
+#pragma warning(disable:4701)
+#include <boost/crc.hpp>
+#pragma warning(pop)
+
 #include <boost/format.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>

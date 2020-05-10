@@ -143,7 +143,6 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, co
             // dispatch
             auto cmd = dx->CreateCommand();
             cmd->shader = "downsample";
-            cmd->cbufferStr = "CBGlobal";
 
             static_assert((DOWNSAMPLE_NUMTHREAD_X == DOWNSAMPLE_NUMTHREAD_Y) && (DOWNSAMPLE_NUMTHREAD_Z == 1));
             cmd->dispatch[0] = std::max(1u, (param->width >> srcMip) / DOWNSAMPLE_NUMTHREAD_X);

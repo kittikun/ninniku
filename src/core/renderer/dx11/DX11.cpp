@@ -355,10 +355,11 @@ namespace ninniku {
 
         for (auto i = 0; i < numImageImpls; ++i) {
             auto& subParam = params->imageDatas[i];
+            auto& initData = initialData[i];
 
-            initialData[i].pSysMem = subParam.data;
-            initialData[i].SysMemPitch = subParam.rowPitch;
-            initialData[i].SysMemSlicePitch = subParam.depthPitch;
+            initData.pSysMem = subParam.data;
+            initData.SysMemPitch = subParam.rowPitch;
+            initData.SysMemSlicePitch = subParam.depthPitch;
         }
 
         // we want to use unique_ptr here so that the object is properly destroyed in case it fails before we return
@@ -388,7 +389,7 @@ namespace ninniku {
             desc.MiscFlags = miscFlags;
 
             impl->_texture.emplace<DX11Tex2D>();
-            hr = _device->CreateTexture2D(&desc, (numImageImpls > 0) ? initialData.data() : nullptr, std::get<DX11Tex2D>(impl->_texture).GetAddressOf());
+            hr = _device->CreateTexture2D(&desc, initialData.data(), std::get<DX11Tex2D>(impl->_texture).GetAddressOf());
             apiName = "ID3D11Device::CreateTexture2D";
         } else if (is1d) {
             D3D11_TEXTURE1D_DESC desc = {};
@@ -648,9 +649,7 @@ namespace ninniku {
         // sampler states
         D3D11_SAMPLER_DESC samplerDesc = {};
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+        samplerDesc.AddressU = samplerDesc.AddressV = samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
         samplerDesc.MaxAnisotropy = 1;
         samplerDesc.MinLOD = -D3D11_FLOAT32_MAX;
         samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
