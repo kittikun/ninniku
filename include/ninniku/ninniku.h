@@ -56,13 +56,13 @@ namespace ninniku {
     /// Initialize ninniku framework
     /// shaderPaths must point to compiled .cso folders
     /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    [[nodiscard]] NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Initialize ninniku framework
     /// alternative version where each shader blob must be manually loaded
     /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    [[nodiscard]] NINNIKU_API bool Initialize(const ERenderer renderer, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Cleanup resources used by ninniku

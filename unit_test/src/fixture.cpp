@@ -35,7 +35,9 @@ SetupFixtureDX11::SetupFixtureDX11()
     uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
     // because unit test run on CI, always use WARP
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, flags, ninniku::ELogLevel::LL_FULL);
+    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, flags, ninniku::ELogLevel::LL_FULL)) {
+        throw new std::exception("Failed to initialize Ninniku.");
+    }
 }
 
 SetupFixtureDX11::~SetupFixtureDX11()
@@ -57,7 +59,9 @@ SetupFixtureDX12::SetupFixtureDX12()
         flags |= ninniku::EInitializationFlags::IF_DisableDX12DebugLayer;
 
     // because unit test run on CI, always use WARP
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, flags, ninniku::ELogLevel::LL_FULL);
+    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, flags, ninniku::ELogLevel::LL_FULL)) {
+        throw new std::exception("Failed to initialize Ninniku.");
+    }
 }
 
 SetupFixtureDX12::~SetupFixtureDX12()
