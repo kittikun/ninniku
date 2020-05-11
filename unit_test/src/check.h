@@ -23,6 +23,10 @@
 #include <cstdint>
 #include <filesystem>
 
+uint32_t GetCRC(uint8_t* data, uint32_t size);
+void CheckCRC(uint8_t* data, uint32_t size, uint32_t checksum);
+void CheckFileCRC(std::filesystem::path path, uint32_t checksum);
+
 unsigned char* GetMD5(uint8_t* data, uint32_t size);
 void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b);
 void CheckFileMD5(std::filesystem::path path, uint64_t a, uint64_t b);

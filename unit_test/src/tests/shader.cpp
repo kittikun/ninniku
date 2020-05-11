@@ -34,12 +34,9 @@
 
 BOOST_AUTO_TEST_SUITE(Shader)
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesDX11, T)
 {
-    // there is an error with the DX12 WARP renderer making it impossible to test on AppVeyor
-    if (IsAppVeyor())
-        return;
-
+    // DX12 doesn't allow binding the same resource as SRV and UAV so the shader needs to be rewritten later
     auto& dx = ninniku::GetRenderer();
     auto resTex = GenerateColoredMips(dx);
     auto res = std::make_unique<ninniku::cmftImage>();
@@ -48,11 +45,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
 
     auto& data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x91086088d369be49, 0x74d54476510012cc);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 3775864256);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesAll, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesDX11, T)
 {
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it since unit tests are using WARP
     auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("CubemapDirToArray");
 
@@ -108,21 +106,23 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesAll, T)
     auto srcImg = std::make_unique<ninniku::ddsImage>();
 
     srcImg->InitializeFromTextureObject(dx, srcTex);
+    srcImg->SaveImage("shader_cubemapDirToArray_src.dds");
 
     auto srcData = srcImg->GetData();
-    auto srcHash = GetMD5(std::get<0>(srcData), std::get<1>(srcData));
+    auto srcHash = GetCRC(std::get<0>(srcData), std::get<1>(srcData));
     auto dstImg = std::make_unique<ninniku::ddsImage>();
 
     dstImg->InitializeFromTextureObject(dx, srcTex);
-
+    srcImg->SaveImage("shader_cubemapDirToArray_dst.dds");
     auto dstData = dstImg->GetData();
-    auto dstHash = GetMD5(std::get<0>(dstData), std::get<1>(dstData));
+    auto dstHash = GetCRC(std::get<0>(dstData), std::get<1>(dstData));
 
-    BOOST_TEST(memcmp(srcHash, dstHash, sizeof(uint64_t) * 2) == 0);
+    BOOST_TEST(srcHash == dstHash);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesDX11, T)
 {
+    // DX12 doesn't allow binding the same resource as SRV and UAV so the shader needs to be rewritten later
     auto& dx = ninniku::GetRenderer();
     auto image = std::make_unique<ninniku::ddsImage>();
 
@@ -136,7 +136,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesDX11, T)
     auto& data = res->GetData();
 
     // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xc85514693c51df6f, 0xd10b1b7b4175a5ff);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 946385041);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
@@ -169,9 +169,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 
     auto& data = res->GetData();
 
-    res->SaveImage("toto.hdr", ninniku::cmftImage::SaveType::LatLong);
-
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xb3ba50ac382fe166, 0xdd1bda49f1b43409);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
@@ -204,7 +202,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 
     auto& data = dstBuffer->GetData();
 
-    CheckMD5(reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(&data.front())), static_cast<uint32_t>(data.size() * sizeof(uint32_t)), 0xe4c6bd586aa54c9b, 0xb02b6bb8ec6b10db);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

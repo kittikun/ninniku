@@ -20,28 +20,26 @@
 
 #include "check.h"
 
-#pragma comment(lib, "libcrypto.lib")
-
+#include <boost/crc.hpp>
 #include <boost/test/unit_test.hpp>
-#include <openssl/md5.h>
 #include <array>
 #include <fstream>
 
-unsigned char* GetMD5(uint8_t* data, uint32_t size)
+uint32_t GetCRC(uint8_t* data, uint32_t size)
 {
-    return MD5(data, size, nullptr);
+    boost::crc_32_type res;
+
+    res.process_bytes(data, size);
+
+    return res.checksum();
 }
 
-void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b)
+void CheckCRC(uint8_t* data, uint32_t size, uint32_t checksum)
 {
-    unsigned char* hash = GetMD5(data, size);
-
-    std::array<uint64_t, 2> wanted = { a, b };
-
-    BOOST_TEST(memcmp(hash, wanted.data(), wanted.size()) == 0);
+    BOOST_TEST(GetCRC(data, size) == checksum);
 }
 
-void CheckFileMD5(std::filesystem::path path, uint64_t a, uint64_t b)
+void CheckFileCRC(std::filesystem::path path, uint32_t checksum)
 {
     std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
     std::ifstream::pos_type pos = ifs.tellg();
@@ -51,5 +49,5 @@ void CheckFileMD5(std::filesystem::path path, uint64_t a, uint64_t b)
     ifs.seekg(0, std::ios::beg);
     ifs.read(reinterpret_cast<char*>(result.data()), pos);
 
-    CheckMD5(result.data(), static_cast<uint32_t>(result.size()), a, b);
+    CheckCRC(result.data(), static_cast<uint32_t>(result.size()), checksum);
 }

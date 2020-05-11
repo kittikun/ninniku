@@ -30,9 +30,9 @@
             "DescriptorTable( Sampler(s0))"
 
 // Use point for since we're going to average samples anyway
-SamplerState ssPoint : register(s0);
-Texture2DArray<float4> srcMip : register(t0);
-RWTexture2DArray<float4> dstMipSlice : register(u0);
+SamplerState ssPoint;
+Texture2DArray<float4> srcMip;
+RWTexture2DArray<float4> dstMipSlice;
 
 [numthreads(DOWNSAMPLE_NUMTHREAD_X, DOWNSAMPLE_NUMTHREAD_Y, DOWNSAMPLE_NUMTHREAD_Z)]
 void main(uint3 GID : SV_GroupID, uint3 GTI : SV_GroupThreadID)

@@ -22,16 +22,20 @@
 
 #include <ninniku/ninniku.h>
 
+#include <boost/test/debug.hpp>
+
 SetupFixtureDX11::SetupFixtureDX11()
 {
-    // because unit test run on CI, always use WARP
 #ifdef _DEBUG
     std::vector<std::string_view> shaderPaths = { "bin\\Debug\\dx11" };
 #else
     std::vector<std::string_view> shaderPaths = { "bin\\Release\\dx11" };
 #endif
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL);
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
+
+    // because unit test run on CI, always use WARP
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, flags, ninniku::ELogLevel::LL_FULL);
 }
 
 SetupFixtureDX11::~SetupFixtureDX11()
@@ -41,21 +45,19 @@ SetupFixtureDX11::~SetupFixtureDX11()
 
 SetupFixtureDX12::SetupFixtureDX12()
 {
-    // because unit test run on CI, always use WARP
 #ifdef _DEBUG
     std::vector<std::string_view> shaderPaths = { "bin\\Debug\\dx12" };
 #else
     std::vector<std::string_view> shaderPaths = { "bin\\Release\\dx12" };
 #endif
 
-    // There is a problem with the WARP renderer and DX12 so all tests are to be disabled for Appveyor now..
-    auto renderer = ninniku::ERenderer::RENDERER_WARP_DX12;
-    auto flags = ninniku::EInitializationFlags::IF_None;
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
     if (IsAppVeyor())
-        flags = ninniku::EInitializationFlags::IF_DisableDX12DebugLayer;
+        flags |= ninniku::EInitializationFlags::IF_DisableDX12DebugLayer;
 
-    ninniku::Initialize(renderer, shaderPaths, flags, ninniku::ELogLevel::LL_FULL);
+    // because unit test run on CI, always use WARP
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, flags, ninniku::ELogLevel::LL_FULL);
 }
 
 SetupFixtureDX12::~SetupFixtureDX12()

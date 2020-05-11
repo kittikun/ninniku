@@ -29,8 +29,7 @@
                        "DescriptorTable(CBV(b0)," \
                                        "UAV(u0))"
 
-RWTexture2DArray<float4> dstTex :
-register(u0);
+RWTexture2DArray<float4> dstTex;
 
 [numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
 void main(uint16_t3 DTI : SV_DispatchThreadID)

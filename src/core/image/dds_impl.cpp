@@ -23,6 +23,7 @@
 
 #include "ninniku/core/image/dds.h"
 
+#include "../../globals.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 #include "../renderer/dx11/DX11.h"
@@ -266,7 +267,7 @@ namespace ninniku {
             return false;
         }
 
-        DWORD flags = DirectX::TEX_COMPRESS_DEFAULT;
+        DWORD flags = DirectX::TEX_COMPRESS_PARALLEL;
         auto bc6hbc7 = false;
 
         // use best compression for BC7
@@ -274,7 +275,10 @@ namespace ninniku {
             case DXGI_FORMAT_BC7_TYPELESS:
             case DXGI_FORMAT_BC7_UNORM:
             case DXGI_FORMAT_BC7_UNORM_SRGB:
-                flags |= DirectX::TEX_COMPRESS_BC7_USE_3SUBSETS;
+                if (Globals::Instance()._bc7Quick)
+                    flags |= DirectX::TEX_COMPRESS_BC7_QUICK;
+                else
+                    flags |= DirectX::TEX_COMPRESS_BC7_USE_3SUBSETS;
                 bc6hbc7 = true;
                 break;
 
@@ -303,6 +307,7 @@ namespace ninniku {
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";
+                LOGD_INDENT_END;
                 return false;
             }
 
@@ -314,6 +319,7 @@ namespace ninniku {
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";
+                LOGD_INDENT_END;
                 return false;
             }
 

@@ -25,7 +25,7 @@
 
 #include "../core/renderer/dx11/DX11.h"
 #include "../core/renderer/dx12/DX12.h"
-
+#include "../globals.h"
 #include "log.h"
 
 #include <atlbase.h>
@@ -55,7 +55,7 @@ namespace ninniku {
                 if ((renderer->GetType() & ERenderer::RENDERER_DX12) != 0) {
                     auto dx = static_cast<DX12*>(renderer.get());
 
-                    if (dx->UseDebugLayer()) {
+                    if (Globals::Instance()._useDebugLayer) {
                         CComPtr<ID3D12DeviceRemovedExtendedData> pDred;
                         auto hr2 = dx->GetDevice()->QueryInterface(IID_PPV_ARGS(&pDred));
 

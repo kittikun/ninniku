@@ -100,8 +100,7 @@
       <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
     </FxCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Console</SubSystem>
     </Link>
     <CustomBuild>
       <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -Od -Zi -Qembed_debug -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco</Command>
@@ -147,6 +146,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
     </Link>
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
@@ -191,6 +191,18 @@
     <CustomBuild Include="src\shaders\dx12\resize.hlsl">
       <FileType>Document</FileType>
     </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\packNormals.hlsl">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\dirToFaces.hlsl">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\colorFaces.hlsl">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <None Include="src\shaders\utility.hlsl">
+      <FileType>Document</FileType>
+    </None>
     <None Include="src\shaders\color20.hlsl">
       <FileType>Document</FileType>
     </None>
@@ -228,18 +240,16 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets" Condition="Exists('..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets')" />
-    <Import Project="..\packages\boost.1.71.0.0\build\boost.targets" Condition="Exists('..\packages\boost.1.71.0.0\build\boost.targets')" />
-    <Import Project="..\packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets" Condition="Exists('..\packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets')" />
-    <Import Project="..\packages\boost_unit_test_framework-vc141.1.71.0.0\build\boost_unit_test_framework-vc141.targets" Condition="Exists('..\packages\boost_unit_test_framework-vc141.1.71.0.0\build\boost_unit_test_framework-vc141.targets')" />
+    <Import Project="..\packages\boost.1.72.0.0\build\boost.targets" Condition="Exists('..\packages\boost.1.72.0.0\build\boost.targets')" />
+    <Import Project="..\packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets" Condition="Exists('..\packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets')" />
+    <Import Project="..\packages\boost_unit_test_framework-vc141.1.72.0.0\build\boost_unit_test_framework-vc141.targets" Condition="Exists('..\packages\boost_unit_test_framework-vc141.1.72.0.0\build\boost_unit_test_framework-vc141.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\openssl-vc141-static-x86_64.1.1.0\build\native\openssl-vc141-static-x86_64.targets'))" />
-    <Error Condition="!Exists('..\packages\boost.1.71.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.71.0.0\build\boost.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_system-vc141.1.71.0.0\build\boost_system-vc141.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_unit_test_framework-vc141.1.71.0.0\build\boost_unit_test_framework-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_unit_test_framework-vc141.1.71.0.0\build\boost_unit_test_framework-vc141.targets'))" />
+    <Error Condition="!Exists('..\packages\boost.1.72.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.72.0.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_unit_test_framework-vc141.1.72.0.0\build\boost_unit_test_framework-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_unit_test_framework-vc141.1.72.0.0\build\boost_unit_test_framework-vc141.targets'))" />
   </Target>
 </Project>

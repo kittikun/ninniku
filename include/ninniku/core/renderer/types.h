@@ -56,7 +56,7 @@ namespace ninniku {
     {
         // This will only be filled when copied from another buffer (they are mapped)
         // Add support for initial data later
-        virtual const std::vector<uint32_t>& GetData() const = 0;
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const = 0;
 
         virtual const BufferParam* GetDesc() const = 0;
         virtual const ShaderResourceView* GetSRV() const = 0;

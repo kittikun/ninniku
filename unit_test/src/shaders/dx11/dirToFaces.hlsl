@@ -19,7 +19,7 @@
 // SOFTWARE.
 
 #include "../cbuffers.h"
-#include "utility.hlsl"
+#include "../utility.hlsl"
 
 TextureCube srcTex;
 RWTexture2DArray<float4> dstTex;

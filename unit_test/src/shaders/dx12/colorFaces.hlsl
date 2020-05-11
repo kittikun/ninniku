@@ -18,17 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../cbuffers.h"
+#include "../color20.hlsl"
+
 #define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
                        "DENY_HULL_SHADER_ROOT_ACCESS | " \
                        "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
                        "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
                        "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
-            "DescriptorTable( UAV(u0) )"
+            "DescriptorTable( UAV(u0))"
 
-RWStructuredBuffer<uint> dstBuffer;
+RWTexture2DArray<float4> dstTex;
 
-[numthreads(16, 1, 1)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
+[numthreads(COLORFACES_NUMTHREAD_X, COLORFACES_NUMTHREAD_Y, COLORFACES_NUMTHREAD_Z)]
+void main(uint3 DTI : SV_DispatchThreadID)
 {
-    dstBuffer[DTI.x] = DTI.x;
+    // we can skip bound checks because we use a fixed size of 512
+    // If you use a numthread that is not a power of 2, you might want to add one
+    dstTex[DTI] = float4(color20[DTI.z], 1);
 }

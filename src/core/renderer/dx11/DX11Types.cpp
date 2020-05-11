@@ -32,9 +32,11 @@ namespace ninniku {
     {
     }
 
-    const std::vector<uint32_t>& DX11BufferImpl::GetData() const
+    const std::tuple<uint8_t*, uint32_t> DX11BufferImpl::GetData() const
     {
-        return _impl.lock()->_data;
+        auto& data = _impl.lock()->_data;
+
+        return std::make_tuple(reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)));
     }
 
     const BufferParam* DX11BufferImpl::GetDesc() const

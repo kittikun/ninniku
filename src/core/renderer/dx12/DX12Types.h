@@ -64,7 +64,7 @@ namespace ninniku {
     {
         DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl) noexcept;
 
-        const std::vector<uint32_t>& GetData() const override;
+        const std::tuple<uint8_t*, uint32_t> GetData() const override;
         const BufferParam* GetDesc() const override;
         const ShaderResourceView* GetSRV() const override;
         const UnorderedAccessView* GetUAV() const override;

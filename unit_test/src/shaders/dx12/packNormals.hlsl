@@ -18,17 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../utility.hlsl"
+
 #define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
                        "DENY_HULL_SHADER_ROOT_ACCESS | " \
                        "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
                        "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
                        "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
-            "DescriptorTable( UAV(u0) )"
+            "DescriptorTable( SRV(t0), " \
+                             "UAV(u0))" \
 
-RWStructuredBuffer<uint> dstBuffer;
+Texture2D<float3> srcTex;
+RWTexture2D<float2> dstTex;
 
-[numthreads(16, 1, 1)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
+[numthreads(32, 32, 1)]
+void main(uint3 DTI : SV_DispatchThreadID)
 {
-    dstBuffer[DTI.x] = DTI.x;
+    dstTex[DTI.xy] = packNormal(srcTex[DTI.xy]);
 }

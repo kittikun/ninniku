@@ -18,17 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
-                       "DENY_HULL_SHADER_ROOT_ACCESS | " \
-                       "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
-                       "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
-                       "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
-            "DescriptorTable( UAV(u0) )"
+#pragma once
 
-RWStructuredBuffer<uint> dstBuffer;
+#include "ninniku/utils.h"
 
-[numthreads(16, 1, 1)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
-{
-    dstBuffer[DTI.x] = DTI.x;
-}
+#include <renderdoc/renderdoc_app.h>
+
+namespace ninniku {
+    class Globals
+    {
+    public:
+        Globals() = default;
+        static Globals& Instance() { return _instance; }
+
+        RENDERDOC_API_1_4_1* _renderDocApi = nullptr;
+        RenderDeviceHandle _renderer;
+
+        bool _doCapture : 1;
+        bool _useDebugLayer : 1;
+        bool _bc7Quick : 1;
+        bool _padding : 5;
+
+    private:
+        static Globals _instance;
+    };
+} // namespace ninniku

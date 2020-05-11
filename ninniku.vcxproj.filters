@@ -174,5 +174,8 @@
     <ClInclude Include="src\utils\stringMap.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\globals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

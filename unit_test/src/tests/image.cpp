@@ -43,14 +43,14 @@ BOOST_AUTO_TEST_CASE(cmft_load)
 
     auto& data = image->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x13f4aafdebe25865, 0x7ba34b1487530781);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 3196376208);
 
     image->Load("data/park02.exr");
     auto& data2 = image->GetData();
-    CheckMD5(std::get<0>(data2), std::get<1>(data2), 0x7df5652cbaf3a5af, 0xf758a4c5d9f5b418);
+    CheckCRC(std::get<0>(data2), std::get<1>(data2), 2283193732);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -65,7 +65,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesDX11, T)
 
     auto& data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xe4b0b9443383639a, 0x1236acd08f0a5de7);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 1279329145);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_need_resize)
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_cubemap)
     BOOST_TEST(image->SaveImage(filename, ninniku::cmftImage::SaveType::Cubemap));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0xd390897a261c6e6d, 0xa7c0fc8663cf6756);
+    CheckFileCRC(filename, 3235862832);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
@@ -121,20 +121,20 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
     BOOST_TEST(image->SaveImage("cmft_saveImageFace.dds", ninniku::cmftImage::SaveType::Facelist));
 
     std::array<std::string, ninniku::CUBEMAP_NUM_FACES> suffixes = { "negx", "negy", "negz", "posx", "posy", "posz" };
-    std::array<uint64_t, ninniku::CUBEMAP_NUM_FACES * 2> hashes = {
-        0xdc56b26bf003de44, 0x06c970d707c430b6,
-        0x870b6392741412ab, 0x10fbb21a5578aa5f,
-        0xe5aaa9a1b0aa8b65, 0x3e2db13cced7c072,
-        0xc866115bfa171b17, 0xdd0d2aca5d914f85,
-        0x44672d04d224b3b6, 0x5445be0b2f0e5ef6,
-        0x92ddcb5da9e8b320, 0xa1dfbe7d24cf0c2e
+    std::array<uint32_t, ninniku::CUBEMAP_NUM_FACES> hashes = {
+        2760747179,
+        1583253975,
+        3324696265,
+        1668495217,
+        3330494877,
+        3989661171
     };
 
     for (auto i = 0; i < suffixes.size(); ++i) {
         auto filename = "cmft_saveImageFace_" + suffixes[i] + ".dds";
 
         BOOST_TEST(std::filesystem::exists(filename));
-        CheckFileMD5(filename, hashes[i * 2], hashes[i * 2 + 1]);
+        CheckFileCRC(filename, hashes[i]);
     }
 }
 
@@ -156,7 +156,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesAll, T)
     BOOST_TEST(res->SaveImage(filename, ninniku::cmftImage::SaveType::LatLong));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x0e595ac204b6395f, 0x40389132a20d31db);
+    CheckFileCRC(filename, 2361495689);
 }
 
 BOOST_AUTO_TEST_CASE(cmft_saveImage_vcross)
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_vcross)
     BOOST_TEST(image->SaveImage(filename, ninniku::cmftImage::SaveType::VCross));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x7b301fd498ff0aaf, 0x10cfb2d95c6fbb22);
+    CheckFileCRC(filename, 3752497809);
 }
 
 BOOST_AUTO_TEST_CASE(dds_load)
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(dds_load)
 
     auto& data = image->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x48e0c9680b2cbcc9, 0xea5f523bdad5cec4);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 2638212697);
 }
 
 BOOST_AUTO_TEST_CASE(dds_need_resize)
@@ -229,11 +229,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesAll, T)
 
     auto& data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xe4b0b9443383639a, 0x1236acd08f0a5de7);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 1279329145);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesDX11, T)
 {
+    // DX12 doesn't allow binding the same resource as SRV and UAV so the shader needs to be rewritten later
     auto& dx = ninniku::GetRenderer();
     auto image = std::make_unique<ninniku::ddsImage>();
 
@@ -249,12 +250,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesDX11, T)
     BOOST_TEST(res->SaveImage(filename));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x90d2840de5fc390c, 0xaafa055284578053);
+    CheckFileCRC(filename, 4173211496);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesDX11, T)
 {
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it since unit tests are using WARP
     auto& dx = ninniku::GetRenderer();
+
     auto resTex = GenerateColoredMips(dx);
     auto res = std::make_unique<ninniku::ddsImage>();
 
@@ -265,11 +268,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesDX11, T
     BOOST_TEST(res->SaveImage(filename));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x96fc6f64b6361b46, 0xbb4679a507b22fe8);
+    CheckFileCRC(filename, 567904825);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesDX11, T)
 {
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    // since unit tests are using WARP
+
     auto& dx = ninniku::GetRenderer();
     auto resTex = GenerateColoredCubeArrayMips(dx);
     auto res = std::make_unique<ninniku::ddsImage>();
@@ -282,14 +288,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesD
     BOOST_TEST(res->SaveImage(filename));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x38e5f5708ca8f166, 0x3cb321201074c3f7);
-
-    // and reload
-    BOOST_TEST(res->Load(filename));
-
-    auto& data = res->GetData();
-
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x3d6bccfb68bfe11f, 0x764deda9ade288b4);
+    CheckFileCRC(filename, 3517905);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
@@ -314,9 +313,9 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
     if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileMD5(filename, 0xc7f0dc21e85e2395, 0xd5c963a78b66a4a4);
+        CheckFileCRC(filename, 1032956914);
     else
-        CheckFileMD5(filename, 0xcbe17bb0ce24e64d, 0x3a5b05ce702693b7);
+        CheckFileCRC(filename, 2648532591);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
@@ -341,12 +340,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
     if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileMD5(filename, 0x99fce9d6ec4ded22, 0x9bc0dedb31b4da7b);
+        CheckFileCRC(filename, 2051743166);
     else
-        CheckFileMD5(filename, 0xa19feec9971c1e04, 0xb13b6718693ef6e7);
+        CheckFileCRC(filename, 821195920);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -361,20 +360,27 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesDX11, T)
 
     res->InitializeFromTextureObject(dx, resized);
 
-    std::string filename = "dds_saveImage_bc3.dds";
+    std::string filename = "dds_saveImage_bc4.dds";
 
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC4_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    // for some reason BC4 leads to different results between debug and release builds
+    // for some reason BC4 leads to different results between debug/release
+    // dx11/dx12 is because of hardware/software compression
 #ifdef _DEBUG
-    CheckFileMD5(filename, 0x397286da7060fabd, 0xb36a91e9ee1c3620);
+    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
+        CheckFileCRC(filename, 1228450784);
+    else
+        CheckFileCRC(filename, 3324017732);
 #else
-    CheckFileMD5(filename, 0x9935add6cf01cfb2, 0xf1cd1f43812c2962);
+    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
+        CheckFileCRC(filename, 2703939131);
+    else
+        CheckFileCRC(filename, 2312058583);
 #endif
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -415,14 +421,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesDX11, T)
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
-#ifdef _DEBUG
-    CheckFileMD5(filename, 0x8338717097b81c8f, 0x96d43528fdcca03a);
-#else
-    CheckFileMD5(filename, 0x8338717097b81c8f, 0x96d43528fdcca03a);
-#endif
+    CheckFileCRC(filename, 3356479526);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -463,14 +465,15 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesDX11, T)
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
+    // for some reason BC5 (16 bit) leads to different results between debug and release builds
 #ifdef _DEBUG
-    CheckFileMD5(filename, 0x41be141dec6447ee, 0xb881f3768608f0e1);
+    CheckFileCRC(filename, 3254186394);
 #else
-    CheckFileMD5(filename, 0xfea9a5d1d0b1ec98, 0xcaf351a85cecc7cc);
+    CheckFileCRC(filename, 2118249824);
 #endif
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -488,10 +491,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesDX11, T)
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC6H_UF16));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x4a21b5bfd91ee91b, 0x046011be19fbd693);
+    // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
+    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
+        CheckFileCRC(filename, 842772517);
+    else
+        CheckFileCRC(filename, 4073542973);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -511,10 +518,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesDX11, T)
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC7_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileMD5(filename, 0x83dbc545c0057bef, 0x81e8e8c2154326bf);
+    // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
+    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
+        CheckFileCRC(filename, 2046772967);
+    else
+        CheckFileCRC(filename, 222998642);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_load, T, FixturesAll, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_load, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -522,18 +533,18 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_load, T, FixturesAll, T)
 
     auto& data = image->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x5c284747dea82181, 0xcdc216b5cbc13d95);
+    CheckCRC(std::get<0>(data), std::get<1>(data), 2997017566);
 
     BOOST_TEST(image->Load("data/architecture-buildings-city-1769347.jpg"));
     auto& data2 = image->GetData();
-    CheckMD5(std::get<0>(data2), std::get<1>(data2), 0x68762d0598a19f79, 0xa183c7f8664ffd53);
+    CheckCRC(std::get<0>(data2), std::get<1>(data2), 2282433845);
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
     auto& data3 = image->GetData();
-    CheckMD5(std::get<0>(data3), std::get<1>(data3), 0xbde7e6526b1c6f06, 0x87ac4825f91dc73b);
+    CheckCRC(std::get<0>(data3), std::get<1>(data3), 3486869451);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_need_resize, T, FixturesAll, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_need_resize, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 

@@ -246,7 +246,7 @@ int main()
     // corresponding test: shader_genMips
     std::vector<std::string_view> shaderPaths = { "..\\simple\\shaders" };
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::EInitializationFlags::IF_EnableCapture, ninniku::ELogLevel::LL_FULL);
 
     shader_colorMips();
 

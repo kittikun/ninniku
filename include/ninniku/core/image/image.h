@@ -24,8 +24,7 @@
 #include "../renderer/renderdevice.h"
 #include "../renderer/types.h"
 
-namespace ninniku
-{
+namespace ninniku {
     using SizeFixResult = std::tuple<bool, uint32_t, uint32_t>;
 
     class Image
@@ -44,7 +43,7 @@ namespace ninniku
         virtual bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) = 0;
         virtual TextureParamHandle CreateTextureParam(const EResourceViews viewFlags) const = 0;
 
-        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(nullptr, 0); }
 
         // Used when transferring data back from the GPU
         virtual bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) = 0;

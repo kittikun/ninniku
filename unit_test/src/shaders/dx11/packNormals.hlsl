@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "utility.hlsl"
+#include "../utility.hlsl"
 
 Texture2D<float3> srcTex;
 RWTexture2D<float2> dstTex;

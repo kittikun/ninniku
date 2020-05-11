@@ -738,8 +738,6 @@ namespace ninniku {
             _shaders.emplace(name, DX11ComputeShader{ shader, bindings });
         }
 
-        LOG_INDENT_END;
-
         return true;
     }
 
@@ -786,13 +784,18 @@ namespace ninniku {
                     LOGE << boost::str(fmt);
                     _com_error err(hr);
                     LOGE << err.ErrorMessage();
+                    LOG_INDENT_END;
                     return false;
                 }
 
                 auto name = iter.path().stem().string();
 
-                if (!LoadShader(name, blob, path))
+                if (!LoadShader(name, blob, path)) {
+                    LOG_INDENT_END;
                     return false;
+                }
+
+                LOG_INDENT_END;
             }
         }
 
