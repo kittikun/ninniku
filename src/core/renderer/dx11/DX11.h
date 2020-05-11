@@ -28,8 +28,7 @@
 
 struct ID3D11ShaderReflection;
 
-namespace ninniku
-{
+namespace ninniku {
     class DX11 final : public RenderDevice
     {
     public:
@@ -56,7 +55,7 @@ namespace ninniku
         const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
         // Not from RenderDevice
-        ID3D11Device* GetDevice() const { return _device.Get(); }
+        inline ID3D11Device* GetDevice() const { return _device.Get(); }
 
     private:
         bool CreateDevice(int adapter, ID3D11Device** pDevice);

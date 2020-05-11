@@ -32,8 +32,7 @@
 #include <comdef.h>
 #include <windows.h>
 
-namespace ninniku
-{
+namespace ninniku {
     uint32_t Align(UINT uLocation, uint32_t uAlign)
     {
         // https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resources
@@ -55,26 +54,34 @@ namespace ninniku
 
                 if ((renderer->GetType() & ERenderer::RENDERER_DX12) != 0) {
                     auto dx = static_cast<DX12*>(renderer.get());
-                    CComPtr<ID3D12DeviceRemovedExtendedData> pDred;
-                    auto hr2 = dx->GetDevice()->QueryInterface(IID_PPV_ARGS(&pDred));
 
-                    if (CheckAPIFailed(hr2, "ID3D12Device::QueryInterface"))
-                        return true;
+                    if (dx->UseDebugLayer()) {
+                        CComPtr<ID3D12DeviceRemovedExtendedData> pDred;
+                        auto hr2 = dx->GetDevice()->QueryInterface(IID_PPV_ARGS(&pDred));
 
-                    D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT dredAutoBreadcrumbsOutput;
-                    D3D12_DRED_PAGE_FAULT_OUTPUT dredPageFaultOutput;
+                        if (CheckAPIFailed(hr2, "ID3D12Device::QueryInterface"))
+                            return true;
 
-                    hr2 = pDred->GetAutoBreadcrumbsOutput(&dredAutoBreadcrumbsOutput);
+                        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT dredAutoBreadcrumbsOutput;
+                        D3D12_DRED_PAGE_FAULT_OUTPUT dredPageFaultOutput;
 
-                    if (CheckAPIFailed(hr2, "ID3D12DeviceRemovedExtendedData::GetAutoBreadcrumbsOutput"))
-                        return true;
+                        hr2 = pDred->GetAutoBreadcrumbsOutput(&dredAutoBreadcrumbsOutput);
 
-                    hr2 = pDred->GetPageFaultAllocationOutput(&dredPageFaultOutput);
+                        if (CheckAPIFailed(hr2, "ID3D12DeviceRemovedExtendedData::GetAutoBreadcrumbsOutput"))
+                            return true;
 
-                    if (CheckAPIFailed(hr2, "ID3D12DeviceRemovedExtendedData::GetPageFaultAllocationOutput"))
-                        return true;
+                        hr2 = pDred->GetPageFaultAllocationOutput(&dredPageFaultOutput);
 
-                    throw new std::exception("DRED parsing not yet implemented");
+                        if (CheckAPIFailed(hr2, "ID3D12DeviceRemovedExtendedData::GetPageFaultAllocationOutput"))
+                            return true;
+
+                        throw new std::exception("DRED parsing not yet implemented");
+                    } else {
+                        auto hr2 = dx->GetDevice()->GetDeviceRemovedReason();
+
+                        if (CheckAPIFailed(hr2, "ID3D11Device::GetDeviceRemovedReason"))
+                            return true;
+                    }
                 } else {
                     auto dx = static_cast<DX11*>(renderer.get());
 
@@ -100,8 +107,7 @@ namespace ninniku
             case DXGI_FORMAT_R32G32B32A32_TYPELESS:
             case DXGI_FORMAT_R32G32B32A32_FLOAT:
             case DXGI_FORMAT_R32G32B32A32_UINT:
-            case DXGI_FORMAT_R32G32B32A32_SINT:
-            {
+            case DXGI_FORMAT_R32G32B32A32_SINT: {
                 res = 16;
                 break;
             }
@@ -109,8 +115,7 @@ namespace ninniku
             case DXGI_FORMAT_R32G32B32_TYPELESS:
             case DXGI_FORMAT_R32G32B32_FLOAT:
             case DXGI_FORMAT_R32G32B32_UINT:
-            case DXGI_FORMAT_R32G32B32_SINT:
-            {
+            case DXGI_FORMAT_R32G32B32_SINT: {
                 res = 12;
                 break;
             }
@@ -131,8 +136,7 @@ namespace ninniku
             case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
             case DXGI_FORMAT_Y416:
             case DXGI_FORMAT_Y210:
-            case DXGI_FORMAT_Y216:
-            {
+            case DXGI_FORMAT_Y216: {
                 res = 8;
                 break;
             }
@@ -174,8 +178,7 @@ namespace ninniku
             case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
             case DXGI_FORMAT_AYUV:
             case DXGI_FORMAT_Y410:
-            case DXGI_FORMAT_YUY2:
-            {
+            case DXGI_FORMAT_YUY2: {
                 res = 4;
                 break;
             }
@@ -195,8 +198,7 @@ namespace ninniku
             case DXGI_FORMAT_B5G6R5_UNORM:
             case DXGI_FORMAT_B5G5R5A1_UNORM:
             case DXGI_FORMAT_A8P8:
-            case DXGI_FORMAT_B4G4R4A4_UNORM:
-            {
+            case DXGI_FORMAT_B4G4R4A4_UNORM: {
                 res = 2;
                 break;
             }
@@ -209,8 +211,7 @@ namespace ninniku
             case DXGI_FORMAT_A8_UNORM:
             case DXGI_FORMAT_AI44:
             case DXGI_FORMAT_IA44:
-            case DXGI_FORMAT_P8:
-            {
+            case DXGI_FORMAT_P8: {
                 res = 1;
                 break;
             }
@@ -238,8 +239,7 @@ namespace ninniku
             case DXGI_FORMAT_BC6H_SF16:
             case DXGI_FORMAT_BC7_TYPELESS:
             case DXGI_FORMAT_BC7_UNORM:
-            case DXGI_FORMAT_BC7_UNORM_SRGB:
-            {
+            case DXGI_FORMAT_BC7_UNORM_SRGB: {
                 res = 1;
                 break;
             }

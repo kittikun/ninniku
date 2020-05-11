@@ -76,7 +76,7 @@ namespace ninniku {
         return sRenderer;
     }
 
-    bool _Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, const ELogLevel logLevel)
+    bool _Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, uint32_t flags, const ELogLevel logLevel)
     {
         ninniku::Log::Initialize(logLevel);
 
@@ -109,7 +109,12 @@ namespace ninniku {
 
             case ERenderer::RENDERER_DX12:
             case ERenderer::RENDERER_WARP_DX12: {
-                sRenderer.reset(new DX12(renderer));
+                auto dx12 = new DX12(renderer);
+
+                if ((flags & EInitializationFlags::IF_DisableDX12DebugLayer) == 0)
+                    dx12->SetUseDebugLayer(true);
+
+                sRenderer.reset(dx12);
             }
             break;
 
@@ -118,7 +123,6 @@ namespace ninniku {
                 return false;
         }
 
-        // since CI is running test, we must use warp driver
         if (!sRenderer->Initialize(shaderPaths)) {
             LOGE << "RenderDevice::Initialize failed";
             return false;
@@ -136,20 +140,20 @@ namespace ninniku {
         return true;
     }
 
-    bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, bool enableCapture, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, uint32_t flags, const ELogLevel logLevel)
     {
-        sDoCapture = enableCapture;
+        sDoCapture = (flags & EInitializationFlags::IF_EnableCapture) != 0;
 
-        return _Initialize(renderer, shaderPaths, logLevel);
+        return _Initialize(renderer, shaderPaths, flags, logLevel);
     }
 
-    bool Initialize(const ERenderer renderer, bool enableCapture, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, uint32_t flags, const ELogLevel logLevel)
     {
         std::vector<std::string_view> shaderPaths;
 
-        sDoCapture = enableCapture;
+        sDoCapture = (flags & EInitializationFlags::IF_EnableCapture) != 0;
 
-        return _Initialize(renderer, shaderPaths, logLevel);
+        return _Initialize(renderer, shaderPaths, flags, logLevel);
     }
 
     void Terminate()

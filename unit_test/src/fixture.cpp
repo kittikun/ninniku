@@ -31,7 +31,7 @@ SetupFixtureDX11::SetupFixtureDX11()
     std::vector<std::string_view> shaderPaths = { "bin\\Release\\dx11" };
 #endif
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, false, ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL);
 }
 
 SetupFixtureDX11::~SetupFixtureDX11()
@@ -50,8 +50,12 @@ SetupFixtureDX12::SetupFixtureDX12()
 
     // There is a problem with the WARP renderer and DX12 so all tests are to be disabled for Appveyor now..
     auto renderer = ninniku::ERenderer::RENDERER_WARP_DX12;
+    auto flags = ninniku::EInitializationFlags::IF_None;
 
-    ninniku::Initialize(renderer, shaderPaths, false, ninniku::ELogLevel::LL_FULL);
+    if (IsAppVeyor())
+        flags = ninniku::EInitializationFlags::IF_DisableDX12DebugLayer;
+
+    ninniku::Initialize(renderer, shaderPaths, flags, ninniku::ELogLevel::LL_FULL);
 }
 
 SetupFixtureDX12::~SetupFixtureDX12()

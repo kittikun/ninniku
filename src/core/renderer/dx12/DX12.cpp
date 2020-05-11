@@ -484,44 +484,48 @@ namespace ninniku {
         if (!hModD3D12)
             return false;
 
-        static PFN_D3D12_GET_DEBUG_INTERFACE s_DynamicD3D12GetDebugInterface = nullptr;
+        HRESULT hr;
 
-        if (!s_DynamicD3D12GetDebugInterface) {
-            s_DynamicD3D12GetDebugInterface = reinterpret_cast<PFN_D3D12_GET_DEBUG_INTERFACE>(reinterpret_cast<void*>(GetProcAddress(hModD3D12, "D3D12GetDebugInterface")));
-            if (!s_DynamicD3D12GetDebugInterface)
+        if (_debugLayer) {
+            static PFN_D3D12_GET_DEBUG_INTERFACE s_DynamicD3D12GetDebugInterface = nullptr;
+
+            if (!s_DynamicD3D12GetDebugInterface) {
+                s_DynamicD3D12GetDebugInterface = reinterpret_cast<PFN_D3D12_GET_DEBUG_INTERFACE>(reinterpret_cast<void*>(GetProcAddress(hModD3D12, "D3D12GetDebugInterface")));
+                if (!s_DynamicD3D12GetDebugInterface)
+                    return false;
+            }
+
+            Microsoft::WRL::ComPtr<ID3D12Debug> debugInterface;
+
+            // if an exception if thrown here, you might need to install the graphics tools
+            // https://msdn.microsoft.com/en-us/library/mt125501.aspx
+            hr = s_DynamicD3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
+
+            if (CheckAPIFailed(hr, "D3D12GetDebugInterface"))
                 return false;
+
+            debugInterface->EnableDebugLayer();
+
+            // GPU based validation
+            Microsoft::WRL::ComPtr<ID3D12Debug1> debugInterface1;
+            hr = debugInterface->QueryInterface(IID_PPV_ARGS(&debugInterface1));
+
+            if (CheckAPIFailed(hr, "ID3D12Debug1::QueryInterface"))
+                return false;
+
+            debugInterface1->SetEnableGPUBasedValidation(true);
+
+            CComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
+
+            hr = D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings));
+
+            if (CheckAPIFailed(hr, "D3D12GetDebugInterface"))
+                return false;
+
+            // Turn on auto-breadcrumbs and page fault reporting.
+            pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
         }
-
-        Microsoft::WRL::ComPtr<ID3D12Debug> debugInterface;
-
-        // if an exception if thrown here, you might need to install the graphics tools
-        // https://msdn.microsoft.com/en-us/library/mt125501.aspx
-        auto hr = s_DynamicD3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
-
-        if (CheckAPIFailed(hr, "D3D12GetDebugInterface"))
-            return false;
-
-        debugInterface->EnableDebugLayer();
-
-        // GPU based validation
-        Microsoft::WRL::ComPtr<ID3D12Debug1> debugInterface1;
-        hr = debugInterface->QueryInterface(IID_PPV_ARGS(&debugInterface1));
-
-        if (CheckAPIFailed(hr, "ID3D12Debug1::QueryInterface"))
-            return false;
-
-        debugInterface1->SetEnableGPUBasedValidation(true);
-
-        CComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
-
-        hr = D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings));
-
-        if (CheckAPIFailed(hr, "D3D12GetDebugInterface"))
-            return false;
-
-        // Turn on auto-breadcrumbs and page fault reporting.
-        pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-        pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
 
         static PFN_D3D12_CREATE_DEVICE s_DynamicD3D12CreateDevice = nullptr;
 

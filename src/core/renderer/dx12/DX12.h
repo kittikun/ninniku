@@ -56,7 +56,9 @@ namespace ninniku {
         // Not from RenderDevice
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
-        ID3D12Device* GetDevice() const { return _device.Get(); }
+        inline ID3D12Device* GetDevice() const { return _device.Get(); }
+        inline void SetUseDebugLayer(bool value) { _debugLayer = value; }
+        inline bool UseDebugLayer() { return _debugLayer; }
 
     private:
         bool CreateCommandContexts();
@@ -72,6 +74,7 @@ namespace ninniku {
     private:
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
         ERenderer _type;
+        bool _debugLayer = false;
 
         DX12Device _device;
 

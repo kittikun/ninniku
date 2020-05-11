@@ -27,7 +27,12 @@
 #include <vector>
 
 namespace ninniku {
-    class DX11;
+    enum  EInitializationFlags
+    {
+        IF_None = 0,
+        IF_EnableCapture = 1 << 0,
+        IF_DisableDX12DebugLayer = 1 << 1
+    };
 
     enum class ELogLevel : uint8_t
     {
@@ -50,13 +55,13 @@ namespace ninniku {
     /// Initialize ninniku framework
     /// shaderPaths must point to compiled .cso folders
     /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, bool enableCapture = false, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Initialize ninniku framework
     /// alternative version where each shader blob must be manually loaded
     /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, bool enableCapture = false, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    NINNIKU_API bool Initialize(const ERenderer renderer, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Cleanup resources used by ninniku
