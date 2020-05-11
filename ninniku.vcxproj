@@ -126,6 +126,7 @@
     <PostBuildEvent>
       <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
 xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
+xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxil.dll $(OutDir)
 </Command>
       <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
@@ -192,7 +193,8 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)</Command>
+      <Command>xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
+xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxil.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
