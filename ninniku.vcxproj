@@ -101,7 +101,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;_DO_CAPTURE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnablePREfast>true</EnablePREfast>

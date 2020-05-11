@@ -27,26 +27,18 @@
 #include "utils/log.h"
 #include "utils/misc.h"
 
-#if defined(_DO_CAPTURE)
+// for captures
+#pragma comment(lib, "dxgi.lib")
 #include <renderdoc/renderdoc_app.h>
 #include <DXProgrammableCapture.h>
-#endif
-
-#ifdef _DEBUG
-#pragma comment(lib, "dxgi.lib")
-
 #include <dxgi1_4.h>
 #include <dxgidebug.h>
-#endif
 
 namespace ninniku {
-#if defined(_DO_CAPTURE)
-    RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
-#endif
-
+    static RENDERDOC_API_1_4_1* gRenderDocApi = nullptr;
     static RenderDeviceHandle sRenderer;
+    static bool sDoCapture = false;
 
-#if defined(_DO_CAPTURE)
     void LoadRenderDoc()
     {
         LOG << "Loading RenderDoc..";
@@ -78,7 +70,6 @@ namespace ninniku {
             ga->BeginCapture();
         }
     }
-#endif
 
     RenderDeviceHandle& GetRenderer()
     {
@@ -91,23 +82,23 @@ namespace ninniku {
 
         LOG << "ninniku HLSL compute shader framework";
 
-#if defined(_DO_CAPTURE)
-        // renderdoc doesn't support DXIL at the moment
-        // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
-        if ((renderer & ERenderer::RENDERER_DX12) == 0) {
-            if ((renderer & ERenderer::RENDERER_WARP) == 0) {
-                LoadRenderDoc();
+        if (sDoCapture) {
+            // renderdoc doesn't support DXIL at the moment
+            // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
+            if ((renderer & ERenderer::RENDERER_DX11) != 0) {
+                if ((renderer & ERenderer::RENDERER_WARP) == 0) {
+                    LoadRenderDoc();
+                } else {
+                    LOGW << "Disabling Renderdoc for WARP devices";
+                }
             } else {
-                LOGW << "Disabling Renderdoc for WARP devices";
-            }
-        } else {
-            if ((renderer & ERenderer::RENDERER_WARP) == 0) {
-                LoadPIX();
-            } else {
-                LOGW << "Disabling PIX for WARP devices";
+                if ((renderer & ERenderer::RENDERER_WARP) == 0) {
+                    LoadPIX();
+                } else {
+                    LOGW << "Disabling PIX for WARP devices";
+                }
             }
         }
-#endif
 
         switch (renderer) {
             case ERenderer::RENDERER_DX11:
@@ -133,24 +124,30 @@ namespace ninniku {
             return false;
         }
 
-#if defined(_DO_CAPTURE)
-        if (gRenderDocApi != nullptr) {
-            gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
-            gRenderDocApi->StartFrameCapture(nullptr, nullptr);
+        if (sDoCapture) {
+            // renderdoc doesn't support DXIL at the moment
+            // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
+            if (((renderer & ERenderer::RENDERER_DX11) != 0) && ((renderer & ERenderer::RENDERER_WARP) == 0) && (gRenderDocApi != nullptr)) {
+                gRenderDocApi->SetCaptureFilePathTemplate("ninniku");
+                gRenderDocApi->StartFrameCapture(nullptr, nullptr);
+            }
         }
-#endif
 
         return true;
     }
 
-    bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, bool enableCapture, const ELogLevel logLevel)
     {
+        sDoCapture = enableCapture;
+
         return _Initialize(renderer, shaderPaths, logLevel);
     }
 
-    bool Initialize(const ERenderer renderer, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, bool enableCapture, const ELogLevel logLevel)
     {
         std::vector<std::string_view> shaderPaths;
+
+        sDoCapture = enableCapture;
 
         return _Initialize(renderer, shaderPaths, logLevel);
     }
@@ -159,20 +156,20 @@ namespace ninniku {
     {
         LOG << "Shutting down..";
 
-#if defined(_DO_CAPTURE)
-        if ((sRenderer->GetType() & ERenderer::RENDERER_DX11) != 0) {
-            if (gRenderDocApi != nullptr) {
-                gRenderDocApi->EndFrameCapture(nullptr, nullptr);
-                gRenderDocApi->Shutdown();
-                gRenderDocApi = nullptr;
-            }
-        } else if ((sRenderer->GetType() & ERenderer::RENDERER_WARP) == 0) {
-            Microsoft::WRL::ComPtr<IDXGraphicsAnalysis> ga;
-            if (!CheckAPIFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&ga)), "DXGIGetDebugInterface1")) {
-                ga->EndCapture();
+        if (sDoCapture) {
+            if ((sRenderer->GetType() & ERenderer::RENDERER_DX11) != 0) {
+                if (gRenderDocApi != nullptr) {
+                    gRenderDocApi->EndFrameCapture(nullptr, nullptr);
+                    gRenderDocApi->Shutdown();
+                    gRenderDocApi = nullptr;
+                }
+            } else if ((sRenderer->GetType() & ERenderer::RENDERER_WARP) == 0) {
+                Microsoft::WRL::ComPtr<IDXGraphicsAnalysis> ga;
+                if (!CheckAPIFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&ga)), "DXGIGetDebugInterface1")) {
+                    ga->EndCapture();
+                }
             }
         }
-#endif
 
         sRenderer->Finalize();
         sRenderer.reset();

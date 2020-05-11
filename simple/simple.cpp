@@ -64,6 +64,56 @@ ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninnik
     return std::move(dst);
 }
 
+ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)
+{
+    auto param = ninniku::TextureParam::Create();
+    param->format = ninniku::TF_R32G32B32A32_FLOAT;
+    param->width = param->height = 512;
+    param->depth = 1;
+    param->numMips = ninniku::CountMips(std::min(param->width, param->height));
+    param->arraySize = ninniku::CUBEMAP_NUM_FACES;
+    param->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
+
+    auto marker = dx->CreateDebugMarker("ColorMips");
+    auto resTex = dx->CreateTexture(param);
+
+    for (uint32_t i = 0; i < param->numMips; ++i) {
+        // dispatch
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "colorMips";
+        cmd->cbufferStr = "CBGlobal";
+
+        static_assert((COLORMIPS_NUMTHREAD_X == COLORMIPS_NUMTHREAD_Y) && (COLORMIPS_NUMTHREAD_Z == 1));
+        cmd->dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
+        cmd->dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
+        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORMIPS_NUMTHREAD_Z;
+
+        cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
+
+        // constant buffer
+        CBGlobal cb = {};
+
+        cb.targetMip = i;
+        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
+
+        dx->Dispatch(cmd);
+    }
+
+    return resTex;
+}
+
+void shader_colorMips()
+{
+    auto& dx = ninniku::GetRenderer();
+    auto resTex = GenerateColoredMips(dx);
+
+    auto image = std::make_unique<ninniku::ddsImage>();
+
+    image->InitializeFromTextureObject(dx, resTex);
+
+    image->SaveImage("toto.dds");
+}
+
 void shader_resize()
 {
     auto image = std::make_unique<ninniku::cmftImage>();
@@ -196,9 +246,9 @@ int main()
     // corresponding test: shader_genMips
     std::vector<std::string_view> shaderPaths = { "..\\simple\\shaders" };
 
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::ELogLevel::LL_FULL);
+    ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, false, ninniku::ELogLevel::LL_FULL);
 
-    shader_resize();
+    shader_colorMips();
 
     ninniku::Terminate();
 }

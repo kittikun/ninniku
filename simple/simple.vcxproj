@@ -117,7 +117,7 @@
       <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <CustomBuild>
-      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
     </CustomBuild>
     <CustomBuild>
       <Outputs>$(MSBuildProjectDirectory)\shaders\%(Filename).dxco</Outputs>
@@ -160,7 +160,7 @@
       <ObjectFileOutput>$(ProjectDir)shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <CustomBuild>
-      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_4 -Od -Zi -Qembed_debug -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
+      <Command>$(SolutionDir)external\dxc\bin\dxc.exe -T cs_6_2 -Od -Zi -Qembed_debug -enable-16bit-types -DHLSL -rootsig-define RS %(FullPath) -Fo $(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Command>
     </CustomBuild>
     <CustomBuild>
       <Outputs>$(MSBuildProjectDirectory)\shaders\%(Filename).dxco </Outputs>
