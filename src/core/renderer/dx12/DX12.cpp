@@ -380,8 +380,7 @@ namespace ninniku {
             desc.CS = foundShader->second;
             desc.pRootSignature = foundRS->second.Get();
 
-            if ((_type & ERenderer::RENDERER_WARP) != 0)
-                desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
+            desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 
             auto hr = _device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&context->_pipelineState));
 
