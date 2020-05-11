@@ -382,6 +382,8 @@ namespace ninniku {
 
             desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 
+            LOGDF(boost::format("Creating pipeling state with byte code: Pointer=%1%, Size=%2%") % desc.CS.pShaderBytecode % desc.CS.BytecodeLength);
+
             auto hr = _device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&context->_pipelineState));
 
             if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
