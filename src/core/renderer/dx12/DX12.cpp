@@ -46,6 +46,35 @@
 #include <boost/crc.hpp>
 
 namespace ninniku {
+    // https://github.com/microsoft/DirectXShaderCompiler/blob/master/tools/clang/unittests/HLSL/ExecutionTest.cpp
+    // DX12 experimental features is required to enable DXC to work with CI
+
+    // A more recent Windows SDK than currently required is needed for these.
+    typedef HRESULT(WINAPI* D3D12EnableExperimentalFeaturesFn)(
+        UINT                                    NumFeatures,
+        __in_ecount(NumFeatures) const IID*     pIIDs,
+        __in_ecount_opt(NumFeatures) void*      pConfigurationStructs,
+        __in_ecount_opt(NumFeatures) UINT*      pConfigurationStructSizes);
+
+    static const GUID D3D12ExperimentalShaderModelsID = { /* 76f5573e-f13a-40f5-b297-81ce9e18933f */
+        0x76f5573e,
+        0xf13a,
+        0x40f5,
+        { 0xb2, 0x97, 0x81, 0xce, 0x9e, 0x18, 0x93, 0x3f }
+    };
+
+    static HRESULT EnableExperimentalShaderModels(HMODULE dll)
+    {
+        D3D12EnableExperimentalFeaturesFn pD3D12EnableExperimentalFeatures = (D3D12EnableExperimentalFeaturesFn)GetProcAddress(dll, "D3D12EnableExperimentalFeatures");
+        if (pD3D12EnableExperimentalFeatures == nullptr) {
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        HRESULT hr = pD3D12EnableExperimentalFeatures(1, &D3D12ExperimentalShaderModelsID, nullptr, nullptr);
+
+        return hr;
+    }
+
     DX12::DX12(ERenderer type)
         : _type{ type }
     {
@@ -490,6 +519,10 @@ namespace ninniku {
         auto hModD3D12 = LoadLibrary(L"d3d12.dll");
 
         if (!hModD3D12)
+            return false;
+
+        // required to enable CI to use DXC
+        if (CheckAPIFailed(EnableExperimentalShaderModels(hModD3D12), "EnableExperimentalShaderModels"))
             return false;
 
         HRESULT hr;
