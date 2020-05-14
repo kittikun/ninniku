@@ -14,26 +14,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\color20.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\cbuffers.h">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="shaders\colorMips.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="shaders\downsample.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="shaders\fillBuffer.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="shaders\resize.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </CustomBuild>
-  </ItemGroup>
 </Project>

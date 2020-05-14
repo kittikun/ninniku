@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../cbuffers.h"
-#include "../color20.hlsl"
+#include "cbuffers.h"
+#include "color20.hlsl"
 
 RWTexture2DArray<float4> dstTex;
 

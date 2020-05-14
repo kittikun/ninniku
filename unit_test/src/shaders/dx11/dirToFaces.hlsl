@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../cbuffers.h"
+#include "cbuffers.h"
 #include "../utility.hlsl"
 
 TextureCube srcTex;

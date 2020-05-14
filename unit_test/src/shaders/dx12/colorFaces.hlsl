@@ -18,15 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../cbuffers.h"
-#include "../color20.hlsl"
+#include "cbuffers.h"
 
 #define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
                        "DENY_HULL_SHADER_ROOT_ACCESS | " \
                        "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
                        "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
                        "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
-            "DescriptorTable( UAV(u0))"
+            "DescriptorTable(CBV(b0)," \
+                            "UAV(u0))"
 
 RWTexture2DArray<float4> dstTex;
 

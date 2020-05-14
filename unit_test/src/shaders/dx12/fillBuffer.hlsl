@@ -28,7 +28,7 @@
 RWStructuredBuffer<uint> dstBuffer;
 
 [numthreads(16, 1, 1)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
+void main(uint3 DTI : SV_DispatchThreadID)
 {
     dstBuffer[DTI.x] = DTI.x;
 }

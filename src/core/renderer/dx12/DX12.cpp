@@ -46,35 +46,6 @@
 #include <boost/crc.hpp>
 
 namespace ninniku {
-    // https://github.com/microsoft/DirectXShaderCompiler/blob/master/tools/clang/unittests/HLSL/ExecutionTest.cpp
-    // DX12 experimental features is required to enable DXC to work with CI
-
-    // A more recent Windows SDK than currently required is needed for these.
-    typedef HRESULT(WINAPI* D3D12EnableExperimentalFeaturesFn)(
-        UINT                                    NumFeatures,
-        __in_ecount(NumFeatures) const IID*     pIIDs,
-        __in_ecount_opt(NumFeatures) void*      pConfigurationStructs,
-        __in_ecount_opt(NumFeatures) UINT*      pConfigurationStructSizes);
-
-    static const GUID D3D12ExperimentalShaderModelsID = { /* 76f5573e-f13a-40f5-b297-81ce9e18933f */
-        0x76f5573e,
-        0xf13a,
-        0x40f5,
-        { 0xb2, 0x97, 0x81, 0xce, 0x9e, 0x18, 0x93, 0x3f }
-    };
-
-    static HRESULT EnableExperimentalShaderModels(HMODULE dll)
-    {
-        D3D12EnableExperimentalFeaturesFn pD3D12EnableExperimentalFeatures = (D3D12EnableExperimentalFeaturesFn)GetProcAddress(dll, "D3D12EnableExperimentalFeatures");
-        if (pD3D12EnableExperimentalFeatures == nullptr) {
-            return HRESULT_FROM_WIN32(GetLastError());
-        }
-
-        HRESULT hr = pD3D12EnableExperimentalFeatures(1, &D3D12ExperimentalShaderModelsID, nullptr, nullptr);
-
-        return hr;
-    }
-
     DX12::DX12(ERenderer type)
         : _type{ type }
     {
@@ -409,7 +380,8 @@ namespace ninniku {
             desc.CS = foundShader->second;
             desc.pRootSignature = foundRS->second.Get();
 
-            desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
+            if (_type == ERenderer::RENDERER_WARP_DX12)
+                desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 
             LOGDF(boost::format("Creating pipeling state with byte code: Pointer=%1%, Size=%2%") % desc.CS.pShaderBytecode % desc.CS.BytecodeLength);
 
@@ -519,10 +491,6 @@ namespace ninniku {
         auto hModD3D12 = LoadLibrary(L"d3d12.dll");
 
         if (!hModD3D12)
-            return false;
-
-        // required to enable CI to use DXC
-        if (CheckAPIFailed(EnableExperimentalShaderModels(hModD3D12), "EnableExperimentalShaderModels"))
             return false;
 
         HRESULT hr;
@@ -887,6 +855,42 @@ namespace ninniku {
         }
 
         auto& bindings = foundBindings->second;
+
+        // resources view are bound in the descriptor heap but we still need to transition their states before we create the views
+        for (auto& kvp : cmd->uavBindings) {
+            auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
+            auto found = bindings.find(kvp.first);
+
+            if (found == bindings.end()) {
+                auto fmt = boost::format("Dispatch error: could not find resource bindings for \"%1%\" in \"%2%\"") % kvp.first % cmd->shader;
+                LOGE << boost::str(fmt);
+                return false;
+            }
+
+            if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
+                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
+                auto locked = weak.lock();
+
+                std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+                    //CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
+                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, dxUAV->_index)
+                };
+
+                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+            } else {
+                // DX12TextureInternal
+                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
+                auto locked = weak.lock();
+
+                std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+                    //CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
+                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, dxUAV->_index)
+                };
+
+                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+            }
+        }
+
         auto hash = dxCmd->GetHashBindings();
 
         // look for the subcontext
@@ -939,41 +943,6 @@ namespace ninniku {
             context->_cmdList->SetComputeRootDescriptorTable(i, descriptorHeaps[i]->GetGPUDescriptorHandleForHeapStart());
         }
 
-        // resources view are bound in the descriptor heap but we still need to transition their states
-        for (auto& kvp : cmd->uavBindings) {
-            auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
-            auto found = bindings.find(kvp.first);
-
-            if (found == bindings.end()) {
-                auto fmt = boost::format("Dispatch error: could not find resource bindings for \"%1%\" in \"%2%\"") % kvp.first % cmd->shader;
-                LOGE << boost::str(fmt);
-                return false;
-            }
-
-            if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
-
-                std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
-                    //CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
-                };
-
-                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
-            } else {
-                // DX12TextureInternal
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
-
-                std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
-                    //CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
-                };
-
-                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
-            }
-        }
-
         context->_cmdList->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
 
         // revert transition back
@@ -988,7 +957,7 @@ namespace ninniku {
 
                 std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
                     CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, dxUAV->_index)
                 };
 
                 context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
@@ -999,7 +968,7 @@ namespace ninniku {
 
                 std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
                     CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, dxUAV->_index)
                 };
 
                 context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());

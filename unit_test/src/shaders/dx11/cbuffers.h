@@ -18,29 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "cbuffers.h"
+#ifndef CBUFFER_H
+#define CBUFFER_H
 
-#define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
-                       "DENY_HULL_SHADER_ROOT_ACCESS | " \
-                       "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
-                       "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
-                       "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
-            "DescriptorTable( SRV(t0), " \
-                             "UAV(u0))," \
-            "DescriptorTable( Sampler(s0))"
+#include "../dispatch.h"
 
-Texture2DArray<float4> srcTex;
-RWTexture2DArray<float4> dstTex;
-SamplerState ssLinear;
+CBUFFER CBGlobal{
+    int targetMip;
+};
 
-[numthreads(RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_Z)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
-{
-    float w, h, dummy2;
-
-    dstTex.GetDimensions(w, h, dummy2);
-
-    float2 uv = rcp(float2(w, h)) * (float2(DTI.xy) + (float2)0.5);
-
-    dstTex[DTI] = srcTex.SampleLevel(ssLinear, float3(uv, DTI.z), 0);
-}
+#endif // CBUFFER_H

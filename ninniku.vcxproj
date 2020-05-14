@@ -125,9 +125,8 @@
     </FxCompile>
     <PostBuildEvent>
       <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
-xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
-xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxil.dll $(OutDir)
-</Command>
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxcompiler.dll" $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)</Command>
       <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -193,8 +192,10 @@ xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxil.dll $(OutDir)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxcompiler.dll $(OutDir)
-xcopy /d /y /s $(ProjectDir)external\dxc\bin\dxil.dll $(OutDir)</Command>
+      <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxcompiler.dll" $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)</Command>
+      <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

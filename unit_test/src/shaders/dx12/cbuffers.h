@@ -18,26 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "color20.hlsl"
-#include "cbuffers.h"
+#ifndef CBUFFER12_H
+#define CBUFFER12_H
 
-#define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
-                       "DENY_HULL_SHADER_ROOT_ACCESS | " \
-                       "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
-                       "DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
-                       "DENY_PIXEL_SHADER_ROOT_ACCESS), " \
-                       "DescriptorTable(CBV(b0)," \
-                                       "UAV(u0))"
+#include "../dispatch.h"
 
-RWTexture2DArray<float4> dstTex;
+CBUFFER CBGlobalDX12{
+    int targetMip;
+    float3 color20[20];
+};
 
-[numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
-{
-    uint16_t w, h, elems;
-
-    dstTex.GetDimensions(w, h, elems);
-
-    if (all(DTI.xy < uint16_t2(w, h)))
-        dstTex[DTI] = float4(color20[targetMip], 1);
-}
+#endif // CBUFFER12_H

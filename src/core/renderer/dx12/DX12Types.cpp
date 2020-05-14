@@ -177,15 +177,14 @@ namespace ninniku {
 
                     case D3D12_SRV_DIMENSION_TEXTURE2DARRAY: {
                         srvDesc.Texture2DArray = {};
+                        srvDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
 
                         if (dxSRV->_index != std::numeric_limits<uint32_t>::max()) {
                             // one slice for a mip level
-                            srvDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
                             srvDesc.Texture2DArray.MostDetailedMip = dxSRV->_index;
                             srvDesc.Texture2DArray.MipLevels = 1;
                         } else {
                             // everything mips included
-                            srvDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
                             srvDesc.Texture2DArray.MostDetailedMip = 0;
                             srvDesc.Texture2DArray.MipLevels = locked->_desc->numMips;
                         }

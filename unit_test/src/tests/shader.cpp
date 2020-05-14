@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../shaders/cbuffers.h"
+#include "../shaders/dx11/cbuffers.h"
+#include "../shaders/dx12/cbuffers.h"
 #include "../check.h"
 #include "../common.h"
 #include "../fixture.h"
