@@ -29,7 +29,7 @@
 #include "../renderer/dx11/DX11.h"
 #include "../renderer/dx12/DX12.h"
 
-#include <dxc/Support/d3dx12.h>
+#include <d3dx12/d3dx12.h>
 #include <comdef.h>
 
 namespace ninniku {
