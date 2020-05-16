@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../shaders/dx11/cbuffers.h"
-#include "../shaders/dx12/cbuffers.h"
+#include "../shaders/cbuffers.h"
+#include "../shaders/dispatch.h"
 #include "../check.h"
 #include "../common.h"
 #include "../fixture.h"
@@ -192,7 +192,9 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
         auto cmd = dx->CreateCommand();
         cmd->shader = "fillBuffer";
 
-        cmd->dispatch[0] = cmd->dispatch[1] = cmd->dispatch[2] = 1;
+        cmd->dispatch[0] = FILLBUFFER_NUMTHREAD_X;
+        cmd->dispatch[1] = FILLBUFFER_NUMTHREAD_Y;
+        cmd->dispatch[2] = FILLBUFFER_NUMTHREAD_Z;
 
         cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
 

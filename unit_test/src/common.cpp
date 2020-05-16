@@ -20,36 +20,11 @@
 
 #include "common.h"
 
-#include "shaders/dx11/cbuffers.h"
-#include "shaders/dx12/cbuffers.h"
+#include "shaders/dispatch.h"
+#include "shaders/cbuffers.h"
 
 #include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/utils.h>
-
-// duplicate from color20.hlsl but there is a bug with DXC from 10.0.18362.0 and static const arrays
-static constexpr float3 color20[] = {
-    float3(0.f, 1.f, 0.f),
-    float3(0.f, 0.f, 1.f),
-    float3(1.f, 0.f, 0.f),
-    float3(0.003f, 1.f, 0.996f),
-    float3(1.f, 0.650f, 0.996f),
-    float3(1.f, 0.858f, 0.4f),
-    float3(0.f, 0.392f, 0.003f),
-    float3(0.003f, 0.f, 0.403f),
-    float3(0.584f, 0.f, 0.227f),
-    float3(0.f, 0.490f, 0.709f),
-    float3(1.f, 0.f, 0.964f),
-    float3(1.f, 0.933f, 0.909f),
-    float3(0.466f, 0.301f, 0.f),
-    float3(0.564f, 0.984f, 0.572f),
-    float3(0.f, 0.462f, 1.f),
-    float3(0.835f, 1.f, 0.f),
-    float3(1.f, 0.576f, 0.494f),
-    float3(0.415f, 0.509f, 0.423f),
-    float3(1.f, 0.007f, 0.615f),
-    float3(0.996f, 0.537f, 0.f),
-    float3(0.478f, 0.278f, 0.509f)
-};
 
 ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)
 {
@@ -78,21 +53,11 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)
         cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
 
         // constant buffer
-        if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX12) != 0) {
-            // duplicate because of the DXC bug from 10.0.18362.0 and static const arrays
-            CBGlobalDX12 cb = {};
+        CBGlobal cb = {};
 
-            cb.targetMip = i;
-            memcpy_s(cb.color20, sizeof(float3) * 20, color20, sizeof(float3) * 20);
+        cb.targetMip = i;
 
-            dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobalDX12));
-        } else {
-            CBGlobal cb = {};
-
-            cb.targetMip = i;
-
-            dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
-        }
+        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
 
         dx->Dispatch(cmd);
     }
@@ -127,31 +92,11 @@ ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle&
         cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
 
         // constant buffer
-        if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX12) != 0) {
-            // duplicate because of the DXC bug from 10.0.18362.0 and static const arrays
-            CBGlobalDX12 cb = {};
+        CBGlobal cb = {};
 
-            cb.targetMip = i;
-            memcpy_s(cb.color20, sizeof(float3) * 20, color20, sizeof(float3) * 20);
+        cb.targetMip = i;
 
-            dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobalDX12));
-        } else {
-            if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX12) != 0) {
-                // duplicate because of the DXC bug from 10.0.18362.0 and static const arrays
-                CBGlobalDX12 cb = {};
-
-                cb.targetMip = i;
-                memcpy_s(cb.color20, sizeof(float3) * 20, color20, sizeof(float3) * 20);
-
-                dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobalDX12));
-            } else {
-                CBGlobal cb = {};
-
-                cb.targetMip = i;
-
-                dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
-            }
-        }
+        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
 
         dx->Dispatch(cmd);
     }

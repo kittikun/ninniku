@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "cbuffers.h"
+#include "../dispatch.h"
+#include "../cbuffers.h"
 
 // Use point for since we're going to average samples anyway
 SamplerState ssPoint;

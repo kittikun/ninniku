@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../dispatch.h"
 #include "../utility.hlsl"
 
 #define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \

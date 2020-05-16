@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../dispatch.h"
+
 #define RS  "RootFlags( DENY_VERTEX_SHADER_ROOT_ACCESS | " \
                        "DENY_HULL_SHADER_ROOT_ACCESS | " \
                        "DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
@@ -27,7 +29,7 @@
 
 RWStructuredBuffer<uint> dstBuffer;
 
-[numthreads(16, 1, 1)]
+[numthreads(FILLBUFFER_NUMTHREAD_X, FILLBUFFER_NUMTHREAD_Y, FILLBUFFER_NUMTHREAD_Z)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
     dstBuffer[DTI.x] = DTI.x;

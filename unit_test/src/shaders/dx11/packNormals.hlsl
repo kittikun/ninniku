@@ -18,12 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../dispatch.h"
 #include "../utility.hlsl"
 
 Texture2D<float3> srcTex;
 RWTexture2D<float2> dstTex;
 
-[numthreads(32, 32, 1)]
+[numthreads(PACKNORMALS_NUMTHREAD_X, PACKNORMALS_NUMTHREAD_Y, PACKNORMALS_NUMTHREAD_Z)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
     dstTex[DTI.xy] = packNormal(srcTex[DTI.xy]);

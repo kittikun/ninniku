@@ -18,14 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CBUFFER12_H
-#define CBUFFER12_H
+#ifndef CBUFFER_H
+#define CBUFFER_H
 
-#include "../dispatch.h"
+#ifdef HLSL
+#define CBUFFER cbuffer
+#else
+#include <DirectXMath.h>
 
-CBUFFER CBGlobalDX12{
+#define CBUFFER struct alignas(16)
+#define float4x4 DirectX::XMMATRIX
+#define float3 DirectX::XMFLOAT3
+#endif
+
+CBUFFER CBGlobal{
     int targetMip;
-    float3 color20[20];
 };
 
-#endif // CBUFFER12_H
+#endif // CBUFFER_H

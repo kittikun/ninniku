@@ -18,9 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "../dispatch.h"
+
 RWStructuredBuffer<uint> dstBuffer;
 
-[numthreads(16, 1, 1)]
+[numthreads(FILLBUFFER_NUMTHREAD_X, FILLBUFFER_NUMTHREAD_Y, FILLBUFFER_NUMTHREAD_Z)]
 void main(uint3 DTI : SV_DispatchThreadID)
 {
     dstBuffer[DTI.x] = DTI.x;

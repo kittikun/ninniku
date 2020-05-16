@@ -21,16 +21,6 @@
 #ifndef DISPATCH_H
 #define DISPATCH_H
 
-#ifdef HLSL
-#define CBUFFER cbuffer
-#else
-#include <DirectXMath.h>
-
-#define CBUFFER struct alignas(16)
-#define float4x4 DirectX::XMMATRIX
-#define float3 DirectX::XMFLOAT3
-#endif
-
 #define COLORFACES_NUMTHREAD_X 16
 #define COLORFACES_NUMTHREAD_Y COLORFACES_NUMTHREAD_X
 #define COLORFACES_NUMTHREAD_Z 1
@@ -58,5 +48,9 @@
 #define RESIZE_NUMTHREAD_X 32
 #define RESIZE_NUMTHREAD_Y RESIZE_NUMTHREAD_X
 #define RESIZE_NUMTHREAD_Z 1
+
+#define FILLBUFFER_NUMTHREAD_X 16
+#define FILLBUFFER_NUMTHREAD_Y 1
+#define FILLBUFFER_NUMTHREAD_Z 1
 
 #endif // DISPATCH_H
