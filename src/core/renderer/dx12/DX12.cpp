@@ -458,7 +458,7 @@ namespace ninniku {
                       &heapProperties,
                       D3D12_HEAP_FLAG_NONE,
                       &desc,
-                      D3D12_RESOURCE_STATE_COPY_DEST,
+                      D3D12_RESOURCE_STATE_COMMON,
                       nullptr,
                       IID_PPV_ARGS(cbuffer._resource.GetAddressOf()));
 
@@ -488,12 +488,15 @@ namespace ninniku {
         subdata.RowPitch = cbuffer._size;
         subdata.SlicePitch = subdata.RowPitch;
 
+        auto transition = CD3DX12_RESOURCE_BARRIER::Transition(cbuffer._resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+
+        _copyCmdList->ResourceBarrier(1, &transition);
         UpdateSubresources(_copyCmdList.Get(), cbuffer._resource.Get(), cbuffer._upload.Get(), 0, 0, 1, &subdata);
         _copyCmdList->Close();
         ExecuteCommand(_copyCommandQueue, _copyCmdList);
         _copyCmdList->Reset(_copyCommandAllocator.Get(), nullptr);
 
-        auto transition = CD3DX12_RESOURCE_BARRIER::Transition(cbuffer._resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        transition = CD3DX12_RESOURCE_BARRIER::Transition(cbuffer._resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
         _transitionCmdList->ResourceBarrier(1, &transition);
         _transitionCmdList->Close();
@@ -1042,7 +1045,7 @@ namespace ninniku {
         _tracker.ReleaseObjects();
     }
 
-    bool DX12::Initialize(const std::vector<std::string_view>& shaderPaths)
+    bool DX12::Initialize()
     {
         auto adapter = 0;
 
@@ -1142,19 +1145,53 @@ namespace ninniku {
 
         _copyCmdList->SetName(L"Transition Command List");
 
-        // parse shaders
-        if ((shaderPaths.size() > 0)) {
-            for (auto& path : shaderPaths) {
-                if (!LoadShaders(path)) {
-                    auto fmt = boost::format("Failed to load shaders in: %1%") % path;
-                    LOGE << boost::str(fmt);
-                    return false;
-                }
-            }
-        }
+        //// parse shaders
+        //if ((shaderPaths.size() > 0)) {
+        //    for (auto& path : shaderPaths) {
+        //        if (!LoadShaders(path)) {
+        //            auto fmt = boost::format("Failed to load shaders in: %1%") % path;
+        //            LOGE << boost::str(fmt);
+        //            return false;
+        //        }
+        //    }
+        //}
 
         if (!CreateSamplers())
             return false;
+
+        return true;
+    }
+
+    bool DX12::LoadShader(const std::filesystem::path& path)
+    {
+        if (std::filesystem::is_directory(path)) {
+            return LoadShaders(path);
+        } else if (path.extension() == ShaderExt) {
+            auto fmt = boost::format("Loading %1%..") % path;
+
+            LOG_INDENT_START << boost::str(fmt);
+
+            IDxcLibrary* pLibrary = nullptr;
+
+            auto hr = DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary);
+
+            if (CheckAPIFailed(hr, "DxcCreateInstance for CLSID_DxcLibrary"))
+                return false;
+
+            Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
+
+            hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path.string()).c_str(), nullptr, &pBlob);
+
+            if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile"))
+                return false;
+
+            if (!LoadShader(path, pBlob.Get())) {
+                LOG_INDENT_END;
+                return false;
+            }
+
+            LOG_INDENT_END;
+        }
 
         return true;
     }
@@ -1164,8 +1201,9 @@ namespace ninniku {
         throw std::exception("not implemented");
     }
 
-    bool DX12::LoadShader(const std::string_view& name, IDxcBlobEncoding* pBlob)
+    bool DX12::LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob)
     {
+        auto name = path.stem().string();
         Microsoft::WRL::ComPtr<IDxcContainerReflection> pContainerReflection;
 
         auto hr = DxcCreateInstance(CLSID_DxcContainerReflection, __uuidof(IDxcContainerReflection), (void**)&pContainerReflection);
@@ -1228,6 +1266,7 @@ namespace ninniku {
         }
 
         // store shader
+        LOGDF(boost::format("Adding CS: \"%1%\" to library") % name);
         _shaders.emplace(name, CD3DX12_SHADER_BYTECODE(pBlob->GetBufferPointer(), pBlob->GetBufferSize()));
 
         // Create command contexts for all the shaders we just found
@@ -1240,7 +1279,7 @@ namespace ninniku {
     /// <summary>
     /// Load all shaders in /data
     /// </summary>
-    bool DX12::LoadShaders(const std::string_view& shaderPath)
+    bool DX12::LoadShaders(const std::filesystem::path& shaderPath)
     {
         // check if directory is valid
         if (!std::filesystem::is_directory(shaderPath)) {
@@ -1250,13 +1289,11 @@ namespace ninniku {
             return false;
         }
 
-        std::string_view ext{ ".dxco" };
-
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
         auto fileCounter = [&](const std::filesystem::directory_entry & d) {
-            return (!is_directory(d.path()) && (d.path().extension() == ext));
+            return (!is_directory(d.path()) && (d.path().extension() == ShaderExt));
         };
 
         auto numFiles = std::count_if(begin, end, fileCounter);
@@ -1264,37 +1301,8 @@ namespace ninniku {
 
         LOGD << boost::str(fmt);
 
-        IDxcLibrary* pLibrary = nullptr;
-
-        auto hr = DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary);
-
-        if (CheckAPIFailed(hr, "DxcCreateInstance for CLSID_DxcLibrary"))
-            return false;
-
         for (auto& iter : std::filesystem::recursive_directory_iterator(shaderPath)) {
-            if (iter.path().extension() == ext) {
-                auto path = iter.path().string();
-
-                fmt = boost::format("Loading %1%..") % path;
-
-                LOG_INDENT_START << boost::str(fmt);
-
-                Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
-
-                hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path).c_str(), nullptr, &pBlob);
-
-                if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile"))
-                    return false;
-
-                auto name = iter.path().stem().string();
-
-                if (!LoadShader(name, pBlob.Get())) {
-                    LOG_INDENT_END;
-                    return false;
-                }
-
-                LOG_INDENT_END;
-            }
+            LoadShader(iter.path());
         }
 
         return true;
@@ -1431,13 +1439,16 @@ namespace ninniku {
             subdata.RowPitch = size;
             subdata.SlicePitch = subdata.RowPitch;
 
-            auto transition = CD3DX12_RESOURCE_BARRIER::Transition(found->second._resource.Get(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
+            auto transition = CD3DX12_RESOURCE_BARRIER::Transition(found->second._resource.Get(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COMMON);
 
             _transitionCmdList->ResourceBarrier(1, &transition);
             _transitionCmdList->Close();
             ExecuteCommand(_transitionCommandQueue, _transitionCmdList);
             _transitionCmdList->Reset(_transitionCommandAllocator.Get(), nullptr);
 
+            transition = CD3DX12_RESOURCE_BARRIER::Transition(found->second._resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+
+            _copyCmdList->ResourceBarrier(1, &transition);
             UpdateSubresources(_copyCmdList.Get(), found->second._resource.Get(), found->second._upload.Get(), 0, 0, 1, &subdata);
             _copyCmdList->Close();
             ExecuteCommand(_copyCommandQueue, _copyCmdList);

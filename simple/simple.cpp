@@ -28,7 +28,7 @@ int main()
     // corresponding test: shader_genMips
     std::vector<std::string_view> shaderPaths = { "..\\simple\\shaders" };
 
-    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, shaderPaths, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
+    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
         return -1;
 
     ninniku::Terminate();

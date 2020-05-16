@@ -21,21 +21,24 @@
 #pragma once
 
 #include <boost/mpl/vector.hpp>
+#include <string_view>
 
 struct SetupFixtureDX11
 {
     SetupFixtureDX11();
     ~SetupFixtureDX11();
+
+    std::string_view shaderRoot;
 };
 
 struct SetupFixtureDX12
 {
     SetupFixtureDX12();
     ~SetupFixtureDX12();
+
+    std::string_view shaderRoot;
 };
 
 typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesAll;
 typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
 typedef boost::mpl::vector<SetupFixtureDX12> FixturesDX12;
-
-bool IsAppVeyor();

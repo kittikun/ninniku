@@ -168,6 +168,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\tests\image.cpp" />
     <ClCompile Include="src\tests\shader.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -177,6 +178,7 @@
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\fixture.h" />
     <ClInclude Include="src\shaders\cbuffers.h" />
+    <ClInclude Include="src\utils.h" />
     <None Include="src\shaders\dispatch.h" />
   </ItemGroup>
   <ItemGroup>

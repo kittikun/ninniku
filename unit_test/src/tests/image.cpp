@@ -18,11 +18,12 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "../shaders/dx11/cbuffers.h"
-#include "../shaders/dx12/cbuffers.h"
+#include "../shaders/dispatch.h"
+#include "../shaders/cbuffers.h"
 #include "../check.h"
 #include "../common.h"
 #include "../fixture.h"
+#include "../utils.h"
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/core/renderer/renderdevice.h>
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(cmft_load)
 
     CheckCRC(std::get<0>(data), std::get<1>(data), 3196376208);
 
-    image->Load("data/park02.exr");
+    BOOST_TEST(image->Load("data/park02.exr"));
     auto& data2 = image->GetData();
     CheckCRC(std::get<0>(data2), std::get<1>(data2), 2283193732);
 }
@@ -55,14 +56,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/Cathedral01.hdr");
+    BOOST_TEST(image->Load("data/Cathedral01.hdr"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, srcTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, srcTex));
 
     auto& data = res->GetData();
 
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_cubemap)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
     std::string filename = "cmft_saveImage_cubemap.dds";
 
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
     BOOST_TEST(image->SaveImage("cmft_saveImageFace.dds", ninniku::cmftImage::SaveType::Facelist));
 
@@ -143,14 +144,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    image->Load("data/Cathedral01.dds");
+    BOOST_TEST(image->Load("data/Cathedral01.dds"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, srcTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, srcTex));
 
     std::string filename = "cmft_saveImage_longlat.hdr";
 
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_vcross)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
     std::string filename = "cmft_saveImage_vcross.dds";
 
@@ -219,14 +220,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/Cathedral01.hdr");
+    BOOST_TEST(image->Load("data/Cathedral01.hdr"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, srcTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, srcTex));
 
     auto& data = res->GetData();
 
@@ -239,12 +240,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesDX11, T)
     auto& dx = ninniku::GetRenderer();
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    image->Load("data/Cathedral01.dds");
+    BOOST_TEST(image->Load("data/Cathedral01.dds"));
 
-    auto resTex = Generate2DTexWithMips(dx, image.get());
+    auto resTex = Generate2DTexWithMips(dx, image.get(), T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, resTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resTex));
 
     std::string filename = "dds_saveImage_raw_mips.dds";
 
@@ -259,10 +260,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesDX11, T
     // There is something wrong with WARP but it's working fine for DX12 HW so disable it since unit tests are using WARP
     auto& dx = ninniku::GetRenderer();
 
-    auto resTex = GenerateColoredMips(dx);
+    auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, resTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resTex));
 
     std::string filename = "dds_saveImage_raw_cube_mips.dds";
 
@@ -278,10 +279,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesD
     // since unit tests are using WARP
 
     auto& dx = ninniku::GetRenderer();
-    auto resTex = GenerateColoredCubeArrayMips(dx);
+    auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, resTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resTex));
 
     std::string filename = "dds_saveImage_raw_cube_array__mips.dds";
 
@@ -302,10 +303,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
-    auto resized = ResizeImage(dx, srcTex, needFix);
+    auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, resized);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resized));
 
     std::string filename = "dds_saveImage_bc1.dds";
 
@@ -329,10 +330,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
-    auto resized = ResizeImage(dx, srcTex, needFix);
+    auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, resized);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resized));
 
     std::string filename = "dds_saveImage_bc3.dds";
 
@@ -356,10 +357,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
-    auto resized = ResizeImage(dx, srcTex, needFix);
+    auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, resized);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resized));
 
     std::string filename = "dds_saveImage_bc4.dds";
 
@@ -383,12 +384,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
 {
+    auto& dx = ninniku::GetRenderer();
+    BOOST_TEST(LoadShader(dx, "packNormals", T::shaderRoot));
+
     auto image = std::make_unique<ninniku::genericImage>();
 
-    image->Load("data/weave_8.png");
+    BOOST_TEST(image->Load("data/weave_8.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
 
     // packed normal
@@ -413,12 +416,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
     cmd->dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
     cmd->dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
 
-    dx->Dispatch(cmd);
+    BOOST_TEST(dx->Dispatch(cmd));
 
     auto res = std::make_unique<ninniku::ddsImage>();
     std::string filename = "dds_saveImage_bc5_8.dds";
 
-    res->InitializeFromTextureObject(dx, dst);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, dst));
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
@@ -429,7 +432,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
-    image->Load("data/weave_16.png");
+    BOOST_TEST(image->Load("data/weave_16.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
@@ -457,12 +460,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
     cmd->dispatch[1] = dstParam->height / PACKNORMALS_NUMTHREAD_Y;
     cmd->dispatch[2] = PACKNORMALS_NUMTHREAD_Z;
 
-    dx->Dispatch(cmd);
+    BOOST_TEST(dx->Dispatch(cmd));
 
     auto res = std::make_unique<ninniku::ddsImage>();
     std::string filename = "dds_saveImage_bc5_16.dds";
 
-    res->InitializeFromTextureObject(dx, dst);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, dst));
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
@@ -478,14 +481,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, srcTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, srcTex));
 
     std::string filename = "dds_saveImage_bc6h.dds";
 
@@ -509,10 +512,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
     auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
-    auto resized = ResizeImage(dx, srcTex, needFix);
+    auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    res->InitializeFromTextureObject(dx, resized);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resized));
 
     std::string_view filename = "dds_saveImage_bc7.dds";
 
@@ -549,7 +552,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_need_resize, T, FixturesDX11, T)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
-    image->Load("data/banner.png");
+    BOOST_TEST(image->Load("data/banner.png"));
 
     auto needFix = image->IsRequiringFix();
 
@@ -557,14 +560,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_need_resize, T, FixturesDX11, T)
     BOOST_TEST(std::get<1>(needFix) == 1024);
     BOOST_TEST(std::get<2>(needFix) == 2048);
 
-    image->Load("data/architecture-buildings-city-1769347.jpg");
+    BOOST_TEST(image->Load("data/architecture-buildings-city-1769347.jpg"));
     needFix = image->IsRequiringFix();
 
     BOOST_TEST(std::get<0>(needFix));
     BOOST_TEST(std::get<1>(needFix) == 2048);
     BOOST_TEST(std::get<2>(needFix) == 2048);
 
-    image->Load("data/whipple_creek_regional_park_01_2k.hdr");
+    BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
     needFix = image->IsRequiringFix();
 
     BOOST_TEST(std::get<0>(needFix) == false);

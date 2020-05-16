@@ -23,6 +23,7 @@
 #include "../check.h"
 #include "../common.h"
 #include "../fixture.h"
+#include "../utils.h"
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/core/renderer/renderdevice.h>
@@ -33,16 +34,18 @@
 #include <ninniku/types.h>
 #include <ninniku/utils.h>
 
+#include <boost/format.hpp>
+
 BOOST_AUTO_TEST_SUITE(Shader)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesDX11, T)
 {
     // DX12 doesn't allow binding the same resource as SRV and UAV so the shader needs to be rewritten later
     auto& dx = ninniku::GetRenderer();
-    auto resTex = GenerateColoredMips(dx);
+    auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, resTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resTex));
 
     auto& data = res->GetData();
 
@@ -53,6 +56,9 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesDX11, T)
 {
     // There is something wrong with WARP but it's working fine for DX12 HW so disable it since unit tests are using WARP
     auto& dx = ninniku::GetRenderer();
+    BOOST_TEST(LoadShader(dx, "colorFaces", T::shaderRoot));
+    BOOST_TEST(LoadShader(dx, "dirToFaces", T::shaderRoot));
+
     auto marker = dx->CreateDebugMarker("CubemapDirToArray");
 
     auto param = ninniku::TextureParam::Create();
@@ -81,7 +87,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesDX11, T)
 
         cmd->uavBindings.insert(std::make_pair("dstTex", srcTex->GetUAV(0)));
 
-        dx->Dispatch(cmd);
+        BOOST_TEST(dx->Dispatch(cmd));
     }
 
     // generate destination texture by sampling source using direction vectors
@@ -101,20 +107,20 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesDX11, T)
         cmd->srvBindings.insert(std::make_pair("srcTex", srcTex->GetSRVCube()));
         cmd->uavBindings.insert(std::make_pair("dstTex", dstTex->GetUAV(0)));
 
-        dx->Dispatch(cmd);
+        BOOST_TEST(dx->Dispatch(cmd));
     }
 
     auto srcImg = std::make_unique<ninniku::ddsImage>();
 
-    srcImg->InitializeFromTextureObject(dx, srcTex);
-    srcImg->SaveImage("shader_cubemapDirToArray_src.dds");
+    BOOST_TEST(srcImg->InitializeFromTextureObject(dx, srcTex));
+    BOOST_TEST(srcImg->SaveImage("shader_cubemapDirToArray_src.dds"));
 
     auto srcData = srcImg->GetData();
     auto srcHash = GetCRC(std::get<0>(srcData), std::get<1>(srcData));
     auto dstImg = std::make_unique<ninniku::ddsImage>();
 
-    dstImg->InitializeFromTextureObject(dx, srcTex);
-    srcImg->SaveImage("shader_cubemapDirToArray_dst.dds");
+    BOOST_TEST(dstImg->InitializeFromTextureObject(dx, srcTex));
+    BOOST_TEST(srcImg->SaveImage("shader_cubemapDirToArray_dst.dds"));
     auto dstData = dstImg->GetData();
     auto dstHash = GetCRC(std::get<0>(dstData), std::get<1>(dstData));
 
@@ -127,12 +133,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesDX11, T)
     auto& dx = ninniku::GetRenderer();
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    image->Load("data/Cathedral01.dds");
+    BOOST_TEST(image->Load("data/Cathedral01.dds"));
 
-    auto resTex = Generate2DTexWithMips(dx, image.get());
+    auto resTex = Generate2DTexWithMips(dx, image.get(), T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, resTex);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, resTex));
 
     auto& data = res->GetData();
 
@@ -144,7 +150,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/Cathedral01.hdr");
+    BOOST_TEST(image->Load("data/Cathedral01.hdr"));
 
     auto needFix = image->IsRequiringFix();
     auto newSize = std::get<1>(needFix);
@@ -162,11 +168,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
     dstParam->arraySize = 6;
     dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
-    auto dst = ResizeImage(dx, srcTex, needFix);
+    auto dst = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
 
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, dst);
+    BOOST_TEST(res->InitializeFromTextureObject(dx, dst));
 
     auto& data = res->GetData();
 
@@ -176,6 +182,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 {
     auto& dx = ninniku::GetRenderer();
+    BOOST_TEST(LoadShader(dx, "fillBuffer", T::shaderRoot));
+
     auto params = ninniku::BufferParam::Create();
 
     params->numElements = 16;
@@ -198,7 +206,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 
         cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
 
-        dx->Dispatch(cmd);
+        BOOST_TEST(dx->Dispatch(cmd));
     }
 
     auto dstBuffer = dx->CreateBuffer(srcBuffer);

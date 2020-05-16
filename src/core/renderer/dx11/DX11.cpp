@@ -617,7 +617,7 @@ namespace ninniku {
         _tracker.ReleaseObjects();
     }
 
-    bool DX11::Initialize(const std::vector<std::string_view>& shaderPaths)
+    bool DX11::Initialize()
     {
         auto adapter = 0;
 
@@ -634,16 +634,6 @@ namespace ninniku {
         if (_context == nullptr) {
             LOGE << "Failed to obtain immediate context";
             return false;
-        }
-
-        if ((shaderPaths.size() > 0)) {
-            for (auto& path : shaderPaths) {
-                if (!LoadShaders(path)) {
-                    auto fmt = boost::format("Failed to load shaders in: %1%") % path;
-                    LOGE << boost::str(fmt);
-                    return false;
-                }
-            }
         }
 
         // sampler states
@@ -680,22 +670,54 @@ namespace ninniku {
         return true;
     }
 
+    bool DX11::LoadShader(const std::filesystem::path& path)
+    {
+        if (std::filesystem::is_directory(path)) {
+            return LoadShaders(path);
+        } else if (path.extension() == ShaderExt) {
+            auto fmt = boost::format("Loading %1%..") % path;
+
+            LOG_INDENT_START << boost::str(fmt);
+
+            ID3DBlob* blob = nullptr;
+            auto hr = D3DReadFileToBlob(ninniku::strToWStr(path.string()).c_str(), &blob);
+
+            if (FAILED(hr)) {
+                fmt = boost::format("Failed to D3DReadFileToBlob: %1% with:") % path;
+                LOGE << boost::str(fmt);
+                _com_error err(hr);
+                LOGE << err.ErrorMessage();
+                LOG_INDENT_END;
+                return false;
+            }
+
+            if (!LoadShader(path, blob)) {
+                LOG_INDENT_END;
+                return false;
+            }
+
+            LOG_INDENT_END;
+        }
+
+        return true;
+    }
+
     bool DX11::LoadShader(const std::string_view& name, const void* pData, const size_t size)
     {
-        ID3DBlob* pBlob = nullptr;
-        const auto hr = D3DCreateBlob(size, &pBlob);
+        auto fmt = boost::format("Loading shader: %1% directly from memory");
 
-        if (FAILED(hr)) {
-            LOGE << (boost::format("Failed to call D3DCreateBlob: %1% with: %2%") % name % _com_error(hr).ErrorMessage()).str();
+        ID3DBlob* pBlob = nullptr;
+        auto hr = D3DCreateBlob(size, &pBlob);
+
+        if (CheckAPIFailed(hr, "D3DCreateBlob"))
             return false;
-        }
 
         memcpy_s(pBlob->GetBufferPointer(), size, pData, size);
 
-        return LoadShader(name, pBlob, "");
+        return LoadShader(name, pBlob);
     }
 
-    bool DX11::LoadShader(const std::string_view& name, ID3DBlob* pBlob, const std::string_view& path)
+    bool DX11::LoadShader(const std::filesystem::path& path, ID3DBlob* pBlob)
     {
         // reflection
         ID3D11ShaderReflection* reflect = nullptr;
@@ -726,14 +748,11 @@ namespace ninniku {
 
         hr = _device->CreateComputeShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, shader.GetAddressOf());
 
-        if (FAILED(hr)) {
-            _com_error err(hr);
-            auto fmt = boost::format("Failed to CreateComputeShader: %1% with: %2%") % path % err.ErrorMessage();
-            LOGE << boost::str(fmt);
+        if (CheckAPIFailed(hr, "CreateComputeShader")) {
             return false;
         } else {
-            auto fmt = boost::format("Adding CS: \"%1%\" to library") % name;
-            LOGD << boost::str(fmt);
+            auto name = path.stem().string();
+            LOGDF(boost::format("Adding CS: \"%1%\" to library") % name);
 
             _shaders.emplace(name, DX11ComputeShader{ shader, bindings });
         }
@@ -744,7 +763,7 @@ namespace ninniku {
     /// <summary>
     /// Load all shaders in /data
     /// </summary>
-    bool DX11::LoadShaders(const std::string_view& shaderPath)
+    bool DX11::LoadShaders(const std::filesystem::path& shaderPath)
     {
         // check if directory is valid
         if (!std::filesystem::is_directory(shaderPath)) {
@@ -754,13 +773,11 @@ namespace ninniku {
             return false;
         }
 
-        std::string_view ext{ ".cso" };
-
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
         auto fileCounter = [&](const std::filesystem::directory_entry & d) {
-            return (!is_directory(d.path()) && (d.path().extension() == ext));
+            return (!is_directory(d.path()) && (d.path().extension() == ShaderExt));
         };
 
         auto numFiles = std::count_if(begin, end, fileCounter);
@@ -769,34 +786,7 @@ namespace ninniku {
         LOGD << boost::str(fmt);
 
         for (auto& iter : std::filesystem::recursive_directory_iterator(shaderPath)) {
-            if (iter.path().extension() == ext) {
-                auto path = iter.path().string();
-
-                fmt = boost::format("Loading %1%..") % path;
-
-                LOG_INDENT_START << boost::str(fmt);
-
-                ID3DBlob* blob = nullptr;
-                auto hr = D3DReadFileToBlob(ninniku::strToWStr(path).c_str(), &blob);
-
-                if (FAILED(hr)) {
-                    fmt = boost::format("Failed to D3DReadFileToBlob: %1% with:") % path;
-                    LOGE << boost::str(fmt);
-                    _com_error err(hr);
-                    LOGE << err.ErrorMessage();
-                    LOG_INDENT_END;
-                    return false;
-                }
-
-                auto name = iter.path().stem().string();
-
-                if (!LoadShader(name, blob, path)) {
-                    LOG_INDENT_END;
-                    return false;
-                }
-
-                LOG_INDENT_END;
-            }
+            LoadShader(iter.path());
         }
 
         return true;

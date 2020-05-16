@@ -35,6 +35,7 @@ namespace ninniku {
         DX12(ERenderer type);
 
         ERenderer GetType() const override { return _type; }
+        const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
         void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
@@ -45,7 +46,8 @@ namespace ninniku {
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
-        bool Initialize(const std::vector<std::string_view>& shaderPaths) override;
+        bool Initialize() override;
+        bool LoadShader(const std::filesystem::path& path) override;
         bool LoadShader(const std::string_view& name, const void* pData, const size_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
@@ -64,12 +66,13 @@ namespace ninniku {
         bool CreateDevice(int adapter);
         bool CreateSamplers();
         bool ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList);
-        bool LoadShader(const std::string_view& name, IDxcBlobEncoding* pBlob);
-        bool LoadShaders(const std::string_view& shaderPath);
+        bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
+        bool LoadShaders(const std::filesystem::path& path);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
+        static constexpr std::string_view ShaderExt = ".dxco";
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
         ERenderer _type;
         uint8_t _padding[3];

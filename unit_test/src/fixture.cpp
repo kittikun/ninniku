@@ -20,6 +20,8 @@
 
 #include "fixture.h"
 
+#include "utils.h"
+
 #include <ninniku/ninniku.h>
 
 #include <boost/test/debug.hpp>
@@ -27,15 +29,15 @@
 SetupFixtureDX11::SetupFixtureDX11()
 {
 #ifdef _DEBUG
-    std::vector<std::string_view> shaderPaths = { "bin\\Debug\\dx11" };
+    shaderRoot = "bin\\Debug\\dx11";
 #else
-    std::vector<std::string_view> shaderPaths = { "bin\\Release\\dx11" };
+    shaderRoot = "bin\\Release\\dx11";
 #endif
 
     uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
     // because unit test run on CI, always use WARP
-    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, shaderPaths, flags, ninniku::ELogLevel::LL_FULL)) {
+    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX11, flags, ninniku::ELogLevel::LL_FULL)) {
         throw new std::exception("Failed to initialize Ninniku.");
     }
 }
@@ -48,9 +50,9 @@ SetupFixtureDX11::~SetupFixtureDX11()
 SetupFixtureDX12::SetupFixtureDX12()
 {
 #ifdef _DEBUG
-    std::vector<std::string_view> shaderPaths = { "bin\\Debug\\dx12" };
+    shaderRoot = "bin\\Debug\\dx12";
 #else
-    std::vector<std::string_view> shaderPaths = { "bin\\Release\\dx12" };
+    shaderRoot = "bin\\Release\\dx12";
 #endif
 
     uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
@@ -59,7 +61,7 @@ SetupFixtureDX12::SetupFixtureDX12()
         flags |= ninniku::EInitializationFlags::IF_DisableDX12DebugLayer;
 
     // because unit test run on CI, always use WARP
-    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, shaderPaths, flags, ninniku::ELogLevel::LL_FULL)) {
+    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_WARP_DX12, flags, ninniku::ELogLevel::LL_FULL)) {
         throw new std::exception("Failed to initialize Ninniku.");
     }
 }
@@ -67,17 +69,4 @@ SetupFixtureDX12::SetupFixtureDX12()
 SetupFixtureDX12::~SetupFixtureDX12()
 {
     ninniku::Terminate();
-}
-
-bool IsAppVeyor()
-{
-    char* value;
-    size_t len;
-
-    auto ret = _dupenv_s(&value, &len, "APPVEYOR");
-
-    if ((len > 0) && (strcmp(value, "True") == 0))
-        return true;
-
-    return false;
 }

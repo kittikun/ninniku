@@ -75,7 +75,7 @@ namespace ninniku {
         return Globals::Instance()._renderer;
     }
 
-    bool _Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, const ELogLevel logLevel)
+    bool _Initialize(const ERenderer renderer, const ELogLevel logLevel)
     {
         ninniku::Log::Initialize(logLevel);
 
@@ -121,7 +121,7 @@ namespace ninniku {
                 return false;
         }
 
-        if (!dx->Initialize(shaderPaths)) {
+        if (!dx->Initialize()) {
             LOGE << "RenderDevice::Initialize failed";
             return false;
         }
@@ -145,20 +145,33 @@ namespace ninniku {
         Globals::Instance()._bc7Quick = (flags & EInitializationFlags::IF_BC7_QUICK_MODE) != 0;
     }
 
-    bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, uint32_t flags, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, const std::vector<std::filesystem::path>& shaderPaths, uint32_t flags, const ELogLevel logLevel)
     {
         InitializeGlobals(flags);
 
-        return _Initialize(renderer, shaderPaths, logLevel);
+        if (!_Initialize(renderer, logLevel))
+            return false;
+
+        if ((shaderPaths.size() > 0)) {
+            auto& dx = GetRenderer();
+
+            for (auto& path : shaderPaths) {
+                if (!dx->LoadShader(path)) {
+                    auto fmt = boost::format("Failed to load shaders in: %1%") % path;
+                    LOGE << boost::str(fmt);
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     bool Initialize(const ERenderer renderer, uint32_t flags, const ELogLevel logLevel)
     {
-        std::vector<std::string_view> shaderPaths;
-
         InitializeGlobals(flags);
 
-        return _Initialize(renderer, shaderPaths, logLevel);
+        return _Initialize(renderer, logLevel);
     }
 
     void Terminate()

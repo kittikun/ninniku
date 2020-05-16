@@ -35,7 +35,8 @@ namespace ninniku {
         DX11(ERenderer type);
 
         // RenderDevice
-        virtual ERenderer GetType() const override { return _type; }
+        ERenderer GetType() const override { return _type; }
+        const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
         void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
@@ -46,7 +47,8 @@ namespace ninniku {
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
-        bool Initialize(const std::vector<std::string_view>& shaderPaths) override;
+        bool Initialize() override;
+        bool LoadShader(const std::filesystem::path& path) override;
         bool LoadShader(const std::string_view& name, const void* pData, const size_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
@@ -60,8 +62,8 @@ namespace ninniku {
     private:
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
         std::string_view DxSRVDimensionToString(D3D_SRV_DIMENSION dimension);
-        bool LoadShader(const std::string_view& name, ID3DBlob* pBlob, const std::string_view& path);
-        bool LoadShaders(const std::string_view& shaderPath);
+        bool LoadShader(const std::filesystem::path& path, ID3DBlob* pBlob);
+        bool LoadShaders(const std::filesystem::path& shaderPath);
         bool MakeTextureSRV(const TextureSRVParams& params);
         StringMap<uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
 
@@ -74,6 +76,8 @@ namespace ninniku {
         }
 
     private:
+        static constexpr std::string_view ShaderExt = ".cso";
+
         ERenderer _type;
         DX11Device _device;
         DX11Context _context;

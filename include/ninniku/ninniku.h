@@ -22,6 +22,7 @@
 
 #include "export.h"
 
+#include <filesystem>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -56,7 +57,7 @@ namespace ninniku {
     /// Initialize ninniku framework
     /// shaderPaths must point to compiled .cso folders
     /// </summary>
-    [[nodiscard]] NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string_view>& shaderPaths, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    [[nodiscard]] NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::filesystem::path>& shaderPaths, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Initialize ninniku framework

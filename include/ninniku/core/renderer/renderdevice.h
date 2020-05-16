@@ -24,8 +24,9 @@
 #include "../../types.h"
 #include "types.h"
 
-namespace ninniku
-{
+#include <filesystem>
+
+namespace ninniku {
     class RenderDevice : NonCopyableBase
     {
         // no copy of any kind allowed
@@ -38,6 +39,7 @@ namespace ninniku
         virtual ~RenderDevice() = default;
 
         virtual ERenderer GetType() const = 0;
+        virtual const std::string_view& GetShaderExtension() const = 0;
 
         virtual void CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
         virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
@@ -46,13 +48,14 @@ namespace ninniku
         virtual CommandHandle CreateCommand() const = 0;
         virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
-        virtual bool Dispatch(const CommandHandle& cmd) = 0;
+        [[nodiscard]] virtual bool Dispatch(const CommandHandle& cmd) = 0;
         virtual void Finalize() = 0;
-        virtual bool Initialize(const std::vector<std::string_view>& shaderPaths) = 0;
-        virtual bool LoadShader(const std::string_view& name, const void* pData, const size_t size) = 0;
-        virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
-        virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
-        virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
+        [[nodiscard]] virtual bool Initialize() = 0;
+        [[nodiscard]] virtual bool LoadShader(const std::filesystem::path& path) = 0;
+        [[nodiscard]] virtual bool LoadShader(const std::string_view& name, const void* pData, const size_t size) = 0;
+        [[nodiscard]] virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
+        [[nodiscard]] virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
+        [[nodiscard]] virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
 
         virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;
 

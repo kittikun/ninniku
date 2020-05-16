@@ -18,11 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+#include "utils.h"
 
-#include <ninniku/core/image/image.h>
+#include <boost/format.hpp>
 
-ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot);
-ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot);
-ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, const ninniku::Image* image, const std::string_view& shaderRoot);
-ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes, const std::string_view& shaderRoot);
+bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, const std::string_view& shaderRoot)
+{
+    auto fmt = boost::format("%1%\\%2%%3%") % shaderRoot % name % dx->GetShaderExtension();
+
+    return dx->LoadShader(boost::str(fmt));
+}
+
+bool IsAppVeyor()
+{
+    char* value;
+    size_t len;
+
+    auto ret = _dupenv_s(&value, &len, "APPVEYOR");
+
+    if ((len > 0) && (strcmp(value, "True") == 0))
+        return true;
+
+    return false;
+}

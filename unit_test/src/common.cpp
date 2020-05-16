@@ -22,12 +22,17 @@
 
 #include "shaders/dispatch.h"
 #include "shaders/cbuffers.h"
+#include "utils.h"
 
 #include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/utils.h>
 
-ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)
+#include <boost/test/unit_test.hpp>
+
+ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot)
 {
+    BOOST_TEST(LoadShader(dx, "colorMips", shaderRoot));
+
     auto param = ninniku::TextureParam::Create();
     param->format = ninniku::TF_R32G32B32A32_FLOAT;
     param->width = param->height = 512;
@@ -57,16 +62,18 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx)
 
         cb.targetMip = i;
 
-        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
+        BOOST_TEST(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
 
-        dx->Dispatch(cmd);
+        BOOST_TEST(dx->Dispatch(cmd));
     }
 
     return resTex;
 }
 
-ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle& dx)
+ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot)
 {
+    BOOST_TEST(LoadShader(dx, "colorMips", shaderRoot));
+
     auto param = ninniku::TextureParam::Create();
     param->format = ninniku::TF_R8G8B8A8_UNORM;
     param->width = param->height = 512;
@@ -96,16 +103,18 @@ ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle&
 
         cb.targetMip = i;
 
-        dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
+        BOOST_TEST(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
 
-        dx->Dispatch(cmd);
+        BOOST_TEST(dx->Dispatch(cmd));
     }
 
     return resTex;
 }
 
-ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, const ninniku::Image* image)
+ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, const ninniku::Image* image, const std::string_view& shaderRoot)
 {
+    BOOST_TEST(LoadShader(dx, "downsample", shaderRoot));
+
     auto marker = dx->CreateDebugMarker("CommonGenerateMips");
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
@@ -156,15 +165,17 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, co
             cmd->uavBindings.insert(std::make_pair("dstMipSlice", resTex->GetUAV(srcMip + 1)));
             cmd->ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
 
-            dx->Dispatch(cmd);
+            BOOST_TEST(dx->Dispatch(cmd));
         }
     }
 
     return std::move(resTex);
 }
 
-ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes)
+ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes, const std::string_view& shaderRoot)
 {
+    BOOST_TEST(LoadShader(dx, "resize", shaderRoot));
+
     auto subMarker = dx->CreateDebugMarker("CommonResizeImageImpl");
 
     auto dstParam = ninniku::TextureParam::Create();
@@ -196,7 +207,7 @@ ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninnik
         cmd->dispatch[1] = dstParam->height / RESIZE_NUMTHREAD_Y;
         cmd->dispatch[2] = dstParam->arraySize / RESIZE_NUMTHREAD_Z;
 
-        dx->Dispatch(cmd);
+        BOOST_TEST(dx->Dispatch(cmd));
     }
 
     return std::move(dst);

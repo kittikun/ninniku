@@ -20,9 +20,8 @@
 
 #pragma once
 
-#include <ninniku/core/image/image.h>
+#include <ninniku/core/renderer/renderdevice.h>
+#include <string_view>
 
-ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot);
-ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot);
-ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, const ninniku::Image* image, const std::string_view& shaderRoot);
-ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes, const std::string_view& shaderRoot);
+bool IsAppVeyor();
+[[nodiscard]] bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, const std::string_view& shaderRoot);
