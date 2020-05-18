@@ -33,7 +33,7 @@
 RWTexture2DArray<float4> dstTex;
 
 [numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
-void main(uint3 DTI : SV_DispatchThreadID)
+void main(uint16_t3 DTI : SV_DispatchThreadID)
 {
     uint16_t w, h, elems;
 

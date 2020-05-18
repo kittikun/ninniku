@@ -33,7 +33,7 @@ Texture2D<float3> srcTex;
 RWTexture2D<float2> dstTex;
 
 [numthreads(32, 32, 1)]
-void main(uint3 DTI : SV_DispatchThreadID)
+void main(uint16_t3 DTI : SV_DispatchThreadID)
 {
     dstTex[DTI.xy] = packNormal(srcTex[DTI.xy]);
 }

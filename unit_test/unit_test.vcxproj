@@ -162,7 +162,9 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\check.cpp" />
+    <ClCompile Include="src\check.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Disabled</Optimization>
+    </ClCompile>
     <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\fixture.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -203,6 +205,9 @@
       <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Include="src\shaders\dx12\resize.hlsl">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\downsample.hlsl">
       <FileType>Document</FileType>
     </CustomBuild>
     <None Include="src\shaders\utility.hlsl">

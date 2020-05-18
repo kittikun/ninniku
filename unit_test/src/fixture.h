@@ -29,6 +29,16 @@ struct SetupFixtureDX11
     ~SetupFixtureDX11();
 
     std::string_view shaderRoot;
+    bool isNull = false;
+};
+
+struct SetupFixtureDX11Warp
+{
+    SetupFixtureDX11Warp();
+    ~SetupFixtureDX11Warp();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
 };
 
 struct SetupFixtureDX12
@@ -37,8 +47,20 @@ struct SetupFixtureDX12
     ~SetupFixtureDX12();
 
     std::string_view shaderRoot;
+    bool isNull = false;
 };
 
-typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesAll;
+struct SetupFixtureDX12Warp
+{
+    SetupFixtureDX12Warp();
+    ~SetupFixtureDX12Warp();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
+};
+
+typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12, SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesAll;
+typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesWarpAll;
+typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesHWAll;
 typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
 typedef boost::mpl::vector<SetupFixtureDX12> FixturesDX12;

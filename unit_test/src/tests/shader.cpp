@@ -38,10 +38,19 @@
 
 BOOST_AUTO_TEST_SUITE(Shader)
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
 {
-    // DX12 doesn't allow binding the same resource as SRV and UAV so the shader needs to be rewritten later
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
 
@@ -49,13 +58,32 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesDX11, T)
 
     auto& data = res->GetData();
 
-    CheckCRC(std::get<0>(data), std::get<1>(data), 3775864256);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 3775864256);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesAll, T)
 {
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it since unit tests are using WARP
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     BOOST_TEST(LoadShader(dx, "colorFaces", T::shaderRoot));
     BOOST_TEST(LoadShader(dx, "dirToFaces", T::shaderRoot));
 
@@ -127,10 +155,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesDX11, T)
     BOOST_TEST(srcHash == dstHash);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesAll, T)
 {
-    // DX12 doesn't allow binding the same resource as SRV and UAV so the shader needs to be rewritten later
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::ddsImage>();
 
     BOOST_TEST(image->Load("data/Cathedral01.dds"));
@@ -142,12 +179,32 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesDX11, T)
 
     auto& data = res->GetData();
 
-    // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
-    CheckCRC(std::get<0>(data), std::get<1>(data), 946385041);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 946385041);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_TEST(image->Load("data/Cathedral01.hdr"));
@@ -156,7 +213,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
     auto newSize = std::get<1>(needFix);
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("Resize");
     auto srcTex = dx->CreateTexture(srcParam);
 
@@ -176,11 +232,28 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 
     auto& data = res->GetData();
 
-    CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 1396798068);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto& dx = ninniku::GetRenderer();
     BOOST_TEST(LoadShader(dx, "fillBuffer", T::shaderRoot));
 
@@ -213,7 +286,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 
     auto& data = dstBuffer->GetData();
 
-    CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
+            break;
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

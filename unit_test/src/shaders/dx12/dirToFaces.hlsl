@@ -36,7 +36,7 @@ RWTexture2DArray<float4> dstTex;
 SamplerState ssPoint;
 
 [numthreads(DIRTOFACE_NUMTHREAD_X, DIRTOFACE_NUMTHREAD_Y, DIRTOFACE_NUMTHREAD_Z)]
-void main(int3 DTI : SV_DispatchThreadID)
+void main(int16_t3 DTI : SV_DispatchThreadID)
 {
     float w, dummy1, dummy2;
 

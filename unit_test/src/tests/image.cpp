@@ -54,6 +54,10 @@ BOOST_AUTO_TEST_CASE(cmft_load)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_TEST(image->Load("data/Cathedral01.hdr"));
@@ -142,6 +146,10 @@ BOOST_AUTO_TEST_CASE(cmft_saveImage_faceList)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto image = std::make_unique<ninniku::ddsImage>();
 
     BOOST_TEST(image->Load("data/Cathedral01.dds"));
@@ -218,6 +226,10 @@ BOOST_AUTO_TEST_CASE(dds_texture_param)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_TEST(image->Load("data/Cathedral01.hdr"));
@@ -234,10 +246,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesAll, T)
     CheckCRC(std::get<0>(data), std::get<1>(data), 1279329145);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
 {
-    // DX12 doesn't allow binding the same resource as SRV and UAV so the shader needs to be rewritten later
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::ddsImage>();
 
     BOOST_TEST(image->Load("data/Cathedral01.dds"));
@@ -251,14 +272,31 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesDX11, T)
 
     BOOST_TEST(res->SaveImage(filename));
     BOOST_TEST(std::filesystem::exists(filename));
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 4173211496);
+            break;
 
-    CheckFileCRC(filename, 4173211496);
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
 {
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it since unit tests are using WARP
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
 
     auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
@@ -270,15 +308,32 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesDX11, T
     BOOST_TEST(res->SaveImage(filename));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileCRC(filename, 567904825);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 567904825);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesAll, T)
 {
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    // since unit tests are using WARP
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
 
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
@@ -290,17 +345,37 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesD
     BOOST_TEST(res->SaveImage(filename));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileCRC(filename, 3517905);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 3517905);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/banner.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
@@ -314,20 +389,40 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
     BOOST_TEST(std::filesystem::exists(filename));
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
-    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileCRC(filename, 1032956914);
-    else
-        CheckFileCRC(filename, 2648532591);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 409997713);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 1032956914);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/Rainbow_to_alpha_gradient.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
@@ -341,20 +436,40 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
     BOOST_TEST(std::filesystem::exists(filename));
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
-    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileCRC(filename, 2051743166);
-    else
-        CheckFileCRC(filename, 821195920);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 2138065852);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 2051743166);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/toshi-1072059-unsplash.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
@@ -370,21 +485,54 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
     // for some reason BC4 leads to different results between debug/release
     // dx11/dx12 is because of hardware/software compression
 #ifdef _DEBUG
-    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileCRC(filename, 1228450784);
-    else
-        CheckFileCRC(filename, 3324017732);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+            CheckFileCRC(filename, 1002934303);
+            break;
+
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 1002934303);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 1228450784);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 #else
-    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileCRC(filename, 2703939131);
-    else
-        CheckFileCRC(filename, 2312058583);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 769240813);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 2703939131);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 #endif
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     BOOST_TEST(LoadShader(dx, "packNormals", T::shaderRoot));
 
     auto image = std::make_unique<ninniku::genericImage>();
@@ -425,17 +573,42 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
     BOOST_TEST(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_TEST(std::filesystem::exists(filename));
 
-    CheckFileCRC(filename, 3356479526);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 923975562);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 3356479526);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
+    BOOST_TEST(LoadShader(dx, "packNormals", T::shaderRoot));
+
     auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/weave_16.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
 
     // packed normal
@@ -471,14 +644,44 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
 
     // for some reason BC5 (16 bit) leads to different results between debug and release builds
 #ifdef _DEBUG
-    CheckFileCRC(filename, 3254186394);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 1319360950);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 3254186394);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 #else
-    CheckFileCRC(filename, 2118249824);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 3457244965);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 2118249824);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 #endif
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_TEST(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
@@ -496,20 +699,40 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
     BOOST_TEST(std::filesystem::exists(filename));
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
-    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileCRC(filename, 842772517);
-    else
-        CheckFileCRC(filename, 4073542973);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            CheckFileCRC(filename, 4073542973);
+            break;
+
+        case ninniku::ERenderer::RENDERER_DX11:
+            CheckFileCRC(filename, 842772517);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 842772517);
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::genericImage>();
 
     BOOST_TEST(image->Load("data/banner.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto srcTex = dx->CreateTexture(srcParam);
     auto needFix = image->IsRequiringFix();
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
@@ -523,13 +746,26 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
     BOOST_TEST(std::filesystem::exists(filename));
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
-    if ((dx->GetType() & ninniku::ERenderer::RENDERER_DX11) != 0)
-        CheckFileCRC(filename, 2046772967);
-    else
-        CheckFileCRC(filename, 222998642);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 2657823934);
+            break;
+
+        case ninniku::ERenderer::RENDERER_DX11:
+            CheckFileCRC(filename, 3153192394);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 2046772967);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_load, T, FixturesDX11, T)
+BOOST_AUTO_TEST_CASE(generic_load)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -548,7 +784,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_load, T, FixturesDX11, T)
     CheckCRC(std::get<0>(data3), std::get<1>(data3), 3486869451);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(generic_need_resize, T, FixturesDX11, T)
+BOOST_AUTO_TEST_CASE(generic_need_resize)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 

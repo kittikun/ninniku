@@ -266,7 +266,7 @@ namespace ninniku {
             return BufferHandle();
 
         if (isSRV) {
-            auto srv = new DX12ShaderResourceView(std::numeric_limits<uint32_t>::max());
+            auto srv = new DX12ShaderResourceView(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
             srv->_resource = impl;
 
@@ -274,7 +274,7 @@ namespace ninniku {
         }
 
         if (isUAV) {
-            auto uav = new DX12UnorderedAccessView(std::numeric_limits<uint32_t>::max());
+            auto uav = new DX12UnorderedAccessView(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
             uav->_resource = impl;
             impl->_uav.reset(uav);
@@ -805,12 +805,12 @@ namespace ninniku {
             };
 
             if (isCubeArray) {
-                lmbd(impl, impl->_srvCubeArray, std::numeric_limits<uint32_t>::max());
+                lmbd(impl, impl->_srvCubeArray, D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
             }
 
             if (isCube) {
                 // To sample texture as cubemap
-                lmbd(impl, impl->_srvCube, std::numeric_limits<uint32_t>::max());
+                lmbd(impl, impl->_srvCube, D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
                 // To sample texture as array, one for each miplevel
                 impl->_srvArray.resize(params->numMips);
@@ -819,7 +819,7 @@ namespace ninniku {
                     lmbd(impl, impl->_srvArray[i], i);
                 }
 
-                lmbd(impl, impl->_srvArrayWithMips, std::numeric_limits<uint32_t>::max());
+                lmbd(impl, impl->_srvArrayWithMips, D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
             } else if (params->arraySize > 1) {
                 // one for each miplevel
                 impl->_srvArray.resize(params->numMips);
@@ -828,7 +828,7 @@ namespace ninniku {
                     lmbd(impl, impl->_srvArray[i], i);
                 }
             } else {
-                lmbd(impl, impl->_srvDefault, std::numeric_limits<uint32_t>::max());
+                lmbd(impl, impl->_srvDefault, D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
             }
         }
 
@@ -853,7 +853,7 @@ namespace ninniku {
 
         auto shaderHash = dxCmd->GetHashShader();
 
-        // if the user changed the corresponding shader unbind iti
+        // if the user changed the corresponding shader unbind it
         if (!dxCmd->_impl.expired() && (dxCmd->_impl.lock()->_contextShaderHash != shaderHash)) {
             dxCmd->_impl.reset();
         }
@@ -883,51 +883,16 @@ namespace ninniku {
 
         auto& bindings = foundBindings->second;
 
-        // resources view are bound in the descriptor heap but we still need to transition their states before we create the views
-        for (auto& kvp : cmd->uavBindings) {
-            auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
-            auto found = bindings.find(kvp.first);
-
-            if (found == bindings.end()) {
-                auto fmt = boost::format("Dispatch error: could not find resource bindings for \"%1%\" in \"%2%\"") % kvp.first % cmd->shader;
-                LOGE << boost::str(fmt);
-                return false;
-            }
-
-            if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
-
-                std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
-                    //CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, dxUAV->_index)
-                };
-
-                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
-            } else {
-                // DX12TextureInternal
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
-
-                std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
-                    //CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, dxUAV->_index)
-                };
-
-                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
-            }
-        }
-
-        auto hash = dxCmd->GetHashBindings();
-
         // look for the subcontext
+        auto hash = dxCmd->GetHashBindings();
         auto foundHash = context->_subContexts.find(hash);
 
         DX12CommandSubContext* subContext = nullptr;
 
         if (foundHash == context->_subContexts.end()) {
             // create and initialize subcontext
-            if (!context->CreateSubContext(_device, hash, cmd->shader, static_cast<uint32_t>(bindings.size())))
+            // sampler are bound in another descriptor heap so count them out
+            if (!context->CreateSubContext(_device, hash, cmd->shader, static_cast<uint32_t>(bindings.size() - cmd->ssBindings.size())))
                 return false;
 
             subContext = &context->_subContexts[hash];
@@ -970,35 +935,143 @@ namespace ninniku {
             context->_cmdList->SetComputeRootDescriptorTable(i, descriptorHeaps[i]->GetGPUDescriptorHandleForHeapStart());
         }
 
+        // resources view are bound in the descriptor heap but we still need to transition their states before we create the views
+        bool uavWholeResAll = false;
+        std::unordered_map<ID3D12Resource*, bool> uavWholeRes{ cmd->uavBindings.size() };
+
+        if (cmd->srvBindings.size() == 0) {
+            // only UAV access will be required for the whole resources meaning UAV read/write
+            uavWholeResAll = true;
+        } else {
+            // we need to check if this going to be the case for the UAV requested by the user
+            for (auto& uavKVP : cmd->uavBindings) {
+                auto dxUAV = static_cast<const DX12UnorderedAccessView*>(uavKVP.second);
+                ID3D12Resource* uavRes = nullptr;
+
+                if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
+                    auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
+                    auto locked = weak.lock();
+
+                    uavRes = locked->_buffer.Get();
+                } else {
+                    auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
+                    auto locked = weak.lock();
+
+                    uavRes = locked->_texture.Get();
+                }
+
+                for (auto& srvKVP : cmd->srvBindings) {
+                    auto dxSRV = static_cast<const DX12ShaderResourceView*>(srvKVP.second);
+                    ID3D12Resource* srvRes = nullptr;
+
+                    if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->_resource)) {
+                        auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxSRV->_resource);
+                        auto locked = weak.lock();
+
+                        srvRes = locked->_buffer.Get();
+                    } else {
+                        auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxSRV->_resource);
+                        auto locked = weak.lock();
+
+                        srvRes = locked->_texture.Get();
+                    }
+
+                    if (uavRes == srvRes) {
+                        uavWholeRes[uavRes] = false;
+                    } else {
+                        uavWholeRes[uavRes] = true;
+                    }
+                }
+            }
+        }
+
+        if (cmd->uavBindings.size() > 0) {
+            for (auto& kvp : cmd->uavBindings) {
+                auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
+                auto found = bindings.find(kvp.first);
+
+                if (found == bindings.end()) {
+                    auto fmt = boost::format("Dispatch error: could not find resource bindings for \"%1%\" in \"%2%\"") % kvp.first % cmd->shader;
+                    LOGE << boost::str(fmt);
+                    return false;
+                }
+
+                if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
+                    auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
+                    auto locked = weak.lock();
+                    auto whole = uavWholeResAll;
+
+                    if (!whole) {
+                        whole = uavWholeRes[locked->_buffer.Get()];
+                    }
+
+                    std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+                        //CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
+                        CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->_index)
+                    };
+
+                    context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                } else {
+                    // DX12TextureInternal
+                    auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
+                    auto locked = weak.lock();
+                    auto whole = uavWholeResAll;
+
+                    if (!whole) {
+                        whole = uavWholeRes[locked->_texture.Get()];
+                    }
+
+                    std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+                        //CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
+                        CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->_index)
+                    };
+
+                    context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                }
+            }
+        }
+
+        // dispatch
         context->_cmdList->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
 
         // revert transition back
-        for (auto& kvp : cmd->uavBindings) {
-            auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
+        if (cmd->uavBindings.size() > 0) {
+            for (auto& kvp : cmd->uavBindings) {
+                auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
 
-            // bindings correctness was already checked during push so skip them
+                // bindings correctness was already checked during push so skip that
+                if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
+                    auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
+                    auto locked = weak.lock();
+                    auto whole = uavWholeResAll;
 
-            if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
+                    if (!whole) {
+                        whole = uavWholeRes[locked->_buffer.Get()];
+                    }
 
-                std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
-                    CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, dxUAV->_index)
-                };
+                    std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+                        //CD3DX12_RESOURCE_BARRIER::UAV(locked->_buffer.Get()),
+                        CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->_index)
+                    };
 
-                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
-            } else {
-                // DX12TextureInternal
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
-                auto locked = weak.lock();
+                    context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                } else {
+                    // DX12TextureInternal
+                    auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
+                    auto locked = weak.lock();
+                    auto whole = uavWholeResAll;
 
-                std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
-                    CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
-                    CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, dxUAV->_index)
-                };
+                    if (!whole) {
+                        whole = uavWholeRes[locked->_texture.Get()];
+                    }
 
-                context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                    std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+                        //CD3DX12_RESOURCE_BARRIER::UAV(locked->_texture.Get()),
+                        CD3DX12_RESOURCE_BARRIER::Transition(locked->_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->_index)
+                    };
+
+                    context->_cmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                }
             }
         }
 
