@@ -204,7 +204,7 @@ namespace ninniku {
         LOG << "Shutting down..";
 
         auto& renderer = Globals::Instance()._renderer;
-        auto isNull = (renderer->GetType() != ERenderer::RENDERER_NULL);
+        auto isNull = renderer->GetType() == ERenderer::RENDERER_NULL;
 
         if ((renderer->GetType() != ERenderer::RENDERER_NULL) && (Globals::Instance()._doCapture)) {
             if ((renderer->GetType() & ERenderer::RENDERER_DX11) != 0) {
