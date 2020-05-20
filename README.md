@@ -2,7 +2,7 @@
 
 ```ninniku (にんにく) is the Japanese word for garlic```
 
-[![Build status](https://ci.appveyor.com/api/projects/status/9wne2qsbsihhxnxd/branch/dx12?svg=true)](https://ci.appveyor.com/project/kittikun/ninniku/branch/dx12)
+[![Build status](https://ci.appveyor.com/api/projects/status/9wne2qsbsihhxnxd/branch/master?svg=true)](https://ci.appveyor.com/project/kittikun/ninniku/branch/master)
 
 Simple framework to run compute jobs with DX11/DX12
 - Can load/save cubemaps with [cmft](https://github.com/dariomanesku/cmft)
