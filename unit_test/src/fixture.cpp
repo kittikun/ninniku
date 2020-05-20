@@ -57,16 +57,16 @@ SetupFixtureDX11::SetupFixtureDX11()
 
     if (IsAppVeyor()) {
         isNull = true;
-    }
-
-    if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+    } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
         std::cout << "Failed to initialize Ninniku." << std::endl;
     }
 }
 
 SetupFixtureDX11::~SetupFixtureDX11()
 {
-    ninniku::Terminate();
+    if (!IsAppVeyor()) {
+        ninniku::Terminate();
+    }
 }
 
 SetupFixtureDX11Warp::SetupFixtureDX11Warp()
@@ -93,16 +93,16 @@ SetupFixtureDX12::SetupFixtureDX12()
 
     if (IsAppVeyor()) {
         isNull = true;
-    }
-
-    if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+    } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
         std::cout << "Failed to initialize Ninniku." << std::endl;
     }
 }
 
 SetupFixtureDX12::~SetupFixtureDX12()
 {
-    ninniku::Terminate();
+    if (!IsAppVeyor()) {
+        ninniku::Terminate();
+    }
 }
 
 SetupFixtureDX12Warp::SetupFixtureDX12Warp()
