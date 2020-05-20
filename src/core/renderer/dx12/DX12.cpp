@@ -1211,10 +1211,11 @@ namespace ninniku {
             if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile"))
                 return false;
 
-            if (!IsDXILSigned(pBlob->GetBufferPointer())) {
-                if (!ValidateDXCBlob(pBlob.Get(), pLibrary))
-                    return false;
-            }
+            // this is broken so always validate for now..
+            //if (!IsDXILSigned(pBlob->GetBufferPointer())) {
+            if (!ValidateDXCBlob(pBlob.Get(), pLibrary))
+                return false;
+            //}
 
             if (!LoadShader(path, pBlob.Get())) {
                 LOG_INDENT_END;

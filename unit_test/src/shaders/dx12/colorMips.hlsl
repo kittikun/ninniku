@@ -33,12 +33,12 @@
 RWTexture2DArray<float4> dstTex;
 
 [numthreads(COLORMIPS_NUMTHREAD_X, COLORMIPS_NUMTHREAD_Y, COLORMIPS_NUMTHREAD_Z)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
+void main(uint3 DTI : SV_DispatchThreadID)
 {
-    uint16_t w, h, elems;
+    uint w, h, elems;
 
     dstTex.GetDimensions(w, h, elems);
 
-    if (all(DTI.xy < uint16_t2(w, h)))
+    if (all(DTI.xy < uint2(w, h)))
         dstTex[DTI] = float4(color20[targetMip], 1);
 }

@@ -50,6 +50,6 @@ namespace hlsl {
 
 namespace ninniku {
     [[nodiscard]] IDxcLibrary* GetDXCLibrary();
-    [[nodiscard]] bool IsDXILSigned(void* buffer);
+    //[[nodiscard]] bool IsDXILSigned(void* buffer);
     [[nodiscard]] bool ValidateDXCBlob(IDxcBlobEncoding* pBlob, IDxcLibrary* pLibrary);
 } // namespace ninniku

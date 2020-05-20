@@ -33,7 +33,7 @@
 RWTexture2DArray<float4> dstTex;
 
 [numthreads(COLORFACES_NUMTHREAD_X, COLORFACES_NUMTHREAD_Y, COLORFACES_NUMTHREAD_Z)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
+void main(uint3 DTI : SV_DispatchThreadID)
 {
     // we can skip bound checks because we use a fixed size of 512
     // If you use a numthread that is not a power of 2, you might want to add one

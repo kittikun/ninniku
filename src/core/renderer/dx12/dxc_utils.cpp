@@ -27,12 +27,12 @@
 #include <dxcapi.h>
 
 namespace ninniku {
-    // https://www.wihlidal.com/blog/pipeline/2018-09-16-dxil-signing-post-compile/
-    struct DxilMinimalHeader
-    {
-        UINT32 four_cc;
-        UINT32 hash_digest[4];
-    };
+    //// https://www.wihlidal.com/blog/pipeline/2018-09-16-dxil-signing-post-compile/
+    //struct DxilMinimalHeader
+    //{
+    //    UINT32 four_cc;
+    //    UINT32 hash_digest[4];
+    //};
 
     IDxcLibrary* GetDXCLibrary()
     {
@@ -48,16 +48,17 @@ namespace ninniku {
         return pLibrary;
     }
 
-    bool IsDXILSigned(void* buffer)
-    {
-        DxilMinimalHeader* header = reinterpret_cast<DxilMinimalHeader*>(buffer);
-        bool has_digest = false;
-        has_digest |= header->hash_digest[0] != 0x0;
-        has_digest |= header->hash_digest[1] != 0x0;
-        has_digest |= header->hash_digest[2] != 0x0;
-        has_digest |= header->hash_digest[3] != 0x0;
-        return has_digest;
-    }
+    // this is not working, find another way later
+    //bool IsDXILSigned(void* buffer)
+    //{
+    //    DxilMinimalHeader* header = reinterpret_cast<DxilMinimalHeader*>(buffer);
+    //    bool has_digest = false;
+    //    has_digest |= header->hash_digest[0] != 0x0;
+    //    has_digest |= header->hash_digest[1] != 0x0;
+    //    has_digest |= header->hash_digest[2] != 0x0;
+    //    has_digest |= header->hash_digest[3] != 0x0;
+    //    return has_digest;
+    //}
 
     bool ValidateDXCBlob(IDxcBlobEncoding* pBlob, IDxcLibrary* pLibrary)
     {

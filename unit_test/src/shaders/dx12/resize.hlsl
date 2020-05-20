@@ -35,7 +35,7 @@ RWTexture2DArray<float4> dstTex;
 SamplerState ssLinear;
 
 [numthreads(RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_X, RESIZE_NUMTHREAD_Z)]
-void main(uint16_t3 DTI : SV_DispatchThreadID)
+void main(uint3 DTI : SV_DispatchThreadID)
 {
     float w, h, dummy2;
 
