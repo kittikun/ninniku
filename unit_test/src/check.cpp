@@ -36,7 +36,7 @@ uint32_t GetCRC(uint8_t* data, uint32_t size)
 
 void CheckCRC(uint8_t* data, uint32_t size, uint32_t checksum)
 {
-    BOOST_TEST(GetCRC(data, size) == checksum);
+    BOOST_REQUIRE(GetCRC(data, size) == checksum);
 }
 
 void CheckFileCRC(std::filesystem::path path, uint32_t checksum)

@@ -24,6 +24,7 @@
 #include "ninniku/core/renderer/renderdevice.h"
 #include "core/renderer/dx11/DX11.h"
 #include "core/renderer/dx12/DX12.h"
+#include "core/renderer/null.h"
 #include "utils/log.h"
 #include "utils/misc.h"
 #include "globals.h"
@@ -34,6 +35,7 @@
 #include <DXProgrammableCapture.h>
 #include <dxgi1_4.h>
 #include <dxgidebug.h>
+#include <Windows.h>
 
 namespace ninniku {
     Globals Globals::_instance;
@@ -75,12 +77,8 @@ namespace ninniku {
         return Globals::Instance()._renderer;
     }
 
-    bool _Initialize(const ERenderer renderer, const ELogLevel logLevel)
+    bool _Initialize(const ERenderer renderer)
     {
-        ninniku::Log::Initialize(logLevel);
-
-        LOG << "ninniku HLSL compute shader framework";
-
         if (Globals::Instance()._doCapture) {
             // renderdoc doesn't support DXIL at the moment
             // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
@@ -102,6 +100,11 @@ namespace ninniku {
         auto& dx = Globals::Instance()._renderer;
 
         switch (renderer) {
+            case ERenderer::RENDERER_NULL: {
+                dx.reset(new NullRenderer());
+            }
+            break;
+
             case ERenderer::RENDERER_DX11:
             case ERenderer::RENDERER_WARP_DX11: {
                 dx.reset(new DX11(renderer));
@@ -110,9 +113,7 @@ namespace ninniku {
 
             case ERenderer::RENDERER_DX12:
             case ERenderer::RENDERER_WARP_DX12: {
-                auto dx12 = new DX12(renderer);
-
-                dx.reset(dx12);
+                dx.reset(new DX12(renderer));
             }
             break;
 
@@ -145,11 +146,33 @@ namespace ninniku {
         Globals::Instance()._bc7Quick = (flags & EInitializationFlags::IF_BC7_QUICK_MODE) != 0;
     }
 
+    void InitializeLog(const ELogLevel logLevel)
+    {
+        ninniku::Log::Initialize(logLevel);
+
+        LOG << "ninniku HLSL compute shader framework";
+    }
+
+    void FixFlags(const ERenderer renderer, uint32_t& flags)
+    {
+        if (!IsDebuggerPresent() && ((renderer & ERenderer::RENDERER_DX12) != 0) && ((flags & EInitializationFlags::IF_DisableDX12DebugLayer) != 0)) {
+            // disable is not debbugger is attached since you cannot see the messages anyway
+            LOG << "No debugger detected, disabling DX12 debug layer..";
+
+            flags = flags & ~EInitializationFlags::IF_DisableDX12DebugLayer;
+        }
+
+        if (renderer == ERenderer::RENDERER_NULL)
+            flags = 0;
+    }
+
     bool Initialize(const ERenderer renderer, const std::vector<std::filesystem::path>& shaderPaths, uint32_t flags, const ELogLevel logLevel)
     {
+        InitializeLog(logLevel);
+        FixFlags(renderer, flags);
         InitializeGlobals(flags);
 
-        if (!_Initialize(renderer, logLevel))
+        if (!_Initialize(renderer))
             return false;
 
         if ((shaderPaths.size() > 0)) {
@@ -169,9 +192,11 @@ namespace ninniku {
 
     bool Initialize(const ERenderer renderer, uint32_t flags, const ELogLevel logLevel)
     {
+        InitializeLog(logLevel);
+        FixFlags(renderer, flags);
         InitializeGlobals(flags);
 
-        return _Initialize(renderer, logLevel);
+        return _Initialize(renderer);
     }
 
     void Terminate()
@@ -179,8 +204,9 @@ namespace ninniku {
         LOG << "Shutting down..";
 
         auto& renderer = Globals::Instance()._renderer;
+        auto isNull = (renderer->GetType() != ERenderer::RENDERER_NULL);
 
-        if (Globals::Instance()._doCapture) {
+        if ((renderer->GetType() != ERenderer::RENDERER_NULL) && (Globals::Instance()._doCapture)) {
             if ((renderer->GetType() & ERenderer::RENDERER_DX11) != 0) {
                 if (Globals::Instance()._renderDocApi != nullptr) {
                     Globals::Instance()._renderDocApi->EndFrameCapture(nullptr, nullptr);
@@ -198,7 +224,7 @@ namespace ninniku {
         renderer->Finalize();
         renderer.reset();
 
-        if (Globals::Instance()._useDebugLayer) {
+        if (!isNull && Globals::Instance()._useDebugLayer) {
             Microsoft::WRL::ComPtr<IDXGIDebug1> dxgiDebug;
             if (!CheckAPIFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug)), "DXGIGetDebugInterface1")) {
                 LOG << "Reporting live objects";

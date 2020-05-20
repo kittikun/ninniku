@@ -80,7 +80,6 @@ namespace ninniku {
         DX12Device _device;
 
         // commands and fences
-        DX12CommandAllocator _commandAllocatorCompute;
         DX12CommandQueue _commandQueue;
         DX12Fence _fence;
         uint64_t volatile _fenceValue;

@@ -46,6 +46,7 @@ namespace ninniku {
 
     enum ERenderer : uint8_t
     {
+        RENDERER_NULL = 0x0,    // When you don't need a renderer (only process images)
         RENDERER_WARP = 0x1,
         RENDERER_DX11 = 0x2,
         RENDERER_DX12 = 0x4,

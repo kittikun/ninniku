@@ -210,6 +210,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClCompile Include="src\core\renderer\dx11\DX11Types.cpp" />
     <ClCompile Include="src\core\renderer\dx12\DX12.cpp" />
     <ClCompile Include="src\core\renderer\dx12\DX12Types.cpp" />
+    <ClCompile Include="src\core\renderer\dx12\dxc_utils.cpp" />
     <ClCompile Include="src\ninniku.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -245,7 +246,9 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClInclude Include="src\core\renderer\dx11\DX11Types.h" />
     <ClInclude Include="src\core\renderer\dx12\DX12.h" />
     <ClInclude Include="src\core\renderer\dx12\DX12Types.h" />
+    <ClInclude Include="src\core\renderer\dx12\dxc_utils.h" />
     <ClInclude Include="src\core\renderer\DXCommon.h" />
+    <ClInclude Include="src\core\renderer\null.h" />
     <ClInclude Include="src\globals.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\utils\log.h" />

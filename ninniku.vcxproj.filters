@@ -91,6 +91,9 @@
     <ClCompile Include="src\utils\objectTracker.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\renderer\dx12\dxc_utils.cpp">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -176,6 +179,12 @@
     </ClInclude>
     <ClInclude Include="src\globals.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx12\dxc_utils.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\null.h">
+      <Filter>Source Files\core\renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

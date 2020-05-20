@@ -23,6 +23,12 @@
 #include <boost/mpl/vector.hpp>
 #include <string_view>
 
+struct SetupFixtureNull
+{
+    SetupFixtureNull();
+    ~SetupFixtureNull();
+};
+
 struct SetupFixtureDX11
 {
     SetupFixtureDX11();
@@ -62,5 +68,9 @@ struct SetupFixtureDX12Warp
 typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12, SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesAll;
 typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesWarpAll;
 typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesHWAll;
+
 typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
+typedef boost::mpl::vector<SetupFixtureDX11Warp> FixturesDX11Warp;
+
 typedef boost::mpl::vector<SetupFixtureDX12> FixturesDX12;
+typedef boost::mpl::vector<SetupFixtureDX12Warp> FixturesDX12Warp;

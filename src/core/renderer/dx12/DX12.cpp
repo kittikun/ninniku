@@ -31,6 +31,7 @@
 #include "../../../utils/misc.h"
 #include "../../../utils/objectTracker.h"
 #include "../DXCommon.h"
+#include "dxc_utils.h"
 
 #pragma warning(push)
 #pragma warning(disable:4100)
@@ -43,31 +44,6 @@
 #include <dxcapi.h>
 #include <d3dx12/d3dx12.h>
 #include <boost/crc.hpp>
-
-namespace hlsl {
-    // this is from DxilContainer.h
-#define DXIL_FOURCC(ch0, ch1, ch2, ch3) (                            \
-            (uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
-            (uint32_t)(uint8_t)(ch2) << 16  | (uint32_t)(uint8_t)(ch3) << 24   \
-        )
-
-    enum DxilFourCC
-    {
-        DFCC_Container = DXIL_FOURCC('D', 'X', 'B', 'C'), // for back-compat with tools that look for DXBC containers
-        DFCC_ResourceDef = DXIL_FOURCC('R', 'D', 'E', 'F'),
-        DFCC_InputSignature = DXIL_FOURCC('I', 'S', 'G', '1'),
-        DFCC_OutputSignature = DXIL_FOURCC('O', 'S', 'G', '1'),
-        DFCC_PatchConstantSignature = DXIL_FOURCC('P', 'S', 'G', '1'),
-        DFCC_ShaderStatistics = DXIL_FOURCC('S', 'T', 'A', 'T'),
-        DFCC_ShaderDebugInfoDXIL = DXIL_FOURCC('I', 'L', 'D', 'B'),
-        DFCC_ShaderDebugName = DXIL_FOURCC('I', 'L', 'D', 'N'),
-        DFCC_FeatureInfo = DXIL_FOURCC('S', 'F', 'I', '0'),
-        DFCC_PrivateData = DXIL_FOURCC('P', 'R', 'I', 'V'),
-        DFCC_RootSignature = DXIL_FOURCC('R', 'T', 'S', '0'),
-        DFCC_DXIL = DXIL_FOURCC('D', 'X', 'I', 'L'),
-        DFCC_PipelineStateValidation = DXIL_FOURCC('P', 'S', 'V', '0'),
-    };
-}
 
 namespace ninniku {
     DX12::DX12(ERenderer type)
@@ -572,7 +548,6 @@ namespace ninniku {
         }
 
         Microsoft::WRL::ComPtr<IDXGIAdapter> pAdapter;
-
         Microsoft::WRL::ComPtr<IDXGIFactory4> dxgiFactory;
 
         if (DXCommon::GetDXGIFactory<IDXGIFactory4>(dxgiFactory.GetAddressOf())) {
@@ -593,11 +568,9 @@ namespace ninniku {
             return false;
         }
 
-        auto minFeatureLevel = D3D_FEATURE_LEVEL_11_0;
+        auto minFeatureLevel = D3D_FEATURE_LEVEL_12_0;
 
         hr = s_DynamicD3D12CreateDevice(pAdapter.Get(), minFeatureLevel, IID_PPV_ARGS(&_device));
-
-        Microsoft::WRL::ComPtr<IDXGIDevice3> dxgiDevice;
 
         if (SUCCEEDED(hr)) {
             DXGI_ADAPTER_DESC desc;
@@ -1136,24 +1109,17 @@ namespace ninniku {
         srvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-        HRESULT hr;
-
         D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
         samplerHeapDesc.NumDescriptors = 1;
         samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
         samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-        hr = _device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&_samplerHeap));
+        auto hr = _device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&_samplerHeap));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap"))
             return false;
 
         // Create command allocators
-        hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&_commandAllocatorCompute));
-
-        if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator (compute)"))
-            return false;
-
         hr = _device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&_copyCommandAllocator));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator (copy)"))
@@ -1218,17 +1184,6 @@ namespace ninniku {
 
         _copyCmdList->SetName(L"Transition Command List");
 
-        //// parse shaders
-        //if ((shaderPaths.size() > 0)) {
-        //    for (auto& path : shaderPaths) {
-        //        if (!LoadShaders(path)) {
-        //            auto fmt = boost::format("Failed to load shaders in: %1%") % path;
-        //            LOGE << boost::str(fmt);
-        //            return false;
-        //        }
-        //    }
-        //}
-
         if (!CreateSamplers())
             return false;
 
@@ -1244,19 +1199,22 @@ namespace ninniku {
 
             LOG_INDENT_START << boost::str(fmt);
 
-            IDxcLibrary* pLibrary = nullptr;
+            IDxcLibrary* pLibrary = GetDXCLibrary();
 
-            auto hr = DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary);
-
-            if (CheckAPIFailed(hr, "DxcCreateInstance for CLSID_DxcLibrary"))
+            if (pLibrary == nullptr)
                 return false;
 
             Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
 
-            hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path.string()).c_str(), nullptr, &pBlob);
+            auto hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path.string()).c_str(), nullptr, &pBlob);
 
             if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile"))
                 return false;
+
+            if (!IsDXILSigned(pBlob->GetBufferPointer())) {
+                if (!ValidateDXCBlob(pBlob.Get(), pLibrary))
+                    return false;
+            }
 
             if (!LoadShader(path, pBlob.Get())) {
                 LOG_INDENT_END;
