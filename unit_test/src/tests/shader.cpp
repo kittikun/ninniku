@@ -248,7 +248,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesDX12, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 {
     // Disable HW GPU support when running on CI
     if (T::isNull)
