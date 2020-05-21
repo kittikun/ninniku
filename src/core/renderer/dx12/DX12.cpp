@@ -1201,21 +1201,24 @@ namespace ninniku {
 
             IDxcLibrary* pLibrary = GetDXCLibrary();
 
-            if (pLibrary == nullptr)
+            if (pLibrary == nullptr) {
+                LOG_INDENT_END;
                 return false;
+            }
 
             Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
 
             auto hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path.string()).c_str(), nullptr, &pBlob);
 
-            if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile"))
+            if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile")) {
+                LOG_INDENT_END;
                 return false;
+            }
 
-            // this is broken so always validate for now..
-            //if (!IsDXILSigned(pBlob->GetBufferPointer())) {
-            if (!ValidateDXCBlob(pBlob.Get(), pLibrary))
+            if (!ValidateDXCBlob(pBlob.Get(), pLibrary)) {
+                LOG_INDENT_END;
                 return false;
-            //}
+            }
 
             if (!LoadShader(path, pBlob.Get())) {
                 LOG_INDENT_END;
@@ -1228,9 +1231,41 @@ namespace ninniku {
         return true;
     }
 
-    bool DX12::LoadShader([[maybe_unused]]const std::string_view& name, [[maybe_unused]]const void* pData, [[maybe_unused]]const size_t size)
+    bool DX12::LoadShader(const std::string_view& name, const void* pData, const uint32_t size)
     {
-        throw std::exception("not implemented");
+        auto fmt = boost::format("Loading %1% directly from memory..") % name;
+
+        LOG_INDENT_START << boost::str(fmt);
+
+        IDxcLibrary* pLibrary = GetDXCLibrary();
+
+        if (pLibrary == nullptr) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
+
+        auto hr = pLibrary->CreateBlobWithEncodingFromPinned(pData, size, 0, pBlob.GetAddressOf());
+
+        if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobWithEncodingFromPinned")) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        if (!ValidateDXCBlob(pBlob.Get(), pLibrary)) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        if (!LoadShader(name, pBlob.Get())) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        LOG_INDENT_END;
+
+        return true;
     }
 
     bool DX12::LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob)
@@ -1321,7 +1356,7 @@ namespace ninniku {
             return false;
         }
 
-        // Count the number of .cso found
+        // Count the number of .dxco found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
         auto fileCounter = [&](const std::filesystem::directory_entry & d) {

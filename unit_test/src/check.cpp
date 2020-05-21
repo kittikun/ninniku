@@ -19,11 +19,11 @@
 // SOFTWARE.
 
 #include "check.h"
+#include "utils.h"
 
 #include <boost/crc.hpp>
 #include <boost/test/unit_test.hpp>
 #include <array>
-#include <fstream>
 
 uint32_t GetCRC(uint8_t* data, uint32_t size)
 {
@@ -41,13 +41,7 @@ void CheckCRC(uint8_t* data, uint32_t size, uint32_t checksum)
 
 void CheckFileCRC(std::filesystem::path path, uint32_t checksum)
 {
-    std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
-    std::ifstream::pos_type pos = ifs.tellg();
+    auto data = LoadFile(path);
 
-    std::vector<uint8_t> result(pos);
-
-    ifs.seekg(0, std::ios::beg);
-    ifs.read(reinterpret_cast<char*>(result.data()), pos);
-
-    CheckCRC(result.data(), static_cast<uint32_t>(result.size()), checksum);
+    CheckCRC(data.data(), static_cast<uint32_t>(data.size()), checksum);
 }

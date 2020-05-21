@@ -23,6 +23,7 @@
 
 #pragma comment(lib, "D3DCompiler.lib")
 
+#include "../../../globals.h"
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
 #include "../../../utils/objectTracker.h"
@@ -263,9 +264,8 @@ namespace ninniku {
 
         UINT createDeviceFlags = 0;
 
-#ifdef _DEBUG
-        createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+        if (Globals::Instance()._useDebugLayer)
+            createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 
         std::array<D3D_FEATURE_LEVEL, 1> featureLevels = { D3D_FEATURE_LEVEL_11_1 };
 
@@ -702,7 +702,7 @@ namespace ninniku {
         return true;
     }
 
-    bool DX11::LoadShader(const std::string_view& name, const void* pData, const size_t size)
+    bool DX11::LoadShader(const std::string_view& name, const void* pData, const uint32_t size)
     {
         auto fmt = boost::format("Loading shader: %1% directly from memory");
 

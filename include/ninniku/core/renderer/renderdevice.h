@@ -52,7 +52,7 @@ namespace ninniku {
         virtual void Finalize() = 0;
         [[nodiscard]] virtual bool Initialize() = 0;
         [[nodiscard]] virtual bool LoadShader(const std::filesystem::path& path) = 0;
-        [[nodiscard]] virtual bool LoadShader(const std::string_view& name, const void* pData, const size_t size) = 0;
+        [[nodiscard]] virtual bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
         [[nodiscard]] virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;

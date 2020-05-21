@@ -157,7 +157,7 @@ namespace ninniku {
     {
         if (!IsDebuggerPresent() && ((renderer & ERenderer::RENDERER_DX12) != 0) && ((flags & EInitializationFlags::IF_DisableDX12DebugLayer) != 0)) {
             // disable is not debbugger is attached since you cannot see the messages anyway
-            LOG << "No debugger detected, disabling DX12 debug layer..";
+            LOGW << "No debugger detected, disabling DX12 debug layer..";
 
             flags = flags & ~EInitializationFlags::IF_DisableDX12DebugLayer;
         }

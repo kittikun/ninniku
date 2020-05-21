@@ -38,6 +38,22 @@
 
 BOOST_AUTO_TEST_SUITE(Shader)
 
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_LoadMemory, T, FixturesAll, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    auto name = "colorMips";
+    auto fmt = boost::format("%1%\\%2%%3%") % T::shaderRoot % name % dx->GetShaderExtension();
+
+    auto shader = LoadFile(boost::str(fmt));
+
+    BOOST_REQUIRE(dx->LoadShader(name, shader.data(), static_cast<uint32_t>(shader.size())));
+}
+
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
 {
     // Disable HW GPU support when running on CI

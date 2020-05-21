@@ -43,7 +43,7 @@ namespace ninniku {
         void Finalize() override {}
         bool Initialize() override { return true; }
         bool LoadShader([[maybe_unused]] const std::filesystem::path& path) override { throw std::exception("Invalid for RENDERER_NULL"); }
-        bool LoadShader([[maybe_unused]] const std::string_view& name, [[maybe_unused]] const void* pData, [[maybe_unused]] const size_t size) override { throw std::exception("Invalid for RENDERER_NULL"); }
+        bool LoadShader([[maybe_unused]] const std::string_view& name, [[maybe_unused]] const void* pData, [[maybe_unused]] const uint32_t size) override { throw std::exception("Invalid for RENDERER_NULL"); }
         MappedResourceHandle Map([[maybe_unused]] const BufferHandle& bObj) override { throw std::exception("Invalid for RENDERER_NULL"); }
         MappedResourceHandle Map([[maybe_unused]] const TextureHandle& tObj, [[maybe_unused]] const uint32_t index) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool UpdateConstantBuffer([[maybe_unused]] const std::string_view& name, [[maybe_unused]] void* data, [[maybe_unused]] const uint32_t size) override { throw std::exception("Invalid for RENDERER_NULL"); }

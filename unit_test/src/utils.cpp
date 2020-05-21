@@ -21,6 +21,20 @@
 #include "utils.h"
 
 #include <boost/format.hpp>
+#include <fstream>
+
+std::vector<uint8_t> LoadFile(const std::filesystem::path& path)
+{
+    std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
+    std::ifstream::pos_type pos = ifs.tellg();
+
+    std::vector<uint8_t> result(pos);
+
+    ifs.seekg(0, std::ios::beg);
+    ifs.read(reinterpret_cast<char*>(result.data()), pos);
+
+    return result;
+}
 
 bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, const std::string_view& shaderRoot)
 {
