@@ -23,7 +23,8 @@
 
 #include <cassert>
 
-namespace ninniku {
+namespace ninniku
+{
     constexpr const bool IsPow2(const uint32_t x) noexcept
     {
         return ((x != 0) && !(x & (x - 1)));

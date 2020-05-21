@@ -36,7 +36,8 @@
 #include <array>
 #include <filesystem>
 
-namespace ninniku {
+namespace ninniku
+{
     cmftImage::cmftImage()
         : _impl{ new cmftImageImpl() }
     {
@@ -209,7 +210,7 @@ namespace ninniku {
 
         bool imageLoaded = false;
 
-        if (std::filesystem::path{ path } .extension() == ".exr")
+        if (std::filesystem::path{ path }.extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
             imageLoaded = imageLoad(_image, path.data(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.data(), cmft::TextureFormat::RGBA32F);

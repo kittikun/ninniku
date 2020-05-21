@@ -23,12 +23,13 @@
 
 #include "../../../utils/misc.h"
 
-namespace ninniku {
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // DX11BufferImpl
     //////////////////////////////////////////////////////////////////////////
     DX11BufferImpl::DX11BufferImpl(const std::shared_ptr<DX11BufferInternal>& impl) noexcept
-        : _impl { impl }
+        : _impl{ impl }
     {
     }
 
@@ -131,7 +132,7 @@ namespace ninniku {
     // DX11TextureImpl
     //////////////////////////////////////////////////////////////////////////
     DX11TextureImpl::DX11TextureImpl(const std::shared_ptr<DX11TextureInternal>& impl) noexcept
-        : _impl { impl }
+        : _impl{ impl }
     {
     }
 

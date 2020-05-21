@@ -22,7 +22,8 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class NullRenderer final : public RenderDevice
     {
     public:

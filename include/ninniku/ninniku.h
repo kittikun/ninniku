@@ -27,7 +27,8 @@
 #include <string>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     enum  EInitializationFlags
     {
         IF_None = 0,

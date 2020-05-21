@@ -22,7 +22,8 @@
 
 #include "ninniku/core/renderer/types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     // TODO: we need to address the case were user owned objects like a command
     // goes are destroyed and never re-used again. At the moment, ObjectTracker will
     // hold dead references..

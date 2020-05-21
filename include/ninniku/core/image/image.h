@@ -24,7 +24,8 @@
 #include "../renderer/renderdevice.h"
 #include "../renderer/types.h"
 
-namespace ninniku {
+namespace ninniku
+{
     using SizeFixResult = std::tuple<bool, uint32_t, uint32_t>;
 
     class Image

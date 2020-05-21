@@ -28,7 +28,8 @@
 
 struct ID3D11ShaderReflection;
 
-namespace ninniku {
+namespace ninniku
+{
     class DX11 final : public RenderDevice
     {
     public:

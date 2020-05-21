@@ -37,7 +37,8 @@
 #include <dxgidebug.h>
 #include <Windows.h>
 
-namespace ninniku {
+namespace ninniku
+{
     Globals Globals::_instance;
 
     void LoadRenderDoc()
@@ -100,19 +101,22 @@ namespace ninniku {
         auto& dx = Globals::Instance()._renderer;
 
         switch (renderer) {
-            case ERenderer::RENDERER_NULL: {
+            case ERenderer::RENDERER_NULL:
+            {
                 dx.reset(new NullRenderer());
             }
             break;
 
             case ERenderer::RENDERER_DX11:
-            case ERenderer::RENDERER_WARP_DX11: {
+            case ERenderer::RENDERER_WARP_DX11:
+            {
                 dx.reset(new DX11(renderer));
             }
             break;
 
             case ERenderer::RENDERER_DX12:
-            case ERenderer::RENDERER_WARP_DX12: {
+            case ERenderer::RENDERER_WARP_DX12:
+            {
                 dx.reset(new DX12(renderer));
             }
             break;

@@ -25,7 +25,8 @@
 
 #include <dxgiformat.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class ddsImageImpl;
 
     class ddsImage final : public Image

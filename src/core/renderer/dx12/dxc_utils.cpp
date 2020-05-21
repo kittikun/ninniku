@@ -26,7 +26,8 @@
 
 #include <dxcapi.h>
 
-namespace ninniku {
+namespace ninniku
+{
     IDxcLibrary* GetDXCLibrary()
     {
         static IDxcLibrary* pLibrary = nullptr;

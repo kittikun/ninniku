@@ -32,12 +32,13 @@
 #include <d3dx12/d3dx12.h>
 #include <boost/crc.hpp>
 
-namespace ninniku {
+namespace ninniku
+{
     //////////////////////////////////////////////////////////////////////////
     // DX12BufferImpl
     //////////////////////////////////////////////////////////////////////////
     DX12BufferImpl::DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl) noexcept
-        : _impl { impl }
+        : _impl{ impl }
     {
     }
 
@@ -67,7 +68,7 @@ namespace ninniku {
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
     DX12CommandInternal::DX12CommandInternal(uint32_t shaderHash) noexcept
-        : _contextShaderHash { shaderHash }
+        : _contextShaderHash{ shaderHash }
     {
     }
 
@@ -162,20 +163,23 @@ namespace ninniku {
                 srvDesc.ViewDimension = static_cast<D3D12_SRV_DIMENSION>(found->second.Dimension);
 
                 switch (found->second.Dimension) {
-                    case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY: {
+                    case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
+                    {
                         srvDesc.TextureCubeArray = {};
                         srvDesc.TextureCubeArray.MipLevels = locked->_desc->numMips;
                         srvDesc.TextureCubeArray.NumCubes = locked->_desc->arraySize / CUBEMAP_NUM_FACES;
                     }
                     break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURECUBE: {
+                    case D3D12_SRV_DIMENSION_TEXTURECUBE:
+                    {
                         srvDesc.TextureCube = {};
                         srvDesc.TextureCube.MipLevels = locked->_desc->numMips;
                     }
                     break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE2DARRAY: {
+                    case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
+                    {
                         srvDesc.Texture2DArray = {};
                         srvDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
 
@@ -191,7 +195,8 @@ namespace ninniku {
                     }
                     break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE1DARRAY: {
+                    case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
+                    {
                         srvDesc.Texture1DArray = {};
                         srvDesc.Texture1DArray.ArraySize = locked->_desc->arraySize;
                         srvDesc.Texture1DArray.MostDetailedMip = dxSRV->_index;
@@ -199,19 +204,22 @@ namespace ninniku {
                     }
                     break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE1D: {
+                    case D3D12_SRV_DIMENSION_TEXTURE1D:
+                    {
                         srvDesc.Texture1D = {};
                         srvDesc.Texture1D.MipLevels = locked->_desc->numMips;
                     }
                     break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE2D: {
+                    case D3D12_SRV_DIMENSION_TEXTURE2D:
+                    {
                         srvDesc.Texture2D = {};
                         srvDesc.Texture2D.MipLevels = locked->_desc->numMips;
                     }
                     break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE3D: {
+                    case D3D12_SRV_DIMENSION_TEXTURE3D:
+                    {
                         srvDesc.Texture3D = {};
                         srvDesc.Texture3D.MipLevels = locked->_desc->numMips;
                     }
@@ -372,10 +380,10 @@ namespace ninniku {
     // DX12MappedResource
     //////////////////////////////////////////////////////////////////////////
     DX12MappedResource::DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data) noexcept
-        : _resource { resource }
-    , _subresource{ subresource }
-    , _range{ range }
-    , _data{ data } {
+        : _resource{ resource }
+        , _subresource{ subresource }
+        , _range{ range }
+        , _data{ data } {
     }
 
     DX12MappedResource::~DX12MappedResource()
@@ -387,7 +395,7 @@ namespace ninniku {
     // DX12ShaderResourceView
     //////////////////////////////////////////////////////////////////////////
     DX12ShaderResourceView::DX12ShaderResourceView(uint32_t index) noexcept
-        : _index { index }
+        : _index{ index }
     {
     }
 
@@ -395,7 +403,7 @@ namespace ninniku {
     // DX12TextureImpl
     //////////////////////////////////////////////////////////////////////////
     DX12TextureImpl::DX12TextureImpl(const std::shared_ptr<DX12TextureInternal>& impl) noexcept
-        : _impl { impl }
+        : _impl{ impl }
     {
     }
 
@@ -438,7 +446,7 @@ namespace ninniku {
     // DX12UnorderedAccessView
     //////////////////////////////////////////////////////////////////////////
     DX12UnorderedAccessView::DX12UnorderedAccessView(uint32_t index) noexcept
-        : _index { index }
+        : _index{ index }
     {
     }
 } // namespace ninniku

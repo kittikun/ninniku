@@ -32,7 +32,8 @@
 #include <d3dx12/d3dx12.h>
 #include <comdef.h>
 
-namespace ninniku {
+namespace ninniku
+{
     ddsImage::ddsImage()
         : _impl{ new ddsImageImpl() }
     {

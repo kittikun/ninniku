@@ -28,7 +28,8 @@
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
 
-namespace ninniku {
+namespace ninniku
+{
     class DX12 final : public RenderDevice
     {
     public:

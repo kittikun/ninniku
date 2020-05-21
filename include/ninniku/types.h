@@ -27,7 +27,8 @@
 #include <memory>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
 
     struct BufferObject;

@@ -28,7 +28,8 @@
 #include <d3d12.h>
 #include <d3d12shader.h>
 
-namespace ninniku {
+namespace ninniku
+{
     using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
     using DX12CommandQueue = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
     using DX12GraphicsCommandList = Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>;

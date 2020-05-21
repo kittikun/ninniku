@@ -23,7 +23,8 @@
 #include "../../export.h"
 #include "image.h"
 
-namespace ninniku {
+namespace ninniku
+{
     class cmftImageImpl;
 
     class cmftImage final : public Image

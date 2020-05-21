@@ -30,7 +30,8 @@
 #include <variant>
 #include <vector>
 
-namespace ninniku {
+namespace ninniku
+{
     using DX11Buffer = Microsoft::WRL::ComPtr<ID3D11Buffer>;
     using DX11Context = Microsoft::WRL::ComPtr<ID3D11DeviceContext>;
     using DX11CS = Microsoft::WRL::ComPtr<ID3D11ComputeShader>;

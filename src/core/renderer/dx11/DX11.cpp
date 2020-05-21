@@ -34,7 +34,8 @@
 #include <d3d11shader.h>
 #include <d3dcompiler.h>
 
-namespace ninniku {
+namespace ninniku
+{
     DX11::DX11(ERenderer type)
         : _type{ type }
     {
@@ -542,7 +543,8 @@ namespace ninniku {
         static std::function<ID3D11UnorderedAccessView*(const UnorderedAccessView*)> uavCast = &DX11::castGenericResourceToDX11Resource<UnorderedAccessView, DX11UnorderedAccessView, ID3D11UnorderedAccessView>;
         static std::function<ID3D11SamplerState*(const SamplerState*)> ssCast = &DX11::castGenericResourceToDX11Resource<SamplerState, DX11SamplerState, ID3D11SamplerState>;
 
-        auto lambda = [&](auto & kvp, auto & container, auto castFn) {
+        auto lambda = [&](auto & kvp, auto & container, auto castFn)
+        {
             auto f = cs.bindSlots.find(kvp.first);
 
             if (f != cs.bindSlots.end()) {
@@ -776,7 +778,8 @@ namespace ninniku {
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ShaderExt));
         };
 
@@ -797,7 +800,8 @@ namespace ninniku {
         auto impl = static_cast<DX11TextureImpl*>(params.obj);
         auto internal = impl->_impl.lock();
 
-        auto lmbd = [&](ID3D11Resource * resource, D3D11_SHADER_RESOURCE_VIEW_DESC & desc, SRVHandle & target) {
+        auto lmbd = [&](ID3D11Resource * resource, D3D11_SHADER_RESOURCE_VIEW_DESC & desc, SRVHandle & target)
+        {
             auto srv = new DX11ShaderResourceView();
             auto hr = _device->CreateShaderResourceView(resource, &desc, srv->_resource.GetAddressOf());
 

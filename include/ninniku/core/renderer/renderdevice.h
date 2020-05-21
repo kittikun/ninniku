@@ -26,7 +26,8 @@
 
 #include <filesystem>
 
-namespace ninniku {
+namespace ninniku
+{
     class RenderDevice : NonCopyableBase
     {
         // no copy of any kind allowed

@@ -24,7 +24,8 @@
 
 #include <stdint.h>
 
-namespace ninniku {
+namespace ninniku
+{
     struct NINNIKU_API NonCopyable
     {
         // no copy of any kind allowed

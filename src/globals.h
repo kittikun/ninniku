@@ -24,7 +24,8 @@
 
 #include <renderdoc/renderdoc_app.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class Globals
     {
     public:

@@ -32,7 +32,8 @@
 #include <comdef.h>
 #include <windows.h>
 
-namespace ninniku {
+namespace ninniku
+{
     uint32_t Align(UINT uLocation, uint32_t uAlign)
     {
         // https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resources
@@ -107,7 +108,8 @@ namespace ninniku {
             case DXGI_FORMAT_R32G32B32A32_TYPELESS:
             case DXGI_FORMAT_R32G32B32A32_FLOAT:
             case DXGI_FORMAT_R32G32B32A32_UINT:
-            case DXGI_FORMAT_R32G32B32A32_SINT: {
+            case DXGI_FORMAT_R32G32B32A32_SINT:
+            {
                 res = 16;
                 break;
             }
@@ -115,7 +117,8 @@ namespace ninniku {
             case DXGI_FORMAT_R32G32B32_TYPELESS:
             case DXGI_FORMAT_R32G32B32_FLOAT:
             case DXGI_FORMAT_R32G32B32_UINT:
-            case DXGI_FORMAT_R32G32B32_SINT: {
+            case DXGI_FORMAT_R32G32B32_SINT:
+            {
                 res = 12;
                 break;
             }
@@ -136,7 +139,8 @@ namespace ninniku {
             case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
             case DXGI_FORMAT_Y416:
             case DXGI_FORMAT_Y210:
-            case DXGI_FORMAT_Y216: {
+            case DXGI_FORMAT_Y216:
+            {
                 res = 8;
                 break;
             }
@@ -178,7 +182,8 @@ namespace ninniku {
             case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
             case DXGI_FORMAT_AYUV:
             case DXGI_FORMAT_Y410:
-            case DXGI_FORMAT_YUY2: {
+            case DXGI_FORMAT_YUY2:
+            {
                 res = 4;
                 break;
             }
@@ -198,7 +203,8 @@ namespace ninniku {
             case DXGI_FORMAT_B5G6R5_UNORM:
             case DXGI_FORMAT_B5G5R5A1_UNORM:
             case DXGI_FORMAT_A8P8:
-            case DXGI_FORMAT_B4G4R4A4_UNORM: {
+            case DXGI_FORMAT_B4G4R4A4_UNORM:
+            {
                 res = 2;
                 break;
             }
@@ -211,7 +217,8 @@ namespace ninniku {
             case DXGI_FORMAT_A8_UNORM:
             case DXGI_FORMAT_AI44:
             case DXGI_FORMAT_IA44:
-            case DXGI_FORMAT_P8: {
+            case DXGI_FORMAT_P8:
+            {
                 res = 1;
                 break;
             }
@@ -239,7 +246,8 @@ namespace ninniku {
             case DXGI_FORMAT_BC6H_SF16:
             case DXGI_FORMAT_BC7_TYPELESS:
             case DXGI_FORMAT_BC7_UNORM:
-            case DXGI_FORMAT_BC7_UNORM_SRGB: {
+            case DXGI_FORMAT_BC7_UNORM_SRGB:
+            {
                 res = 1;
                 break;
             }

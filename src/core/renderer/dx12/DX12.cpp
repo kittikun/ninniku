@@ -45,7 +45,8 @@
 #include <d3dx12/d3dx12.h>
 #include <boost/crc.hpp>
 
-namespace ninniku {
+namespace ninniku
+{
     DX12::DX12(ERenderer type)
         : _type{ type }
     {
@@ -231,12 +232,12 @@ namespace ninniku {
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, resFlags);
 
         auto hr = _device->CreateCommittedResource(
-                      &heapProperties,
-                      D3D12_HEAP_FLAG_NONE,
-                      &desc,
-                      resState,
-                      nullptr,
-                      IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            resState,
+            nullptr,
+            IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
@@ -277,12 +278,12 @@ namespace ninniku {
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
 
         auto hr = _device->CreateCommittedResource(
-                      &heapProperties,
-                      D3D12_HEAP_FLAG_NONE,
-                      &desc,
-                      D3D12_RESOURCE_STATE_COPY_DEST,
-                      nullptr,
-                      IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(impl->_buffer.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
@@ -431,12 +432,12 @@ namespace ninniku {
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(cbuffer._size);
 
         auto hr = _device->CreateCommittedResource(
-                      &heapProperties,
-                      D3D12_HEAP_FLAG_NONE,
-                      &desc,
-                      D3D12_RESOURCE_STATE_COMMON,
-                      nullptr,
-                      IID_PPV_ARGS(cbuffer._resource.GetAddressOf()));
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            D3D12_RESOURCE_STATE_COMMON,
+            nullptr,
+            IID_PPV_ARGS(cbuffer._resource.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (resource)"))
             return false;
@@ -446,12 +447,12 @@ namespace ninniku {
 
         heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         hr = _device->CreateCommittedResource(
-                 &heapProperties,
-                 D3D12_HEAP_FLAG_NONE,
-                 &desc,
-                 D3D12_RESOURCE_STATE_GENERIC_READ,
-                 nullptr,
-                 IID_PPV_ARGS(cbuffer._upload.GetAddressOf()));
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(cbuffer._upload.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (upload)"))
             return false;
@@ -677,42 +678,42 @@ namespace ninniku {
 
         if (is1d) {
             desc = CD3DX12_RESOURCE_DESC::Tex1D(
-                       static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
-                       params->width,
-                       static_cast<uint16_t>(params->arraySize),
-                       static_cast<uint16_t>(params->numMips),
-                       resFlags
-                   );
+                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                params->width,
+                static_cast<uint16_t>(params->arraySize),
+                static_cast<uint16_t>(params->numMips),
+                resFlags
+            );
         } else if (is2d) {
             desc = CD3DX12_RESOURCE_DESC::Tex2D(
-                       static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
-                       params->width,
-                       params->height,
-                       static_cast<uint16_t>(params->arraySize),
-                       static_cast<uint16_t>(params->numMips),
-                       1,
-                       0,
-                       resFlags
-                   );
+                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                params->width,
+                params->height,
+                static_cast<uint16_t>(params->arraySize),
+                static_cast<uint16_t>(params->numMips),
+                1,
+                0,
+                resFlags
+            );
         } else {
             // is3d
             desc = CD3DX12_RESOURCE_DESC::Tex3D(
-                       static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
-                       params->width,
-                       params->height,
-                       static_cast<uint16_t>(params->depth),
-                       static_cast<uint16_t>(params->numMips),
-                       resFlags
-                   );
+                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                params->width,
+                params->height,
+                static_cast<uint16_t>(params->depth),
+                static_cast<uint16_t>(params->numMips),
+                resFlags
+            );
         }
 
         auto hr = _device->CreateCommittedResource(
-                      &heapProperties,
-                      D3D12_HEAP_FLAG_NONE,
-                      &desc,
-                      resState,
-                      nullptr,
-                      IID_PPV_ARGS(impl->_texture.GetAddressOf()));
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            resState,
+            nullptr,
+            IID_PPV_ARGS(impl->_texture.GetAddressOf()));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return TextureHandle();
@@ -727,12 +728,12 @@ namespace ninniku {
             desc = CD3DX12_RESOURCE_DESC::Buffer(reqSize);
 
             hr = _device->CreateCommittedResource(
-                     &heapProperties,
-                     D3D12_HEAP_FLAG_NONE,
-                     &desc,
-                     D3D12_RESOURCE_STATE_GENERIC_READ,
-                     nullptr,
-                     IID_PPV_ARGS(upload.GetAddressOf()));
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &desc,
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(upload.GetAddressOf()));
 
             if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (texture upload buffer)"))
                 return TextureHandle();
@@ -770,7 +771,8 @@ namespace ninniku {
         }
 
         if (isSRV) {
-            auto lmbd = [&](const std::shared_ptr<DX12TextureInternal>& internal, SRVHandle & target, uint32_t arrayIndex) {
+            auto lmbd = [&](const std::shared_ptr<DX12TextureInternal>& internal, SRVHandle & target, uint32_t arrayIndex)
+            {
                 auto srv = new DX12ShaderResourceView(arrayIndex);
 
                 srv->_resource = internal;
@@ -1359,7 +1361,8 @@ namespace ninniku {
         // Count the number of .dxco found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d) {
+        auto fileCounter = [&](const std::filesystem::directory_entry & d)
+        {
             return (!is_directory(d.path()) && (d.path().extension() == ShaderExt));
         };
 

@@ -23,7 +23,8 @@
 struct IDxcBlobEncoding;
 struct IDxcLibrary;
 
-namespace hlsl {
+namespace hlsl
+{
     // this is from DxilContainer.h
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) (                            \
             (uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
@@ -48,7 +49,8 @@ namespace hlsl {
     };
 }
 
-namespace ninniku {
+namespace ninniku
+{
     [[nodiscard]] IDxcLibrary* GetDXCLibrary();
     [[nodiscard]] bool ValidateDXCBlob(IDxcBlobEncoding* pBlob, IDxcLibrary* pLibrary);
 } // namespace ninniku
