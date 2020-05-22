@@ -50,6 +50,11 @@ namespace ninniku
         return _impl->InitializeFromTextureObject(dx, srcTex);
     }
 
+    bool cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex, const uint32_t cubeIndex)
+    {
+        return _impl->InitializeFromTextureObject(dx, srcTex, cubeIndex);
+    }
+
     const SizeFixResult cmftImage::IsRequiringFix() const
     {
         return _impl->IsRequiringFix();

@@ -74,6 +74,72 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesAll, T)
     CheckCRC(std::get<0>(data), std::get<1>(data), 1279329145);
 }
 
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, FixturesDX11, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
+    auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
+    auto res = std::make_unique<ninniku::cmftImage>();
+
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex, 1));
+
+    std::string filename = "cmft_from_texture_object_array_specific.hdr";
+
+    // check we can save
+    BOOST_REQUIRE(res->SaveImage(filename, ninniku::cmftImage::SaveType::LatLong));
+
+    std::array<std::string_view, 10> outFiles = {
+        "cmft_from_texture_object_array_specific_0_2048x1024.hdr",
+        "cmft_from_texture_object_array_specific_1_1024x512.hdr",
+        "cmft_from_texture_object_array_specific_2_512x256.hdr",
+        "cmft_from_texture_object_array_specific_3_256x128.hdr",
+        "cmft_from_texture_object_array_specific_4_128x64.hdr",
+        "cmft_from_texture_object_array_specific_5_64x32.hdr",
+        "cmft_from_texture_object_array_specific_6_32x16.hdr",
+        "cmft_from_texture_object_array_specific_7_16x8.hdr",
+        "cmft_from_texture_object_array_specific_8_8x4.hdr",
+        "cmft_from_texture_object_array_specific_9_4x2.hdr"
+    };
+
+    std::array<uint32_t, 10> outHash = {
+        1738107732,
+        110448544,
+        2349275294,
+        3801188921,
+        2758872175,
+        3342859833,
+        3728531904,
+        3377218453,
+        4045490168,
+        3081764371
+    };
+
+    for (auto i = 0; i < 10; ++i) {
+        BOOST_REQUIRE(std::filesystem::exists(outFiles[i]));
+
+        switch (dx->GetType()) {
+            case ninniku::ERenderer::RENDERER_DX11:
+            case ninniku::ERenderer::RENDERER_DX12:
+            case ninniku::ERenderer::RENDERER_WARP_DX11:
+                CheckFileCRC(outFiles[i], outHash[i]);
+                break;
+
+            case ninniku::ERenderer::RENDERER_WARP_DX12:
+                throw new std::exception("Invalid test, shouldn't happen");
+                break;
+        }
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(cmft_need_resize, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
@@ -339,7 +405,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
 
     BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex));
 
-    std::string filename = "dds_saveImage_raw_cube_array__mips.dds";
+    std::string filename = "dds_saveImage_raw_cube_array_mips.dds";
 
     // check we can save
     BOOST_REQUIRE(res->SaveImage(filename));

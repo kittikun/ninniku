@@ -49,6 +49,9 @@ namespace ninniku
 
         NINNIKU_API const SizeFixResult IsRequiringFix() const override;
 
+        // Since cfmt doesn't support cube arrays, you can use this to extract specific a cube map
+        [[nodiscard]] NINNIKU_API bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex, const uint32_t cubeIndex);
+
         enum class SaveType
         {
             Cubemap,

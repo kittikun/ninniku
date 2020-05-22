@@ -49,6 +49,8 @@ namespace ninniku
 
         bool SaveImage(const std::filesystem::path& path, cmftImage::SaveType type);
 
+        bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex, const uint32_t cubeIndex);
+
     protected:
         TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
         uint32_t GetHeight() const override { return _image.m_height; }

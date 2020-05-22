@@ -265,14 +265,32 @@ namespace ninniku
 
     bool cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
+        return InitializeFromTextureObject(dx, srcTex, 0);
+    }
+
+    bool cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex, const uint32_t cubeIndex)
+    {
         // we want to enforce 1:1 for now
-        assert(srcTex->GetDesc()->width == srcTex->GetDesc()->height);
+        if (srcTex->GetDesc()->width != srcTex->GetDesc()->height) {
+            LOGE << "CFMT requires textures 1:1 for width and height";
+            return false;
+        }
+
+        if (srcTex->GetDesc()->arraySize % CUBEMAP_NUM_FACES != 0) {
+            LOGE << "InitializeFromTextureObject with cubeIndex specified implies source is a cubemap array";
+            return false;
+        }
+
+        if ((cubeIndex != 0) && (srcTex->GetDesc()->arraySize / CUBEMAP_NUM_FACES == 1)) {
+            LOGEF(boost::format("Source texture doesn't seems to have enough cubemaps in array to extract %1%") % cubeIndex);
+            return false;
+        }
 
         // allocate memory
         _image.m_width = srcTex->GetDesc()->width;
         _image.m_height = srcTex->GetDesc()->height;
         _image.m_format = GetFormatFromNinnikuFormat(srcTex->GetDesc()->format);
-        _image.m_numFaces = (uint8_t)srcTex->GetDesc()->arraySize;
+        _image.m_numFaces = CUBEMAP_NUM_FACES;
         _image.m_numMips = (uint8_t)srcTex->GetDesc()->numMips;
 
         auto fmt = boost::format("cmftImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % _image.m_width % _image.m_height % (int)_image.m_numFaces % (int)_image.m_numMips;
@@ -305,7 +323,7 @@ namespace ninniku
                 params.dst = readBack.get();
 
                 for (uint32_t face = 0; face < CUBEMAP_NUM_FACES; ++face) {
-                    params.srcFace = face;
+                    params.srcFace = (cubeIndex * CUBEMAP_NUM_FACES) + face;
 
                     auto indexes = dx->CopyTextureSubresource(params);
                     auto mapped = dx->Map(readBack, std::get<1>(indexes));
@@ -334,7 +352,7 @@ namespace ninniku
                 cpyParams.buffer = readback.get();
 
                 for (uint32_t face = 0; face < CUBEMAP_NUM_FACES; ++face) {
-                    cpyParams.texFace = face;
+                    cpyParams.texFace = (cubeIndex * CUBEMAP_NUM_FACES) + face;
 
                     auto cpyRes = dx12->CopyTextureSubresourceToBuffer(cpyParams);
 
