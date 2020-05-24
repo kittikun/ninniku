@@ -38,21 +38,21 @@
 
 BOOST_AUTO_TEST_SUITE(Shader)
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_LoadMemory, T, FixturesAll, T)
-{
-    // Disable HW GPU support when running on CI
-    if (T::isNull)
-        return;
-
-    auto& dx = ninniku::GetRenderer();
-
-    auto name = "colorMips";
-    auto fmt = boost::format("%1%\\%2%%3%") % T::shaderRoot % name % dx->GetShaderExtension();
-
-    auto shader = LoadFile(boost::str(fmt));
-
-    BOOST_REQUIRE(dx->LoadShader(name, shader.data(), static_cast<uint32_t>(shader.size())));
-}
+//BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_LoadMemory, T, FixturesAll, T)
+//{
+//    // Disable HW GPU support when running on CI
+//    if (T::isNull)
+//        return;
+//
+//    auto& dx = ninniku::GetRenderer();
+//
+//    auto name = "colorMips";
+//    auto fmt = boost::format("%1%\\%2%%3%") % T::shaderRoot % name % dx->GetShaderExtension();
+//
+//    auto shader = LoadFile(boost::str(fmt));
+//
+//    BOOST_REQUIRE(dx->LoadShader(name, shader.data(), static_cast<uint32_t>(shader.size())));
+//}
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
 {
@@ -264,52 +264,52 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
-{
-    // Disable HW GPU support when running on CI
-    if (T::isNull)
-        return;
-
-    auto& dx = ninniku::GetRenderer();
-    BOOST_REQUIRE(LoadShader(dx, "fillBuffer", T::shaderRoot));
-
-    auto params = ninniku::BufferParam::Create();
-
-    params->numElements = 16;
-    params->elementSize = sizeof(uint32_t);
-    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
-
-    auto srcBuffer = dx->CreateBuffer(params);
-
-    // fill structured buffer
-    {
-        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
-
-        // dispatch
-        auto cmd = dx->CreateCommand();
-        cmd->shader = "fillBuffer";
-
-        cmd->dispatch[0] = FILLBUFFER_NUMTHREAD_X;
-        cmd->dispatch[1] = FILLBUFFER_NUMTHREAD_Y;
-        cmd->dispatch[2] = FILLBUFFER_NUMTHREAD_Z;
-
-        cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
-
-        BOOST_REQUIRE(dx->Dispatch(cmd));
-    }
-
-    auto dstBuffer = dx->CreateBuffer(srcBuffer);
-
-    auto& data = dstBuffer->GetData();
-
-    switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
-            break;
-    }
-}
+//BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
+//{
+//    // Disable HW GPU support when running on CI
+//    if (T::isNull)
+//        return;
+//
+//    auto& dx = ninniku::GetRenderer();
+//    BOOST_REQUIRE(LoadShader(dx, "fillBuffer", T::shaderRoot));
+//
+//    auto params = ninniku::BufferParam::Create();
+//
+//    params->numElements = 16;
+//    params->elementSize = sizeof(uint32_t);
+//    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+//
+//    auto srcBuffer = dx->CreateBuffer(params);
+//
+//    // fill structured buffer
+//    {
+//        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
+//
+//        // dispatch
+//        auto cmd = dx->CreateCommand();
+//        cmd->shader = "fillBuffer";
+//
+//        cmd->dispatch[0] = FILLBUFFER_NUMTHREAD_X;
+//        cmd->dispatch[1] = FILLBUFFER_NUMTHREAD_Y;
+//        cmd->dispatch[2] = FILLBUFFER_NUMTHREAD_Z;
+//
+//        cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
+//
+//        BOOST_REQUIRE(dx->Dispatch(cmd));
+//    }
+//
+//    auto dstBuffer = dx->CreateBuffer(srcBuffer);
+//
+//    auto& data = dstBuffer->GetData();
+//
+//    switch (dx->GetType()) {
+//        case ninniku::ERenderer::RENDERER_DX11:
+//        case ninniku::ERenderer::RENDERER_DX12:
+//        case ninniku::ERenderer::RENDERER_WARP_DX11:
+//        case ninniku::ERenderer::RENDERER_WARP_DX12:
+//            CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
+//            break;
+//    }
+//}
 
 BOOST_AUTO_TEST_SUITE_END()

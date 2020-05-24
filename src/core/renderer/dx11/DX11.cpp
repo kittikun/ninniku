@@ -706,15 +706,21 @@ namespace ninniku
 
     bool DX11::LoadShader(const std::string_view& name, const void* pData, const uint32_t size)
     {
-        auto fmt = boost::format("Loading shader: %1% directly from memory");
+        auto fmt = boost::format("Loading %1% directly from memory..") % name;
+
+        LOG_INDENT_START << boost::str(fmt);
 
         ID3DBlob* pBlob = nullptr;
         auto hr = D3DCreateBlob(size, &pBlob);
 
-        if (CheckAPIFailed(hr, "D3DCreateBlob"))
+        if (CheckAPIFailed(hr, "D3DCreateBlob")) {
+            LOG_INDENT_END;
             return false;
+        }
 
         memcpy_s(pBlob->GetBufferPointer(), size, pData, size);
+
+        LOG_INDENT_END;
 
         return LoadShader(name, pBlob);
     }
