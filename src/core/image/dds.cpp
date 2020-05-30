@@ -27,46 +27,46 @@ namespace ninniku
 {
     TextureParamHandle ddsImage::CreateTextureParam(const EResourceViews viewFlags) const
     {
-        return _impl->CreateTextureParam(viewFlags);
+        return impl_->CreateTextureParam(viewFlags);
     }
 
     bool ddsImage::Load(const std::string_view& path)
     {
-        return _impl->Load(path);
+        return impl_->Load(path);
     }
 
     bool ddsImage::LoadRaw(const void* pData, const size_t size)
     {
-        return _impl->LoadRaw(pData, size);
+        return impl_->LoadRaw(pData, size);
     }
 
     bool ddsImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
     {
-        return _impl->LoadRaw(pData, size, width, height, format);
+        return impl_->LoadRaw(pData, size, width, height, format);
     }
 
     const std::tuple<uint8_t*, uint32_t> ddsImage::GetData() const
     {
-        return _impl->GetData();
+        return impl_->GetData();
     }
 
     bool ddsImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
-        return _impl->InitializeFromTextureObject(dx, srcTex);
+        return impl_->InitializeFromTextureObject(dx, srcTex);
     }
 
     const SizeFixResult ddsImage::IsRequiringFix() const
     {
-        return _impl->IsRequiringFix();
+        return impl_->IsRequiringFix();
     }
 
     bool ddsImage::SaveImage(const std::string_view& path)
     {
-        return _impl->SaveImage(path);
+        return impl_->SaveImage(path);
     }
 
     bool ddsImage::SaveCompressedImage(const std::string_view& path, RenderDeviceHandle& dx, DXGI_FORMAT format)
     {
-        return _impl->SaveCompressedImage(path, dx, format);
+        return impl_->SaveCompressedImage(path, dx, format);
     }
 } // namespace ninniku

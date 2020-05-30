@@ -61,12 +61,7 @@ namespace ninniku
             dxcRes->GetErrorBuffer(&printBlob);
             pLibrary->GetBlobAsUtf8(printBlob.Get(), printBlobUtf8.GetAddressOf());
 
-            std::string errorString;
-            if (printBlobUtf8) {
-                errorString = reinterpret_cast<const char*>(printBlobUtf8->GetBufferPointer());
-            }
-
-            LOGEF(boost::format("Failed to validate IDxcBlobEncoding with: %1%") % errorString);
+            LOGEF(boost::format("Failed to validate IDxcBlobEncoding with: %1%") % reinterpret_cast<const char*>(printBlobUtf8->GetBufferPointer()));
 
             return false;
         }

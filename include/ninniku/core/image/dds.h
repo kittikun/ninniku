@@ -56,6 +56,6 @@ namespace ninniku
         [[nodiscard]] NINNIKU_API bool SaveCompressedImage(const std::string_view&, RenderDeviceHandle& dx, DXGI_FORMAT format);
 
     private:
-        std::unique_ptr<ddsImageImpl> _impl;
+        std::unique_ptr<ddsImageImpl> impl_;
     };
 } // namespace ninniku

@@ -29,56 +29,56 @@ namespace ninniku
 
         typename std::unordered_map<std::string, ValueType>::iterator find(const std::string_view& str)
         {
-            _tmp.reserve(str.size());
-            _tmp.assign(str.data(), str.size());
-            return std::unordered_map<std::string, ValueType>::find(_tmp);
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
+            return std::unordered_map<std::string, ValueType>::find(tmp_);
         }
 
         typename std::unordered_map<std::string, ValueType>::const_iterator find(const std::string_view& str) const
         {
-            _tmp.reserve(str.size());
-            _tmp.assign(str.data(), str.size());
-            return std::unordered_map<std::string, ValueType>::find(_tmp);
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
+            return std::unordered_map<std::string, ValueType>::find(tmp_);
         }
 
         ValueType& operator[](const std::string_view& str)
         {
-            _tmp.reserve(str.size());
-            _tmp.assign(str.data(), str.size());
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
 
-            return std::unordered_map<std::string, ValueType>::operator [](_tmp);
+            return std::unordered_map<std::string, ValueType>::operator [](tmp_);
         }
 
         const ValueType& operator[](const std::string_view& str) const
         {
-            _tmp.reserve(str.size());
-            _tmp.assign(str.data(), str.size());
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
 
-            return std::unordered_map<std::string, ValueType>::operator [](_tmp);
+            return std::unordered_map<std::string, ValueType>::operator [](tmp_);
         }
 
         void emplace(const std::string_view& str, const ValueType& value)
         {
             // discard return value since it is not needed
-            _tmp.reserve(str.size());
-            _tmp.assign(str.data(), str.size());
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
 
-            std::unordered_map<std::string, ValueType>::emplace(_tmp, value);
+            std::unordered_map<std::string, ValueType>::emplace(tmp_, value);
         }
 
         void emplace(const std::string_view& str, ValueType&& value)
         {
             // discard return value since it is not needed
-            _tmp.reserve(str.size());
-            _tmp.assign(str.data(), str.size());
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
 
-            std::unordered_map<std::string, ValueType>::emplace(_tmp, std::move(value));
+            std::unordered_map<std::string, ValueType>::emplace(tmp_, std::move(value));
         }
 
     private:
-        thread_local static std::string _tmp;
+        thread_local static std::string tmp_;
     };
 
     template<typename ValueType>
-    thread_local std::string StringMap<ValueType>::_tmp;
+    thread_local std::string StringMap<ValueType>::tmp_;
 } // namespace ninniku

@@ -39,7 +39,7 @@
 
 namespace ninniku
 {
-    Globals Globals::_instance;
+    Globals Globals::instance_;
 
     void LoadRenderDoc()
     {
@@ -55,7 +55,7 @@ namespace ninniku
             return;
         } else {
             pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(hInst, "RENDERDOC_GetAPI");
-            int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_1, (void**)&Globals::Instance()._renderDocApi);
+            int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_1, (void**)&Globals::Instance().renderDocApi_);
 
             if (ret != 1) {
                 LOGE << "Failed to get function pointer to RenderDoc API";
@@ -75,12 +75,12 @@ namespace ninniku
 
     RenderDeviceHandle& GetRenderer()
     {
-        return Globals::Instance()._renderer;
+        return Globals::Instance().renderer_;
     }
 
     bool _Initialize(const ERenderer renderer)
     {
-        if (Globals::Instance()._doCapture) {
+        if (Globals::Instance().doCapture_) {
             // renderdoc doesn't support DXIL at the moment
             // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
             if ((renderer & ERenderer::RENDERER_DX11) != 0) {
@@ -98,7 +98,7 @@ namespace ninniku
             }
         }
 
-        auto& dx = Globals::Instance()._renderer;
+        auto& dx = Globals::Instance().renderer_;
 
         switch (renderer) {
             case ERenderer::RENDERER_NULL:
@@ -131,12 +131,12 @@ namespace ninniku
             return false;
         }
 
-        if (Globals::Instance()._doCapture) {
+        if (Globals::Instance().doCapture_) {
             // renderdoc doesn't support DXIL at the moment
             // https://renderdoc.org/docs/behind_scenes/d3d12_support.html#dxil-support
-            if (((renderer & ERenderer::RENDERER_DX11) != 0) && ((renderer & ERenderer::RENDERER_WARP) == 0) && (Globals::Instance()._renderDocApi != nullptr)) {
-                Globals::Instance()._renderDocApi->SetCaptureFilePathTemplate("ninniku");
-                Globals::Instance()._renderDocApi->StartFrameCapture(nullptr, nullptr);
+            if (((renderer & ERenderer::RENDERER_DX11) != 0) && ((renderer & ERenderer::RENDERER_WARP) == 0) && (Globals::Instance().renderDocApi_ != nullptr)) {
+                Globals::Instance().renderDocApi_->SetCaptureFilePathTemplate("ninniku");
+                Globals::Instance().renderDocApi_->StartFrameCapture(nullptr, nullptr);
             }
         }
 
@@ -145,9 +145,9 @@ namespace ninniku
 
     void InitializeGlobals(uint32_t flags)
     {
-        Globals::Instance()._doCapture = (flags & EInitializationFlags::IF_EnableCapture) != 0;
-        Globals::Instance()._useDebugLayer = (flags & EInitializationFlags::IF_DisableDX12DebugLayer) == 0;
-        Globals::Instance()._bc7Quick = (flags & EInitializationFlags::IF_BC7_QUICK_MODE) != 0;
+        Globals::Instance().doCapture_ = (flags & EInitializationFlags::IF_EnableCapture) != 0;
+        Globals::Instance().useDebugLayer_ = (flags & EInitializationFlags::IF_DisableDX12DebugLayer) == 0;
+        Globals::Instance().bc7Quick_ = (flags & EInitializationFlags::IF_BC7_QUICK_MODE) != 0;
     }
 
     void InitializeLog(const ELogLevel logLevel)
@@ -207,15 +207,15 @@ namespace ninniku
     {
         LOG << "Shutting down..";
 
-        auto& renderer = Globals::Instance()._renderer;
+        auto& renderer = Globals::Instance().renderer_;
         auto isNull = renderer->GetType() == ERenderer::RENDERER_NULL;
 
-        if ((renderer->GetType() != ERenderer::RENDERER_NULL) && (Globals::Instance()._doCapture)) {
+        if ((renderer->GetType() != ERenderer::RENDERER_NULL) && (Globals::Instance().doCapture_)) {
             if ((renderer->GetType() & ERenderer::RENDERER_DX11) != 0) {
-                if (Globals::Instance()._renderDocApi != nullptr) {
-                    Globals::Instance()._renderDocApi->EndFrameCapture(nullptr, nullptr);
-                    Globals::Instance()._renderDocApi->Shutdown();
-                    Globals::Instance()._renderDocApi = nullptr;
+                if (Globals::Instance().renderDocApi_ != nullptr) {
+                    Globals::Instance().renderDocApi_->EndFrameCapture(nullptr, nullptr);
+                    Globals::Instance().renderDocApi_->Shutdown();
+                    Globals::Instance().renderDocApi_ = nullptr;
                 }
             } else if ((renderer->GetType() & ERenderer::RENDERER_WARP) == 0) {
                 Microsoft::WRL::ComPtr<IDXGraphicsAnalysis> ga;
@@ -228,7 +228,7 @@ namespace ninniku
         renderer->Finalize();
         renderer.reset();
 
-        if (!isNull && Globals::Instance()._useDebugLayer) {
+        if (!isNull && Globals::Instance().useDebugLayer_) {
             Microsoft::WRL::ComPtr<IDXGIDebug1> dxgiDebug;
             if (!CheckAPIFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug)), "DXGIGetDebugInterface1")) {
                 LOG << "Reporting live objects";

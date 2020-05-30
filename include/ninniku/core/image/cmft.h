@@ -63,6 +63,6 @@ namespace ninniku
         [[nodiscard]] NINNIKU_API bool SaveImage(const std::string_view&, SaveType type);
 
     private:
-        std::unique_ptr<cmftImageImpl> _impl;
+        std::unique_ptr<cmftImageImpl> impl_;
     };
 } // namespace ninniku

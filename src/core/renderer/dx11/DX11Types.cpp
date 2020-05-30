@@ -29,37 +29,49 @@ namespace ninniku
     // DX11BufferImpl
     //////////////////////////////////////////////////////////////////////////
     DX11BufferImpl::DX11BufferImpl(const std::shared_ptr<DX11BufferInternal>& impl) noexcept
-        : _impl{ impl }
+        : impl_{ impl }
     {
     }
 
     const std::tuple<uint8_t*, uint32_t> DX11BufferImpl::GetData() const
     {
-        auto& data = _impl.lock()->_data;
+        if (CheckWeakExpired(impl_))
+            return std::tuple<uint8_t*, uint32_t>();
+
+        auto& data = impl_.lock()->data_;
 
         return std::make_tuple(reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)));
     }
 
     const BufferParam* DX11BufferImpl::GetDesc() const
     {
-        return _impl.lock()->_desc.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->desc_.get();
     }
 
     const ShaderResourceView* DX11BufferImpl::GetSRV() const
     {
-        return _impl.lock()->_srv.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srv_.get();
     }
 
     const UnorderedAccessView* DX11BufferImpl::GetUAV() const
     {
-        return _impl.lock()->_uav.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->uav_.get();
     }
 
     //////////////////////////////////////////////////////////////////////////
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////
-    DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, [[maybe_unused]]const std::string_view& name)
-        : _marker{ marker }
+    DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, [[maybe_unused]] const std::string_view& name)
+        : marker_{ marker }
     {
 #ifdef _DO_CAPTURE
         _marker->BeginEvent(strToWStr(name).c_str());
@@ -77,37 +89,45 @@ namespace ninniku
     // DX11MappedResource
     //////////////////////////////////////////////////////////////////////////
     DX11MappedResource::DX11MappedResource(const DX11Context& context, const TextureHandle& texObj, const uint32_t index)
-        : _context{ context }
-        , _index{ index }
-        , _mapped{}
+        : context_{ context }
+        , index_{ index }
+        , mapped_{}
     {
         auto impl = static_cast<const DX11TextureImpl*>(texObj.get());
-        auto internal = impl->_impl.lock();
 
-        _resource = static_cast<const DX11TextureInternal*>(internal.get());
+        if (CheckWeakExpired(impl->impl_))
+            throw new std::exception("DX11MappedResource ctor");
+
+        auto internal = impl->impl_.lock();
+
+        resource_ = static_cast<const DX11TextureInternal*>(internal.get());
     }
 
     DX11MappedResource::DX11MappedResource(const DX11Context& context, const BufferHandle& bufObj)
-        : _context{ context }
-        , _index{}
-        , _mapped{}
+        : context_{ context }
+        , index_{}
+        , mapped_{}
     {
         auto impl = static_cast<const DX11BufferImpl*>(bufObj.get());
-        auto internal = impl->_impl.lock();
 
-        _resource = static_cast<const DX11BufferInternal*>(internal.get());
+        if (CheckWeakExpired(impl->impl_))
+            throw new std::exception("DX11MappedResource ctor");
+
+        auto internal = impl->impl_.lock();
+
+        resource_ = static_cast<const DX11BufferInternal*>(internal.get());
     }
 
     DX11MappedResource::~DX11MappedResource()
     {
-        if (std::holds_alternative<const DX11BufferInternal*>(_resource)) {
-            auto obj = std::get<const DX11BufferInternal*>(_resource);
+        if (std::holds_alternative<const DX11BufferInternal*>(resource_)) {
+            auto obj = std::get<const DX11BufferInternal*>(resource_);
 
-            _context->Unmap(obj->_buffer.Get(), 0);
+            context_->Unmap(obj->buffer_.Get(), 0);
         } else {
-            auto obj = std::get<const DX11TextureInternal*>(_resource);
+            auto obj = std::get<const DX11TextureInternal*>(resource_);
 
-            _context->Unmap(obj->GetResource(), _index);
+            context_->Unmap(obj->GetResource(), index_);
         }
     }
 
@@ -118,12 +138,12 @@ namespace ninniku
     {
         ID3D11Resource* res = nullptr;
 
-        if (std::holds_alternative<DX11Tex2D>(_texture))
-            res = std::get<DX11Tex2D>(_texture).Get();
-        else if (std::holds_alternative<DX11Tex1D>(_texture))
-            res = std::get<DX11Tex1D>(_texture).Get();
-        else if (std::holds_alternative<DX11Tex3D>(_texture))
-            res = std::get<DX11Tex3D>(_texture).Get();
+        if (std::holds_alternative<DX11Tex2D>(texture_))
+            res = std::get<DX11Tex2D>(texture_).Get();
+        else if (std::holds_alternative<DX11Tex1D>(texture_))
+            res = std::get<DX11Tex1D>(texture_).Get();
+        else if (std::holds_alternative<DX11Tex3D>(texture_))
+            res = std::get<DX11Tex3D>(texture_).Get();
 
         return res;
     }
@@ -132,42 +152,63 @@ namespace ninniku
     // DX11TextureImpl
     //////////////////////////////////////////////////////////////////////////
     DX11TextureImpl::DX11TextureImpl(const std::shared_ptr<DX11TextureInternal>& impl) noexcept
-        : _impl{ impl }
+        : impl_{ impl }
     {
     }
 
     const TextureParam* DX11TextureImpl::GetDesc() const
     {
-        return _impl.lock()->_desc.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->desc_.get();
     }
 
     const ShaderResourceView* DX11TextureImpl::GetSRVDefault() const
     {
-        return _impl.lock()->_srvDefault.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvDefault_.get();
     }
 
     const ShaderResourceView* DX11TextureImpl::GetSRVCube() const
     {
-        return _impl.lock()->_srvCube.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvCube_.get();
     }
 
     const ShaderResourceView* DX11TextureImpl::GetSRVCubeArray() const
     {
-        return _impl.lock()->_srvCubeArray.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvCubeArray_.get();
     }
 
     const ShaderResourceView* DX11TextureImpl::GetSRVArray(uint32_t index) const
     {
-        return _impl.lock()->_srvArray[index].get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvArray_[index].get();
     }
 
     const ShaderResourceView* DX11TextureImpl::GetSRVArrayWithMips() const
     {
-        return _impl.lock()->_srvArrayWithMips.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvArrayWithMips_.get();
     }
 
     const UnorderedAccessView* DX11TextureImpl::GetUAV(uint32_t index) const
     {
-        return _impl.lock()->_uav[index].get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->uav_[index].get();
     }
 } // namespace ninniku

@@ -56,7 +56,7 @@ namespace ninniku
                 if ((renderer->GetType() & ERenderer::RENDERER_DX12) != 0) {
                     auto dx = static_cast<DX12*>(renderer.get());
 
-                    if (Globals::Instance()._useDebugLayer) {
+                    if (Globals::Instance().useDebugLayer_) {
                         CComPtr<ID3D12DeviceRemovedExtendedData> pDred;
                         auto hr2 = dx->GetDevice()->QueryInterface(IID_PPV_ARGS(&pDred));
 
@@ -99,7 +99,7 @@ namespace ninniku
         return false;
     }
 
-    constexpr const uint32_t DXGIFormatToNumBytes(uint32_t format)
+    constexpr uint32_t DXGIFormatToNumBytes(uint32_t format)
     {
         // https://stackoverflow.com/questions/40339138/convert-dxgi-format-to-a-bpp
         uint32_t res = 0;
@@ -259,7 +259,7 @@ namespace ninniku
         return res;
     }
 
-    constexpr const uint32_t DXGIFormatToNinnikuTF(uint32_t fmt)
+    constexpr uint32_t DXGIFormatToNinnikuTF(uint32_t fmt)
     {
         ETextureFormat res = TF_UNKNOWN;
 
@@ -305,7 +305,7 @@ namespace ninniku
         return res;
     }
 
-    constexpr const uint32_t NinnikuTFToDXGIFormat(uint32_t fmt)
+    constexpr uint32_t NinnikuTFToDXGIFormat(uint32_t fmt)
     {
         DXGI_FORMAT res = DXGI_FORMAT_UNKNOWN;
 

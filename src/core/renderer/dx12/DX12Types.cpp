@@ -44,6 +44,9 @@ namespace ninniku
 
     const std::tuple<uint8_t*, uint32_t> DX12BufferImpl::GetData() const
     {
+        if (CheckWeakExpired(_impl))
+            return std::tuple<uint8_t*, uint32_t>();
+
         auto& data = _impl.lock()->_data;
 
         return std::make_tuple(reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)));
@@ -51,16 +54,25 @@ namespace ninniku
 
     const BufferParam* DX12BufferImpl::GetDesc() const
     {
+        if (CheckWeakExpired(_impl))
+            return nullptr;
+
         return _impl.lock()->_desc.get();
     }
 
     const ShaderResourceView* DX12BufferImpl::GetSRV() const
     {
+        if (CheckWeakExpired(_impl))
+            return nullptr;
+
         return _impl.lock()->_srv.get();
     }
 
     const UnorderedAccessView* DX12BufferImpl::GetUAV() const
     {
+        if (CheckWeakExpired(_impl))
+            return nullptr;
+
         return _impl.lock()->_uav.get();
     }
 
@@ -68,13 +80,13 @@ namespace ninniku
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
     DX12CommandInternal::DX12CommandInternal(uint32_t shaderHash) noexcept
-        : _contextShaderHash{ shaderHash }
+        : contextShaderHash_{ shaderHash }
     {
     }
 
     bool DX12CommandInternal::CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings)
     {
-        auto iter = _subContexts.emplace(hash, DX12CommandSubContext{});
+        auto iter = subContexts_.emplace(hash, DX12CommandSubContext{});
         auto& subContext = iter.first->second;
 
         // Create descriptor heap
@@ -96,7 +108,10 @@ namespace ninniku
 
     bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12Command* cmd, const MapNameSlot& bindings, const StringMap<DX12ConstantBuffer>& cbuffers)
     {
-        auto cmdImpl = cmd->_impl.lock();
+        if (CheckWeakExpired(cmd->impl_))
+            return false;
+
+        auto cmdImpl = cmd->impl_.lock();
 
         if (_heapIncrementSizes[0] == 0) {
             // increment size are fixed per hardware but we still need to query them
@@ -123,8 +138,8 @@ namespace ninniku
             }
 
             D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-            cbvDesc.BufferLocation = foundCB->second._resource->GetGPUVirtualAddress();
-            cbvDesc.SizeInBytes = foundCB->second._size;
+            cbvDesc.BufferLocation = foundCB->second.resource_->GetGPUVirtualAddress();
+            cbvDesc.SizeInBytes = foundCB->second.size_;
 
             device->CreateConstantBufferView(&cbvDesc, heapHandle);
             heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
@@ -141,17 +156,21 @@ namespace ninniku
             }
 
             if (found->second.Type == D3D_SIT_TEXTURE) {
-                if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxSRV->_resource)) {
+                if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_)) {
                     LOGEF(boost::format("SRV binding should have been a texture \"%1%\"") % found->first);
                     return false;
                 }
 
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxSRV->_resource);
+                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_);
+
+                if (CheckWeakExpired(weak))
+                    return false;
+
                 auto locked = weak.lock();
 
                 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
                 srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->_desc->format));
+                srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->desc_->format));
 
                 if (found->second.Dimension == D3D_SRV_DIMENSION_BUFFEREX) {
                     // might be dangerous is we intend those because they overlap
@@ -166,31 +185,31 @@ namespace ninniku
                     case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
                     {
                         srvDesc.TextureCubeArray = {};
-                        srvDesc.TextureCubeArray.MipLevels = locked->_desc->numMips;
-                        srvDesc.TextureCubeArray.NumCubes = locked->_desc->arraySize / CUBEMAP_NUM_FACES;
+                        srvDesc.TextureCubeArray.MipLevels = locked->desc_->numMips;
+                        srvDesc.TextureCubeArray.NumCubes = locked->desc_->arraySize / CUBEMAP_NUM_FACES;
                     }
                     break;
 
                     case D3D12_SRV_DIMENSION_TEXTURECUBE:
                     {
                         srvDesc.TextureCube = {};
-                        srvDesc.TextureCube.MipLevels = locked->_desc->numMips;
+                        srvDesc.TextureCube.MipLevels = locked->desc_->numMips;
                     }
                     break;
 
                     case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
                     {
                         srvDesc.Texture2DArray = {};
-                        srvDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
+                        srvDesc.Texture2DArray.ArraySize = locked->desc_->arraySize;
 
-                        if (dxSRV->_index != std::numeric_limits<uint32_t>::max()) {
+                        if (dxSRV->index_ != std::numeric_limits<uint32_t>::max()) {
                             // one slice for a mip level
-                            srvDesc.Texture2DArray.MostDetailedMip = dxSRV->_index;
+                            srvDesc.Texture2DArray.MostDetailedMip = dxSRV->index_;
                             srvDesc.Texture2DArray.MipLevels = 1;
                         } else {
                             // everything mips included
                             srvDesc.Texture2DArray.MostDetailedMip = 0;
-                            srvDesc.Texture2DArray.MipLevels = locked->_desc->numMips;
+                            srvDesc.Texture2DArray.MipLevels = locked->desc_->numMips;
                         }
                     }
                     break;
@@ -198,8 +217,8 @@ namespace ninniku
                     case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
                     {
                         srvDesc.Texture1DArray = {};
-                        srvDesc.Texture1DArray.ArraySize = locked->_desc->arraySize;
-                        srvDesc.Texture1DArray.MostDetailedMip = dxSRV->_index;
+                        srvDesc.Texture1DArray.ArraySize = locked->desc_->arraySize;
+                        srvDesc.Texture1DArray.MostDetailedMip = dxSRV->index_;
                         srvDesc.Texture1DArray.MipLevels = 1;
                     }
                     break;
@@ -207,21 +226,21 @@ namespace ninniku
                     case D3D12_SRV_DIMENSION_TEXTURE1D:
                     {
                         srvDesc.Texture1D = {};
-                        srvDesc.Texture1D.MipLevels = locked->_desc->numMips;
+                        srvDesc.Texture1D.MipLevels = locked->desc_->numMips;
                     }
                     break;
 
                     case D3D12_SRV_DIMENSION_TEXTURE2D:
                     {
                         srvDesc.Texture2D = {};
-                        srvDesc.Texture2D.MipLevels = locked->_desc->numMips;
+                        srvDesc.Texture2D.MipLevels = locked->desc_->numMips;
                     }
                     break;
 
                     case D3D12_SRV_DIMENSION_TEXTURE3D:
                     {
                         srvDesc.Texture3D = {};
-                        srvDesc.Texture3D.MipLevels = locked->_desc->numMips;
+                        srvDesc.Texture3D.MipLevels = locked->desc_->numMips;
                     }
                     break;
 
@@ -229,16 +248,20 @@ namespace ninniku
                         throw new std::exception("Unsupported SRV binding dimension");
                 }
 
-                locked->_texture->SetName(strToWStr(found->first).c_str());
-                device->CreateShaderResourceView(locked->_texture.Get(), &srvDesc, heapHandle);
+                locked->texture_->SetName(strToWStr(found->first).c_str());
+                device->CreateShaderResourceView(locked->texture_.Get(), &srvDesc, heapHandle);
                 heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             } else if (found->second.Type == D3D_SIT_STRUCTURED) {
-                if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->_resource)) {
+                if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_)) {
                     LOGEF(boost::format("SRV binding should have been a buffer \"%1%\"") % found->first);
                     return false;
                 }
 
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxSRV->_resource);
+                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_);
+
+                if (CheckWeakExpired(weak))
+                    return false;
+
                 auto locked = weak.lock();
 
                 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -267,38 +290,46 @@ namespace ninniku
             }
 
             if (found->second.Type == D3D_SIT_UAV_RWTYPED) {
-                if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource)) {
+                if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxUAV->resource_)) {
                     LOGEF(boost::format("SRV binding should have been a texture \"%1%\"") % found->first);
                     return false;
                 }
 
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->_resource);
+                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->resource_);
+
+                if (CheckWeakExpired(weak))
+                    return false;
+
                 auto locked = weak.lock();
 
                 D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-                uavDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->_desc->format));
+                uavDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->desc_->format));
 
-                if (locked->_desc->arraySize > 1) {
+                if (locked->desc_->arraySize > 1) {
                     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-                    uavDesc.Texture2DArray.MipSlice = dxUAV->_index;
-                    uavDesc.Texture2DArray.ArraySize = locked->_desc->arraySize;
+                    uavDesc.Texture2DArray.MipSlice = dxUAV->index_;
+                    uavDesc.Texture2DArray.ArraySize = locked->desc_->arraySize;
                 } else {
                     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-                    uavDesc.Texture2D.MipSlice = dxUAV->_index;
+                    uavDesc.Texture2D.MipSlice = dxUAV->index_;
                 }
 
                 //CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle{ cmdImpl->_descriptorHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<int32_t>(found->second.BindPoint), _srvUAVDescriptorSize };
 
-                locked->_texture->SetName(strToWStr(found->first).c_str());
-                device->CreateUnorderedAccessView(locked->_texture.Get(), nullptr, &uavDesc, heapHandle);
+                locked->texture_->SetName(strToWStr(found->first).c_str());
+                device->CreateUnorderedAccessView(locked->texture_.Get(), nullptr, &uavDesc, heapHandle);
                 heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             } else if (found->second.Type == D3D_SIT_UAV_RWSTRUCTURED) {
-                if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource)) {
+                if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->resource_)) {
                     LOGEF(boost::format("UAV binding should have been a buffer \"%1%\"") % found->first);
                     return false;
                 }
 
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->_resource);
+                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxUAV->resource_);
+
+                if (CheckWeakExpired(weak))
+                    return false;
+
                 auto locked = weak.lock();
 
                 D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -358,7 +389,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12DebugMarker
     //////////////////////////////////////////////////////////////////////////
-    DX12DebugMarker::DX12DebugMarker([[maybe_unused]]const std::string_view& name)
+    DX12DebugMarker::DX12DebugMarker([[maybe_unused]] const std::string_view& name)
     {
 #ifdef _DO_CAPTURE
         // https://devblogs.microsoft.com/pix/winpixeventruntime/
@@ -380,22 +411,22 @@ namespace ninniku
     // DX12MappedResource
     //////////////////////////////////////////////////////////////////////////
     DX12MappedResource::DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data) noexcept
-        : _resource{ resource }
-        , _subresource{ subresource }
-        , _range{ range }
-        , _data{ data } {
+        : resource_{ resource }
+        , subresource_{ subresource }
+        , range_{ range }
+        , data_{ data } {
     }
 
     DX12MappedResource::~DX12MappedResource()
     {
-        _resource->Unmap(_subresource, _range);
+        resource_->Unmap(subresource_, range_);
     }
 
     //////////////////////////////////////////////////////////////////////////
     // DX12ShaderResourceView
     //////////////////////////////////////////////////////////////////////////
     DX12ShaderResourceView::DX12ShaderResourceView(uint32_t index) noexcept
-        : _index{ index }
+        : index_{ index }
     {
     }
 
@@ -403,50 +434,71 @@ namespace ninniku
     // DX12TextureImpl
     //////////////////////////////////////////////////////////////////////////
     DX12TextureImpl::DX12TextureImpl(const std::shared_ptr<DX12TextureInternal>& impl) noexcept
-        : _impl{ impl }
+        : impl_{ impl }
     {
     }
 
     const TextureParam* DX12TextureImpl::GetDesc() const
     {
-        return _impl.lock()->_desc.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->desc_.get();
     }
 
     const ShaderResourceView* DX12TextureImpl::GetSRVDefault() const
     {
-        return _impl.lock()->_srvDefault.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvDefault_.get();
     }
 
     const ShaderResourceView* DX12TextureImpl::GetSRVCube() const
     {
-        return _impl.lock()->_srvCube.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvCube_.get();
     }
 
     const ShaderResourceView* DX12TextureImpl::GetSRVCubeArray() const
     {
-        return _impl.lock()->_srvCubeArray.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvCubeArray_.get();
     }
 
     const ShaderResourceView* DX12TextureImpl::GetSRVArray(uint32_t index) const
     {
-        return _impl.lock()->_srvArray[index].get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvArray_[index].get();
     }
 
     const ShaderResourceView* DX12TextureImpl::GetSRVArrayWithMips() const
     {
-        return _impl.lock()->_srvArrayWithMips.get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->srvArrayWithMips_.get();
     }
 
     const UnorderedAccessView* DX12TextureImpl::GetUAV(uint32_t index) const
     {
-        return _impl.lock()->_uav[index].get();
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->uav_[index].get();
     }
 
     //////////////////////////////////////////////////////////////////////////
     // DX12UnorderedAccessView
     //////////////////////////////////////////////////////////////////////////
     DX12UnorderedAccessView::DX12UnorderedAccessView(uint32_t index) noexcept
-        : _index{ index }
+        : index_{ index }
     {
     }
 } // namespace ninniku

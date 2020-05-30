@@ -30,17 +30,17 @@ namespace ninniku
     {
     public:
         Globals() = default;
-        static Globals& Instance() { return _instance; }
+        static Globals& Instance() { return instance_; }
 
-        RENDERDOC_API_1_4_1* _renderDocApi = nullptr;
-        RenderDeviceHandle _renderer;
+        RENDERDOC_API_1_4_1* renderDocApi_ = nullptr;
+        RenderDeviceHandle renderer_;
 
-        bool _doCapture : 1;
-        bool _useDebugLayer : 1;
-        bool _bc7Quick : 1;
-        bool _padding : 5;
+        bool doCapture_ : 1;
+        bool useDebugLayer_ : 1;
+        bool bc7Quick_ : 1;
+        bool padding_ : 5;
 
     private:
-        static Globals _instance;
+        static Globals instance_;
     };
 } // namespace ninniku

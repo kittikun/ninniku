@@ -49,15 +49,15 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct DX11BufferInternal final : TrackedObject
     {
-        DX11Buffer _buffer;
-        SRVHandle _srv;
-        UAVHandle _uav;
+        DX11Buffer buffer_;
+        SRVHandle srv_;
+        UAVHandle uav_;
 
         // leave data here to support update later on
-        std::vector<uint32_t> _data;
+        std::vector<uint32_t> data_;
 
         // Initial desc that was used to create the resource
-        std::shared_ptr<const BufferParam> _desc;
+        std::shared_ptr<const BufferParam> desc_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ namespace ninniku
         const ShaderResourceView* GetSRV() const override;
         const UnorderedAccessView* GetUAV() const override;
 
-        std::weak_ptr<DX11BufferInternal> _impl;
+        std::weak_ptr<DX11BufferInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -86,8 +86,8 @@ namespace ninniku
         DX11ComputeShader& operator=(DX11ComputeShader&) = delete;
         DX11ComputeShader& operator=(DX11ComputeShader&&) = delete;
 
-        DX11CS shader;
-        StringMap<uint32_t> bindSlots;
+        DX11CS shader_;
+        StringMap<uint32_t> bindSlots_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ namespace ninniku
         ~DX11DebugMarker() override;
 
     private:
-        DX11Marker _marker;
+        DX11Marker marker_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -115,16 +115,16 @@ namespace ninniku
         ~DX11MappedResource() override;
 
         // MappedResource
-        void* GetData() const override { return _mapped.pData; }
+        void* GetData() const override { return mapped_.pData; }
 
-        D3D11_MAPPED_SUBRESOURCE* Get() { return &_mapped; }
-        uint32_t GetRowPitch() const { return _mapped.RowPitch; }
+        D3D11_MAPPED_SUBRESOURCE* Get() { return &mapped_; }
+        uint32_t GetRowPitch() const { return mapped_.RowPitch; }
 
     private:
-        std::variant<const struct DX11TextureInternal*, const DX11BufferInternal*> _resource;
-        const DX11Context& _context;
-        const uint32_t _index;
-        D3D11_MAPPED_SUBRESOURCE _mapped;
+        std::variant<const struct DX11TextureInternal*, const DX11BufferInternal*> resource_;
+        const DX11Context& context_;
+        const uint32_t index_;
+        D3D11_MAPPED_SUBRESOURCE mapped_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -133,19 +133,19 @@ namespace ninniku
     struct DX11ShaderResourceView final : public ShaderResourceView
     {
     public:
-        DX11SRV _resource;
+        DX11SRV resource_;
     };
 
     struct DX11UnorderedAccessView final : public UnorderedAccessView
     {
     public:
-        DX11UAV _resource;
+        DX11UAV resource_;
     };
 
     struct DX11SamplerState final : public SamplerState
     {
     public:
-        DX11SS _resource;
+        DX11SS resource_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -155,25 +155,25 @@ namespace ninniku
     {
         ID3D11Resource* GetResource() const;
 
-        std::variant<DX11Tex1D, DX11Tex2D, DX11Tex3D> _texture;
-        SRVHandle _srvDefault;
+        std::variant<DX11Tex1D, DX11Tex2D, DX11Tex3D> texture_;
+        SRVHandle srvDefault_;
 
         // D3D_SRV_DIMENSION_TEXTURECUBE
-        SRVHandle _srvCube;
+        SRVHandle srvCube_;
 
         // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
-        SRVHandle _srvCubeArray;
+        SRVHandle srvCubeArray_;
 
         // D3D_SRV_DIMENSION_TEXTURE2DARRAY per mip level
-        std::vector<SRVHandle> _srvArray;
+        std::vector<SRVHandle> srvArray_;
 
-        SRVHandle _srvArrayWithMips;
+        SRVHandle srvArrayWithMips_;
 
         // One D3D11_TEX2D_ARRAY_UAV per mip level
-        std::vector<UAVHandle> _uav;
+        std::vector<UAVHandle> uav_;
 
         // Initial desc that was used to create the resource
-        std::shared_ptr<const TextureParam> _desc;
+        std::shared_ptr<const TextureParam> desc_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -191,7 +191,7 @@ namespace ninniku
         const ShaderResourceView* GetSRVArrayWithMips() const override;
         const UnorderedAccessView* GetUAV(uint32_t index) const override;
 
-        std::weak_ptr<DX11TextureInternal> _impl;
+        std::weak_ptr<DX11TextureInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////

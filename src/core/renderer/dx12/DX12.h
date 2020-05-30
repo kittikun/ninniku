@@ -35,10 +35,10 @@ namespace ninniku
     public:
         DX12(ERenderer type);
 
-        ERenderer GetType() const override { return _type; }
+        ERenderer GetType() const override { return type_; }
         const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
-        void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
+        bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
@@ -54,12 +54,12 @@ namespace ninniku
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
         bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
-        const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
+        const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
         // Not from RenderDevice
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
-        inline ID3D12Device* GetDevice() const { return _device.Get(); }
+        inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
         bool CreateCommandContexts();
@@ -75,41 +75,41 @@ namespace ninniku
     private:
         static constexpr std::string_view ShaderExt = ".dxco";
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
-        ERenderer _type;
-        uint8_t _padding[3];
+        ERenderer type_;
+        uint8_t padding_[3];
 
-        DX12Device _device;
+        DX12Device device_;
 
         // commands and fences
-        DX12CommandQueue _commandQueue;
-        DX12Fence _fence;
-        uint64_t volatile _fenceValue;
-        volatile HANDLE _fenceEvent;
+        DX12CommandQueue commandQueue_;
+        DX12Fence fence_;
+        uint64_t volatile fenceValue_;
+        volatile HANDLE fenceEvent_;
 
         // copy
-        DX12CommandAllocator _copyCommandAllocator;
-        DX12CommandQueue _copyCommandQueue;
-        DX12GraphicsCommandList _copyCmdList;
+        DX12CommandAllocator copyCommandAllocator_;
+        DX12CommandQueue copyCommandQueue_;
+        DX12GraphicsCommandList copyCmdList_;
 
         // resource transition
-        DX12CommandAllocator _transitionCommandAllocator;
-        DX12CommandQueue _transitionCommandQueue;
-        DX12GraphicsCommandList _transitionCmdList;
+        DX12CommandAllocator transitionCommandAllocator_;
+        DX12CommandQueue transitionCommandQueue_;
+        DX12GraphicsCommandList transitionCmdList_;
 
         // shader related
-        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
-        StringMap<DX12RootSignature> _rootSignatures;
-        StringMap<D3D12_SHADER_BYTECODE> _shaders;
-        StringMap<DX12ConstantBuffer> _cBuffers;
+        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
+        StringMap<DX12RootSignature> rootSignatures_;
+        StringMap<D3D12_SHADER_BYTECODE> shaders_;
+        StringMap<DX12ConstantBuffer> cBuffers_;
 
-        StringMap<MapNameSlot> _resourceBindings;
+        StringMap<MapNameSlot> resourceBindings_;
 
-        std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> _commandContexts;
+        std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> commandContexts_;
 
         // heap
-        DX12DescriptorHeap _samplerHeap;
+        DX12DescriptorHeap samplerHeap_;
 
         // tracks allocated resources
-        ObjectTracker _tracker;
+        ObjectTracker tracker_;
     };
 } // namespace ninniku

@@ -39,7 +39,7 @@
 namespace ninniku
 {
     cmftImage::cmftImage()
-        : _impl{ new cmftImageImpl() }
+        : impl_{ new cmftImageImpl() }
     {
     }
 
@@ -47,30 +47,30 @@ namespace ninniku
 
     cmftImageImpl::~cmftImageImpl()
     {
-        if (_image.m_data != nullptr)
-            imageUnload(_image);
+        if (image_.m_data != nullptr)
+            imageUnload(image_);
     }
 
     void cmftImageImpl::AllocateMemory()
     {
         // Alloc dst data.
-        const uint32_t bytesPerPixel = GetBPPFromFormat(_image.m_format);
+        const uint32_t bytesPerPixel = GetBPPFromFormat(image_.m_format);
         uint32_t dstDataSize = 0;
         uint32_t dstOffsets[CUBE_FACE_NUM][MAX_MIP_NUM];
 
-        for (uint8_t face = 0; face < _image.m_numFaces; ++face) {
-            for (uint8_t mip = 0; mip < _image.m_numMips; ++mip) {
+        for (uint8_t face = 0; face < image_.m_numFaces; ++face) {
+            for (uint8_t mip = 0; mip < image_.m_numMips; ++mip) {
                 dstOffsets[face][mip] = dstDataSize;
-                uint32_t dstMipSize = std::max(UINT32_C(1), _image.m_width >> mip);
+                uint32_t dstMipSize = std::max(UINT32_C(1), image_.m_width >> mip);
                 dstDataSize += dstMipSize * dstMipSize * bytesPerPixel;
             }
         }
 
-        if (_image.m_data != nullptr)
-            imageUnload(_image);
+        if (image_.m_data != nullptr)
+            imageUnload(image_);
 
-        _image.m_data = CMFT_ALLOC(cmft::g_allocator, dstDataSize);
-        _image.m_dataSize = dstDataSize;
+        image_.m_data = CMFT_ALLOC(cmft::g_allocator, dstDataSize);
+        image_.m_dataSize = dstDataSize;
     }
 
     TextureParamHandle cmftImageImpl::CreateTextureParamInternal(const EResourceViews viewFlags) const
@@ -80,7 +80,7 @@ namespace ninniku
         res->arraySize = CUBEMAP_NUM_FACES;
         res->depth = 1;
         res->format = TF_R32G32B32A32_FLOAT;
-        res->height = res->width = imageGetCubemapFaceSize(_image);
+        res->height = res->width = imageGetCubemapFaceSize(image_);
         res->imageDatas = GetInitializationData();
         res->numMips = 1;
         res->viewflags = viewFlags;
@@ -161,35 +161,35 @@ namespace ninniku
             return false;
         }
 
-        _image.m_width = width;
-        _image.m_height = height;
-        _image.m_dataSize = width * height * sizeof(float);
-        _image.m_format = cmft::TextureFormat::RGBA32F;
-        _image.m_numMips = 1;
-        _image.m_numFaces = 1;
-        _image.m_data = rgba;
+        image_.m_width = width;
+        image_.m_height = height;
+        image_.m_dataSize = width * height * sizeof(float);
+        image_.m_format = cmft::TextureFormat::RGBA32F;
+        image_.m_numMips = 1;
+        image_.m_numFaces = 1;
+        image_.m_data = rgba;
 
         return true;
     }
 
     bool cmftImageImpl::AssembleCubemap()
     {
-        if (!imageIsCubemap(_image)) {
-            if (imageIsCubeCross(_image)) {
+        if (!imageIsCubemap(image_)) {
+            if (imageIsCubeCross(image_)) {
                 LOG << "Converting cube cross to cubemap.";
-                imageCubemapFromCross(_image);
-            } else if (imageIsLatLong(_image)) {
+                imageCubemapFromCross(image_);
+            } else if (imageIsLatLong(image_)) {
                 LOG << "Converting latlong image to cubemap.";
-                imageCubemapFromLatLong(_image);
-            } else if (imageIsHStrip(_image)) {
+                imageCubemapFromLatLong(image_);
+            } else if (imageIsHStrip(image_)) {
                 LOG << "Converting hstrip image to cubemap.";
-                imageCubemapFromStrip(_image);
-            } else if (imageIsVStrip(_image)) {
+                imageCubemapFromStrip(image_);
+            } else if (imageIsVStrip(image_)) {
                 LOG << "Converting vstrip image to cubemap.";
-                imageCubemapFromStrip(_image);
-            } else if (imageIsOctant(_image)) {
+                imageCubemapFromStrip(image_);
+            } else if (imageIsOctant(image_)) {
                 LOG << "Converting octant image to cubemap.";
-                imageCubemapFromOctant(_image);
+                imageCubemapFromOctant(image_);
             } else {
                 LOGE << "Image is not cubemap(6 faces), cubecross(ratio 3:4 or 4:3), latlong(ratio 2:1), hstrip(ratio 6:1), vstrip(ration 1:6)";
 
@@ -197,7 +197,7 @@ namespace ninniku
             }
         }
 
-        if (!imageIsCubemap(_image))
+        if (!imageIsCubemap(image_))
             return false;
 
         return true;
@@ -213,7 +213,7 @@ namespace ninniku
         if (std::filesystem::path{ path }.extension() == ".exr")
             imageLoaded = LoadEXR(path);
         else
-            imageLoaded = imageLoad(_image, path.data(), cmft::TextureFormat::RGBA32F) || imageLoadStb(_image, path.data(), cmft::TextureFormat::RGBA32F);
+            imageLoaded = imageLoad(image_, path.data(), cmft::TextureFormat::RGBA32F) || imageLoadStb(image_, path.data(), cmft::TextureFormat::RGBA32F);
 
         if (!imageLoaded) {
             LOGE << "Failed to load file";
@@ -243,16 +243,16 @@ namespace ninniku
             return false;
         }
 
-        _image.m_width = width;
-        _image.m_height = height;
-        _image.m_dataSize = static_cast<uint32_t>(size);
-        _image.m_format = cmftFormat;
-        _image.m_numMips = 1;
-        _image.m_numFaces = 1;
+        image_.m_width = width;
+        image_.m_height = height;
+        image_.m_dataSize = static_cast<uint32_t>(size);
+        image_.m_format = cmftFormat;
+        image_.m_numMips = 1;
+        image_.m_numFaces = 1;
         //_image.m_data = (float*)pData;
 
-        _image.m_data = CMFT_ALLOC(cmft::g_allocator, size);
-        memcpy_s(_image.m_data, size, pData, size);
+        image_.m_data = CMFT_ALLOC(cmft::g_allocator, size);
+        memcpy_s(image_.m_data, size, pData, size);
 
         if (!AssembleCubemap()) {
             LOGE << "Conversion failed.";
@@ -287,13 +287,13 @@ namespace ninniku
         }
 
         // allocate memory
-        _image.m_width = srcTex->GetDesc()->width;
-        _image.m_height = srcTex->GetDesc()->height;
-        _image.m_format = GetFormatFromNinnikuFormat(srcTex->GetDesc()->format);
-        _image.m_numFaces = CUBEMAP_NUM_FACES;
-        _image.m_numMips = (uint8_t)srcTex->GetDesc()->numMips;
+        image_.m_width = srcTex->GetDesc()->width;
+        image_.m_height = srcTex->GetDesc()->height;
+        image_.m_format = GetFormatFromNinnikuFormat(srcTex->GetDesc()->format);
+        image_.m_numFaces = CUBEMAP_NUM_FACES;
+        image_.m_numMips = (uint8_t)srcTex->GetDesc()->numMips;
 
-        auto fmt = boost::format("cmftImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % _image.m_width % _image.m_height % (int)_image.m_numFaces % (int)_image.m_numMips;
+        auto fmt = boost::format("cmftImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Array=%3%, Mips=%4%") % image_.m_width % image_.m_height % (int)image_.m_numFaces % (int)image_.m_numMips;
         LOG << boost::str(fmt);
 
         AllocateMemory();
@@ -370,14 +370,14 @@ namespace ninniku
     {
         std::array<uint32_t, CUBEMAP_NUM_FACES> offsets;
 
-        cmft::imageGetFaceOffsets(offsets.data(), _image);
+        cmft::imageGetFaceOffsets(offsets.data(), image_);
 
-        const uint32_t bytesPerPixel = getImageDataInfo(_image.m_format).m_bytesPerPixel;
+        const uint32_t bytesPerPixel = getImageDataInfo(image_.m_format).m_bytesPerPixel;
         std::vector<SubresourceParam> res(CUBEMAP_NUM_FACES);
 
         for (auto i = 0; i < CUBEMAP_NUM_FACES; ++i) {
-            res[i].data = static_cast<void*>(static_cast<uint8_t*>(_image.m_data) + offsets[i]);
-            res[i].rowPitch = _image.m_width * bytesPerPixel;
+            res[i].data = static_cast<void*>(static_cast<uint8_t*>(image_.m_data) + offsets[i]);
+            res[i].rowPitch = image_.m_width * bytesPerPixel;
             res[i].depthPitch = 0;
         }
 
@@ -386,7 +386,7 @@ namespace ninniku
 
     const std::tuple<uint8_t*, uint32_t> cmftImageImpl::GetData() const
     {
-        return std::make_tuple(static_cast<uint8_t*>(_image.m_data), _image.m_dataSize);
+        return std::make_tuple(static_cast<uint8_t*>(image_.m_data), image_.m_dataSize);
     }
 
     bool cmftImageImpl::SaveImage(const std::filesystem::path& path, cmftImage::SaveType type)
@@ -434,20 +434,20 @@ namespace ninniku
         // because path is const
         auto pathCopy = path;
 
-        return cmft::imageSave(_image, pathCopy.replace_extension().string().c_str(), cmftFileType, cmftType, cmftFormat, true);
+        return cmft::imageSave(image_, pathCopy.replace_extension().string().c_str(), cmftFileType, cmftType, cmftFormat, true);
     }
 
     void cmftImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
     {
         // get the right offset
-        const uint32_t bytesPerPixel = GetBPPFromFormat(_image.m_format);
-        uint32_t size = _image.m_width;
+        const uint32_t bytesPerPixel = GetBPPFromFormat(image_.m_format);
+        uint32_t size = image_.m_width;
         uint32_t dstDataSize = 0;
         uint32_t dstOffsets[CUBE_FACE_NUM][MAX_MIP_NUM];
         uint32_t dstMipSize[CUBE_FACE_NUM][MAX_MIP_NUM];
 
-        for (uint8_t face = 0; face < _image.m_numFaces; ++face) {
-            for (uint8_t mip = 0; mip < _image.m_numMips; ++mip) {
+        for (uint8_t face = 0; face < image_.m_numFaces; ++face) {
+            for (uint8_t mip = 0; mip < image_.m_numMips; ++mip) {
                 uint32_t mipSize = std::max(UINT32_C(1), size >> mip);
 
                 dstMipSize[face][mip] = mipSize * mipSize * bytesPerPixel;
@@ -456,7 +456,7 @@ namespace ninniku
             }
         }
 
-        auto offset = (uint8_t*)_image.m_data + dstOffsets[dstFace][dstMip];
+        auto offset = (uint8_t*)image_.m_data + dstOffsets[dstFace][dstMip];
 
         // row pitch from dx11 can be larger than for the image so we have to do each row manually
         uint32_t mipSize = size >> dstMip;

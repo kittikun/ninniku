@@ -27,31 +27,31 @@ namespace ninniku
 {
     TextureParamHandle genericImage::CreateTextureParam(const EResourceViews viewFlags) const
     {
-        return _impl->CreateTextureParam(viewFlags);
+        return impl_->CreateTextureParam(viewFlags);
     }
 
     bool genericImage::Load(const std::string_view& path)
     {
-        return _impl->Load(path);
+        return impl_->Load(path);
     }
 
     bool genericImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
     {
-        return _impl->LoadRaw(pData, size, width, height, format);
+        return impl_->LoadRaw(pData, size, width, height, format);
     }
 
     const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
     {
-        return _impl->GetData();
+        return impl_->GetData();
     }
 
     bool genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
-        return _impl->InitializeFromTextureObject(dx, srcTex);
+        return impl_->InitializeFromTextureObject(dx, srcTex);
     }
 
     const SizeFixResult genericImage::IsRequiringFix() const
     {
-        return _impl->IsRequiringFix();
+        return impl_->IsRequiringFix();
     }
 } // namespace ninniku

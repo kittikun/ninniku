@@ -36,10 +36,10 @@ namespace ninniku
         DX11(ERenderer type);
 
         // RenderDevice
-        ERenderer GetType() const override { return _type; }
+        ERenderer GetType() const override { return type_; }
         const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
-        void CopyBufferResource(const CopyBufferSubresourceParam& params) override;
+        bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
@@ -55,10 +55,10 @@ namespace ninniku
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
         bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
-        const SamplerState* GetSampler(ESamplerState sampler) const override { return _samplers[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
+        const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
         // Not from RenderDevice
-        inline ID3D11Device* GetDevice() const { return _device.Get(); }
+        inline ID3D11Device* GetDevice() const { return device_.Get(); }
 
     private:
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
@@ -73,20 +73,20 @@ namespace ninniku
         static ReturnType* castGenericResourceToDX11Resource(const SourceType* src)
         {
             auto view = static_cast<const DestType*>(src);
-            return static_cast<ReturnType*>(view->_resource.Get());
+            return static_cast<ReturnType*>(view->resource_.Get());
         }
 
     private:
         static constexpr std::string_view ShaderExt = ".cso";
 
-        ERenderer _type;
-        DX11Device _device;
-        DX11Context _context;
-        StringMap<DX11ComputeShader> _shaders;
-        StringMap<DX11Buffer> _cBuffers;
-        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> _samplers;
+        ERenderer type_;
+        DX11Device device_;
+        DX11Context context_;
+        StringMap<DX11ComputeShader> shaders_;
+        StringMap<DX11Buffer> cBuffers_;
+        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
 
         // tracks allocated resources
-        ObjectTracker _tracker;
+        ObjectTracker tracker_;
     };
 } // namespace ninniku

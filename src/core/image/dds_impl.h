@@ -50,15 +50,15 @@ namespace ninniku
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
-        uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
+        uint32_t GetHeight() const override { return static_cast<uint32_t>(meta_.height); }
         const std::vector<SubresourceParam> GetInitializationData() const override;
-        uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }
+        uint32_t GetWidth() const override { return static_cast<uint32_t>(meta_.width); }
         bool LoadInternal(const std::string_view& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
         bool ValidateExtension(const std::string_view& ext) const override;
 
     private:
-        DirectX::TexMetadata _meta;
-        DirectX::ScratchImage _scratch;
+        DirectX::TexMetadata meta_;
+        DirectX::ScratchImage scratch_;
     };
 } // namespace ninniku

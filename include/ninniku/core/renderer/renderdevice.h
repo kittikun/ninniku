@@ -42,7 +42,7 @@ namespace ninniku
         virtual ERenderer GetType() const = 0;
         virtual const std::string_view& GetShaderExtension() const = 0;
 
-        virtual void CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
+        [[nodiscard]] virtual bool CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
         virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;

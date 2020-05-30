@@ -50,6 +50,6 @@ namespace ninniku
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;
 
     private:
-        std::unique_ptr<genericImageImpl> _impl;
+        std::unique_ptr<genericImageImpl> impl_;
     };
 } // namespace ninniku

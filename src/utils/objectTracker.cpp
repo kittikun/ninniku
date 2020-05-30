@@ -25,17 +25,17 @@ namespace ninniku
 {
     ObjectTracker::ObjectTracker()
     {
-        _objects.reserve(16);
+        objects_.reserve(16);
     }
 
     void ObjectTracker::RegisterObject(const std::shared_ptr<TrackedObject>& obj)
     {
-        _objects.emplace_back(obj);
+        objects_.emplace_back(obj);
     }
 
     void ObjectTracker::ReleaseObjects()
     {
-        for (auto& obj : _objects) {
+        for (auto& obj : objects_) {
             obj.reset();
         }
     }

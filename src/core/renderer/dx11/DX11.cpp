@@ -37,33 +37,51 @@
 namespace ninniku
 {
     DX11::DX11(ERenderer type)
-        : _type{ type }
+        : type_{ type }
     {
     }
 
-    void DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)
+    bool DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
         auto srcImpl = static_cast<const DX11BufferImpl*>(params.src);
-        auto srcInternal = srcImpl->_impl.lock();
+
+        if (CheckWeakExpired(srcImpl->impl_))
+            return false;
+
+        auto srcInternal = srcImpl->impl_.lock();
 
         auto dstImpl = static_cast<const DX11BufferImpl*>(params.dst);
-        auto dstInternal = dstImpl->_impl.lock();
 
-        _context->CopyResource(dstInternal->_buffer.Get(), srcInternal->_buffer.Get());
+        if (CheckWeakExpired(dstImpl->impl_))
+            return false;
+
+        auto dstInternal = dstImpl->impl_.lock();
+
+        context_->CopyResource(dstInternal->buffer_.Get(), srcInternal->buffer_.Get());
+
+        return true;
     }
 
     std::tuple<uint32_t, uint32_t> DX11::CopyTextureSubresource(const CopyTextureSubresourceParam& params)
     {
         auto srcImpl = static_cast<const DX11TextureImpl*>(params.src);
-        auto srcInternal = srcImpl->_impl.lock();
+
+        if (CheckWeakExpired(srcImpl->impl_))
+            return std::tuple<uint32_t, uint32_t>();
+
+        auto srcInternal = srcImpl->impl_.lock();
 
         auto dstImpl = static_cast<const DX11TextureImpl*>(params.dst);
-        auto dstInternal = dstImpl->_impl.lock();
+
+        if (CheckWeakExpired(dstImpl->impl_))
+            return std::tuple<uint32_t, uint32_t>();
+
+        auto dstInternal = dstImpl->impl_.lock();
 
         uint32_t dstSub = D3D11CalcSubresource(params.dstMip, params.dstFace, dstImpl->GetDesc()->numMips);
         uint32_t srcSub = D3D11CalcSubresource(params.srcMip, params.srcFace, srcImpl->GetDesc()->numMips);
 
-        _context->CopySubresourceRegion(dstInternal->GetResource(), dstSub, 0, 0, 0, srcInternal->GetResource(), srcSub, nullptr);
+        context_->CopySubresourceRegion(dstInternal->GetResource(), dstSub, 0, 0, 0, srcInternal->GetResource(), srcSub, nullptr);
 
         return std::make_tuple(srcSub, dstSub);
     }
@@ -124,12 +142,12 @@ namespace ninniku
 
         auto impl = std::make_shared<DX11BufferInternal>();
 
-        _tracker.RegisterObject(impl);
+        tracker_.RegisterObject(impl);
 
-        impl->_desc = params;
+        impl->desc_ = params;
 
         // do not support initial data for now
-        auto hr = _device->CreateBuffer(&desc, nullptr, impl->_buffer.GetAddressOf());
+        auto hr = device_->CreateBuffer(&desc, nullptr, impl->buffer_.GetAddressOf());
 
         if (CheckAPIFailed(hr, "ID3D11Device::CreateBuffer"))
             return BufferHandle();
@@ -142,12 +160,12 @@ namespace ninniku
 
             auto srv = new DX11ShaderResourceView();
 
-            hr = _device->CreateShaderResourceView(impl->_buffer.Get(), &srvDesc, srv->_resource.GetAddressOf());
+            hr = device_->CreateShaderResourceView(impl->buffer_.Get(), &srvDesc, srv->resource_.GetAddressOf());
 
             if (CheckAPIFailed(hr, "ID3D11Device::CreateShaderResourceView with D3D11_SRV_DIMENSION_BUFFER")) {
                 return BufferHandle();
             } else {
-                impl->_srv.reset(srv);
+                impl->srv_.reset(srv);
             }
         }
 
@@ -159,12 +177,12 @@ namespace ninniku
 
             auto uav = new DX11UnorderedAccessView();
 
-            hr = _device->CreateUnorderedAccessView(impl->_buffer.Get(), &uavDesc, uav->_resource.GetAddressOf());
+            hr = device_->CreateUnorderedAccessView(impl->buffer_.Get(), &uavDesc, uav->resource_.GetAddressOf());
 
             if (CheckAPIFailed(hr, "ID3D11Device::CreateUnorderedAccessView with D3D11_SRV_DIMENSION_BUFFER")) {
                 return BufferHandle();
             } else {
-                impl->_uav.reset(uav);
+                impl->uav_.reset(uav);
             }
         }
 
@@ -174,15 +192,20 @@ namespace ninniku
     BufferHandle DX11::CreateBuffer(const BufferHandle& src)
     {
         auto implSrc = static_cast<const DX11BufferImpl*>(src.get());
-        auto internalSrc = implSrc->_impl.lock();
 
-        assert(internalSrc->_desc->elementSize % 4 == 0);
+        if (CheckWeakExpired(implSrc->impl_))
+            return false;
+
+        auto internalSrc = implSrc->impl_.lock();
+
+        assert(internalSrc->desc_->elementSize % 4 == 0);
 
         auto marker = CreateDebugMarker("CreateBufferFromBufferObject");
 
-        auto dst = CreateBuffer(internalSrc->_desc);
+        auto dst = CreateBuffer(internalSrc->desc_);
         auto implDst = static_cast<const DX11BufferImpl*>(dst.get());
-        auto internalDst = implDst->_impl.lock();
+
+        auto internalDst = implDst->impl_.lock();
 
         // copy src to dst
         {
@@ -191,15 +214,17 @@ namespace ninniku
             copyParams.src = src.get();
             copyParams.dst = dst.get();
 
-            CopyBufferResource(copyParams);
+            if (!CopyBufferResource(copyParams)) {
+                return BufferHandle();
+            }
         }
 
         // create a temporary object readable from CPU to fill internalDst->_data with a map
-        auto stride = internalSrc->_desc->elementSize / 4;
-        auto params = internalSrc->_desc->Duplicate();
+        auto stride = internalSrc->desc_->elementSize / 4;
+        auto params = internalSrc->desc_->Duplicate();
 
         // allocate memory
-        internalDst->_data.resize(stride * internalSrc->_desc->numElements);
+        internalDst->data_.resize(stride * internalSrc->desc_->numElements);
         params->viewflags = RV_CPU_READ;
 
         auto temp = CreateBuffer(params);
@@ -211,14 +236,15 @@ namespace ninniku
             copyParams.src = src.get();
             copyParams.dst = temp.get();
 
-            CopyBufferResource(copyParams);
+            if (!CopyBufferResource(copyParams))
+                return BufferHandle();
         }
 
         auto mapped = Map(temp);
         auto dxMapped = static_cast<const DX11MappedResource*>(mapped.get());
-        uint32_t dstPitch = static_cast<uint32_t>(internalDst->_data.size() * sizeof(uint32_t));
+        uint32_t dstPitch = static_cast<uint32_t>(internalDst->data_.size() * sizeof(uint32_t));
 
-        memcpy_s(&internalDst->_data.front(), dstPitch, mapped->GetData(), std::min(dstPitch, dxMapped->GetRowPitch()));
+        memcpy_s(&internalDst->data_.front(), dstPitch, mapped->GetData(), std::min(dstPitch, dxMapped->GetRowPitch()));
 
         return dst;
     }
@@ -265,7 +291,7 @@ namespace ninniku
 
         UINT createDeviceFlags = 0;
 
-        if (Globals::Instance()._useDebugLayer)
+        if (Globals::Instance().useDebugLayer_)
             createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 
         std::array<D3D_FEATURE_LEVEL, 1> featureLevels = { D3D_FEATURE_LEVEL_11_1 };
@@ -366,9 +392,9 @@ namespace ninniku
         // we want to use unique_ptr here so that the object is properly destroyed in case it fails before we return
         auto impl = std::make_shared<DX11TextureInternal>();
 
-        _tracker.RegisterObject(impl);
+        tracker_.RegisterObject(impl);
 
-        impl->_desc = params;
+        impl->desc_ = params;
 
         auto res = std::make_unique<DX11TextureImpl>(impl);
 
@@ -389,8 +415,8 @@ namespace ninniku
             desc.CPUAccessFlags = cpuFlags;
             desc.MiscFlags = miscFlags;
 
-            impl->_texture.emplace<DX11Tex2D>();
-            hr = _device->CreateTexture2D(&desc, initialData.data(), std::get<DX11Tex2D>(impl->_texture).GetAddressOf());
+            impl->texture_.emplace<DX11Tex2D>();
+            hr = device_->CreateTexture2D(&desc, initialData.data(), std::get<DX11Tex2D>(impl->texture_).GetAddressOf());
             apiName = "ID3D11Device::CreateTexture2D";
         } else if (is1d) {
             D3D11_TEXTURE1D_DESC desc = {};
@@ -404,8 +430,8 @@ namespace ninniku
             desc.CPUAccessFlags = cpuFlags;
             desc.MiscFlags = miscFlags;
 
-            impl->_texture.emplace<DX11Tex1D>();
-            hr = _device->CreateTexture1D(&desc, initialData.data(), std::get<DX11Tex1D>(impl->_texture).GetAddressOf());
+            impl->texture_.emplace<DX11Tex1D>();
+            hr = device_->CreateTexture1D(&desc, initialData.data(), std::get<DX11Tex1D>(impl->texture_).GetAddressOf());
             apiName = "ID3D11Device::CreateTexture1D";
         } else {
             // is3d
@@ -421,8 +447,8 @@ namespace ninniku
             desc.CPUAccessFlags = cpuFlags;
             desc.MiscFlags = miscFlags;
 
-            impl->_texture.emplace<DX11Tex3D>();
-            hr = _device->CreateTexture3D(&desc, initialData.data(), std::get<DX11Tex3D>(impl->_texture).GetAddressOf());
+            impl->texture_.emplace<DX11Tex3D>();
+            hr = device_->CreateTexture3D(&desc, initialData.data(), std::get<DX11Tex3D>(impl->texture_).GetAddressOf());
             apiName = "ID3D11Device::CreateTexture3D";
         }
 
@@ -445,7 +471,7 @@ namespace ninniku
         }
 
         if (isUAV) {
-            impl->_uav.resize(params->numMips);
+            impl->uav_.resize(params->numMips);
 
             // we have to create an UAV for each miplevel
             for (uint32_t i = 0; i < params->numMips; ++i) {
@@ -463,12 +489,12 @@ namespace ninniku
 
                 auto uav = new DX11UnorderedAccessView();
 
-                hr = _device->CreateUnorderedAccessView(impl->GetResource(), &uavDesc, uav->_resource.GetAddressOf());
+                hr = device_->CreateUnorderedAccessView(impl->GetResource(), &uavDesc, uav->resource_.GetAddressOf());
 
                 if (CheckAPIFailed(hr, "ID3D11Device::CreateUnorderedAccessView")) {
                     return TextureHandle();
                 } else {
-                    impl->_uav[i].reset(uav);
+                    impl->uav_[i].reset(uav);
                 }
             }
         }
@@ -518,9 +544,9 @@ namespace ninniku
 
     bool DX11::Dispatch(const CommandHandle& cmd)
     {
-        auto found = _shaders.find(cmd->shader);
+        auto found = shaders_.find(cmd->shader);
 
-        if (found == _shaders.end()) {
+        if (found == shaders_.end()) {
             auto fmt = boost::format("Dispatch error: could not find shader \"%1%\"") % cmd->shader;
             LOGE << boost::str(fmt);
             return false;
@@ -529,7 +555,7 @@ namespace ninniku
         // unbind previously set UAV (assuming there is only ONE was ever used for now)
         std::array<ID3D11UnorderedAccessView*, 1> nullUAV{ nullptr };
 
-        _context->CSSetUnorderedAccessViews(0, 1, nullUAV.data(), nullptr);
+        context_->CSSetUnorderedAccessViews(0, 1, nullUAV.data(), nullptr);
 
         auto& cs = found->second;
 
@@ -539,15 +565,15 @@ namespace ninniku
         static VectorSet<uint32_t, ID3D11SamplerState*> vmSS;
 
         // all of this to wrap a static_cast
-        static std::function<ID3D11ShaderResourceView*(const ShaderResourceView*)> srvCast = &DX11::castGenericResourceToDX11Resource<ShaderResourceView, DX11ShaderResourceView, ID3D11ShaderResourceView>;
-        static std::function<ID3D11UnorderedAccessView*(const UnorderedAccessView*)> uavCast = &DX11::castGenericResourceToDX11Resource<UnorderedAccessView, DX11UnorderedAccessView, ID3D11UnorderedAccessView>;
-        static std::function<ID3D11SamplerState*(const SamplerState*)> ssCast = &DX11::castGenericResourceToDX11Resource<SamplerState, DX11SamplerState, ID3D11SamplerState>;
+        static std::function<ID3D11ShaderResourceView* (const ShaderResourceView*)> srvCast = &DX11::castGenericResourceToDX11Resource<ShaderResourceView, DX11ShaderResourceView, ID3D11ShaderResourceView>;
+        static std::function<ID3D11UnorderedAccessView* (const UnorderedAccessView*)> uavCast = &DX11::castGenericResourceToDX11Resource<UnorderedAccessView, DX11UnorderedAccessView, ID3D11UnorderedAccessView>;
+        static std::function<ID3D11SamplerState* (const SamplerState*)> ssCast = &DX11::castGenericResourceToDX11Resource<SamplerState, DX11SamplerState, ID3D11SamplerState>;
 
-        auto lambda = [&](auto & kvp, auto & container, auto castFn)
+        auto lambda = [&](auto& kvp, auto& container, auto castFn)
         {
-            auto f = cs.bindSlots.find(kvp.first);
+            auto f = cs.bindSlots_.find(kvp.first);
 
-            if (f != cs.bindSlots.end()) {
+            if (f != cs.bindSlots_.end()) {
                 container.insert(f->second, castFn(kvp.second));
             } else {
                 auto fmt = boost::format("Dispatch error: could not find bindSlots \"%1%\"") % kvp.first;
@@ -595,45 +621,45 @@ namespace ninniku
         }
 
         // Set shader data
-        _context->CSSetShader(cs.shader.Get(), nullptr, 0);
+        context_->CSSetShader(cs.shader_.Get(), nullptr, 0);
 
         // Constant buffers
-        auto foundCB = _cBuffers.find(cmd->cbufferStr);
+        auto foundCB = cBuffers_.find(cmd->cbufferStr);
 
-        if (foundCB != _cBuffers.end()) {
+        if (foundCB != cBuffers_.end()) {
             std::array<ID3D11Buffer*, 1> cbs{ foundCB->second.Get() };
 
-            _context->CSSetConstantBuffers(0, 1, cbs.data());
+            context_->CSSetConstantBuffers(0, 1, cbs.data());
         }
 
-        _context->CSSetSamplers(0, vmSS.size(), vmSS.data());
-        _context->CSSetUnorderedAccessViews(0, vmUAV.size(), vmUAV.data(), nullptr);
-        _context->CSSetShaderResources(0, vmSRV.size(), vmSRV.data());
-        _context->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
-        _context->Flush();
+        context_->CSSetSamplers(0, vmSS.size(), vmSS.data());
+        context_->CSSetUnorderedAccessViews(0, vmUAV.size(), vmUAV.data(), nullptr);
+        context_->CSSetShaderResources(0, vmSRV.size(), vmSRV.data());
+        context_->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
+        context_->Flush();
         return true;
     }
 
     void DX11::Finalize()
     {
-        _tracker.ReleaseObjects();
+        tracker_.ReleaseObjects();
     }
 
     bool DX11::Initialize()
     {
         auto adapter = 0;
 
-        if ((_type & ERenderer::RENDERER_WARP) != 0)
+        if ((type_ & ERenderer::RENDERER_WARP) != 0)
             adapter = -1;
 
-        if (!CreateDevice(adapter, _device.GetAddressOf())) {
+        if (!CreateDevice(adapter, device_.GetAddressOf())) {
             LOGE << "Failed to create DX11 device";
             return false;
         }
 
         // get context
-        _device->GetImmediateContext(_context.ReleaseAndGetAddressOf());
-        if (_context == nullptr) {
+        device_->GetImmediateContext(context_.ReleaseAndGetAddressOf());
+        if (context_ == nullptr) {
             LOGE << "Failed to obtain immediate context";
             return false;
         }
@@ -649,24 +675,24 @@ namespace ninniku
 
         auto sampler = new DX11SamplerState();
 
-        auto hr = _device->CreateSamplerState(&samplerDesc, sampler->_resource.GetAddressOf());
+        auto hr = device_->CreateSamplerState(&samplerDesc, sampler->resource_.GetAddressOf());
 
         if (CheckAPIFailed(hr, "ID3D11Device::CreateSamplerState for nearest")) {
             return false;
         } else {
-            _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Point)].reset(sampler);
+            samplers_[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Point)].reset(sampler);
         }
 
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 
         sampler = new DX11SamplerState();
 
-        hr = _device->CreateSamplerState(&samplerDesc, sampler->_resource.GetAddressOf());
+        hr = device_->CreateSamplerState(&samplerDesc, sampler->resource_.GetAddressOf());
 
         if (CheckAPIFailed(hr, "ID3D11Device::CreateSamplerState for linear")) {
             return false;
         } else {
-            _samplers[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Linear)].reset(sampler);
+            samplers_[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Linear)].reset(sampler);
         }
 
         return true;
@@ -754,7 +780,7 @@ namespace ninniku
         // create shader
         DX11CS shader;
 
-        hr = _device->CreateComputeShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, shader.GetAddressOf());
+        hr = device_->CreateComputeShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, shader.GetAddressOf());
 
         if (CheckAPIFailed(hr, "CreateComputeShader")) {
             return false;
@@ -762,7 +788,7 @@ namespace ninniku
             auto name = path.stem().string();
             LOGDF(boost::format("Adding CS: \"%1%\" to library") % name);
 
-            _shaders.emplace(name, DX11ComputeShader{ shader, bindings });
+            shaders_.emplace(name, DX11ComputeShader{ shader, bindings });
         }
 
         return true;
@@ -784,7 +810,7 @@ namespace ninniku
         // Count the number of .cso found
         std::filesystem::directory_iterator begin(shaderPath), end;
 
-        auto fileCounter = [&](const std::filesystem::directory_entry & d)
+        auto fileCounter = [&](const std::filesystem::directory_entry& d)
         {
             return (!is_directory(d.path()) && (d.path().extension() == ShaderExt));
         };
@@ -804,12 +830,16 @@ namespace ninniku
     bool DX11::MakeTextureSRV(const TextureSRVParams& params)
     {
         auto impl = static_cast<DX11TextureImpl*>(params.obj);
-        auto internal = impl->_impl.lock();
 
-        auto lmbd = [&](ID3D11Resource * resource, D3D11_SHADER_RESOURCE_VIEW_DESC & desc, SRVHandle & target)
+        if (CheckWeakExpired(impl->impl_))
+            return false;
+
+        auto internal = impl->impl_.lock();
+
+        auto lmbd = [&](ID3D11Resource* resource, D3D11_SHADER_RESOURCE_VIEW_DESC& desc, SRVHandle& target)
         {
             auto srv = new DX11ShaderResourceView();
-            auto hr = _device->CreateShaderResourceView(resource, &desc, srv->_resource.GetAddressOf());
+            auto hr = device_->CreateShaderResourceView(resource, &desc, srv->resource_.GetAddressOf());
 
             auto fmt = boost::format("ID3D11Device::CreateShaderResourceView with %1%") % DxSRVDimensionToString(desc.ViewDimension);
 
@@ -832,7 +862,7 @@ namespace ninniku
             srvDesc.TextureCubeArray.MipLevels = params.texParams->numMips;
             srvDesc.TextureCubeArray.NumCubes = params.texParams->arraySize / CUBEMAP_NUM_FACES;
 
-            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvCubeArray))
+            if (!lmbd(internal->GetResource(), srvDesc, internal->srvCubeArray_))
                 return false;
         }
 
@@ -842,11 +872,11 @@ namespace ninniku
             srvDesc.TextureCube = {};
             srvDesc.TextureCube.MipLevels = params.texParams->numMips;
 
-            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvCube))
+            if (!lmbd(internal->GetResource(), srvDesc, internal->srvCube_))
                 return false;
 
             // To sample texture as array, one for each miplevel
-            internal->_srvArray.resize(params.texParams->numMips);
+            internal->srvArray_.resize(params.texParams->numMips);
 
             for (uint32_t i = 0; i < params.texParams->numMips; ++i) {
                 srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
@@ -855,7 +885,7 @@ namespace ninniku
                 srvDesc.Texture2DArray.MostDetailedMip = i;
                 srvDesc.Texture2DArray.MipLevels = 1;
 
-                if (!lmbd(internal->GetResource(), srvDesc, internal->_srvArray[i]))
+                if (!lmbd(internal->GetResource(), srvDesc, internal->srvArray_[i]))
                     return false;
             }
 
@@ -866,11 +896,11 @@ namespace ninniku
             srvDesc.Texture2DArray.MostDetailedMip = 0;
             srvDesc.Texture2DArray.MipLevels = params.texParams->numMips;
 
-            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvArrayWithMips))
+            if (!lmbd(internal->GetResource(), srvDesc, internal->srvArrayWithMips_))
                 return false;
         } else if (params.texParams->arraySize > 1) {
             // one for each miplevel
-            internal->_srvArray.resize(params.texParams->numMips);
+            internal->srvArray_.resize(params.texParams->numMips);
 
             for (uint32_t i = 0; i < params.texParams->numMips; ++i) {
                 if (params.is1d) {
@@ -887,7 +917,7 @@ namespace ninniku
                     srvDesc.Texture2DArray.MipLevels = 1;
                 }
 
-                if (!lmbd(internal->GetResource(), srvDesc, internal->_srvArray[i]))
+                if (!lmbd(internal->GetResource(), srvDesc, internal->srvArray_[i]))
                     return false;
             }
         } else {
@@ -905,7 +935,7 @@ namespace ninniku
                 srvDesc.Texture2D.MipLevels = params.texParams->numMips;
             }
 
-            if (!lmbd(internal->GetResource(), srvDesc, internal->_srvDefault))
+            if (!lmbd(internal->GetResource(), srvDesc, internal->srvDefault_))
                 return false;
         }
 
@@ -914,11 +944,15 @@ namespace ninniku
 
     MappedResourceHandle DX11::Map(const BufferHandle& bObj)
     {
-        auto res = std::make_unique<DX11MappedResource>(_context, bObj);
+        auto res = std::make_unique<DX11MappedResource>(context_, bObj);
         auto impl = static_cast<const DX11BufferImpl*>(bObj.get());
-        auto internal = impl->_impl.lock();
 
-        auto hr = _context->Map(internal->_buffer.Get(), 0, D3D11_MAP_READ, 0, res->Get());
+        if (CheckWeakExpired(impl->impl_))
+            return false;
+
+        auto internal = impl->impl_.lock();
+
+        auto hr = context_->Map(internal->buffer_.Get(), 0, D3D11_MAP_READ, 0, res->Get());
 
         if (CheckAPIFailed(hr, "ID3D11DeviceContext::Map"))
             return std::unique_ptr<MappedResource>();
@@ -928,11 +962,15 @@ namespace ninniku
 
     MappedResourceHandle DX11::Map(const TextureHandle& tObj, const uint32_t index)
     {
-        auto res = std::make_unique<DX11MappedResource>(_context, tObj, index);
+        auto res = std::make_unique<DX11MappedResource>(context_, tObj, index);
         auto impl = static_cast<const DX11TextureImpl*>(tObj.get());
-        auto internal = impl->_impl.lock();
 
-        auto hr = _context->Map(internal->GetResource(), index, D3D11_MAP_READ, 0, res->Get());
+        if (CheckWeakExpired(impl->impl_))
+            return MappedResourceHandle();
+
+        auto internal = impl->impl_.lock();
+
+        auto hr = context_->Map(internal->GetResource(), index, D3D11_MAP_READ, 0, res->Get());
 
         if (CheckAPIFailed(hr, "ID3D11DeviceContext::Map"))
             return std::unique_ptr<MappedResource>();
@@ -991,7 +1029,7 @@ namespace ninniku
 
             // if the texture is a constant buffer, we want to create it a slot for it in the map
             if (bindDesc.Type == D3D_SIT_CBUFFER) {
-                _cBuffers.emplace(bindDesc.Name, DX11Buffer{});
+                cBuffers_.emplace(bindDesc.Name, DX11Buffer{});
             }
 
             res.emplace(bindDesc.Name, bindDesc.BindPoint);
@@ -1002,9 +1040,9 @@ namespace ninniku
 
     bool DX11::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)
     {
-        auto found = _cBuffers.find(name);
+        auto found = cBuffers_.find(name);
 
-        if (found == _cBuffers.end()) {
+        if (found == cBuffers_.end()) {
             auto fmt = boost::format("Constant buffer \"%1%\" was not found in any of the shaders parsed") % name;
             LOGE << boost::str(fmt);
 
@@ -1021,7 +1059,7 @@ namespace ninniku
             D3D11_SUBRESOURCE_DATA initialData = {};
             initialData.pSysMem = data;
 
-            auto hr = _device->CreateBuffer(&desc, &initialData, &_cBuffers[name]);
+            auto hr = device_->CreateBuffer(&desc, &initialData, &cBuffers_[name]);
 
             if (CheckAPIFailed(hr, "ID3D11Device::CreateBuffer"))
                 return false;
@@ -1029,14 +1067,14 @@ namespace ninniku
             // constant buffer already exists so just update it
 
             D3D11_MAPPED_SUBRESOURCE mapped = {};
-            auto src = _cBuffers[name].Get();
-            auto hr = _context->Map(src, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+            auto src = cBuffers_[name].Get();
+            auto hr = context_->Map(src, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 
             if (CheckAPIFailed(hr, "ID3D11DeviceContext::Map"))
                 return false;
 
             memcpy_s(mapped.pData, size, data, size);
-            _context->Unmap(src, 0);
+            context_->Unmap(src, 0);
         }
 
         return true;

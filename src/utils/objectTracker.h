@@ -48,6 +48,6 @@ namespace ninniku
         void ReleaseObjects();
 
     private:
-        std::vector<std::shared_ptr<TrackedObject>> _objects;
+        std::vector<std::shared_ptr<TrackedObject>> objects_;
     };
 } // namespace ninniku

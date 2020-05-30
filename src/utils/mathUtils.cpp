@@ -25,12 +25,12 @@
 
 namespace ninniku
 {
-    constexpr const bool IsPow2(const uint32_t x) noexcept
+    constexpr bool IsPow2(const uint32_t x) noexcept
     {
         return ((x != 0) && !(x & (x - 1)));
     }
 
-    constexpr const uint32_t CountMips(const uint32_t faceSize) noexcept
+    constexpr uint32_t CountMips(const uint32_t faceSize) noexcept
     {
         uint32_t mipLevels = 1;
         auto face = faceSize;
@@ -45,7 +45,7 @@ namespace ninniku
         return mipLevels;
     }
 
-    constexpr const int NearestPow2Floor(const int x)
+    constexpr int NearestPow2Floor(const int x)
     {
         int res = 1;
 

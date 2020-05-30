@@ -34,7 +34,7 @@ namespace hlsl
     enum DxilFourCC
     {
         DFCC_Container = DXIL_FOURCC('D', 'X', 'B', 'C'), // for back-compat with tools that look for DXBC containers
-        DFCC_ResourceDef = DXIL_FOURCC('R', 'D', 'E', 'F'),
+        DFCCresource_Def = DXIL_FOURCC('R', 'D', 'E', 'F'),
         DFCC_InputSignature = DXIL_FOURCC('I', 'S', 'G', '1'),
         DFCC_OutputSignature = DXIL_FOURCC('O', 'S', 'G', '1'),
         DFCC_PatchConstantSignature = DXIL_FOURCC('P', 'S', 'G', '1'),

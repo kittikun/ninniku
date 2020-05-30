@@ -35,7 +35,7 @@
 namespace ninniku
 {
     ddsImage::ddsImage()
-        : _impl{ new ddsImageImpl() }
+        : impl_{ new ddsImageImpl() }
     {
     }
 
@@ -45,13 +45,13 @@ namespace ninniku
     {
         auto res = TextureParam::Create();
 
-        res->arraySize = static_cast<uint32_t>(_meta.arraySize);
-        res->depth = static_cast<uint32_t>(_meta.depth);
-        res->format = DXGIFormatToNinnikuTF(_meta.format);
-        res->width = static_cast<uint32_t>(_meta.width);
-        res->height = static_cast<uint32_t>(_meta.height);
+        res->arraySize = static_cast<uint32_t>(meta_.arraySize);
+        res->depth = static_cast<uint32_t>(meta_.depth);
+        res->format = DXGIFormatToNinnikuTF(meta_.format);
+        res->width = static_cast<uint32_t>(meta_.width);
+        res->height = static_cast<uint32_t>(meta_.height);
         res->imageDatas = GetInitializationData();
-        res->numMips = static_cast<uint32_t>(_meta.mipLevels);
+        res->numMips = static_cast<uint32_t>(meta_.mipLevels);
         res->viewflags = viewFlags;
 
         return std::move(res);
@@ -59,26 +59,26 @@ namespace ninniku
 
     const std::tuple<uint8_t*, uint32_t> ddsImageImpl::GetData() const
     {
-        return std::make_tuple(_scratch.GetPixels(), static_cast<uint32_t>(_scratch.GetPixelsSize()));
+        return std::make_tuple(scratch_.GetPixels(), static_cast<uint32_t>(scratch_.GetPixelsSize()));
     }
 
     const std::vector<SubresourceParam> ddsImageImpl::GetInitializationData() const
     {
-        if (_meta.IsVolumemap()) {
+        if (meta_.IsVolumemap()) {
             LOGE << "Texture3D are not supported for now";
 
             return std::vector<SubresourceParam>();
         }
 
         // texture1D or 2D
-        std::vector<SubresourceParam> res(_meta.arraySize * _meta.mipLevels);
+        std::vector<SubresourceParam> res(meta_.arraySize * meta_.mipLevels);
 
         size_t idx = 0;
 
-        for (size_t item = 0; item < _meta.arraySize; ++item) {
-            for (size_t level = 0; level < _meta.mipLevels; ++level) {
-                auto index = _meta.ComputeIndex(level, item, 0);
-                auto& img = _scratch.GetImages()[index];
+        for (size_t item = 0; item < meta_.arraySize; ++item) {
+            for (size_t level = 0; level < meta_.mipLevels; ++level) {
+                auto index = meta_.ComputeIndex(level, item, 0);
+                auto& img = scratch_.GetImages()[index];
 
                 res[idx].data = img.pixels;
                 res[idx].rowPitch = static_cast<uint32_t>(img.rowPitch);
@@ -97,19 +97,19 @@ namespace ninniku
 
         auto wPath = strToWStr(path);
 
-        HRESULT hr = GetMetadataFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, _meta);
+        HRESULT hr = GetMetadataFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, meta_);
         if (FAILED(hr)) {
             fmt = boost::format("Could not load metadata for DDS file %1%") % path;
             LOGE << boost::str(fmt);
             return false;
         }
 
-        if ((_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE3D) && (_meta.arraySize > 1)) {
+        if ((meta_.dimension == DirectX::TEX_DIMENSION_TEXTURE3D) && (meta_.arraySize > 1)) {
             LOGE << "Texture3DArray cannot be loaded";
             return false;
         }
 
-        hr = LoadFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, &_meta, _scratch);
+        hr = LoadFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, &meta_, scratch_);
         if (FAILED(hr)) {
             fmt = boost::format("Failed to load DDS file %1%") % path;
             LOGE << boost::str(fmt);
@@ -121,7 +121,7 @@ namespace ninniku
 
     bool ddsImageImpl::LoadRaw(const void* pData, const size_t size)
     {
-        const auto hr = LoadFromDDSMemory(pData, size, DirectX::DDS_FLAGS_NONE, &_meta, _scratch);
+        const auto hr = LoadFromDDSMemory(pData, size, DirectX::DDS_FLAGS_NONE, &meta_, scratch_);
         if (FAILED(hr)) {
             LOGE << "Failed to load DDS file";
             return false;
@@ -130,7 +130,7 @@ namespace ninniku
         return true;
     }
 
-    bool ddsImageImpl::LoadRaw([[maybe_unused]]const void* pData, [[maybe_unused]]const size_t size, [[maybe_unused]]const uint32_t width, [[maybe_unused]]const uint32_t height, [[maybe_unused]]const int32_t format)
+    bool ddsImageImpl::LoadRaw([[maybe_unused]] const void* pData, [[maybe_unused]] const size_t size, [[maybe_unused]] const uint32_t width, [[maybe_unused]] const uint32_t height, [[maybe_unused]] const int32_t format)
     {
         throw std::exception("not implemented");
     }
@@ -138,30 +138,30 @@ namespace ninniku
     bool ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
         // DirectXTex
-        _meta = DirectX::TexMetadata{};
-        _meta.width = srcTex->GetDesc()->width;
-        _meta.height = srcTex->GetDesc()->height;
-        _meta.depth = srcTex->GetDesc()->depth;
-        _meta.arraySize = srcTex->GetDesc()->arraySize;
-        _meta.mipLevels = srcTex->GetDesc()->numMips;
-        _meta.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcTex->GetDesc()->format));
+        meta_ = DirectX::TexMetadata{};
+        meta_.width = srcTex->GetDesc()->width;
+        meta_.height = srcTex->GetDesc()->height;
+        meta_.depth = srcTex->GetDesc()->depth;
+        meta_.arraySize = srcTex->GetDesc()->arraySize;
+        meta_.mipLevels = srcTex->GetDesc()->numMips;
+        meta_.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcTex->GetDesc()->format));
 
-        if (_meta.depth > 1) {
-            _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;
-        } else if (_meta.height > 1) {
-            _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE2D;
+        if (meta_.depth > 1) {
+            meta_.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;
+        } else if (meta_.height > 1) {
+            meta_.dimension = DirectX::TEX_DIMENSION_TEXTURE2D;
         } else {
-            _meta.dimension = DirectX::TEX_DIMENSION_TEXTURE1D;
+            meta_.dimension = DirectX::TEX_DIMENSION_TEXTURE1D;
         }
 
         // assume that an arraysize of 6 == cubemap
-        if ((_meta.arraySize % CUBEMAP_NUM_FACES == 0) && (_meta.dimension == DirectX::TEX_DIMENSION_TEXTURE2D))
-            _meta.miscFlags |= DirectX::TEX_MISC_TEXTURECUBE;
+        if ((meta_.arraySize % CUBEMAP_NUM_FACES == 0) && (meta_.dimension == DirectX::TEX_DIMENSION_TEXTURE2D))
+            meta_.miscFlags |= DirectX::TEX_MISC_TEXTURECUBE;
 
-        auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%, IsCubemap=%6%") % _meta.width % _meta.height % _meta.depth % _meta.arraySize % _meta.mipLevels % ((_meta.miscFlags & DirectX::TEX_MISC_TEXTURECUBE) != 0);
+        auto fmt = boost::format("ddsImageImpl::InitializeFromTextureObject with Width=%1%, Height=%2%, Depth=%3%, Array=%4%, Mips=%5%, IsCubemap=%6%") % meta_.width % meta_.height % meta_.depth % meta_.arraySize % meta_.mipLevels % ((meta_.miscFlags & DirectX::TEX_MISC_TEXTURECUBE) != 0);
         LOG << boost::str(fmt);
 
-        auto hr = _scratch.Initialize(_meta);
+        auto hr = scratch_.Initialize(meta_);
 
         if (CheckAPIFailed(hr, "DirectX::ScratchImage::Initialize"))
             return false;
@@ -237,7 +237,7 @@ namespace ninniku
 
     bool ddsImageImpl::SaveImage(const std::string_view& path)
     {
-        auto hr = DirectX::SaveToDDSFile(_scratch.GetImage(0, 0, 0), _scratch.GetImageCount(), _meta, DirectX::DDS_FLAGS_FORCE_DX10_EXT, ninniku::strToWStr(path).c_str());
+        auto hr = DirectX::SaveToDDSFile(scratch_.GetImage(0, 0, 0), scratch_.GetImageCount(), meta_, DirectX::DDS_FLAGS_FORCE_DX10_EXT, ninniku::strToWStr(path).c_str());
 
         if (FAILED(hr)) {
             LOGE << "Failed to save compressed DDS";
@@ -257,9 +257,9 @@ namespace ninniku
             return false;
         }
 
-        auto img = _scratch.GetImage(0, 0, 0);
+        auto img = scratch_.GetImage(0, 0, 0);
         assert(img);
-        size_t nimg = _scratch.GetImageCount();
+        size_t nimg = scratch_.GetImageCount();
 
         std::unique_ptr<DirectX::ScratchImage> resImageImpl(new (std::nothrow) DirectX::ScratchImage);
 
@@ -276,7 +276,7 @@ namespace ninniku
             case DXGI_FORMAT_BC7_TYPELESS:
             case DXGI_FORMAT_BC7_UNORM:
             case DXGI_FORMAT_BC7_UNORM_SRGB:
-                if (Globals::Instance()._bc7Quick)
+                if (Globals::Instance().bc7Quick_)
                     flags |= DirectX::TEX_COMPRESS_BC7_QUICK;
                 else
                     flags |= DirectX::TEX_COMPRESS_BC7_USE_3SUBSETS;
@@ -299,11 +299,11 @@ namespace ninniku
                 auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
                 auto dx11 = static_cast<DX11*>(dx.get());
 
-                hr = DirectX::Compress(dx11->GetDevice(), img, nimg, _meta, format, flags, 1.f, *resImageImpl);
+                hr = DirectX::Compress(dx11->GetDevice(), img, nimg, meta_, format, flags, 1.f, *resImageImpl);
             } else {
                 LOGD_INDENT_START << "DirectXTex CPU Compression";
 
-                hr = DirectX::Compress(img, nimg, _meta, format, flags, 1.f, *resImageImpl);
+                hr = DirectX::Compress(img, nimg, meta_, format, flags, 1.f, *resImageImpl);
             }
 
             if (FAILED(hr)) {
@@ -316,7 +316,7 @@ namespace ninniku
         } else {
             LOGD_INDENT_START << "DirectXTex CPU Compression";
 
-            auto hr = DirectX::Compress(img, nimg, _meta, format, flags, DirectX::TEX_THRESHOLD_DEFAULT, *resImageImpl);
+            auto hr = DirectX::Compress(img, nimg, meta_, format, flags, DirectX::TEX_THRESHOLD_DEFAULT, *resImageImpl);
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";
@@ -327,7 +327,7 @@ namespace ninniku
             LOGD_INDENT_END;
         }
 
-        auto resMeta = DirectX::TexMetadata(_meta);
+        auto resMeta = DirectX::TexMetadata(meta_);
 
         resMeta.format = format;
 
@@ -343,8 +343,8 @@ namespace ninniku
 
     void ddsImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
     {
-        auto index = _meta.ComputeIndex(dstMip, dstFace, 0);
-        auto& img = _scratch.GetImages()[index];
+        auto index = meta_.ComputeIndex(dstMip, dstFace, 0);
+        auto& img = scratch_.GetImages()[index];
 
         if (newRowPitch > img.rowPitch) {
             // row pitch from dx11 can be larger than for the image so we have to do each row manually

@@ -89,17 +89,17 @@ namespace ninniku
     {
         DX12CommandInternal(uint32_t shaderHash) noexcept;
 
-        DX12RootSignature _rootSignature;
-        DX12PipelineState _pipelineState;
-        DX12CommandAllocator _cmdAllocator;
-        DX12GraphicsCommandList _cmdList;
+        DX12RootSignature rootSignature_;
+        DX12PipelineState pipelineState_;
+        DX12CommandAllocator cmdAllocator_;
+        DX12GraphicsCommandList cmdList_;
 
         // user might change the bound shader so keep the last used one
-        uint32_t _contextShaderHash;
+        uint32_t contextShaderHash_;
 
         bool CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings);
 
-        std::unordered_map<uint32_t, DX12CommandSubContext> _subContexts;
+        std::unordered_map<uint32_t, DX12CommandSubContext> subContexts_;
     };
 
     struct DX12Command final : public Command
@@ -107,7 +107,7 @@ namespace ninniku
         uint32_t GetHashShader() const;
         uint32_t GetHashBindings() const;
 
-        std::weak_ptr<DX12CommandInternal> _impl;
+        std::weak_ptr<DX12CommandInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -115,9 +115,9 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct DX12ConstantBuffer
     {
-        DX12Resource _resource;
-        DX12Resource _upload;
-        uint32_t _size = 0;
+        DX12Resource resource_;
+        DX12Resource upload_;
+        uint32_t size_ = 0;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ namespace ninniku
         ~DX12DebugMarker() override;
 
     private:
-        static inline std::atomic<uint8_t> _colorIdx;
+        static inline std::atomic<uint8_t> colorIdx_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -142,13 +142,13 @@ namespace ninniku
         DX12MappedResource(const DX12Resource& resource, const D3D12_RANGE* range, const uint32_t subresource, void* data) noexcept;
         ~DX12MappedResource() override;
 
-        void* GetData() const override { return _data; }
+        void* GetData() const override { return data_; }
 
     private:
-        DX12Resource _resource;
-        uint32_t _subresource;
-        const D3D12_RANGE* _range;
-        void* _data;
+        DX12Resource resource_;
+        uint32_t subresource_;
+        const D3D12_RANGE* range_;
+        void* data_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -157,8 +157,8 @@ namespace ninniku
     struct DX12SamplerState final : public SamplerState
     {
     public:
-        DX12DescriptorHeap _descriptorHeap;
-        D3D12_SAMPLER_DESC _desc;
+        DX12DescriptorHeap descriptorHeap_;
+        D3D12_SAMPLER_DESC desc_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -168,20 +168,20 @@ namespace ninniku
     {
         DX12ShaderResourceView(uint32_t index) noexcept;
 
-        std::variant<std::weak_ptr<DX12BufferInternal>, std::weak_ptr<struct DX12TextureInternal>> _resource;
+        std::variant<std::weak_ptr<DX12BufferInternal>, std::weak_ptr<struct DX12TextureInternal>> resource_;
 
         // only when array, std::numeric_limits<uint32_t>::max() otherwise
-        uint32_t _index;
+        uint32_t index_;
     };
 
     struct DX12UnorderedAccessView final : public UnorderedAccessView
     {
         DX12UnorderedAccessView(uint32_t index) noexcept;
 
-        std::variant<std::weak_ptr<DX12BufferInternal>, std::weak_ptr<struct DX12TextureInternal>> _resource;
+        std::variant<std::weak_ptr<DX12BufferInternal>, std::weak_ptr<struct DX12TextureInternal>> resource_;
 
         // only when array, std::numeric_limits<uint32_t>::max() otherwise
-        uint32_t _index;
+        uint32_t index_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -189,26 +189,26 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct DX12TextureInternal final : TrackedObject
     {
-        DX12Resource _texture;
+        DX12Resource texture_;
 
-        SRVHandle _srvDefault;
+        SRVHandle srvDefault_;
 
         // D3D_SRV_DIMENSION_TEXTURECUBE
-        SRVHandle _srvCube;
+        SRVHandle srvCube_;
 
         // D3D_SRV_DIMENSION_TEXTURECUBEARRAY
-        SRVHandle _srvCubeArray;
+        SRVHandle srvCubeArray_;
 
         // D3D_SRV_DIMENSION_TEXTURE2DARRAY per mip level
-        std::vector<SRVHandle> _srvArray;
+        std::vector<SRVHandle> srvArray_;
 
-        SRVHandle _srvArrayWithMips;
+        SRVHandle srvArrayWithMips_;
 
         // One D3D11_TEX2D_ARRAY_UAV per mip level
-        std::vector<UAVHandle> _uav;
+        std::vector<UAVHandle> uav_;
 
         // Initial desc that was used to create the resource
-        std::shared_ptr<const TextureParam> _desc;
+        std::shared_ptr<const TextureParam> desc_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -226,7 +226,7 @@ namespace ninniku
         const ShaderResourceView* GetSRVArrayWithMips() const override;
         const UnorderedAccessView* GetUAV(uint32_t index) const override;
 
-        std::weak_ptr<DX12TextureInternal> _impl;
+        std::weak_ptr<DX12TextureInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////
