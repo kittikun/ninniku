@@ -111,10 +111,10 @@ SetupFixtureDX12Warp::SetupFixtureDX12Warp()
     auto renderer = ninniku::ERenderer::RENDERER_WARP_DX12;
     uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
-    if (IsAppVeyor()) {
-        isNull = true;
+    if (IsAppVeyor())
         flags |= ninniku::EInitializationFlags::IF_DisableDX12DebugLayer;
-    } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+
+    if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
         std::cout << "Failed to initialize Ninniku." << std::endl;
     }
 }
