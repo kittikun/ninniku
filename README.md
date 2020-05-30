@@ -7,7 +7,6 @@
 Simple framework to run compute jobs with DX11/DX12
 - Can load/save cubemaps with [cmft](https://github.com/dariomanesku/cmft)
 - Can load/save DDS with [DirectXTex](https://github.com/Microsoft/DirectXTex)
-  * Saved dds files must be compressed BCx format (but BC2 is not supported)
 - Can load BMP, GIF, HDR, JPG, PNG, PIC, PNM, PSD, TGA files with [stb](https://github.com/nothings/stb)
   * Can be 1-4 channel, 8 or 16 bits
 - Can load EXR files with [tinyexr](https://github.com/syoyo/tinyexr)
