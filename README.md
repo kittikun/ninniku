@@ -4,18 +4,16 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/9wne2qsbsihhxnxd/branch/master?svg=true)](https://ci.appveyor.com/project/kittikun/ninniku/branch/master)
 
-Simple framework to run compute jobs with DX11
-- Texture are supported with the SRV/UAV views
-- Can load/save cubemaps with [cmft](https://github.com/dariomanesku/cmft).
-  * Saved dds files can be DXGI_FORMAT_R32G32B32A32_FLOAT or DXGI_FORMAT_R8G8B8A8_UNORM
+Simple framework to run compute jobs with DX11/DX12
+- Can load/save cubemaps with [cmft](https://github.com/dariomanesku/cmft)
 - Can load/save DDS with [DirectXTex](https://github.com/Microsoft/DirectXTex)
-  * Saved dds files must be compressed BCx format (but BC2 is not supported)
 - Can load BMP, GIF, HDR, JPG, PNG, PIC, PNM, PSD, TGA files with [stb](https://github.com/nothings/stb)
   * Can be 1-4 channel, 8 or 16 bits
 - Can load EXR files with [tinyexr](https://github.com/syoyo/tinyexr)
-- Can capture commands with [RenderDoc](https://renderdoc.org/).
-  * Compile using Debug configuration or define _USE_RENDERDOC
+- Can capture commands with [RenderDoc](https://renderdoc.org/) for DX11 and [PIX](https://devblogs.microsoft.com/pix/) for DX12
+  * Compile using Debug configuration or define _DO_CAPTURE
   * Captures will be called ninniku_frame0.rdc
+- DX12 shaders are compiled using the [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler)
 
 #### Usage:
 Look at project simple or there is plenty of samples provided as unit tests

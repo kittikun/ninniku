@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -22,11 +22,38 @@
 
 #include "export.h"
 
-namespace ninniku {
-    NINNIKU_API const bool IsPow2(const uint32_t x);
-    NINNIKU_API const uint32_t CountMips(const uint32_t faceSize);
-    NINNIKU_API const int NearestPow2Floor(const int x);
+#include <stdint.h>
 
-    NINNIKU_API const std::wstring strToWStr(const std::string&);
-    NINNIKU_API const std::string wstrToStr(const std::wstring&);
+namespace ninniku
+{
+    struct NINNIKU_API NonCopyable
+    {
+        // no copy of any kind allowed
+        NonCopyable(const NonCopyable&) = delete;
+        NonCopyable& operator=(NonCopyable&) = delete;
+        NonCopyable(NonCopyable&&) = delete;
+        NonCopyable& operator=(NonCopyable&&) = delete;
+
+        NonCopyable() = default;
+        virtual ~NonCopyable() = default;
+    };
+
+    class NINNIKU_API NonCopyableBase
+    {
+        // no copy of any kind allowed
+        NonCopyableBase(const NonCopyableBase&) = delete;
+        NonCopyableBase& operator=(NonCopyableBase&) = delete;
+        NonCopyableBase(NonCopyableBase&&) = delete;
+        NonCopyableBase& operator=(NonCopyableBase&&) = delete;
+
+    protected:
+        NonCopyableBase() = default;
+        virtual ~NonCopyableBase() = default;
+    };
+
+    NINNIKU_API constexpr bool IsPow2(const uint32_t x) noexcept;
+    NINNIKU_API constexpr uint32_t CountMips(const uint32_t faceSize) noexcept;
+    NINNIKU_API constexpr int NearestPow2Floor(const int x);
+    NINNIKU_API constexpr uint32_t DXGIFormatToNinnikuTF(uint32_t);
+    NINNIKU_API constexpr uint32_t NinnikuTFToDXGIFormat(uint32_t);
 } // namespace ninniku

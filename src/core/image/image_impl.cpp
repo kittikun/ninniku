@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,7 @@
 
 namespace ninniku
 {
-    TextureParamHandle ImageImpl::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle ImageImpl::CreateTextureParam(const EResourceViews viewFlags) const
     {
         if (viewFlags == EResourceViews::RV_None) {
             LOGE << "TextureParam view flags cannot be ETextureViews::TV_None";
@@ -61,11 +61,11 @@ namespace ninniku
         return std::make_tuple(res, tx, ty);
     }
 
-    bool ImageImpl::Load(const std::string& path)
+    bool ImageImpl::Load(const std::string_view& path)
     {
-        auto validPath = boost::filesystem::path{ path };
+        auto validPath = std::filesystem::path{ path };
 
-        if (!boost::filesystem::exists(validPath)) {
+        if (!std::filesystem::exists(validPath)) {
             auto fmt = boost::format("Could not find file \"%1%\"") % path;
             LOGE << boost::str(fmt);
 

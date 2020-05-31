@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -25,28 +25,33 @@
 
 namespace ninniku
 {
-    TextureParamHandle genericImage::CreateTextureParam(const uint8_t viewFlags) const
+    TextureParamHandle genericImage::CreateTextureParam(const EResourceViews viewFlags) const
     {
-        return _impl->CreateTextureParam(viewFlags);
+        return impl_->CreateTextureParam(viewFlags);
     }
 
-    bool genericImage::Load(const std::string& path)
+    bool genericImage::Load(const std::string_view& path)
     {
-        return _impl->Load(path);
+        return impl_->Load(path);
+    }
+
+    bool genericImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
+    {
+        return impl_->LoadRaw(pData, size, width, height, format);
     }
 
     const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
     {
-        return _impl->GetData();
+        return impl_->GetData();
     }
 
-    void genericImage::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    bool genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
     {
-        return _impl->InitializeFromTextureObject(dx, srcTex);
+        return impl_->InitializeFromTextureObject(dx, srcTex);
     }
 
     const SizeFixResult genericImage::IsRequiringFix() const
     {
-        return _impl->IsRequiringFix();
+        return impl_->IsRequiringFix();
     }
 } // namespace ninniku

@@ -10,8 +10,8 @@
 
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/5827/badge.svg)](https://scan.coverity.com/projects/5827)
 
-`tinyexr` is a small, single header-only library to load and save OpenEXR(.exr) images.
-`tinyexr` is written in portable C++(no library dependency except for STL), thus `tinyexr` is good to embed into your application.
+`tinyexr` is a small, single header-only library to load and save OpenEXR (.exr) images.
+`tinyexr` is written in portable C++ (no library dependency except for STL), thus `tinyexr` is good to embed into your application.
 To use `tinyexr`, simply copy `tinyexr.h` into your project.
 
 Current status of `tinyexr` is:
@@ -19,13 +19,13 @@ Current status of `tinyexr` is:
 - OpenEXR v1 image
   - [x] Scanline format
   - [ ] Tiled format
-    - [x] Tile format with no LoD(load).
-    - [ ] Tile format with LoD(load).
-    - [ ] Tile format with no LoD(save).
-    - [ ] Tile format with LoD(save).
+    - [x] Tile format with no LoD (load).
+    - [ ] Tile format with LoD (load).
+    - [ ] Tile format with no LoD (save).
+    - [ ] Tile format with LoD (save).
   - [x] Custom attributes
 - OpenEXR v2 image
-  - [ ] Multipart format 
+  - [ ] Multipart format
     - [x] Load multi-part image
     - [ ] Save multi-part image
     - [ ] Load multi-part deep image
@@ -38,19 +38,19 @@ Current status of `tinyexr` is:
   - [x] ZIP
   - [x] ZIPS
   - [x] PIZ
-  - [x] ZFP(tinyexr extension)
+  - [x] ZFP (tinyexr extension)
   - [ ] B44?
   - [ ] B44A?
   - [ ] PIX24?
 - Line order.
-  - [x] Increasing, decreasing(load)
+  - [x] Increasing, decreasing (load)
   - [ ] Random?
-  - [ ] Increasing, decreasing(save)
-- Pixel format(UINT, FLOAT).
-  - [x] UINT, FLOAT(load)
-  - [x] UINT, FLOAT(deep load)
-  - [x] UINT, FLOAT(save)
-  - [ ] UINT, FLOAT(deep save)
+  - [ ] Increasing, decreasing (save)
+- Pixel format (UINT, FLOAT).
+  - [x] UINT, FLOAT (load)
+  - [x] UINT, FLOAT (deep load)
+  - [x] UINT, FLOAT (save)
+  - [ ] UINT, FLOAT (deep save)
 - Support for big endian machine.
   - [x] Loading scanline image
   - [x] Saving scanline image
@@ -59,17 +59,19 @@ Current status of `tinyexr` is:
   - [ ] Loading deep image
   - [ ] Saving deep image
 - Optimization
+  - [x] C++11 thread loading
+  - [ ] C++11 thread saving
   - [ ] ISPC?
   - [x] OpenMP multi-threading in EXR loading.
   - [x] OpenMP multi-threading in EXR saving.
   - [ ] OpenMP multi-threading in deep image loading.
   - [ ] OpenMP multi-threading in deep image saving.
 * C interface.
-  * You can easily write language bindings(e.g. golang)
+  * You can easily write language bindings (e.g. golang)
 
-# Use case 
+# Use case
 
-## New TinyEXR(v0.9.5+)
+## New TinyEXR (v0.9.5+)
 
 * Godot. Multi-platform 2D and 3D game engine https://godotengine.org/
 * Filament. PBR engine. https://github.com/google/filament
@@ -77,11 +79,11 @@ Current status of `tinyexr` is:
 * The-Forge. The Forge Cross-Platform Rendering Framework PC, Linux, Ray Tracing, macOS / iOS, Android, XBOX, PS4 https://github.com/ConfettiFX/The-Forge
 * Your project here!
 
-## Older TinyEXR(v0.9.0)
+## Older TinyEXR (v0.9.0)
 
 * mallie https://github.com/lighttransport/mallie
 * Cinder 0.9.0 https://libcinder.org/notes/v0.9.0
-* Piccante(develop branch) http://piccantelib.net/
+* Piccante (develop branch) http://piccantelib.net/
 * Your project here!
 
 ## Examples
@@ -91,7 +93,9 @@ Current status of `tinyexr` is:
 * [examples/exr2rgbe/](examples/exr2rgbe) EXR to .hdr converter
 * [examples/ldr2exr/](examples/exr2rgbe) LDR to EXR converter
 * [examples/exr2ldr/](examples/exr2ldr) EXR to LDR converter
-* [examples/cube2longlat/](examples/cube2longlat) Cubemap to longlat(equirectangler) converter
+* [examples/exr2fptiff/](examples/exr2fptiff) EXR to 32bit floating point TIFF converter
+  * for 32bit floating point TIFF to EXR convert, see https://github.com/syoyo/tinydngloader/tree/master/examples/fptiff2exr
+* [examples/cube2longlat/](examples/cube2longlat) Cubemap to longlat (equirectangler) converter
 
 ## Experimental
 
@@ -101,7 +105,7 @@ Current status of `tinyexr` is:
 
 NOTE: **API is still subject to change**. See the source code for details.
 
-Include `tinyexr.h` with `TINYEXR_IMPLEMENTATION` flag(do this only for **one** .cc file).
+Include `tinyexr.h` with `TINYEXR_IMPLEMENTATION` flag (do this only for **one** .cc file).
 
 ```cpp
 //Please include your own zlib-compatible API header before
@@ -114,9 +118,12 @@ Include `tinyexr.h` with `TINYEXR_IMPLEMENTATION` flag(do this only for **one** 
 
 ### Compile flags
 
-* `TINYEXR_USE_MINIZ` Use embedded miniz(default = 1). Please include `zlib.h` header(before `tinyexr.h`) if you disable miniz support.
-* `TINYEXR_USE_PIZ` Enable PIZ compression support(default = 1)
-* `TINYEXR_USE_ZFP` Enable ZFP compression supoort(TinyEXR extension, default = 0)
+* `TINYEXR_USE_MINIZ` Use embedded miniz (default = 1). Please include `zlib.h` header (before `tinyexr.h`) if you disable miniz support.
+* `TINYEXR_USE_PIZ` Enable PIZ compression support (default = 1)
+* `TINYEXR_USE_ZFP` Enable ZFP compression supoort (TinyEXR extension, default = 0)
+* `TINYEXR_USE_THREAD` Enable threaded loading using C++11 thread (Requires C++11 compiler, default = 0)
+* `TINYEXR_USE_OPENMP` Enable OpenMP threading support (default = 1 if `_OPENMP` is defined)
+  * Use `TINYEXR_USE_OPENMP=0` to force disable OpenMP code path even if OpenMP is available/enabled in the compiler.
 
 ### Quickly reading RGB(A) EXR file.
 
@@ -136,7 +143,36 @@ Include `tinyexr.h` with `TINYEXR_IMPLEMENTATION` flag(do this only for **one** 
     }
   } else {
     ...
-    free(out); // relase memory of image data
+    free(out); // release memory of image data
+  }
+
+```
+
+### Reading layered RGB(A) EXR file.
+
+If you want to read EXR image with layer info (channel has a name with delimiter `.`), please use `LoadEXRWithLayer` API.
+
+You need to know layer name in advance (e.g. through `EXRLayers` API).
+
+```cpp
+  const char* input = ...;
+  const char* layer_name = "diffuse"; // or use EXRLayers to get list of layer names in .exr
+  float* out; // width * height * RGBA
+  int width;
+  int height;
+  const char* err = NULL; // or nullptr in C++11
+
+  // will read `diffuse.R`, `diffuse.G`, `diffuse.B`, (`diffuse.A`) channels
+  int ret = LoadEXRWithLayer(&out, &width, &height, input, layer_name, &err);
+
+  if (ret != TINYEXR_SUCCESS) {
+    if (err) {
+       fprintf(stderr, "ERR : %s\n", err);
+       FreeEXRErrorMessage(err); // release memory of error message.
+    }
+  } else {
+    ...
+    free(out); // release memory of image data
   }
 
 ```
@@ -168,7 +204,7 @@ Scanline and tiled format are supported.
   ret = ParseEXRHeaderFromFile(&exr_header, &exr_version, argv[1], &err);
   if (ret != 0) {
     fprintf(stderr, "Parse EXR err: %s\n", err);
-    FreeEXRErrorMessage(err); // free's buffer for an error message 
+    FreeEXRErrorMessage(err); // free's buffer for an error message
     return ret;
   }
 
@@ -186,7 +222,7 @@ Scanline and tiled format are supported.
   if (ret != 0) {
     fprintf(stderr, "Load EXR err: %s\n", err);
     FreeEXRHeader(&exr_header);
-    FreeEXRErrorMessage(err); // free's buffer for an error message 
+    FreeEXRErrorMessage(err); // free's buffer for an error message
     return ret;
   }
 
@@ -227,7 +263,7 @@ Scanline and tiled format are supported.
   ret = ParseEXRMultipartHeaderFromFile(&exr_headers, &num_exr_headers, &exr_version, argv[1], &err);
   if (ret != 0) {
     fprintf(stderr, "Parse EXR err: %s\n", err);
-    FreeEXRErrorMessage(err); // free's buffer for an error message 
+    FreeEXRErrorMessage(err); // free's buffer for an error message
     return ret;
   }
 
@@ -245,7 +281,7 @@ Scanline and tiled format are supported.
   ret = LoadEXRMultipartImageFromFile(&images.at(0), const_cast<const EXRHeader**>(exr_headers), num_exr_headers, argv[1], &err);
   if (ret != 0) {
     fprintf(stderr, "Parse EXR err: %s\n", err);
-    FreeEXRErrorMessage(err); // free's buffer for an error message 
+    FreeEXRErrorMessage(err); // free's buffer for an error message
     return ret;
   }
 
@@ -305,13 +341,13 @@ Saving Scanline EXR file.
     image.height = height;
 
     header.num_channels = 3;
-    header.channels = (EXRChannelInfo *)malloc(sizeof(EXRChannelInfo) * header.num_channels); 
+    header.channels = (EXRChannelInfo *)malloc(sizeof(EXRChannelInfo) * header.num_channels);
     // Must be (A)BGR order, since most of EXR viewers expect this channel order.
     strncpy(header.channels[0].name, "B", 255); header.channels[0].name[strlen("B")] = '\0';
     strncpy(header.channels[1].name, "G", 255); header.channels[1].name[strlen("G")] = '\0';
     strncpy(header.channels[2].name, "R", 255); header.channels[2].name[strlen("R")] = '\0';
 
-    header.pixel_types = (int *)malloc(sizeof(int) * header.num_channels); 
+    header.pixel_types = (int *)malloc(sizeof(int) * header.num_channels);
     header.requested_pixel_types = (int *)malloc(sizeof(int) * header.num_channels);
     for (int i = 0; i < header.num_channels; i++) {
       header.pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT; // pixel type of input image
@@ -319,13 +355,13 @@ Saving Scanline EXR file.
     }
 
     const char* err = NULL; // or nullptr in C++11 or later.
-    int ret = SaveEXRImageToFile(&image, &header, argv[2], &err);
+    int ret = SaveEXRImageToFile(&image, &header, outfilename, &err);
     if (ret != TINYEXR_SUCCESS) {
       fprintf(stderr, "Save EXR err: %s\n", err);
-      FreeEXRErrorMessage(err); // free's buffer for an error message 
+      FreeEXRErrorMessage(err); // free's buffer for an error message
       return ret;
     }
-    printf("Saved exr file. [ %s ] \n", argv[2]);
+    printf("Saved exr file. [ %s ] \n", outfilename);
 
     free(rgb);
 
@@ -347,7 +383,7 @@ See `example/deepview` for actual usage.
 
   int ret = LoadDeepEXR(&deepImage, input, &err);
 
-  // acccess to each sample in the deep pixel.
+  // access to each sample in the deep pixel.
   for (int y = 0; y < deepImage.height; y++) {
     int sampleNum = deepImage.offset_table[y][deepImage.width-1];
     for (int x = 0; x < deepImage.width-1; x++) {
@@ -372,18 +408,13 @@ See `example/deepview` for actual usage.
 
 ![DeepViewExample](https://github.com/syoyo/tinyexr/blob/master/examples/deepview/deepview_screencast.gif?raw=true)
 
-## Defines
-
-* TINYEXR_USE_MINIZ  Set `1`(default) to use embedded miniz compression. If you want zlib or custom zlib compatible library, set `0` and link zlib library.
-* TINYEXR_USE_ZFP    Set `1` to use ZFP compression.  
-
 ## TinyEXR extension
 
 ### ZFP
 
 #### NOTE
 
-TinyEXR adds ZFP compression as an experimemtal support(Linux and MacOSX only).
+TinyEXR adds ZFP compression as an experimemtal support (Linux and MacOSX only).
 
 ZFP only supports FLOAT format pixel, and its image width and height must be the multiple of 4, since ZFP compresses pixels with 4x4 pixel block.
 
@@ -414,7 +445,7 @@ For ZFP EXR image, the following attribute must exist in its EXR image.
   * 1 = precision based variable rate compression
   * 2 = accuracy based variable rate compression
 
-And the one of following attributes must exist, depending on the `zfpCompressionType` value.
+And the one of following attributes must exist in EXR, depending on the `zfpCompressionType` value.
 
 * `zfpCompressionRate` (double)
   * Specifies compression rate for fixed rate compression.
@@ -440,35 +471,35 @@ Contribution is welcome!
   - [ ] B44A?
   - [ ] PIX24?
 - [ ] Custom attributes
-  - [x] Normal image(EXR 1.x)
-  - [ ] Deep image(EXR 2.x)
-- [ ] JavaScript library(experimental. using Emscripten)
+  - [x] Normal image (EXR 1.x)
+  - [ ] Deep image (EXR 2.x)
+- [ ] JavaScript library (experimental, using Emscripten)
   - [x] LoadEXRFromMemory
   - [ ] SaveMultiChannelEXR
   - [ ] Deep image save/load
 - [ ] Write from/to memory buffer.
   - [ ] Deep image save/load
 - [ ] Tile format.
-  - [x] Tile format with no LoD(load).
-  - [ ] Tile format with LoD(load).
-  - [ ] Tile format with no LoD(save).
-  - [ ] Tile format with LoD(save).
+  - [x] Tile format with no LoD (load).
+  - [ ] Tile format with LoD (load).
+  - [ ] Tile format with no LoD (save).
+  - [ ] Tile format with LoD (save).
 - [ ] Support for custom compression type.
-  - [x] zfp compression(Not in OpenEXR spec, though)
+  - [x] zfp compression (Not in OpenEXR spec, though)
   - [ ] zstd?
 - [x] Multi-channel.
-- [ ] Multi-part(EXR2.0)
+- [ ] Multi-part (EXR2.0)
   - [x] Load multi-part image
   - [ ] Load multi-part deep image
 - [ ] Line order.
-  - [x] Increasing, decreasing(load)
+  - [x] Increasing, decreasing (load)
   - [ ] Random?
-  - [ ] Increasing, decreasing(save)
-- [ ] Pixel format(UINT, FLOAT).
-  - [x] UINT, FLOAT(load)
-  - [x] UINT, FLOAT(deep load)
-  - [x] UINT, FLOAT(save)
-  - [ ] UINT, FLOAT(deep save)
+  - [ ] Increasing, decreasing (save)
+- [ ] Pixel format (UINT, FLOAT).
+  - [x] UINT, FLOAT (load)
+  - [x] UINT, FLOAT (deep load)
+  - [x] UINT, FLOAT (save)
+  - [ ] UINT, FLOAT (deep save)
 - [ ] Support for big endian machine.
   - [ ] Loading multi-part channel EXR
   - [ ] Saving multi-part channel EXR
@@ -480,6 +511,10 @@ Contribution is welcome!
   - [x] OpenMP multi-threading in EXR saving.
   - [ ] OpenMP multi-threading in deep image loading.
   - [ ] OpenMP multi-threading in deep image saving.
+
+## Python bindings
+
+`pytinyexr` is available: https://pypi.org/project/pytinyexr/ (loading only as of 0.9.1)
 
 ## Similar or related projects
 
@@ -497,11 +532,11 @@ Contribution is welcome!
 
 ## Author(s)
 
-Syoyo Fujita(syoyo@lighttransport.com)
+Syoyo Fujita (syoyo@lighttransport.com)
 
 ## Contributor(s)
 
-* Matt Ebb (http://mattebb.com) : deep image example. Thanks!
-* Matt Pharr (http://pharr.org/matt/) : Testing tinyexr with OpenEXR(IlmImf). Thanks! 
-* Andrew Bell (https://github.com/andrewfb) & Richard Eakin (https://github.com/richardeakin) : Improving TinyEXR API. Thanks!
-* Mike Wong (https://github.com/mwkm) : ZIPS compression support in loading. Thanks!
+* Matt Ebb (http://mattebb.com): deep image example. Thanks!
+* Matt Pharr (http://pharr.org/matt/): Testing tinyexr with OpenEXR(IlmImf). Thanks!
+* Andrew Bell (https://github.com/andrewfb) & Richard Eakin (https://github.com/richardeakin): Improving TinyEXR API. Thanks!
+* Mike Wong (https://github.com/mwkm): ZIPS compression support in loading. Thanks!

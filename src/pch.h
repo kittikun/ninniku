@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -22,19 +22,29 @@
 
 // STL
 #include <algorithm>
+#include <array>
+#include <atomic>
 #include <cassert>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
-// DX11/WIN
+// DX/WIN
 #include <wrl/client.h>
+#include <atlbase.h>
+#include <comdef.h>
 #include <d3d11_1.h>
+#include <d3d12.h>
 
 // BOOST
-#include <boost/filesystem.hpp>
+#pragma warning(push)
+#pragma warning(disable:4701)
+#include <boost/crc.hpp>
+#pragma warning(pop)
+
 #include <boost/format.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>

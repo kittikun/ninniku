@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -20,9 +20,13 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
 #include <cstdint>
+#include <filesystem>
+
+uint32_t GetCRC(uint8_t* data, uint32_t size);
+void CheckCRC(uint8_t* data, uint32_t size, uint32_t checksum);
+void CheckFileCRC(std::filesystem::path path, uint32_t checksum);
 
 unsigned char* GetMD5(uint8_t* data, uint32_t size);
 void CheckMD5(uint8_t* data, uint32_t size, uint64_t a, uint64_t b);
-void CheckFileMD5(boost::filesystem::path path, uint64_t a, uint64_t b);
+void CheckFileMD5(std::filesystem::path path, uint64_t a, uint64_t b);

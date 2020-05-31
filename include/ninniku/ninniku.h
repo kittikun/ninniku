@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -22,12 +22,20 @@
 
 #include "export.h"
 
+#include <filesystem>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
-namespace ninniku {
-    class DX11;
+namespace ninniku
+{
+    enum  EInitializationFlags
+    {
+        IF_None = 0,
+        IF_EnableCapture = 1 << 0,
+        IF_DisableDX12DebugLayer = 1 << 1,
+        IF_BC7_QUICK_MODE = 1 << 2
+    };
 
     enum class ELogLevel : uint8_t
     {
@@ -37,17 +45,27 @@ namespace ninniku {
         LL_FULL
     };
 
-    enum class ERenderer : uint8_t
+    enum ERenderer : uint8_t
     {
-        RENDERER_DX11,
-        RENDERER_WARP
+        RENDERER_NULL = 0x0,    // When you don't need a renderer (only process images)
+        RENDERER_WARP = 0x1,
+        RENDERER_DX11 = 0x2,
+        RENDERER_DX12 = 0x4,
+        RENDERER_WARP_DX11 = RENDERER_WARP | RENDERER_DX11,
+        RENDERER_WARP_DX12 = RENDERER_WARP | RENDERER_DX12
     };
 
     /// <summary>
     /// Initialize ninniku framework
     /// shaderPaths must point to compiled .cso folders
     /// </summary>
-    NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::string>& shaderPaths, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+    [[nodiscard]] NINNIKU_API bool Initialize(const ERenderer renderer, const std::vector<std::filesystem::path>& shaderPaths, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
+
+    /// <summary>
+    /// Initialize ninniku framework
+    /// alternative version where each shader blob must be manually loaded
+    /// </summary>
+    [[nodiscard]] NINNIKU_API bool Initialize(const ERenderer renderer, uint32_t flags = EInitializationFlags::IF_None, const ELogLevel logLevel = ELogLevel::LL_WARN_ERROR);
 
     /// <summary>
     /// Cleanup resources used by ninniku

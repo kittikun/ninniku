@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,14 @@
 
 #include <cassert>
 
-namespace ninniku {
-    const bool IsPow2(const uint32_t x) noexcept
+namespace ninniku
+{
+    constexpr bool IsPow2(const uint32_t x) noexcept
     {
         return ((x != 0) && !(x & (x - 1)));
     }
 
-    const uint32_t CountMips(const uint32_t faceSize) noexcept
+    constexpr uint32_t CountMips(const uint32_t faceSize) noexcept
     {
         uint32_t mipLevels = 1;
         auto face = faceSize;
@@ -44,7 +45,7 @@ namespace ninniku {
         return mipLevels;
     }
 
-    const int NearestPow2Floor(const int x)
+    constexpr int NearestPow2Floor(const int x)
     {
         int res = 1;
 

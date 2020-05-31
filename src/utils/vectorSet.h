@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -38,45 +38,45 @@ namespace ninniku
 
         void beginInsert() noexcept
         {
-            _map.clear();
+            map_.clear();
         }
 
-        const ValueType* data() const noexcept { return _list.data(); }
+        const ValueType* data() const noexcept { return list_.data(); }
 
         void endInsert()
         {
-            if (_map.size() > 1) {
-                auto lamda = [](const KVP & lhs, const KVP & rhs)
+            if (map_.size() > 1) {
+                auto lamda = [](const KVP& lhs, const KVP& rhs)
                 {
                     return std::get<0>(lhs) < std::get<0>(rhs);
                 };
 
-                std::sort(_map.begin(), _map.end(), lamda);
+                std::sort(map_.begin(), map_.end(), lamda);
             }
 
             // copy sorted item to list
-            auto size = _map.size();
+            auto size = map_.size();
 
-            _list.clear();
-            _list.resize(size);
+            list_.clear();
+            list_.resize(size);
 
             for (int i = 0; i < size; ++i) {
-                _list[i] = std::get<1>(_map[i]);
+                list_[i] = std::get<1>(map_[i]);
             }
         }
 
         void insert(const KeyType& key, const ValueType& value)
         {
-            _map.push_back(std::make_tuple(key, value));
+            map_.push_back(std::make_tuple(key, value));
         }
 
         const uint32_t size() const noexcept
         {
-            return static_cast<uint32_t>(_list.size());
+            return static_cast<uint32_t>(list_.size());
         }
 
     private:
-        std::vector<std::tuple<KeyType, ValueType>> _map;
-        std::vector<ValueType> _list;
+        std::vector<std::tuple<KeyType, ValueType>> map_;
+        std::vector<ValueType> list_;
     };
 } // namespace ninniku

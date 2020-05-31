@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -39,31 +39,33 @@ namespace ninniku
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transferring data back from the GPU
-        void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
+        bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) override;
+
+        bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
 
         // Save Image as DDS R32G32B32A32_FLOAT
-        bool SaveImage(const std::string&);
+        bool SaveImage(const std::string_view&);
 
     protected:
-        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
-        uint32_t GetHeight() const override { return _height; }
+        TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
+        uint32_t GetHeight() const override { return height_; }
         const std::vector<SubresourceParam> GetInitializationData() const override;
-        uint32_t GetWidth() const override { return _width; }
-        bool LoadInternal(const std::string& path) override;
+        uint32_t GetWidth() const override { return width_; }
+        bool LoadInternal(const std::string_view& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
-        bool ValidateExtension(const std::string& ext) const override;
+        bool ValidateExtension(const std::string_view& ext) const override;
 
     private:
         void ConvertToR11G11B10();
-        uint32_t GetFormat() const;
+        ETextureFormat GetFormat() const;
         void Reset();
 
     private:
-        uint32_t _width;
-        uint32_t _height;
-        uint32_t _bpp;
-        uint8_t* _data8;
-        uint16_t* _data16;
-        std::vector<uint32_t> _convertedData;
+        uint32_t width_;
+        uint32_t height_;
+        uint32_t bpp_;
+        uint8_t* data8_;
+        uint16_t* data16_;
+        std::vector<uint32_t> convertedData_;
     };
 } // namespace ninniku

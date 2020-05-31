@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -25,16 +25,17 @@
 
 #include "../../utils/log.h"
 
-#include <boost/filesystem.hpp>
-#include <DirectXPackedVector.h>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+
+#include <array>
+#include <filesystem>
+#include <DirectXPackedVector.h>
 
 namespace ninniku
 {
     genericImage::genericImage()
-        : _impl{ new genericImageImpl() }
+        : impl_{ new genericImageImpl() }
     {
     }
 
@@ -47,81 +48,81 @@ namespace ninniku
 
     void genericImageImpl::ConvertToR11G11B10()
     {
-        auto size = _width * _height;
+        auto size = width_ * height_;
 
-        _convertedData.resize(size);
+        convertedData_.resize(size);
 
         for (uint32_t i = 0; i < size; ++i) {
             float r, g, b;
 
-            if (_data16 != nullptr) {
-                r = static_cast<float>(_data16[i * 3 + 0]);
-                g = static_cast<float>(_data16[i * 3 + 1]);
-                b = static_cast<float>(_data16[i * 3 + 2]);
+            if (data16_ != nullptr) {
+                r = static_cast<float>(data16_[i * 3 + 0]);
+                g = static_cast<float>(data16_[i * 3 + 1]);
+                b = static_cast<float>(data16_[i * 3 + 2]);
             } else {
-                r = static_cast<float>(_data8[i * 3 + 0]) / 255.f;
-                g = static_cast<float>(_data8[i * 3 + 1]) / 255.f;
-                b = static_cast<float>(_data8[i * 3 + 2]) / 255.f;
+                r = static_cast<float>(data8_[i * 3 + 0]) / 255.f;
+                g = static_cast<float>(data8_[i * 3 + 1]) / 255.f;
+                b = static_cast<float>(data8_[i * 3 + 2]) / 255.f;
             }
 
             auto r11b11g10 = DirectX::PackedVector::XMFLOAT3PK(r, g, b);
 
-            _convertedData[i] = r11b11g10;
+            convertedData_[i] = r11b11g10;
         }
     }
 
-    TextureParamHandle genericImageImpl::CreateTextureParamInternal(const uint8_t viewFlags) const
+    TextureParamHandle genericImageImpl::CreateTextureParamInternal(const EResourceViews viewFlags) const
     {
-        auto res = std::make_shared<TextureParam>();
+        auto res = TextureParam::Create();
 
         auto fmt = GetFormat();
 
-        if (fmt == DXGI_FORMAT_UNKNOWN)
+        if (fmt == TF_UNKNOWN)
             return std::move(res);
 
         res->format = fmt;
         res->arraySize = 1;
         res->depth = 1;
         res->numMips = 1;
-        res->width = _width;
-        res->height = _height;
+        res->width = width_;
+        res->height = height_;
         res->imageDatas = GetInitializationData();
         res->viewflags = viewFlags;
 
         return std::move(res);
     }
 
-    uint32_t genericImageImpl::GetFormat() const
+    ETextureFormat genericImageImpl::GetFormat() const
     {
-        uint32_t res = DXGI_FORMAT_UNKNOWN;
+        auto res = TF_UNKNOWN;
 
-        switch (_bpp) {
+        switch (bpp_) {
             case 4:
-                if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16G16B16A16_UNORM;
+                if (data16_ != nullptr)
+                    res = TF_R16G16B16A16_UNORM;
                 else
-                    res = DXGI_FORMAT_R8G8B8A8_UNORM;
+                    res = TF_R8G8B8A8_UNORM;
                 break;
 
             case 3:
-                if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16G16B16A16_UNORM;
+                if (data16_ != nullptr)
+                    res = TF_R16G16B16A16_UNORM;
                 else
-                    res = DXGI_FORMAT_R11G11B10_FLOAT;
+                    res = TF_R11G11B10_FLOAT;
                 break;
 
             case 2:
-                if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16G16_UNORM;
+                if (data16_ != nullptr)
+                    res = TF_R16G16_UNORM;
                 else
-                    res = DXGI_FORMAT_R8G8_UNORM;
+                    res = TF_R8G8_UNORM;
                 break;
 
             case 1:
-                if (_data16 != nullptr)
-                    res = DXGI_FORMAT_R16_UNORM;
+                if (data16_ != nullptr)
+                    res = TF_R16_UNORM;
                 else
-                    res = DXGI_FORMAT_R8_UNORM;
+                    res = TF_R8_UNORM;
                 break;
 
             default:
@@ -131,19 +132,19 @@ namespace ninniku
         return res;
     }
 
-    bool genericImageImpl::LoadInternal(const std::string& path)
+    bool genericImageImpl::LoadInternal(const std::string_view& path)
     {
         auto fmt = boost::format("genericImageImpl::Load, Path=\"%1%\"") % path;
         LOG << boost::str(fmt);
 
         Reset();
 
-        if (stbi_is_16_bit(path.c_str()))
-            _data16 = stbi_load_16(path.c_str(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
+        if (stbi_is_16_bit(path.data()))
+            data16_ = stbi_load_16(path.data(), (int*)&width_, (int*)&height_, (int*)&bpp_, 0);
         else
-            _data8 = stbi_load(path.c_str(), (int*)&_width, (int*)&_height, (int*)&_bpp, 0);
+            data8_ = stbi_load(path.data(), (int*)&width_, (int*)&height_, (int*)&bpp_, 0);
 
-        if (_bpp == 3) {
+        if (bpp_ == 3) {
             // we must convert from RGB to R11G11B10 since there is no R8G8B8 formats
             // a bit overkill but better than having an unused alpha
             ConvertToR11G11B10();
@@ -152,30 +153,35 @@ namespace ninniku
         return true;
     }
 
+    bool genericImageImpl::LoadRaw([[maybe_unused]] const void* pData, [[maybe_unused]] const size_t size, [[maybe_unused]] const uint32_t width, [[maybe_unused]] const uint32_t height, [[maybe_unused]] const int32_t format)
+    {
+        throw std::exception("not implemented");
+    }
+
     const std::tuple<uint8_t*, uint32_t> genericImageImpl::GetData() const
     {
-        uint32_t size = _width * _height * _bpp;
+        uint32_t size = width_ * height_ * bpp_;
 
-        if (_data16 != nullptr)
-            return std::make_tuple(reinterpret_cast<uint8_t*>(_data16), size * 2);
+        if (data16_ != nullptr)
+            return std::make_tuple(reinterpret_cast<uint8_t*>(data16_), size * 2);
 
-        return std::make_tuple(_data8, size);
+        return std::make_tuple(data8_, size);
     }
 
     const std::vector<SubresourceParam> genericImageImpl::GetInitializationData() const
     {
         std::vector<SubresourceParam> res(1);
 
-        if (_bpp == 3) {
-            res[0].data = const_cast<uint32_t*>(_convertedData.data());
-            res[0].rowPitch = _width * sizeof(uint32_t);
+        if (bpp_ == 3) {
+            res[0].data = const_cast<uint32_t*>(convertedData_.data());
+            res[0].rowPitch = width_ * sizeof(uint32_t);
         } else {
-            if (_data16 != nullptr) {
-                res[0].data = _data16;
-                res[0].rowPitch = _width * _bpp * 2;
+            if (data16_ != nullptr) {
+                res[0].data = data16_;
+                res[0].rowPitch = width_ * bpp_ * 2;
             } else {
-                res[0].data = _data8;
-                res[0].rowPitch = _width * _bpp;
+                res[0].data = data8_;
+                res[0].rowPitch = width_ * bpp_;
             }
         }
 
@@ -184,34 +190,34 @@ namespace ninniku
         return res;
     }
 
-    void genericImageImpl::InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex)
+    bool genericImageImpl::InitializeFromTextureObject([[maybe_unused]] RenderDeviceHandle& dx, [[maybe_unused]] const TextureHandle& srcTex)
     {
         throw std::exception("not implemented");
     }
 
     void genericImageImpl::Reset()
     {
-        _width = _height = _bpp = 0;
+        width_ = height_ = bpp_ = 0;
 
-        if (_data8 != nullptr) {
-            stbi_image_free(_data8);
-            _data8 = nullptr;
+        if (data8_ != nullptr) {
+            stbi_image_free(data8_);
+            data8_ = nullptr;
         }
 
-        if (_data16 != nullptr) {
-            stbi_image_free(_data16);
-            _data16 = nullptr;
+        if (data16_ != nullptr) {
+            stbi_image_free(data16_);
+            data16_ = nullptr;
         }
     }
 
-    void genericImageImpl::UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch)
+    void genericImageImpl::UpdateSubImage([[maybe_unused]] const uint32_t dstFace, [[maybe_unused]] const uint32_t dstMip, [[maybe_unused]] const uint8_t* newData, [[maybe_unused]] const uint32_t newRowPitch)
     {
         throw std::exception("not implemented");
     }
 
-    bool genericImageImpl::ValidateExtension(const std::string& ext) const
+    bool genericImageImpl::ValidateExtension(const std::string_view& ext) const
     {
-        const std::array<std::string, 9> valid = { ".jpg", ".png", ".tga", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
+        const std::array<std::string_view, 9> valid = { ".jpg", ".png", ".tga", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
 
         for (auto& validExt : valid)
             if (ext == validExt)
