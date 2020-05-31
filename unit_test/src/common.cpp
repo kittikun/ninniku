@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -20,51 +20,101 @@
 
 #include "common.h"
 
+#include "shaders/dispatch.h"
 #include "shaders/cbuffers.h"
+#include "utils.h"
 
-#include <ninniku/dx11/DX11.h>
+#include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/utils.h>
 
-ninniku::TextureHandle GenerateColoredMips(ninniku::DX11Handle& dx)
+#include <boost/test/unit_test.hpp>
+
+ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot)
 {
+    BOOST_REQUIRE(LoadShader(dx, "colorMips", shaderRoot));
+
     auto param = ninniku::TextureParam::Create();
-    param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    param->format = ninniku::TF_R32G32B32A32_FLOAT;
     param->width = param->height = 512;
     param->depth = 1;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
-    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+    param->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
 
     auto marker = dx->CreateDebugMarker("ColorMips");
     auto resTex = dx->CreateTexture(param);
 
     for (uint32_t i = 0; i < param->numMips; ++i) {
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "colorMips";
-        cmd.cbufferStr = "CBGlobal";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "colorMips";
+        cmd->cbufferStr = "CBGlobal";
 
         static_assert((COLORMIPS_NUMTHREAD_X == COLORMIPS_NUMTHREAD_Y) && (COLORMIPS_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
-        cmd.dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
-        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORMIPS_NUMTHREAD_Z;
+        cmd->dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
+        cmd->dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
+        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORMIPS_NUMTHREAD_Z;
 
-        cmd.uavBindings.insert(std::make_pair("dstTex", resTex->uav[i]));
+        cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
 
         // constant buffer
         CBGlobal cb = {};
 
         cb.targetMip = i;
-        dx->UpdateConstantBuffer(cmd.cbufferStr, &cb, sizeof(CBGlobal));
 
-        dx->Dispatch(cmd);
+        BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+
+        BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
     return resTex;
 }
 
-ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninniku::Image* image)
+ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle& dx, const std::string_view& shaderRoot)
 {
+    BOOST_REQUIRE(LoadShader(dx, "colorMips", shaderRoot));
+
+    auto param = ninniku::TextureParam::Create();
+    param->format = ninniku::TF_R8G8B8A8_UNORM;
+    param->width = param->height = 512;
+    param->depth = 1;
+    param->numMips = ninniku::CountMips(std::min(param->width, param->height));
+    param->arraySize = ninniku::CUBEMAP_NUM_FACES * 8;
+    param->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
+
+    auto marker = dx->CreateDebugMarker("ColorCubeArrayMip");
+    auto resTex = dx->CreateTexture(param);
+
+    for (uint32_t i = 0; i < param->numMips; ++i) {
+        // dispatch
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "colorMips";
+        cmd->cbufferStr = "CBGlobal";
+
+        static_assert((COLORCUBEARRAYMIPS_NUMTHREAD_X == COLORCUBEARRAYMIPS_NUMTHREAD_Y) && (COLORCUBEARRAYMIPS_NUMTHREAD_Z == 1));
+        cmd->dispatch[0] = std::max(1u, (param->width >> i) / COLORMIPS_NUMTHREAD_X);
+        cmd->dispatch[1] = std::max(1u, (param->height >> i) / COLORMIPS_NUMTHREAD_Y);
+        cmd->dispatch[2] = param->arraySize / COLORMIPS_NUMTHREAD_Z;
+
+        cmd->uavBindings.insert(std::make_pair("dstTex", resTex->GetUAV(i)));
+
+        // constant buffer
+        CBGlobal cb = {};
+
+        cb.targetMip = i;
+
+        BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+
+        BOOST_REQUIRE(dx->Dispatch(cmd));
+    }
+
+    return resTex;
+}
+
+ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, const ninniku::Image* image, const std::string_view& shaderRoot)
+{
+    BOOST_REQUIRE(LoadShader(dx, "downsample", shaderRoot));
+
     auto marker = dx->CreateDebugMarker("CommonGenerateMips");
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
@@ -76,7 +126,7 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninn
     param->depth = 1;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
-    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+    param->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
 
     auto resTex = dx->CreateTexture(param);
 
@@ -103,60 +153,61 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::DX11Handle& dx, const ninn
 
         for (uint32_t srcMip = 0; srcMip < param->numMips - 1; ++srcMip) {
             // dispatch
-            ninniku::Command cmd = {};
-            cmd.shader = "downsample";
-            cmd.cbufferStr = "CBGlobal";
+            auto cmd = dx->CreateCommand();
+            cmd->shader = "downsample";
 
             static_assert((DOWNSAMPLE_NUMTHREAD_X == DOWNSAMPLE_NUMTHREAD_Y) && (DOWNSAMPLE_NUMTHREAD_Z == 1));
-            cmd.dispatch[0] = std::max(1u, (param->width >> srcMip) / DOWNSAMPLE_NUMTHREAD_X);
-            cmd.dispatch[1] = std::max(1u, (param->height >> srcMip) / DOWNSAMPLE_NUMTHREAD_Y);
-            cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DOWNSAMPLE_NUMTHREAD_Z;
+            cmd->dispatch[0] = std::max(1u, (param->width >> srcMip) / DOWNSAMPLE_NUMTHREAD_X);
+            cmd->dispatch[1] = std::max(1u, (param->height >> srcMip) / DOWNSAMPLE_NUMTHREAD_Y);
+            cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DOWNSAMPLE_NUMTHREAD_Z;
 
-            cmd.srvBindings.insert(std::make_pair("srcMip", resTex->srvArray[srcMip]));
-            cmd.uavBindings.insert(std::make_pair("dstMipSlice", resTex->uav[srcMip + 1]));
-            cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
+            cmd->srvBindings.insert(std::make_pair("srcMip", resTex->GetSRVArray(srcMip)));
+            cmd->uavBindings.insert(std::make_pair("dstMipSlice", resTex->GetUAV(srcMip + 1)));
+            cmd->ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
 
-            dx->Dispatch(cmd);
+            BOOST_REQUIRE(dx->Dispatch(cmd));
         }
     }
 
     return std::move(resTex);
 }
 
-ninniku::TextureHandle ResizeImage(ninniku::DX11Handle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes)
+ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninniku::TextureHandle& srcTex, const ninniku::SizeFixResult fixRes, const std::string_view& shaderRoot)
 {
+    BOOST_REQUIRE(LoadShader(dx, "resize", shaderRoot));
+
     auto subMarker = dx->CreateDebugMarker("CommonResizeImageImpl");
 
     auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = std::get<1>(fixRes);
     dstParam->height = std::get<2>(fixRes);
-    dstParam->depth = srcTex->desc->depth;
-    dstParam->format = srcTex->desc->format;
-    dstParam->numMips = srcTex->desc->numMips;
-    dstParam->arraySize = srcTex->desc->arraySize;
-    dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+    dstParam->depth = srcTex->GetDesc()->depth;
+    dstParam->format = srcTex->GetDesc()->format;
+    dstParam->numMips = srcTex->GetDesc()->numMips;
+    dstParam->arraySize = srcTex->GetDesc()->arraySize;
+    dstParam->viewflags = static_cast<ninniku::EResourceViews>(ninniku::RV_SRV | ninniku::RV_UAV);
 
     auto dst = dx->CreateTexture(dstParam);
 
     for (uint32_t mip = 0; mip < dstParam->numMips; ++mip) {
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "resize";
-        cmd.ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::ESamplerState::SS_Linear)));
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "resize";
+        cmd->ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::ESamplerState::SS_Linear)));
 
         if (dstParam->arraySize > 1)
-            cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvArray[mip]));
+            cmd->srvBindings.insert(std::make_pair("srcTex", srcTex->GetSRVArray(mip)));
         else
-            cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvDefault));
+            cmd->srvBindings.insert(std::make_pair("srcTex", srcTex->GetSRVDefault()));
 
-        cmd.uavBindings.insert(std::make_pair("dstTex", dst->uav[mip]));
+        cmd->uavBindings.insert(std::make_pair("dstTex", dst->GetUAV(mip)));
 
         static_assert((RESIZE_NUMTHREAD_X == RESIZE_NUMTHREAD_Y) && (RESIZE_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = dstParam->width / RESIZE_NUMTHREAD_X;
-        cmd.dispatch[1] = dstParam->height / RESIZE_NUMTHREAD_Y;
-        cmd.dispatch[2] = dstParam->arraySize / RESIZE_NUMTHREAD_Z;
+        cmd->dispatch[0] = dstParam->width / RESIZE_NUMTHREAD_X;
+        cmd->dispatch[1] = dstParam->height / RESIZE_NUMTHREAD_Y;
+        cmd->dispatch[2] = dstParam->arraySize / RESIZE_NUMTHREAD_Z;
 
-        dx->Dispatch(cmd);
+        BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
     return std::move(dst);

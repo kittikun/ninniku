@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -21,7 +21,8 @@
 #pragma once
 
 #include "../../types.h"
-#include "../../dx11/DX11Types.h"
+#include "../renderer/renderdevice.h"
+#include "../renderer/types.h"
 
 namespace ninniku
 {
@@ -39,14 +40,14 @@ namespace ninniku
         Image() = default;
         virtual ~Image() = default;
 
-        virtual bool Load(const std::string&) = 0;
-		virtual bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) = 0;
-        virtual TextureParamHandle CreateTextureParam(const uint8_t viewFlags) const = 0;
+        virtual bool Load(const std::string_view&) = 0;
+        virtual bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) = 0;
+        virtual TextureParamHandle CreateTextureParam(const EResourceViews viewFlags) const = 0;
 
-        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(nullptr, 0); }
 
         // Used when transferring data back from the GPU
-        virtual void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) = 0;
+        virtual bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) = 0;
 
         /// <summary>
         /// Check if a image is a power of 2 and return a 2 item tuple

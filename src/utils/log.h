@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,7 +28,9 @@
 
 #define LOG BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Core) << ninniku::Log::GetIndent()
 #define LOGD BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_DX) << ninniku::Log::GetIndent()
+#define LOGDF(X) BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_DX) << ninniku::Log::GetIndent() << boost::str(X)
 #define LOGE BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Error) << ninniku::Log::GetIndent()
+#define LOGEF(X) BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Error) << ninniku::Log::GetIndent() << boost::str(X)
 #define LOGW BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Warning) << ninniku::Log::GetIndent()
 
 #define LOG_INDENT_START ninniku::Log::StartIndent(); ## LOG
@@ -39,8 +41,10 @@
 #define LOGD_INDENT_END LOGD << "..done"; ninniku::Log::EndIndent()
 #define LOGE_INDENT_END LOGE << "..done"; ninniku::Log::EndIndent()
 
-namespace ninniku {
-    namespace Log {
+namespace ninniku
+{
+    namespace Log
+    {
         enum BoostLogLevel
         {
             Log_DX,

@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -24,7 +24,8 @@
 
 #include <DirectXTex.h>
 
-namespace ninniku {
+namespace ninniku
+{
     class ddsImageImpl final : public ImageImpl
     {
         // no copy of any kind allowed
@@ -39,25 +40,25 @@ namespace ninniku {
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transferring data back from the GPU
-        void InitializeFromTextureObject(DX11Handle& dx, const TextureHandle& srcTex) override;
+        bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) override;
 
-		bool LoadRaw(const void* pData, const size_t size);
-		bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
+        bool LoadRaw(const void* pData, const size_t size);
+        bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
 
-        bool SaveImage(const std::string&);
-        bool SaveCompressedImage(const std::string&, DX11Handle& dx, DXGI_FORMAT format);
+        bool SaveImage(const std::string_view&);
+        bool SaveCompressedImage(const std::string_view&, RenderDeviceHandle& dx, DXGI_FORMAT format);
 
     protected:
-        TextureParamHandle CreateTextureParamInternal(const uint8_t viewFlags) const override;
-        uint32_t GetHeight() const override { return static_cast<uint32_t>(_meta.height); }
+        TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;
+        uint32_t GetHeight() const override { return static_cast<uint32_t>(meta_.height); }
         const std::vector<SubresourceParam> GetInitializationData() const override;
-        uint32_t GetWidth() const override { return static_cast<uint32_t>(_meta.width); }
-        bool LoadInternal(const std::string& path) override;
+        uint32_t GetWidth() const override { return static_cast<uint32_t>(meta_.width); }
+        bool LoadInternal(const std::string_view& path) override;
         void UpdateSubImage(const uint32_t dstFace, const uint32_t dstMip, const uint8_t* newData, const uint32_t newRowPitch) override;
-        bool ValidateExtension(const std::string& ext) const override;
+        bool ValidateExtension(const std::string_view& ext) const override;
 
     private:
-        DirectX::TexMetadata _meta;
-        DirectX::ScratchImage _scratch;
+        DirectX::TexMetadata meta_;
+        DirectX::ScratchImage scratch_;
     };
 } // namespace ninniku

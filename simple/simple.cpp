@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -19,44 +19,14 @@
 // SOFTWARE.
 
 #include <ninniku/ninniku.h>
-#include <ninniku/dx11/DX11.h>
-#include <ninniku/core/buffer.h>
+#include <ninniku/core/renderer/renderdevice.h>
+#include <ninniku/core/image/cmft.h>
+#include <ninniku/core/image/dds.h>
 
 int main()
 {
-    std::vector<std::string> shaderPaths = { "..\\simple\\shaders", "..\\unit_test\\shaders" };
-
-    ninniku::Initialize(ninniku::ERenderer::RENDERER_DX11, shaderPaths, ninniku::ELogLevel::LL_FULL);
-
-    auto& dx = ninniku::GetRenderer();
-    auto params = ninniku::BufferParam::Create();
-
-    params->numElements = 16;
-    params->elementSize = sizeof(uint32_t);
-    params->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
-
-    auto srcBuffer = dx->CreateBuffer(params);
-
-    // fill structured buffer
-    {
-        auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
-
-        // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "fillBuffer";
-
-        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
-
-        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
-
-        dx->Dispatch(cmd);
-    }
-
-    ninniku::Buffer dstBuffer;
-
-    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
-
-    auto& data = dstBuffer.GetData();
+    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
+        return -1;
 
     ninniku::Terminate();
 }

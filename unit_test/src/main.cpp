@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -22,5 +22,3 @@
 
 #define BOOST_TEST_MODULE ninniku
 #include <boost/test/included/unit_test.hpp>
-
-BOOST_GLOBAL_FIXTURE(SetupFixture);

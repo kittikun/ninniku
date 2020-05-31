@@ -11,6 +11,12 @@
     <Filter Include="Source Files\shaders">
       <UniqueIdentifier>{95317c23-655c-4d54-9b9e-937332ceb1fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\shaders\dx11">
+      <UniqueIdentifier>{77e38d00-6c2c-4bd9-be68-ac63d982a312}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders\dx12">
+      <UniqueIdentifier>{53d43b84-f152-44c8-bc96-7b40bec58335}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\fixture.cpp">
@@ -31,13 +37,19 @@
     <ClCompile Include="src\common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="src\shaders\color20.hlsl">
+    <None Include="src\shaders\utility.hlsl">
       <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="src\shaders\utility.hlsl">
+    <None Include="src\shaders\dispatch.h">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\color20.hlsl">
       <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>
@@ -48,34 +60,60 @@
     <ClInclude Include="src\fixture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\common.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\shaders\cbuffers.h">
       <Filter>Source Files\shaders</Filter>
     </ClInclude>
-    <ClInclude Include="src\common.h">
+    <ClInclude Include="src\utils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\shaders\colorFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\colorFaces.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\colorMips.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\colorMips.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\dirToFaces.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\dirToFaces.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\downsample.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\downsample.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\resize.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\fillBuffer.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\packNormals.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\packNormals.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
-    <FxCompile Include="src\shaders\fillBuffer.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="src\shaders\dx11\resize.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="src\shaders\dx12\fillBuffer.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\colorMips.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\packNormals.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\dirToFaces.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\colorFaces.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\resize.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\downsample.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

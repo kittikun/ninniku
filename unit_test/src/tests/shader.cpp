@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -19,41 +19,95 @@
 // SOFTWARE.
 
 #include "../shaders/cbuffers.h"
+#include "../shaders/dispatch.h"
 #include "../check.h"
 #include "../common.h"
+#include "../fixture.h"
+#include "../utils.h"
 
 #include <boost/test/unit_test.hpp>
-#include <ninniku/dx11/DX11.h>
-#include <ninniku/core/buffer.h>
+#include <ninniku/core/renderer/renderdevice.h>
+#include <ninniku/core/renderer/types.h>
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
 #include <ninniku/ninniku.h>
 #include <ninniku/types.h>
 #include <ninniku/utils.h>
 
+#include <boost/format.hpp>
+
 BOOST_AUTO_TEST_SUITE(Shader)
 
-BOOST_AUTO_TEST_CASE(shader_colorMips)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_LoadMemory, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto& dx = ninniku::GetRenderer();
-    auto resTex = GenerateColoredMips(dx);
+
+    auto name = "colorMips";
+    auto fmt = boost::format("%1%\\%2%%3%") % T::shaderRoot % name % dx->GetShaderExtension();
+
+    auto shader = LoadFile(boost::str(fmt));
+
+    BOOST_REQUIRE(dx->LoadShader(name, shader.data(), static_cast<uint32_t>(shader.size())));
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
+    auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, resTex);
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex));
 
     auto& data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0x91086088d369be49, 0x74d54476510012cc);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 3775864256);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
-BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
+    BOOST_REQUIRE(LoadShader(dx, "colorFaces", T::shaderRoot));
+    BOOST_REQUIRE(LoadShader(dx, "dirToFaces", T::shaderRoot));
+
     auto marker = dx->CreateDebugMarker("CubemapDirToArray");
 
     auto param = ninniku::TextureParam::Create();
     param->width = param->height = 512;
-    param->format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    param->format = ninniku::DXGIFormatToNinnikuTF(DXGI_FORMAT_R32G32B32A32_FLOAT);
     param->depth = 1;
     param->numMips = 1;
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
@@ -67,17 +121,17 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         auto subMarker = dx->CreateDebugMarker("Source Texture");
 
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "colorFaces";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "colorFaces";
 
         static_assert((COLORFACES_NUMTHREAD_X == COLORFACES_NUMTHREAD_Y) && (COLORFACES_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = param->width / COLORFACES_NUMTHREAD_X;
-        cmd.dispatch[1] = param->height / COLORFACES_NUMTHREAD_Y;
-        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORFACES_NUMTHREAD_Z;
+        cmd->dispatch[0] = param->width / COLORFACES_NUMTHREAD_X;
+        cmd->dispatch[1] = param->height / COLORFACES_NUMTHREAD_Y;
+        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / COLORFACES_NUMTHREAD_Z;
 
-        cmd.uavBindings.insert(std::make_pair("dstTex", srcTex->uav[0]));
+        cmd->uavBindings.insert(std::make_pair("dstTex", srcTex->GetUAV(0)));
 
-        dx->Dispatch(cmd);
+        BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
     // generate destination texture by sampling source using direction vectors
@@ -85,91 +139,140 @@ BOOST_AUTO_TEST_CASE(shader_cubemapDirToArray)
         auto subMarker = dx->CreateDebugMarker("Destination Texture");
 
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "dirToFaces";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "dirToFaces";
 
         static_assert((DIRTOFACE_NUMTHREAD_X == DIRTOFACE_NUMTHREAD_Y) && (DIRTOFACE_NUMTHREAD_Z == 1));
-        cmd.dispatch[0] = param->width / DIRTOFACE_NUMTHREAD_X;
-        cmd.dispatch[1] = param->height / DIRTOFACE_NUMTHREAD_Y;
-        cmd.dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
+        cmd->dispatch[0] = param->width / DIRTOFACE_NUMTHREAD_X;
+        cmd->dispatch[1] = param->height / DIRTOFACE_NUMTHREAD_Y;
+        cmd->dispatch[2] = ninniku::CUBEMAP_NUM_FACES / DIRTOFACE_NUMTHREAD_Z;
 
-        cmd.ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
-        cmd.srvBindings.insert(std::make_pair("srcTex", srcTex->srvCube));
-        cmd.uavBindings.insert(std::make_pair("dstTex", dstTex->uav[0]));
+        cmd->ssBindings.insert(std::make_pair("ssPoint", dx->GetSampler(ninniku::ESamplerState::SS_Point)));
+        cmd->srvBindings.insert(std::make_pair("srcTex", srcTex->GetSRVCube()));
+        cmd->uavBindings.insert(std::make_pair("dstTex", dstTex->GetUAV(0)));
 
-        dx->Dispatch(cmd);
+        BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
     auto srcImg = std::make_unique<ninniku::ddsImage>();
 
-    srcImg->InitializeFromTextureObject(dx, srcTex);
+    BOOST_REQUIRE(srcImg->InitializeFromTextureObject(dx, srcTex));
+    BOOST_REQUIRE(srcImg->SaveImage("shader_cubemapDirToArray_src.dds"));
 
     auto srcData = srcImg->GetData();
-    auto srcHash = GetMD5(std::get<0>(srcData), std::get<1>(srcData));
+    auto srcHash = GetCRC(std::get<0>(srcData), std::get<1>(srcData));
     auto dstImg = std::make_unique<ninniku::ddsImage>();
 
-    dstImg->InitializeFromTextureObject(dx, srcTex);
-
+    BOOST_REQUIRE(dstImg->InitializeFromTextureObject(dx, srcTex));
+    BOOST_REQUIRE(srcImg->SaveImage("shader_cubemapDirToArray_dst.dds"));
     auto dstData = dstImg->GetData();
-    auto dstHash = GetMD5(std::get<0>(dstData), std::get<1>(dstData));
+    auto dstHash = GetCRC(std::get<0>(dstData), std::get<1>(dstData));
 
-    BOOST_TEST(memcmp(srcHash, dstHash, sizeof(uint64_t) * 2) == 0);
+    BOOST_REQUIRE(srcHash == dstHash);
 }
 
-BOOST_AUTO_TEST_CASE(shader_genMips)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    image->Load("data/Cathedral01.dds");
+    BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
 
-    auto resTex = Generate2DTexWithMips(dx, image.get());
+    auto resTex = Generate2DTexWithMips(dx, image.get(), T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, resTex);
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex));
 
     auto& data = res->GetData();
 
-    // note that WARP rendering cannot correctly run the mip generation phase so this hash it not entirely correct
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xc85514693c51df6f, 0xd10b1b7b4175a5ff);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 946385041);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
-BOOST_AUTO_TEST_CASE(shader_resize)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    image->Load("data/Cathedral01.hdr");
+    BOOST_REQUIRE(image->Load("data/Cathedral01.hdr"));
 
     auto needFix = image->IsRequiringFix();
     auto newSize = std::get<1>(needFix);
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
-    auto& dx = ninniku::GetRenderer();
     auto marker = dx->CreateDebugMarker("Resize");
     auto srcTex = dx->CreateTexture(srcParam);
 
     auto dstParam = ninniku::TextureParam::Create();
     dstParam->width = newSize;
     dstParam->height = newSize;
-    dstParam->format = srcTex->desc->format;
+    dstParam->format = srcTex->GetDesc()->format;
     dstParam->numMips = 1;
     dstParam->arraySize = 6;
     dstParam->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
-    auto dst = ResizeImage(dx, srcTex, needFix);
+    auto dst = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
 
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    res->InitializeFromTextureObject(dx, dst);
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, dst));
 
     auto& data = res->GetData();
 
-    CheckMD5(std::get<0>(data), std::get<1>(data), 0xb3ba50ac382fe166, 0xdd1bda49f1b43409);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 1396798068);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
 }
 
-BOOST_AUTO_TEST_CASE(shader_structuredBuffer)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto& dx = ninniku::GetRenderer();
+    BOOST_REQUIRE(LoadShader(dx, "fillBuffer", T::shaderRoot));
+
     auto params = ninniku::BufferParam::Create();
 
     params->numElements = 16;
@@ -183,23 +286,30 @@ BOOST_AUTO_TEST_CASE(shader_structuredBuffer)
         auto subMarker = dx->CreateDebugMarker("Fill StructuredBuffer");
 
         // dispatch
-        ninniku::Command cmd = {};
-        cmd.shader = "fillBuffer";
+        auto cmd = dx->CreateCommand();
+        cmd->shader = "fillBuffer";
 
-        cmd.dispatch[0] = cmd.dispatch[1] = cmd.dispatch[2] = 1;
+        cmd->dispatch[0] = FILLBUFFER_NUMTHREAD_X;
+        cmd->dispatch[1] = FILLBUFFER_NUMTHREAD_Y;
+        cmd->dispatch[2] = FILLBUFFER_NUMTHREAD_Z;
 
-        cmd.uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->uav));
+        cmd->uavBindings.insert(std::make_pair("dstBuffer", srcBuffer->GetUAV()));
 
-        dx->Dispatch(cmd);
+        BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
-    ninniku::Buffer dstBuffer;
+    auto dstBuffer = dx->CreateBuffer(srcBuffer);
 
-    dstBuffer.InitializeFromBufferObject(dx, srcBuffer);
+    auto& data = dstBuffer->GetData();
 
-    auto& data = dstBuffer.GetData();
-
-    CheckMD5(reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(&data.front())), static_cast<uint32_t>(data.size() * sizeof(uint32_t)), 0xe4c6bd586aa54c9b, 0xb02b6bb8ec6b10db);
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
+            break;
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

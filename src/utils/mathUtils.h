@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -24,8 +24,9 @@
 
 #include <cstdint>
 
-namespace ninniku {
-    const bool IsPow2(const uint32_t x) noexcept;
-    NINNIKU_API const uint32_t CountMips(const uint32_t faceSize) noexcept;
-    const int NearestPow2Floor(const int x);
+namespace ninniku
+{
+    NINNIKU_API constexpr bool IsPow2(const uint32_t x) noexcept;
+    NINNIKU_API constexpr uint32_t CountMips(const uint32_t faceSize) noexcept;
+    NINNIKU_API constexpr int NearestPow2Floor(const int x);
 } // namespace ninniku

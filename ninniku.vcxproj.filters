@@ -8,14 +8,8 @@
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{5e90b6a1-b7c6-4c83-a38c-a930c87619ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\dx11">
-      <UniqueIdentifier>{fb74b349-6196-4459-a58e-0df91dd58475}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Include">
       <UniqueIdentifier>{479c4862-4492-44e3-8eee-a0c2f4e475c9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Include\dx11">
-      <UniqueIdentifier>{0f23edd4-eeb9-4d4b-8113-970874989451}</UniqueIdentifier>
     </Filter>
     <Filter Include="Include\core">
       <UniqueIdentifier>{5f568ac1-0d00-4291-80a0-88cad9bee54c}</UniqueIdentifier>
@@ -29,6 +23,18 @@
     <Filter Include="Source Files\core\image">
       <UniqueIdentifier>{1af98406-f9d1-4194-afaa-abdd912490a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Include\core\renderer">
+      <UniqueIdentifier>{eb83b084-3d34-4ea9-bbb8-c559c0b7f3db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\renderer">
+      <UniqueIdentifier>{18839f85-7841-4ab9-92a9-bdae08e7a89e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\renderer\dx11">
+      <UniqueIdentifier>{f2e48192-a364-48c2-aa47-271d307f3aee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\renderer\dx12">
+      <UniqueIdentifier>{d40cf3e3-f8cd-4641-87ca-58290091b874}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utils\log.cpp">
@@ -36,9 +42,6 @@
     </ClCompile>
     <ClCompile Include="src\utils\misc.cpp">
       <Filter>Source Files\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\dx11\DX11.cpp">
-      <Filter>Source Files\dx11</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp">
       <Filter>Source Files</Filter>
@@ -49,14 +52,8 @@
     <ClCompile Include="src\utils\mathUtils.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\dx11\DX11_impl.cpp">
-      <Filter>Source Files\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="src\types.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\dx11\DX11Types.cpp">
-      <Filter>Source Files\dx11</Filter>
     </ClCompile>
     <ClCompile Include="src\core\image\cmft.cpp">
       <Filter>Source Files\core\image</Filter>
@@ -79,11 +76,23 @@
     <ClCompile Include="src\core\image\image_impl.cpp">
       <Filter>Source Files\core\image</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\buffer_impl.cpp">
-      <Filter>Source Files\core</Filter>
+    <ClCompile Include="src\core\renderer\dx11\DX11.cpp">
+      <Filter>Source Files\core\renderer\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\buffer.cpp">
-      <Filter>Source Files\core</Filter>
+    <ClCompile Include="src\core\renderer\dx11\DX11Types.cpp">
+      <Filter>Source Files\core\renderer\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\dx12\DX12.cpp">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\dx12\DX12Types.cpp">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\objectTracker.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\dx12\dxc_utils.cpp">
+      <Filter>Source Files\core\renderer\dx12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -105,12 +114,6 @@
     <ClInclude Include="include\ninniku\types.h">
       <Filter>Include</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\dx11\DX11.h">
-      <Filter>Include\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ninniku\dx11\DX11Types.h">
-      <Filter>Include\dx11</Filter>
-    </ClInclude>
     <ClInclude Include="include\ninniku\ninniku.h">
       <Filter>Include</Filter>
     </ClInclude>
@@ -119,9 +122,6 @@
     </ClInclude>
     <ClInclude Include="include\ninniku\utils.h">
       <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="src\dx11\DX11_impl.h">
-      <Filter>Source Files\dx11</Filter>
     </ClInclude>
     <ClInclude Include="include\ninniku\export.h">
       <Filter>Include</Filter>
@@ -150,11 +150,41 @@
     <ClInclude Include="src\core\image\image_impl.h">
       <Filter>Source Files\core\image</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\core\buffer.h">
-      <Filter>Include\core</Filter>
+    <ClInclude Include="include\ninniku\core\renderer\renderdevice.h">
+      <Filter>Include\core\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\buffer_impl.h">
-      <Filter>Source Files\core</Filter>
+    <ClInclude Include="include\ninniku\core\renderer\types.h">
+      <Filter>Include\core\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx11\DX11.h">
+      <Filter>Source Files\core\renderer\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx11\DX11Types.h">
+      <Filter>Source Files\core\renderer\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx12\DX12.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx12\DX12Types.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\DXCommon.h">
+      <Filter>Source Files\core\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\objectTracker.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\stringMap.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\globals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx12\dxc_utils.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\null.h">
+      <Filter>Source Files\core\renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

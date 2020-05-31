@@ -1,4 +1,4 @@
-// Copyright(c) 2018-2019 Kitti Vongsay
+// Copyright(c) 2018-2020 Kitti Vongsay
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -20,8 +20,57 @@
 
 #pragma once
 
-struct SetupFixture
+#include <boost/mpl/vector.hpp>
+#include <string_view>
+
+struct SetupFixtureNull
 {
-    SetupFixture();
-    ~SetupFixture();
+    SetupFixtureNull();
+    ~SetupFixtureNull();
 };
+
+struct SetupFixtureDX11
+{
+    SetupFixtureDX11();
+    ~SetupFixtureDX11();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
+};
+
+struct SetupFixtureDX11Warp
+{
+    SetupFixtureDX11Warp();
+    ~SetupFixtureDX11Warp();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
+};
+
+struct SetupFixtureDX12
+{
+    SetupFixtureDX12();
+    ~SetupFixtureDX12();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
+};
+
+struct SetupFixtureDX12Warp
+{
+    SetupFixtureDX12Warp();
+    ~SetupFixtureDX12Warp();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
+};
+
+typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12, SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesAll;
+typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesWarpAll;
+typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesHWAll;
+
+typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
+typedef boost::mpl::vector<SetupFixtureDX11Warp> FixturesDX11Warp;
+
+typedef boost::mpl::vector<SetupFixtureDX12> FixturesDX12;
+typedef boost::mpl::vector<SetupFixtureDX12Warp> FixturesDX12Warp;
