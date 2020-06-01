@@ -21,6 +21,7 @@
 #include "pch.h"
 #include "DX11Types.h"
 
+#include "../../../globals.h"
 #include "../../../utils/misc.h"
 
 namespace ninniku
@@ -73,16 +74,16 @@ namespace ninniku
     DX11DebugMarker::DX11DebugMarker(const DX11Marker& marker, [[maybe_unused]] const std::string_view& name)
         : marker_{ marker }
     {
-#ifdef _DO_CAPTURE
-        _marker->BeginEvent(strToWStr(name).c_str());
-#endif
+        if (Globals::Instance().doCapture_) {
+            marker_->BeginEvent(strToWStr(name).c_str());
+        }
     }
 
     DX11DebugMarker::~DX11DebugMarker()
     {
-#ifdef _DO_CAPTURE
-        _marker->EndEvent();
-#endif
+        if (Globals::Instance().doCapture_) {
+            marker_->EndEvent();
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -89,9 +89,10 @@ namespace ninniku
     DebugMarkerHandle DX11::CreateDebugMarker(const std::string_view& name) const
     {
         DX11Marker marker;
-#ifdef _DO_CAPTURE
-        _context->QueryInterface(IID_PPV_ARGS(marker.GetAddressOf()));
-#endif
+
+        if (Globals::Instance().doCapture_) {
+            context_->QueryInterface(IID_PPV_ARGS(marker.GetAddressOf()));
+        }
 
         return std::make_unique<DX11DebugMarker>(marker, name);
     }

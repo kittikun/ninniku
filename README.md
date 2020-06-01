@@ -15,8 +15,7 @@
   * Can be 1-4 channel, 8 or 16 bits
 - Can load EXR files with [tinyexr](https://github.com/syoyo/tinyexr)
 - Can capture commands with [RenderDoc](https://renderdoc.org/) for DX11 and [PIX](https://devblogs.microsoft.com/pix/) for DX12
-  * Compile using Debug configuration or define _DO_CAPTURE
-  * Captures will be called ninniku_frame0.rdc
+  * Renderdoc captures will be called ninniku_frame0.rdc
 - DX12 shaders are compiled using the [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler)
 
 #### Usage:
