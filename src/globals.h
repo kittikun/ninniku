@@ -21,6 +21,7 @@
 #pragma once
 
 #include "ninniku/utils.h"
+#include "ninniku/core/renderer/renderdevice.h"
 
 #include <renderdoc/renderdoc_app.h>
 

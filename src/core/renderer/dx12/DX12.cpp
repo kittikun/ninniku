@@ -559,21 +559,22 @@ namespace ninniku
             Microsoft::WRL::ComPtr<ID3D12Debug1> debugInterface1;
             hr = debugInterface->QueryInterface(IID_PPV_ARGS(&debugInterface1));
 
-            if (CheckAPIFailed(hr, "ID3D12Debug1::QueryInterface"))
+            if (CheckAPIFailed(hr, "ID3D12Debug1::QueryInterface (GPU validation)"))
                 return false;
 
             debugInterface1->SetEnableGPUBasedValidation(true);
 
-            CComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
+            Microsoft::WRL::ComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
 
             hr = D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings));
 
-            if (CheckAPIFailed(hr, "D3D12GetDebugInterface"))
-                return false;
-
-            // Turn on auto-breadcrumbs and page fault reporting.
-            pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
-            pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            if (FAILED(hr)) {
+                LOGW << "Couldn't initialize Device Removed Extended Data (DRED), you need to update your Windows 10 version to at least 1903 to use it";
+            } else {
+                // Turn on auto-breadcrumbs and page fault reporting.
+                pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+                pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            }
         }
 
         static PFN_D3D12_CREATE_DEVICE s_DynamicD3D12CreateDevice = nullptr;

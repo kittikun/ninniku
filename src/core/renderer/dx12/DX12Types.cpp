@@ -21,6 +21,7 @@
 #include "pch.h"
 #include "DX12Types.h"
 
+#include "../../../globals.h"
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
 
@@ -391,20 +392,20 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     DX12DebugMarker::DX12DebugMarker([[maybe_unused]] const std::string_view& name)
     {
-#ifdef _DO_CAPTURE
-        // https://devblogs.microsoft.com/pix/winpixeventruntime/
-        // says a ID3D12CommandList/ID3D12CommandQueue should be used but cannot find that override
+        if (Globals::Instance().doCapture_) {
+            // https://devblogs.microsoft.com/pix/winpixeventruntime/
+            // says a ID3D12CommandList/ID3D12CommandQueue should be used but cannot find that override
 
-        auto color = PIX_COLOR_INDEX(_colorIdx++);
-        PIXBeginEvent(color, name.data());
-#endif
+            auto color = PIX_COLOR_INDEX(colorIdx_++);
+            PIXBeginEvent(color, name.data());
+        }
     }
 
     DX12DebugMarker::~DX12DebugMarker()
     {
-#ifdef _DO_CAPTURE
-        PIXEndEvent();
-#endif
+        if (Globals::Instance().doCapture_) {
+            PIXEndEvent();
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
