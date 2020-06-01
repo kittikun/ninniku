@@ -564,12 +564,12 @@ namespace ninniku
 
             debugInterface1->SetEnableGPUBasedValidation(true);
 
-            Microsoft::WRL::CComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
+            Microsoft::WRL::ComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
 
             hr = D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings));
 
             if (CheckAPIFailed(hr, "D3D12GetDebugInterface (DRED)")) {
-                LOGW << "Couldn't initialize DRED, you might need to update your Windows 10 version to at least 1903"
+                LOGW << "Couldn't initialize DRED, you might need to update your Windows 10 version to at least 1903";
             } else {
                 // Turn on auto-breadcrumbs and page fault reporting.
                 pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
