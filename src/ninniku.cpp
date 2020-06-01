@@ -160,10 +160,10 @@ namespace ninniku
     void FixFlags(const ERenderer renderer, uint32_t& flags)
     {
         if (!IsDebuggerPresent() && ((renderer & ERenderer::RENDERER_DX12) != 0) && ((flags & EInitializationFlags::IF_DisableDX12DebugLayer) == 0)) {
-            // disable is not debbugger is attached since you cannot see the messages anyway
+            // disable is not debugger is attached since you cannot see the messages anyway
             LOGW << "No debugger detected, disabling DX12 debug layer..";
 
-            flags &= EInitializationFlags::IF_DisableDX12DebugLayer;
+            flags |= EInitializationFlags::IF_DisableDX12DebugLayer;
         }
 
         if (renderer == ERenderer::RENDERER_NULL)
