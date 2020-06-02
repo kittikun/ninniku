@@ -875,7 +875,7 @@ namespace ninniku
             auto foundContext = commandContexts_.find(shaderHash);
 
             if (foundContext == commandContexts_.end()) {
-                auto fmt = boost::format("Dispatch error: could not find command context for shader \"%1%\"") % cmd->shader;
+                auto fmt = boost::format("Dispatch error: could not find command context for shader \"%1%\". Did you forget to load the shader ?") % cmd->shader;
                 LOGE << boost::str(fmt);
                 return false;
             }
