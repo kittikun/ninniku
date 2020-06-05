@@ -72,8 +72,11 @@ namespace ninniku
         template<typename SourceType, typename DestType, typename ReturnType>
         static ReturnType* castGenericResourceToDX11Resource(const SourceType* src)
         {
-            auto view = static_cast<const DestType*>(src);
-            return static_cast<ReturnType*>(view->resource_.Get());
+			if (src == nullptr)
+				return static_cast<ReturnType*>(nullptr);
+
+			auto view = static_cast<const DestType*>(src);
+			return static_cast<ReturnType*>(view->resource_.Get());
         }
 
     private:

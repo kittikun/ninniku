@@ -1044,8 +1044,7 @@ namespace ninniku
         auto found = cBuffers_.find(name);
 
         if (found == cBuffers_.end()) {
-            auto fmt = boost::format("Constant buffer \"%1%\" was not found in any of the shaders parsed") % name;
-            LOGE << boost::str(fmt);
+            LOGEF(boost::format("Constant buffer \"%1%\" was not found in any of the shaders parsed") % name);
 
             return false;
         }

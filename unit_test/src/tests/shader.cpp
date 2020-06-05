@@ -38,6 +38,97 @@
 
 BOOST_AUTO_TEST_SUITE(Shader)
 
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
+    BOOST_REQUIRE(LoadShader(dx, "sameResource", T::shaderRoot));
+
+    auto param = ninniku::TextureParam::Create();
+
+    param->width = param->height = 512;
+
+    auto numMips = ninniku::CountMips(param->width);
+
+    param->numMips = numMips;
+    param->arraySize = ninniku::CUBEMAP_NUM_FACES;
+    param->depth = 1;
+    param->format = ninniku::TF_R8G8B8A8_UNORM;
+    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+
+    auto res = dx->CreateTexture(param);
+    auto cmd = dx->CreateCommand();
+    CBGlobal cb = {};
+
+    cmd->shader = "sameResource";
+    cmd->cbufferStr = "CBGlobal";
+
+    // first dispatch is to initialize mip 0 to black
+    {
+        auto marker = dx->CreateDebugMarker("Initialize mip 0");
+
+        cmd->srvBindings.insert(std::make_pair("srcTex", nullptr));
+        cmd->uavBindings.insert(std::make_pair("dstTex", res->GetUAV(0)));
+        cmd->dispatch[0] = param->width / SAME_RESOURCE_X;
+        cmd->dispatch[1] = param->height / SAME_RESOURCE_Y;
+        cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
+
+        // constant buffer
+        cb.targetMip = 0;
+
+        BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+        BOOST_REQUIRE(dx->Dispatch(cmd));
+    }
+
+    auto marker = dx->CreateDebugMarker("Other mips");
+
+    for (uint32_t i = 1; i < numMips; ++i) {
+        cmd->srvBindings["srcTex"] = res->GetSRVArray(i - 1);
+        cmd->uavBindings["dstTex"] = res->GetUAV(i);
+
+        cmd->dispatch[0] = std::max(1u, (param->width >> i) / SAME_RESOURCE_X);
+        cmd->dispatch[1] = std::max(1u, (param->height >> i) / SAME_RESOURCE_Y);
+
+        cb.targetMip = i;
+
+        BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+        BOOST_REQUIRE(dx->Dispatch(cmd));
+    }
+
+    auto image = std::make_unique<ninniku::ddsImage>();
+
+    BOOST_REQUIRE(image->InitializeFromTextureObject(dx, res));
+
+    std::string filename = "shader_SRV_UAV_same_resource.dds";
+
+    BOOST_REQUIRE(image->SaveImage(filename));
+    BOOST_REQUIRE(std::filesystem::exists(filename));
+
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 1517223776);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 1737166122);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_LoadMemory, T, FixturesAll, T)
 {
     // Disable HW GPU support when running on CI

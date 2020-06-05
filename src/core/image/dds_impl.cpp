@@ -299,11 +299,11 @@ namespace ninniku
                 auto subMarker = dx->CreateDebugMarker("DirectXTex Compress");
                 auto dx11 = static_cast<DX11*>(dx.get());
 
-                hr = DirectX::Compress(dx11->GetDevice(), img, nimg, meta_, format, flags, 1.f, *resImageImpl);
+                hr = DirectX::Compress(dx11->GetDevice(), img, nimg, meta_, format, static_cast<DirectX::TEX_COMPRESS_FLAGS>(flags), 1.f, *resImageImpl);
             } else {
                 LOGD_INDENT_START << "DirectXTex CPU Compression";
 
-                hr = DirectX::Compress(img, nimg, meta_, format, flags, 1.f, *resImageImpl);
+                hr = DirectX::Compress(img, nimg, meta_, format, static_cast<DirectX::TEX_COMPRESS_FLAGS>(flags), 1.f, *resImageImpl);
             }
 
             if (FAILED(hr)) {
@@ -316,7 +316,7 @@ namespace ninniku
         } else {
             LOGD_INDENT_START << "DirectXTex CPU Compression";
 
-            auto hr = DirectX::Compress(img, nimg, meta_, format, flags, DirectX::TEX_THRESHOLD_DEFAULT, *resImageImpl);
+            auto hr = DirectX::Compress(img, nimg, meta_, format, static_cast<DirectX::TEX_COMPRESS_FLAGS>(flags), DirectX::TEX_THRESHOLD_DEFAULT, *resImageImpl);
 
             if (FAILED(hr)) {
                 LOGE << "Failed to compress DDS";

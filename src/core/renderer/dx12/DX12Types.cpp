@@ -148,7 +148,6 @@ namespace ninniku
 
         // create srv bindings to the resource
         for (auto& srv : cmd->srvBindings) {
-            auto dxSRV = static_cast<const DX12ShaderResourceView*>(srv.second);
             auto found = bindings.find(srv.first);
 
             if (found == bindings.end()) {
@@ -156,127 +155,138 @@ namespace ninniku
                 return false;
             }
 
-            if (found->second.Type == D3D_SIT_TEXTURE) {
-                if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_)) {
-                    LOGEF(boost::format("SRV binding should have been a texture \"%1%\"") % found->first);
-                    return false;
-                }
+            auto dxSRV = static_cast<const DX12ShaderResourceView*>(srv.second);
 
-                auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_);
-
-                if (CheckWeakExpired(weak))
-                    return false;
-
-                auto locked = weak.lock();
-
+            if (dxSRV == nullptr) {
                 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
                 srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->desc_->format));
-
-                if (found->second.Dimension == D3D_SRV_DIMENSION_BUFFEREX) {
-                    // might be dangerous is we intend those because they overlap
-                    // D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE or
-                    // D3D_SRV_DIMENSION_BUFFEREX
-                    throw new std::exception("potential overlap");
-                }
-
+                srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
                 srvDesc.ViewDimension = static_cast<D3D12_SRV_DIMENSION>(found->second.Dimension);
-
-                switch (found->second.Dimension) {
-                    case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
-                    {
-                        srvDesc.TextureCubeArray = {};
-                        srvDesc.TextureCubeArray.MipLevels = locked->desc_->numMips;
-                        srvDesc.TextureCubeArray.NumCubes = locked->desc_->arraySize / CUBEMAP_NUM_FACES;
+                device->CreateShaderResourceView(nullptr, &srvDesc, heapHandle);
+                heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+            } else {
+                if (found->second.Type == D3D_SIT_TEXTURE) {
+                    if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_)) {
+                        LOGEF(boost::format("SRV binding should have been a texture \"%1%\"") % found->first);
+                        return false;
                     }
-                    break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURECUBE:
-                    {
-                        srvDesc.TextureCube = {};
-                        srvDesc.TextureCube.MipLevels = locked->desc_->numMips;
+                    auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_);
+
+                    if (CheckWeakExpired(weak))
+                        return false;
+
+                    auto locked = weak.lock();
+
+                    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                    srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(locked->desc_->format));
+
+                    if (found->second.Dimension == D3D_SRV_DIMENSION_BUFFEREX) {
+                        // might be dangerous is we intend those because they overlap
+                        // D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE or
+                        // D3D_SRV_DIMENSION_BUFFEREX
+                        throw new std::exception("potential overlap");
                     }
-                    break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
-                    {
-                        srvDesc.Texture2DArray = {};
-                        srvDesc.Texture2DArray.ArraySize = locked->desc_->arraySize;
+                    srvDesc.ViewDimension = static_cast<D3D12_SRV_DIMENSION>(found->second.Dimension);
 
-                        if (dxSRV->index_ != std::numeric_limits<uint32_t>::max()) {
-                            // one slice for a mip level
-                            srvDesc.Texture2DArray.MostDetailedMip = dxSRV->index_;
-                            srvDesc.Texture2DArray.MipLevels = 1;
-                        } else {
-                            // everything mips included
-                            srvDesc.Texture2DArray.MostDetailedMip = 0;
-                            srvDesc.Texture2DArray.MipLevels = locked->desc_->numMips;
+                    switch (found->second.Dimension) {
+                        case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
+                        {
+                            srvDesc.TextureCubeArray = {};
+                            srvDesc.TextureCubeArray.MipLevels = locked->desc_->numMips;
+                            srvDesc.TextureCubeArray.NumCubes = locked->desc_->arraySize / CUBEMAP_NUM_FACES;
                         }
-                    }
-                    break;
+                        break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
-                    {
-                        srvDesc.Texture1DArray = {};
-                        srvDesc.Texture1DArray.ArraySize = locked->desc_->arraySize;
-                        srvDesc.Texture1DArray.MostDetailedMip = dxSRV->index_;
-                        srvDesc.Texture1DArray.MipLevels = 1;
-                    }
-                    break;
+                        case D3D12_SRV_DIMENSION_TEXTURECUBE:
+                        {
+                            srvDesc.TextureCube = {};
+                            srvDesc.TextureCube.MipLevels = locked->desc_->numMips;
+                        }
+                        break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE1D:
-                    {
-                        srvDesc.Texture1D = {};
-                        srvDesc.Texture1D.MipLevels = locked->desc_->numMips;
-                    }
-                    break;
+                        case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
+                        {
+                            srvDesc.Texture2DArray = {};
+                            srvDesc.Texture2DArray.ArraySize = locked->desc_->arraySize;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE2D:
-                    {
-                        srvDesc.Texture2D = {};
-                        srvDesc.Texture2D.MipLevels = locked->desc_->numMips;
-                    }
-                    break;
+                            if (dxSRV->index_ != std::numeric_limits<uint32_t>::max()) {
+                                // one slice for a mip level
+                                srvDesc.Texture2DArray.MostDetailedMip = dxSRV->index_;
+                                srvDesc.Texture2DArray.MipLevels = 1;
+                            } else {
+                                // everything mips included
+                                srvDesc.Texture2DArray.MostDetailedMip = 0;
+                                srvDesc.Texture2DArray.MipLevels = locked->desc_->numMips;
+                            }
+                        }
+                        break;
 
-                    case D3D12_SRV_DIMENSION_TEXTURE3D:
-                    {
-                        srvDesc.Texture3D = {};
-                        srvDesc.Texture3D.MipLevels = locked->desc_->numMips;
-                    }
-                    break;
+                        case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
+                        {
+                            srvDesc.Texture1DArray = {};
+                            srvDesc.Texture1DArray.ArraySize = locked->desc_->arraySize;
+                            srvDesc.Texture1DArray.MostDetailedMip = dxSRV->index_;
+                            srvDesc.Texture1DArray.MipLevels = 1;
+                        }
+                        break;
 
-                    default:
-                        throw new std::exception("Unsupported SRV binding dimension");
+                        case D3D12_SRV_DIMENSION_TEXTURE1D:
+                        {
+                            srvDesc.Texture1D = {};
+                            srvDesc.Texture1D.MipLevels = locked->desc_->numMips;
+                        }
+                        break;
+
+                        case D3D12_SRV_DIMENSION_TEXTURE2D:
+                        {
+                            srvDesc.Texture2D = {};
+                            srvDesc.Texture2D.MipLevels = locked->desc_->numMips;
+                        }
+                        break;
+
+                        case D3D12_SRV_DIMENSION_TEXTURE3D:
+                        {
+                            srvDesc.Texture3D = {};
+                            srvDesc.Texture3D.MipLevels = locked->desc_->numMips;
+                        }
+                        break;
+
+                        default:
+                            throw new std::exception("Unsupported SRV binding dimension");
+                    }
+
+                    locked->texture_->SetName(strToWStr(found->first).c_str());
+                    device->CreateShaderResourceView(locked->texture_.Get(), &srvDesc, heapHandle);
+                    heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                } else if (found->second.Type == D3D_SIT_STRUCTURED) {
+                    if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_)) {
+                        LOGEF(boost::format("SRV binding should have been a buffer \"%1%\"") % found->first);
+                        return false;
+                    }
+
+                    auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_);
+
+                    if (CheckWeakExpired(weak))
+                        return false;
+
+                    auto locked = weak.lock();
+
+                    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+                    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                    srvDesc.Buffer.FirstElement = 0;
+                    srvDesc.Buffer.NumElements = locked->_desc->numElements;
+                    srvDesc.Buffer.StructureByteStride = locked->_desc->elementSize;
+                    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+                    locked->_buffer->SetName(strToWStr(found->first).c_str());
+                    device->CreateShaderResourceView(locked->_buffer.Get(), &srvDesc, heapHandle);
+                    heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
                 }
-
-                locked->texture_->SetName(strToWStr(found->first).c_str());
-                device->CreateShaderResourceView(locked->texture_.Get(), &srvDesc, heapHandle);
-                heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
-            } else if (found->second.Type == D3D_SIT_STRUCTURED) {
-                if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_)) {
-                    LOGEF(boost::format("SRV binding should have been a buffer \"%1%\"") % found->first);
-                    return false;
-                }
-
-                auto weak = std::get<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_);
-
-                if (CheckWeakExpired(weak))
-                    return false;
-
-                auto locked = weak.lock();
-
-                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-                srvDesc.Buffer.FirstElement = 0;
-                srvDesc.Buffer.NumElements = locked->_desc->numElements;
-                srvDesc.Buffer.StructureByteStride = locked->_desc->elementSize;
-                srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
-                locked->_buffer->SetName(strToWStr(found->first).c_str());
-                device->CreateShaderResourceView(locked->_buffer.Get(), &srvDesc, heapHandle);
-                heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             }
         }
 

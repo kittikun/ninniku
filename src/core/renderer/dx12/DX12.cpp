@@ -985,6 +985,11 @@ namespace ninniku
 
                 for (auto& srvKVP : cmd->srvBindings) {
                     auto dxSRV = static_cast<const DX12ShaderResourceView*>(srvKVP.second);
+
+                    // null SRV are allowed to mimic DX11
+                    if (dxSRV == nullptr)
+                        continue;
+
                     ID3D12Resource* srvRes = nullptr;
 
                     if (std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_)) {
@@ -1564,8 +1569,7 @@ namespace ninniku
         auto found = cBuffers_.find(name);
 
         if (found == cBuffers_.end()) {
-            auto fmt = boost::format("Constant buffer \"%1%\" was not found in any of the shaders parsed") % name;
-            LOGE << boost::str(fmt);
+            LOGEF(boost::format("Constant buffer \"%1%\" was not found in any of the shaders parsed") % name);
 
             return false;
         }
