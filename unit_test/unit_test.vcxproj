@@ -161,6 +161,10 @@
     <CustomBuild Include="src\shaders\dx12\downsample.hlsl">
       <FileType>Document</FileType>
     </CustomBuild>
+    <FxCompile Include="src\shaders\dx11\sameResource.hlsl" />
+    <CustomBuild Include="src\shaders\dx12\sameResource.hlsl">
+      <FileType>Document</FileType>
+    </CustomBuild>
     <None Include="src\shaders\utility.hlsl">
       <FileType>Document</FileType>
     </None>
