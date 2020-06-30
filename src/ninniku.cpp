@@ -49,8 +49,7 @@ namespace ninniku
         auto hInst = LoadLibrary(ninniku::strToWStr(path).c_str());
 
         if (hInst == nullptr) {
-            auto fmt = boost::format("Failed to load %1%") % path;
-            LOGE << boost::str(fmt);
+            LOGEF(boost::format("Failed to load %1%") % path);
 
             return;
         } else {
@@ -148,6 +147,7 @@ namespace ninniku
         Globals::Instance().doCapture_ = (flags & EInitializationFlags::IF_EnableCapture) != 0;
         Globals::Instance().useDebugLayer_ = (flags & EInitializationFlags::IF_DisableDX12DebugLayer) == 0;
         Globals::Instance().bc7Quick_ = (flags & EInitializationFlags::IF_BC7_QUICK_MODE) != 0;
+        Globals::Instance().safeAndSlowDX12 = (flags & EInitializationFlags::IF_SafeAndSlowDX12) != 0;
     }
 
     void InitializeLog(const ELogLevel logLevel)
@@ -184,8 +184,7 @@ namespace ninniku
 
             for (auto& path : shaderPaths) {
                 if (!dx->LoadShader(path)) {
-                    auto fmt = boost::format("Failed to load shaders in: %1%") % path;
-                    LOGE << boost::str(fmt);
+                    LOGEF(boost::format("Failed to load shaders in: %1%") % path);
                     return false;
                 }
             }

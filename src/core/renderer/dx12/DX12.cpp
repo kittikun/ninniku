@@ -80,9 +80,12 @@ namespace ninniku
 
         // we assume that dst is already in D3D12_RESOURCE_STATE_COPY_DEST
         transitionCmdList_->ResourceBarrier(barrierCount, barriers.data());
-        transitionCmdList_->Close();
-        ExecuteCommand(transitionCommandQueue_, transitionCmdList_);
-        transitionCmdList_->Reset(transitionCommandAllocator_.Get(), nullptr);
+
+        if (Globals::Instance().safeAndSlowDX12) {
+            transitionCmdList_->Close();
+            ExecuteCommand(transitionCommandQueue_, transitionCmdList_);
+            transitionCmdList_->Reset(transitionCommandAllocator_.Get(), nullptr);
+        }
 
         copyCmdList_->CopyResource(dstInternal->_buffer.Get(), srcInternal->_buffer.Get());
         copyCmdList_->Close();
@@ -376,6 +379,28 @@ namespace ninniku
         memcpy_s(&internalDst->_data.front(), dstPitch, mapped->GetData(), dstPitch);
 
         return dst;
+    }
+
+    CommandList DX12::CreateCommandList(EQueueType type)
+    {
+        CommandList res;
+
+        res.type = type;
+
+        switch (type) {
+            case ninniku::DX12::QT_DIRECT:
+                hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&copyCmdList_));
+                break;
+            case ninniku::DX12::QT_COMPUTE:
+                hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&copyCmdList_));
+
+                break;
+            case ninniku::DX12::QT_COPY:
+                hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&copyCmdList_));
+                break;
+        }
+
+        return res;
     }
 
     bool DX12::CreateCommandContexts()
@@ -937,7 +962,6 @@ namespace ninniku
                 }
 
                 auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE{ dxSS->descriptorHeap_->GetCPUDescriptorHandleForHeapStart() };
-
                 device_->CreateSampler(&dxSS->desc_, handle);
 
                 descriptorHeaps[descriptorHeapCount++] = dxSS->descriptorHeap_.Get();
@@ -1123,14 +1147,18 @@ namespace ninniku
             }
         }
 
-        auto hr = context->cmdList_->Close();
+        if (Globals::Instance().safeAndSlowDX12) {
+            auto hr = context->cmdList_->Close();
 
-        if (CheckAPIFailed(hr, "ID3D12GraphicsCommandList::Close"))
-            return false;
+            if (CheckAPIFailed(hr, "ID3D12GraphicsCommandList::Close"))
+                return false;
 
-        ExecuteCommand(commandQueue_, context->cmdList_);
+            ExecuteCommand(commandQueue_, context->cmdList_);
 
-        context->cmdList_->Reset(context->cmdAllocator_.Get(), context->pipelineState_.Get());
+            context->cmdList_->Reset(context->cmdAllocator_.Get(), context->pipelineState_.Get());
+        } else {
+            InsertFence(EQueueType::QT_DIRECT);
+        }
 
         return true;
     }
@@ -1164,6 +1192,10 @@ namespace ninniku
         CloseHandle(fenceEvent_);
 
         tracker_.ReleaseObjects();
+    }
+
+    void DX12::Flush()
+    {
     }
 
     bool DX12::Initialize()
@@ -1261,6 +1293,34 @@ namespace ninniku
 
         if (!CreateSamplers())
             return false;
+
+        return true;
+    }
+
+    bool DX12::InsertFence(EQueueType type)
+    {
+        uint64_t fenceValue = InterlockedIncrement(&fenceValue_);
+
+        switch (type) {
+            case ninniku::DX12::QT_DIRECT:
+                break;
+
+            case ninniku::DX12::QT_COMPUTE:
+            {
+                auto hr = commandQueue_->Signal(fence_.Get(), fenceValue);
+
+                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
+                    return false;
+
+                // have the other queues wait for this
+                copyCommandQueue_->Wait(fence_.Get(), fenceValue);
+                transitionCommandQueue_->Wait(fence_.Get(), fenceValue);
+            }
+            break;
+
+            case ninniku::DX12::QT_COPY:
+                break;
+        }
 
         return true;
     }

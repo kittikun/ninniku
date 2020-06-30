@@ -36,10 +36,11 @@ namespace ninniku
         RENDERDOC_API_1_4_1* renderDocApi_ = nullptr;
         RenderDeviceHandle renderer_;
 
+        bool bc7Quick_ : 1;
         bool doCapture_ : 1;
         bool useDebugLayer_ : 1;
-        bool bc7Quick_ : 1;
-        bool padding_ : 5;
+        bool safeAndSlowDX12 : 1;
+        bool padding_ : 4;
 
     private:
         static Globals instance_;

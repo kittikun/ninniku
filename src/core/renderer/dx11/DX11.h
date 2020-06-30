@@ -48,6 +48,7 @@ namespace ninniku
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
+        void Flush() override {}
         bool Initialize() override;
         bool LoadShader(const std::filesystem::path& path) override;
         bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
@@ -72,11 +73,11 @@ namespace ninniku
         template<typename SourceType, typename DestType, typename ReturnType>
         static ReturnType* castGenericResourceToDX11Resource(const SourceType* src)
         {
-			if (src == nullptr)
-				return static_cast<ReturnType*>(nullptr);
+            if (src == nullptr)
+                return static_cast<ReturnType*>(nullptr);
 
-			auto view = static_cast<const DestType*>(src);
-			return static_cast<ReturnType*>(view->resource_.Get());
+            auto view = static_cast<const DestType*>(src);
+            return static_cast<ReturnType*>(view->resource_.Get());
         }
 
     private:

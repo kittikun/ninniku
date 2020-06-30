@@ -51,6 +51,7 @@ namespace ninniku
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
         [[nodiscard]] virtual bool Dispatch(const CommandHandle& cmd) = 0;
         virtual void Finalize() = 0;
+        virtual void Flush() = 0;
         [[nodiscard]] virtual bool Initialize() = 0;
         [[nodiscard]] virtual bool LoadShader(const std::filesystem::path& path) = 0;
         [[nodiscard]] virtual bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) = 0;

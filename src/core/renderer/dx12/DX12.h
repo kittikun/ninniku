@@ -47,6 +47,7 @@ namespace ninniku
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
+        void Flush() override;
         bool Initialize() override;
         bool LoadShader(const std::filesystem::path& path) override;
         bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
@@ -62,17 +63,32 @@ namespace ninniku
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
+        std::tuple<bool, CommandList> CreateCommandList(EQueueType type);
         bool CreateCommandContexts();
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
         bool CreateSamplers();
         bool ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList);
+        bool InsertFence(EQueueType type);
         bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::filesystem::path& path);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
+        enum EQueueType : uint8_t
+        {
+            QT_DIRECT = 0,
+            QT_COMPUTE = 1 << 0,
+            QT_COPY = 1 << 1
+        };
+
+        struct CommandList
+        {
+            EQueueType type;
+            DX12GraphicsCommandList cmdList;
+        };
+
         static constexpr std::string_view ShaderExt = ".dxco";
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
         ERenderer type_;
