@@ -25,6 +25,8 @@
 #include "../../../utils/stringMap.h"
 #include "DX12Types.h"
 
+#include <boost/pool/object_pool.hpp>
+
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
 
@@ -32,6 +34,20 @@ namespace ninniku
 {
     class DX12 final : public RenderDevice
     {
+	private:
+		enum EQueueType : uint8_t
+		{
+			QT_COMPUTE = 0,
+			QT_COPY = 1 << 0,
+			QT_TRANSITION = 1 << 1,
+		};
+
+		struct CommandList
+		{
+			EQueueType type;
+			DX12GraphicsCommandList gfxCmdList;
+		};
+
     public:
         DX12(ERenderer type);
 
@@ -63,7 +79,7 @@ namespace ninniku
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
-        std::tuple<bool, CommandList> CreateCommandList(EQueueType type);
+        std::tuple<bool, CommandList*> CreateCommandList(EQueueType type);
         bool CreateCommandContexts();
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
@@ -76,19 +92,6 @@ namespace ninniku
         bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
     private:
-        enum EQueueType : uint8_t
-        {
-            QT_DIRECT = 0,
-            QT_COMPUTE = 1 << 0,
-            QT_COPY = 1 << 1
-        };
-
-        struct CommandList
-        {
-            EQueueType type;
-            DX12GraphicsCommandList cmdList;
-        };
-
         static constexpr std::string_view ShaderExt = ".dxco";
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
         ERenderer type_;
@@ -102,15 +105,20 @@ namespace ninniku
         uint64_t volatile fenceValue_;
         volatile HANDLE fenceEvent_;
 
+		// compute
+		DX12CommandAllocator computeAllocator_;
+
         // copy
         DX12CommandAllocator copyCommandAllocator_;
         DX12CommandQueue copyCommandQueue_;
-        DX12GraphicsCommandList copyCmdList_;
 
         // resource transition
         DX12CommandAllocator transitionCommandAllocator_;
         DX12CommandQueue transitionCommandQueue_;
-        DX12GraphicsCommandList transitionCmdList_;
+
+		// IF_SafeAndSlowDX12 only 
+		DX12GraphicsCommandList copyCmdList_;
+		DX12GraphicsCommandList transitionCmdList_;
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
@@ -127,5 +135,10 @@ namespace ninniku
 
         // tracks allocated resources
         ObjectTracker tracker_;
+		
+		// Object pools
+		boost::object_pool<CommandList> poolCmd_;
+
+		std::vector<CommandList*> _commands;
     };
 } // namespace ninniku

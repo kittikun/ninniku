@@ -91,8 +91,6 @@ namespace ninniku
 
         DX12RootSignature rootSignature_;
         DX12PipelineState pipelineState_;
-        DX12CommandAllocator cmdAllocator_;
-        DX12GraphicsCommandList cmdList_;
 
         // user might change the bound shader so keep the last used one
         uint32_t contextShaderHash_;
@@ -100,6 +98,10 @@ namespace ninniku
         bool CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings);
 
         std::unordered_map<uint32_t, DX12CommandSubContext> subContexts_;
+
+		// IF_SafeAndSlowDX12 only 
+		DX12CommandAllocator cmdAllocator_;
+		DX12GraphicsCommandList cmdList_;
     };
 
     struct DX12Command final : public Command
