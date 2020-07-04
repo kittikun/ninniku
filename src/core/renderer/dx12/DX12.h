@@ -84,7 +84,7 @@ namespace ninniku
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
         bool CreateSamplers();
-        bool ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList);
+        bool ExecuteCommand(const CommandList* cmdList);
         bool InsertFence(EQueueType type);
         bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::filesystem::path& path);

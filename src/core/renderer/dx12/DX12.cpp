@@ -448,24 +448,41 @@ namespace ninniku
 
         cmd->type = type;
 
-		HRESULT hr = E_FAIL;
 
-        switch (type) {
-            case ninniku::DX12::QT_TRANSITION:
-                hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, transitionCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&cmd->gfxCmdList));
-                break;
+		if (Globals::Instance().safeAndSlowDX12) {
+			switch (type) {
+			case ninniku::DX12::QT_TRANSITION:
+				cmd->gfxCmdList = transitionCmdList_;
+				break;
 
-            case ninniku::DX12::QT_COMPUTE:
+			case ninniku::DX12::QT_COMPUTE:
+				throw std::exception("shouldn't happen");
+				break;
+
+			case ninniku::DX12::QT_COPY:
+				cmd->gfxCmdList = copyCmdList_;
+				break;
+			}
+		} else {
+			HRESULT hr = E_FAIL;
+
+			switch (type) {
+			case ninniku::DX12::QT_TRANSITION:
+				hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, transitionCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&cmd->gfxCmdList));
+				break;
+
+			case ninniku::DX12::QT_COMPUTE:
 				hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, computeAllocator_.Get(), nullptr, IID_PPV_ARGS(&cmd->gfxCmdList));
-                break;
+				break;
 
-            case ninniku::DX12::QT_COPY:
-                hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&cmd->gfxCmdList));
-                break;
-        }
+			case ninniku::DX12::QT_COPY:
+				hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&cmd->gfxCmdList));
+				break;
+			}
 
-		if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
-			return std::make_tuple(false, static_cast<DX12::CommandList*>(nullptr));
+			if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
+				return std::make_tuple(false, static_cast<DX12::CommandList*>(nullptr));
+		}
 
         return std::make_tuple(true, cmd);
     }
@@ -1247,25 +1264,45 @@ namespace ninniku
         return true;
     }
 
-    bool DX12::ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList)
+    bool DX12::ExecuteCommand(const CommandList* cmdList)
     {
-        // for now we can to execute the command list right away
-        std::array<ID3D12CommandList*, 1> pCommandLists = { cmdList.Get() };
+		if (Globals::Instance().safeAndSlowDX12) {
+			// for now we can to execute the command list right away
+			std::array<ID3D12CommandList*, 1> pCommandLists = { cmdList->gfxCmdList.Get() };
+			uint64_t fenceValue = InterlockedIncrement(&fenceValue_);
+			HRESULT hr = E_FAIL;
 
-        queue->ExecuteCommandLists(1, &pCommandLists.front());
+			switch (cmdList->type)
+			{
+			case ninniku::DX12::QT_TRANSITION:
+				transitionCommandQueue_->ExecuteCommandLists(1, &pCommandLists.front());
+				hr = transitionCommandQueue_->Signal(fence_.Get(), fenceValue);
+				break;
 
-        uint64_t fenceValue = InterlockedIncrement(&fenceValue_);
-        auto hr = queue->Signal(fence_.Get(), fenceValue);
+			case ninniku::DX12::QT_COMPUTE:
+				commandQueue_->ExecuteCommandLists(1, &pCommandLists.front());
+				hr = commandQueue_->Signal(fence_.Get(), fenceValue);
+				break;
 
-        if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
-            return false;
+			case ninniku::DX12::QT_COPY:
+				copyCommandQueue_->ExecuteCommandLists(1, &pCommandLists.front());
+				hr = copyCommandQueue_->Signal(fence_.Get(), fenceValue);
+				break;
+			}
 
-        hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
+			if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
+				return false;
 
-        if (CheckAPIFailed(hr, "ID3D12Fence::SetEventOnCompletion"))
-            return false;
+			hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
 
-        WaitForSingleObject(fenceEvent_, INFINITE);
+			if (CheckAPIFailed(hr, "ID3D12Fence::SetEventOnCompletion"))
+				return false;
+
+			WaitForSingleObject(fenceEvent_, INFINITE);
+		} else {
+			// put in the queue and execute when flush is called
+			_commands.push_back(cmdList);
+		}
 
         return true;
     }
