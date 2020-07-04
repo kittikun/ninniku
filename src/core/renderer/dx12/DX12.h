@@ -34,19 +34,19 @@ namespace ninniku
 {
     class DX12 final : public RenderDevice
     {
-	private:
-		enum EQueueType : uint8_t
-		{
-			QT_COMPUTE = 0,
-			QT_COPY = 1 << 0,
-			QT_TRANSITION = 1 << 1,
-		};
+    private:
+        enum EQueueType : uint8_t
+        {
+            QT_COMPUTE = 0,
+            QT_COPY = 1 << 0,
+            QT_TRANSITION = 1 << 1,
+        };
 
-		struct CommandList
-		{
-			EQueueType type;
-			DX12GraphicsCommandList gfxCmdList;
-		};
+        struct CommandList
+        {
+            EQueueType type;
+            DX12GraphicsCommandList gfxCmdList;
+        };
 
     public:
         DX12(ERenderer type);
@@ -100,25 +100,27 @@ namespace ninniku
         DX12Device device_;
 
         // commands and fences
-        DX12CommandQueue commandQueue_;
         DX12Fence fence_;
         uint64_t volatile fenceValue_;
         volatile HANDLE fenceEvent_;
 
-		// compute
-		DX12CommandAllocator computeAllocator_;
+        // compute
+        DX12CommandAllocator computeAllocator_;
 
         // copy
         DX12CommandAllocator copyCommandAllocator_;
         DX12CommandQueue copyCommandQueue_;
 
+        // direct
+        DX12CommandQueue commandQueue_;
+
         // resource transition
         DX12CommandAllocator transitionCommandAllocator_;
         DX12CommandQueue transitionCommandQueue_;
 
-		// IF_SafeAndSlowDX12 only 
-		DX12GraphicsCommandList copyCmdList_;
-		DX12GraphicsCommandList transitionCmdList_;
+        // IF_SafeAndSlowDX12 only
+        DX12GraphicsCommandList copyCmdList_;
+        DX12GraphicsCommandList transitionCmdList_;
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
@@ -135,10 +137,10 @@ namespace ninniku
 
         // tracks allocated resources
         ObjectTracker tracker_;
-		
-		// Object pools
-		boost::object_pool<CommandList> poolCmd_;
 
-		std::vector<CommandList*> _commands;
+        // Object pools
+        boost::object_pool<CommandList> poolCmd_;
+
+        std::vector<const CommandList*> _commands;
     };
 } // namespace ninniku
