@@ -232,6 +232,8 @@ namespace ninniku
             }
         }
 
+		dx->Flush();
+
         return true;
     }
 

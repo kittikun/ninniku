@@ -42,7 +42,7 @@ namespace ninniku
         TextureHandle CreateTexture(const TextureParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool Dispatch(const CommandHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         void Finalize() override {}
-        void Flush() override {}
+        void Flush() override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool Initialize() override { return true; }
         bool LoadShader(const std::filesystem::path&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool LoadShader(const std::string_view&, const void*, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }

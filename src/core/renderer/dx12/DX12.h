@@ -25,6 +25,7 @@
 #include "../../../utils/stringMap.h"
 #include "DX12Types.h"
 
+#include <boost/circular_buffer.hpp>
 #include <boost/pool/object_pool.hpp>
 
 struct IDxcBlobEncoding;
@@ -94,6 +95,8 @@ namespace ninniku
     private:
         static constexpr std::string_view ShaderExt = ".dxco";
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
+        static constexpr uint32_t MAX_COMMAND_QUEUE = 64;
+
         ERenderer type_;
         uint8_t padding_[3];
 
@@ -141,6 +144,6 @@ namespace ninniku
         // Object pools
         boost::object_pool<CommandList> poolCmd_;
 
-        std::vector<const CommandList*> _commands;
+        boost::circular_buffer<const CommandList*> _commands;
     };
 } // namespace ninniku

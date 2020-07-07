@@ -89,6 +89,9 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
         BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
+    dx->Flush();
+
+
     auto marker = dx->CreateDebugMarker("Other mips");
 
     for (uint32_t i = 1; i < numMips; ++i) {
