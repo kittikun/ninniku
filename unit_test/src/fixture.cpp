@@ -91,6 +91,8 @@ SetupFixtureDX12::SetupFixtureDX12()
     auto renderer = ninniku::ERenderer::RENDERER_DX12;
     uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
+    //flags |= ninniku::EInitializationFlags::IF_SafeAndSlowDX12;
+
     if (IsAppVeyor()) {
         isNull = true;
     } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
