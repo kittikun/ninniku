@@ -641,6 +641,13 @@ namespace ninniku
         return true;
     }
 
+    bool DX11::Flush()
+    {
+        LOGW << "Flush() has no effect when the renderer is DX11";
+
+        return true;
+    }
+
     void DX11::Finalize()
     {
         tracker_.ReleaseObjects();

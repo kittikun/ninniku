@@ -49,8 +49,9 @@ namespace ninniku
 {
     DX12::DX12(ERenderer type)
         : type_{ type }
-        , _commands{ MAX_COMMAND_QUEUE }
+        , _commands{}
     {
+        _commands.reserve(MAX_COMMAND_QUEUE);
     }
 
     bool DX12::CopyBufferResource(const CopyBufferSubresourceParam& params)
@@ -456,7 +457,7 @@ namespace ninniku
                     break;
 
                 case ninniku::DX12::QT_COMPUTE:
-                    throw std::exception("Should come from DX12CommandInternal");
+                    cmd->gfxCmdList = computeCmdList_;
                     break;
 
                 case ninniku::DX12::QT_COPY:
@@ -472,7 +473,7 @@ namespace ninniku
                     break;
 
                 case ninniku::DX12::QT_COMPUTE:
-                    hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, computeAllocator_.Get(), nullptr, IID_PPV_ARGS(&cmd->gfxCmdList));
+                    hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&cmd->gfxCmdList));
                     break;
 
                 case ninniku::DX12::QT_COPY:
@@ -537,24 +538,6 @@ namespace ninniku
                 return false;
 
             context->pipelineState_->SetName(strToWStr(kvp.first).c_str());
-
-            if (Globals::Instance().safeAndSlowDX12) {
-                // Create command allocators
-                hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&context->cmdAllocator_));
-
-                if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator (compute)"))
-                    return false;
-
-                // Create command list
-                // only support a single GPU for now
-                // we also only support compute for now and don't expect any pipeline state changes for now
-                hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, context->cmdAllocator_.Get(), context->pipelineState_.Get(), IID_PPV_ARGS(&context->cmdList_));
-
-                if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList"))
-                    return false;
-
-                context->cmdList_->SetName(strToWStr(kvp.first).c_str());
-            }
 
             // no need to track contexts because they will be released upon destruction anyway
             commandContexts_.emplace(res.checksum(), std::move(context));
@@ -1100,9 +1083,17 @@ namespace ninniku
 
         // resources view are bound in the descriptor heap but we still need to transition their states before we create the views
         bool uavWholeResAll = false;
+        bool srvAllNull = true;
         std::unordered_map<ID3D12Resource*, bool> uavWholeRes{ cmd->uavBindings.size() };
 
-        if (cmd->srvBindings.size() == 0) {
+        for (auto& srv : cmd->srvBindings) {
+            if (srv.second != nullptr) {
+                srvAllNull = false;
+                break;
+            }
+        }
+
+        if ((cmd->srvBindings.size() == 0) || srvAllNull) {
             // only UAV access will be required for the whole resources meaning UAV read/write
             uavWholeResAll = true;
         } else {
@@ -1170,6 +1161,9 @@ namespace ninniku
         }
 
         if (cmd->uavBindings.size() > 0) {
+            auto createRes2 = CreateCommandList(QT_TRANSITION);
+            auto cmdList2 = std::get<1>(createRes2);
+
             for (auto& kvp : cmd->uavBindings) {
                 auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
                 auto found = bindings.find(kvp.first);
@@ -1198,7 +1192,7 @@ namespace ninniku
                         CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->index_)
                     };
 
-                    cmdList->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                    cmdList2->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
                 } else {
                     // DX12TextureInternal
                     auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->resource_);
@@ -1218,16 +1212,23 @@ namespace ninniku
                         CD3DX12_RESOURCE_BARRIER::Transition(locked->texture_.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->index_)
                     };
 
-                    cmdList->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                    cmdList2->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
                 }
             }
+
+            ExecuteCommand(cmdList2);
         }
 
         // dispatch
         cmdList->gfxCmdList->Dispatch(cmd->dispatch[0], cmd->dispatch[1], cmd->dispatch[2]);
 
+        ExecuteCommand(cmdList);
+
         // revert transition back
         if (cmd->uavBindings.size() > 0) {
+            auto createRes3 = CreateCommandList(QT_TRANSITION);
+            auto cmdList3 = std::get<1>(createRes3);
+
             for (auto& kvp : cmd->uavBindings) {
                 auto dxUAV = static_cast<const DX12UnorderedAccessView*>(kvp.second);
 
@@ -1250,7 +1251,7 @@ namespace ninniku
                         CD3DX12_RESOURCE_BARRIER::Transition(locked->_buffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->index_)
                     };
 
-                    cmdList->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                    cmdList3->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
                 } else {
                     // DX12TextureInternal
                     auto weak = std::get<std::weak_ptr<DX12TextureInternal>>(dxUAV->resource_);
@@ -1266,17 +1267,17 @@ namespace ninniku
                         CD3DX12_RESOURCE_BARRIER::Transition(locked->texture_.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, whole ? D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES : dxUAV->index_)
                     };
 
-                    cmdList->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+                    cmdList3->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
                 }
             }
-        }
 
-        ExecuteCommand(cmdList);
+            ExecuteCommand(cmdList3);
+        }
 
         return true;
     }
 
-    bool DX12::ExecuteCommand(const CommandList* cmdList)
+    bool DX12::ExecuteCommand(CommandList* cmdList)
     {
         cmdList->gfxCmdList->Close();
 
@@ -1293,8 +1294,8 @@ namespace ninniku
                     break;
 
                 case ninniku::DX12::QT_COMPUTE:
-                    commandQueue_->ExecuteCommandLists(1, &pCommandLists.front());
-                    hr = commandQueue_->Signal(fence_.Get(), fenceValue);
+                    computeCommandQueue_->ExecuteCommandLists(1, &pCommandLists.front());
+                    hr = computeCommandQueue_->Signal(fence_.Get(), fenceValue);
                     break;
 
                 case ninniku::DX12::QT_COPY:
@@ -1319,7 +1320,7 @@ namespace ninniku
                     break;
 
                 case ninniku::DX12::QT_COMPUTE:
-                    // to do reset
+                    cmdList->gfxCmdList->Reset(computeCommandAllocator_.Get(), nullptr);
                     break;
 
                 case ninniku::DX12::QT_COPY:
@@ -1328,11 +1329,6 @@ namespace ninniku
             }
         } else {
             // put in the queue and execute when flush is called
-
-            if (_commands.full()) {
-                int i = 0;
-            }
-
             _commands.push_back(cmdList);
         }
 
@@ -1351,58 +1347,64 @@ namespace ninniku
         tracker_.ReleaseObjects();
     }
 
-    void DX12::Flush()
+    bool DX12::Flush()
     {
-        static std::vector<ID3D12CommandList*> compute;
-        static std::vector<ID3D12CommandList*> copy;
-        static std::vector<ID3D12CommandList*> transition;
-
-        compute.clear();
-        copy.clear();
-        transition.clear();
-
-        for (const auto& iter : _commands) {
-            switch (iter->type) {
-                case ninniku::DX12::QT_TRANSITION:
-                    transition.push_back(iter->gfxCmdList.Get());
-                    transitionCommandQueue_->ExecuteCommandLists(static_cast<uint32_t>(transition.size()), transition.data());
-
-                    if (!InsertFence(iter->type))
-                        return;
-
-                    break;
-
-                case ninniku::DX12::QT_COMPUTE:
-                    compute.push_back(iter->gfxCmdList.Get());
-                    commandQueue_->ExecuteCommandLists(static_cast<uint32_t>(compute.size()), compute.data());
-
-                    if (!InsertFence(iter->type))
-                        return;
-
-                    break;
-
-                case ninniku::DX12::QT_COPY:
-                    copy.push_back(iter->gfxCmdList.Get());
-                    copyCommandQueue_->ExecuteCommandLists(static_cast<uint32_t>(copy.size()), copy.data());
-
-                    if (!InsertFence(iter->type))
-                        return;
-
-                    break;
-            }
-
-            iter->~CommandList();
+        if (Globals::Instance().safeAndSlowDX12) {
+            LOGW << "Flush() has no effect when EInitializationFlags::IF_SafeAndSlowDX12 is set";
+            return true;
         }
 
-        //transitionCommandQueue_->ExecuteCommandLists(static_cast<uint32_t>(transition.size()), transition.data());
-        //commandQueue_->ExecuteCommandLists(static_cast<uint32_t>(compute.size()), compute.data());
-        //copyCommandQueue_->ExecuteCommandLists(static_cast<uint32_t>(copy.size()), copy.data());
+        if (_commands.empty()) {
+            LOGW << "Flush() was called but the command list was empty";
+            return true;
+        }
 
-        //for (const auto& iter : _commands) {
-        //    iter->~CommandList();
-        //}
+        std::array<ID3D12CommandList*, 1> cmdList;
+        uint64_t fenceValue = std::numeric_limits<uint64_t>::max();
+
+        for (auto& iter : _commands) {
+            cmdList[0] = iter->gfxCmdList.Get();
+
+            switch (iter->type) {
+                case ninniku::DX12::QT_TRANSITION:
+                {
+                    transitionCommandQueue_->ExecuteCommandLists(1, cmdList.data());
+                }
+                break;
+
+                case ninniku::DX12::QT_COMPUTE:
+                {
+                    computeCommandQueue_->ExecuteCommandLists(1, cmdList.data());
+                }
+                break;
+
+                case ninniku::DX12::QT_COPY:
+                {
+                    copyCommandQueue_->ExecuteCommandLists(1, cmdList.data());
+                }
+                break;
+            }
+
+            fenceValue = InsertFence(iter->type);
+
+            if (fenceValue == std::numeric_limits<uint64_t>::max())
+                return false;
+
+            iter->~CommandList();
+            poolCmd_.free(iter);
+        }
+
+        // we still need to wait for commands to finish running
+        auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
+
+        if (CheckAPIFailed(hr, "ID3D12Fence::SetEventOnCompletion"))
+            return false;
+
+        WaitForSingleObject(fenceEvent_, INFINITE);
 
         _commands.clear();
+
+        return true;
     }
 
     bool DX12::Initialize()
@@ -1434,7 +1436,7 @@ namespace ninniku
             return false;
 
         // Create command allocators
-        hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&computeAllocator_));
+        hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&computeCommandAllocator_));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator (compute)"))
             return false;
@@ -1452,7 +1454,7 @@ namespace ninniku
         // command queue
         D3D12_COMMAND_QUEUE_DESC queueDesc = { D3D12_COMMAND_LIST_TYPE_COMPUTE, 0, D3D12_COMMAND_QUEUE_FLAG_NONE };
 
-        hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue_));
+        hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&computeCommandQueue_));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandQueue"))
             return false;
@@ -1485,7 +1487,11 @@ namespace ninniku
         }
 
         if (Globals::Instance().safeAndSlowDX12) {
-            // command lists
+            // compute
+            hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&computeCmdList_));
+
+            if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandList (compute)"))
+                return false;
 
             // copy
             hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&copyCmdList_));
@@ -1510,7 +1516,7 @@ namespace ninniku
         return true;
     }
 
-    bool DX12::InsertFence(EQueueType type)
+    uint64_t DX12::InsertFence(EQueueType type)
     {
         uint64_t fenceValue = InterlockedIncrement(&fenceValue_);
 
@@ -1519,21 +1525,21 @@ namespace ninniku
             {
                 auto hr = transitionCommandQueue_->Signal(fence_.Get(), fenceValue);
 
-                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
-                    return false;
+                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal (QT_TRANSITION)"))
+                    return std::numeric_limits<uint64_t>::max();
 
                 // have the other queues wait for this
                 copyCommandQueue_->Wait(fence_.Get(), fenceValue);
-                commandQueue_->Wait(fence_.Get(), fenceValue);
+                computeCommandQueue_->Wait(fence_.Get(), fenceValue);
             }
             break;
 
             case ninniku::DX12::QT_COMPUTE:
             {
-                auto hr = commandQueue_->Signal(fence_.Get(), fenceValue);
+                auto hr = computeCommandQueue_->Signal(fence_.Get(), fenceValue);
 
-                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
-                    return false;
+                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal (QT_COMPUTE)"))
+                    return std::numeric_limits<uint64_t>::max();
 
                 // have the other queues wait for this
                 copyCommandQueue_->Wait(fence_.Get(), fenceValue);
@@ -1545,17 +1551,17 @@ namespace ninniku
             {
                 auto hr = copyCommandQueue_->Signal(fence_.Get(), fenceValue);
 
-                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
-                    return false;
+                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal (QT_COPY)"))
+                    return std::numeric_limits<uint64_t>::max();
 
                 // have the other queues wait for this
-                commandQueue_->Wait(fence_.Get(), fenceValue);
+                computeCommandQueue_->Wait(fence_.Get(), fenceValue);
                 transitionCommandQueue_->Wait(fence_.Get(), fenceValue);
             }
             break;
         }
 
-        return true;
+        return fenceValue;
     }
 
     bool DX12::LoadShader(const std::filesystem::path& path)

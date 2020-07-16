@@ -89,11 +89,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesDX12, 
         BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
-    dx->Flush();
+    BOOST_REQUIRE(dx->Flush());
 
     auto marker = dx->CreateDebugMarker("Other mips");
 
-    for (uint32_t i = 1; i < numMips; ++i) {
+    for (uint32_t i = 1; i <= 1; ++i) {
         cmd->srvBindings["srcTex"] = res->GetSRVArray(i - 1);
         cmd->uavBindings["dstTex"] = res->GetUAV(i);
 
@@ -106,7 +106,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesDX12, 
         BOOST_REQUIRE(dx->Dispatch(cmd));
     }
 
-    dx->Flush();
+    BOOST_REQUIRE(dx->Flush());
 
     auto image = std::make_unique<ninniku::ddsImage>();
 

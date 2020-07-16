@@ -48,7 +48,7 @@ namespace ninniku
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
-        void Flush() override {}
+        bool Flush() override;
         bool Initialize() override;
         bool LoadShader(const std::filesystem::path& path) override;
         bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;

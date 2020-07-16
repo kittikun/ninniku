@@ -25,7 +25,7 @@
 #include "../../../utils/stringMap.h"
 #include "DX12Types.h"
 
-#include <boost/circular_buffer.hpp>
+//#include <boost/circular_buffer.hpp>
 #include <boost/pool/object_pool.hpp>
 
 struct IDxcBlobEncoding;
@@ -64,7 +64,7 @@ namespace ninniku
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
-        void Flush() override;
+        bool Flush() override;
         bool Initialize() override;
         bool LoadShader(const std::filesystem::path& path) override;
         bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
@@ -85,8 +85,8 @@ namespace ninniku
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
         bool CreateSamplers();
-        bool ExecuteCommand(const CommandList* cmdList);
-        bool InsertFence(EQueueType type);
+        bool ExecuteCommand(CommandList* cmdList);
+        uint64_t InsertFence(EQueueType type);
         bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::filesystem::path& path);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
@@ -108,14 +108,12 @@ namespace ninniku
         volatile HANDLE fenceEvent_;
 
         // compute
-        DX12CommandAllocator computeAllocator_;
+        DX12CommandAllocator computeCommandAllocator_;
+        DX12CommandQueue computeCommandQueue_;
 
         // copy
         DX12CommandAllocator copyCommandAllocator_;
         DX12CommandQueue copyCommandQueue_;
-
-        // direct
-        DX12CommandQueue commandQueue_;
 
         // resource transition
         DX12CommandAllocator transitionCommandAllocator_;
@@ -123,6 +121,7 @@ namespace ninniku
 
         // IF_SafeAndSlowDX12 only
         DX12GraphicsCommandList copyCmdList_;
+        DX12GraphicsCommandList computeCmdList_;
         DX12GraphicsCommandList transitionCmdList_;
 
         // shader related
@@ -144,6 +143,7 @@ namespace ninniku
         // Object pools
         boost::object_pool<CommandList> poolCmd_;
 
-        boost::circular_buffer<const CommandList*> _commands;
+        //boost::circular_buffer<const CommandList*> _commands;
+        std::vector<CommandList*> _commands;
     };
 } // namespace ninniku

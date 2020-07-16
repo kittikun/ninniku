@@ -37,3 +37,6 @@ Look at project simple or there is plenty of samples provided as unit tests
 
 ###### DXC Release:
 > "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe" -T cs_6_2 -D HLSL -rootsig-define RS %(FullPath) -Fo $(ProjectDir)bin\$(Configuration)\dx12\%(Filename).dxco
+
+#### Rules:
+- **[DX12]** Samplers must be declared last in the HLSL root signature definition.
