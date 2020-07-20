@@ -226,7 +226,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <Import Project="packages\boost_log_setup-vc141.1.72.0.0\build\boost_log_setup-vc141.targets" Condition="Exists('packages\boost_log_setup-vc141.1.72.0.0\build\boost_log_setup-vc141.targets')" />
     <Import Project="packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets" Condition="Exists('packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets')" />
     <Import Project="packages\boost_thread-vc141.1.72.0.0\build\boost_thread-vc141.targets" Condition="Exists('packages\boost_thread-vc141.1.72.0.0\build\boost_thread-vc141.targets')" />
-    <Import Project="packages\directxtex_desktop_win10.2020.6.2.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('packages\directxtex_desktop_win10.2020.6.2.1\build\native\directxtex_desktop_win10.targets')" />
+    <Import Project="packages\directxtex_desktop_win10.2020.7.2.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('packages\directxtex_desktop_win10.2020.7.2.1\build\native\directxtex_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -242,6 +242,6 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <Error Condition="!Exists('packages\boost_log_setup-vc141.1.72.0.0\build\boost_log_setup-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log_setup-vc141.1.72.0.0\build\boost_log_setup-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_system-vc141.1.72.0.0\build\boost_system-vc141.targets'))" />
     <Error Condition="!Exists('packages\boost_thread-vc141.1.72.0.0\build\boost_thread-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc141.1.72.0.0\build\boost_thread-vc141.targets'))" />
-    <Error Condition="!Exists('packages\directxtex_desktop_win10.2020.6.2.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtex_desktop_win10.2020.6.2.1\build\native\directxtex_desktop_win10.targets'))" />
+    <Error Condition="!Exists('packages\directxtex_desktop_win10.2020.7.2.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtex_desktop_win10.2020.7.2.1\build\native\directxtex_desktop_win10.targets'))" />
   </Target>
 </Project>
