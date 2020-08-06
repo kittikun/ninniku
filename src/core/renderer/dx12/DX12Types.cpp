@@ -258,7 +258,9 @@ namespace ninniku
                             throw new std::exception("Unsupported SRV binding dimension");
                     }
 
-                    locked->texture_->SetName(strToWStr(found->first).c_str());
+					auto fmt = boost::format("%1% %2%") % found->first % dxSRV->index_;
+
+					locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
                     device->CreateShaderResourceView(locked->texture_.Get(), &srvDesc, heapHandle);
                     heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
                 } else if (found->second.Type == D3D_SIT_STRUCTURED) {
@@ -327,7 +329,9 @@ namespace ninniku
 
                 //CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle{ cmdImpl->_descriptorHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<int32_t>(found->second.BindPoint), _srvUAVDescriptorSize };
 
-                locked->texture_->SetName(strToWStr(found->first).c_str());
+                auto fmt = boost::format("%1% %2%") % found->first % dxUAV->index_;
+
+                locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
                 device->CreateUnorderedAccessView(locked->texture_.Get(), nullptr, &uavDesc, heapHandle);
                 heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             } else if (found->second.Type == D3D_SIT_UAV_RWSTRUCTURED) {
