@@ -89,7 +89,7 @@ SetupFixtureDX12::SetupFixtureDX12()
     auto renderer = GetRenderer();
     uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE | GetExtraFlags();
 
-    if (IsAppVeyor() && (GetRenderer() == ninniku::ERenderer::RENDERER_DX12)) {
+    if (IsAppVeyor() && (renderer == ninniku::ERenderer::RENDERER_DX12)) {
         isNull = true;
     } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
         std::cout << "Failed to initialize Ninniku." << std::endl;
