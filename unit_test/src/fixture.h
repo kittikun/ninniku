@@ -50,36 +50,40 @@ struct SetupFixtureDX11Warp
     bool isNull = false;
 };
 
-class SetupFixtureDX12
+struct SetupFixtureDX12
 {
-public:
     SetupFixtureDX12();
-    virtual ~SetupFixtureDX12();
-
-    virtual ninniku::ERenderer GetRenderer() const { return ninniku::ERenderer::RENDERER_DX12; }
-    virtual uint32_t GetExtraFlags() const { return 0; }
+    ~SetupFixtureDX12();
 
     std::string_view shaderRoot;
     bool isNull = false;
 };
 
-class SetupFixtureDX12Slow : public SetupFixtureDX12
+struct SetupFixtureDX12Slow
 {
-public:
-    uint32_t GetExtraFlags() const override { return ninniku::EInitializationFlags::IF_SafeAndSlowDX12; }
+    SetupFixtureDX12Slow();
+    ~SetupFixtureDX12Slow();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
 };
 
-class SetupFixtureDX12WarpSlow : public SetupFixtureDX12
+struct SetupFixtureDX12Warp
 {
-public:
-    ninniku::ERenderer GetRenderer() const override { return ninniku::ERenderer::RENDERER_WARP_DX12; }
-    uint32_t GetExtraFlags() const override { return ninniku::EInitializationFlags::IF_SafeAndSlowDX12; }
+    SetupFixtureDX12Warp();
+    ~SetupFixtureDX12Warp();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
 };
 
-class SetupFixtureDX12Warp : public SetupFixtureDX12
+struct SetupFixtureDX12WarpSlow
 {
-public:
-    ninniku::ERenderer GetRenderer() const override { return ninniku::ERenderer::RENDERER_WARP_DX12; }
+    SetupFixtureDX12WarpSlow();
+    ~SetupFixtureDX12WarpSlow();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
 };
 
 typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp> FixturesWarpAll;

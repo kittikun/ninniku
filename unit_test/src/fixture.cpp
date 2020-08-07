@@ -86,10 +86,10 @@ SetupFixtureDX11Warp::~SetupFixtureDX11Warp()
 SetupFixtureDX12::SetupFixtureDX12()
     : shaderRoot{ DX12ShadersRoot }
 {
-    auto renderer = GetRenderer();
-    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE | GetExtraFlags();
+    auto renderer = ninniku::ERenderer::RENDERER_DX12;
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
-    if (IsAppVeyor() && (renderer == ninniku::ERenderer::RENDERER_DX12)) {
+    if (IsAppVeyor()) {
         isNull = true;
     } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
         std::cout << "Failed to initialize Ninniku." << std::endl;
@@ -98,7 +98,59 @@ SetupFixtureDX12::SetupFixtureDX12()
 
 SetupFixtureDX12::~SetupFixtureDX12()
 {
-    if ((!IsAppVeyor()) || (GetRenderer() == ninniku::ERenderer::RENDERER_WARP_DX12)) {
+    if (!IsAppVeyor()) {
         ninniku::Terminate();
     }
+}
+
+SetupFixtureDX12Slow::SetupFixtureDX12Slow()
+    : shaderRoot{ DX12ShadersRoot }
+{
+    auto renderer = ninniku::ERenderer::RENDERER_DX12;
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE | ninniku::EInitializationFlags::IF_SafeAndSlowDX12;
+
+    if (IsAppVeyor()) {
+        isNull = true;
+    } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+        std::cout << "Failed to initialize Ninniku." << std::endl;
+    }
+}
+
+SetupFixtureDX12Slow::~SetupFixtureDX12Slow()
+{
+    if (!IsAppVeyor()) {
+        ninniku::Terminate();
+    }
+}
+
+SetupFixtureDX12Warp::SetupFixtureDX12Warp()
+    : shaderRoot{ DX12ShadersRoot }
+{
+    auto renderer = ninniku::ERenderer::RENDERER_WARP_DX12;
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
+
+    if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+        std::cout << "Failed to initialize Ninniku." << std::endl;
+    }
+}
+
+SetupFixtureDX12Warp::~SetupFixtureDX12Warp()
+{
+    ninniku::Terminate();
+}
+
+SetupFixtureDX12WarpSlow::SetupFixtureDX12WarpSlow()
+    : shaderRoot{ DX12ShadersRoot }
+{
+    auto renderer = ninniku::ERenderer::RENDERER_WARP_DX12;
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE | ninniku::EInitializationFlags::IF_SafeAndSlowDX12;
+
+    if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+        std::cout << "Failed to initialize Ninniku." << std::endl;
+    }
+}
+
+SetupFixtureDX12WarpSlow::~SetupFixtureDX12WarpSlow()
+{
+    ninniku::Terminate();
 }
