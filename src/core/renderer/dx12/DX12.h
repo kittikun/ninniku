@@ -22,10 +22,9 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
-#include "../../../utils/stringMap.h"
-#include "DX12Types.h"
+#include "../../../utils/string_map.h"
+#include "dx12_types.h"
 
-//#include <boost/circular_buffer.hpp>
 #include <boost/pool/object_pool.hpp>
 
 struct IDxcBlobEncoding;
@@ -33,116 +32,116 @@ struct ID3D12ShaderReflection;
 
 namespace ninniku
 {
-	class DX12 final : public RenderDevice
-	{
-	private:
-		enum EQueueType : uint8_t
-		{
-			QT_COMPUTE = 0,
-			QT_COPY = 1 << 0,
-			QT_TRANSITION = 1 << 1,
-		};
+    class DX12 final : public RenderDevice
+    {
+    private:
+        enum EQueueType : uint8_t
+        {
+            QT_COMPUTE = 0,
+            QT_COPY = 1 << 0,
+            QT_TRANSITION = 1 << 1,
+        };
 
-		struct CommandList
-		{
-			EQueueType type;
-			DX12GraphicsCommandList gfxCmdList;
-		};
+        struct CommandList
+        {
+            EQueueType type;
+            DX12GraphicsCommandList gfxCmdList;
+        };
 
-	public:
-		DX12(ERenderer type);
+    public:
+        DX12(ERenderer type);
 
-		ERenderer GetType() const override { return type_; }
-		const std::string_view& GetShaderExtension() const override { return ShaderExt; }
+        ERenderer GetType() const override { return type_; }
+        const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
-		bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
-		std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
-		BufferHandle CreateBuffer(const BufferParamHandle& params) override;
-		BufferHandle CreateBuffer(const BufferHandle& src) override;
-		CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
-		DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
-		TextureHandle CreateTexture(const TextureParamHandle& params) override;
-		bool Dispatch(const CommandHandle& cmd) override;
-		void Finalize() override;
-		bool Initialize() override;
-		bool LoadShader(const std::filesystem::path& path) override;
-		bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
-		MappedResourceHandle Map(const BufferHandle& bObj) override;
-		MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
-		bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
+        bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
+        BufferHandle CreateBuffer(const BufferParamHandle& params) override;
+        BufferHandle CreateBuffer(const BufferHandle& src) override;
+        CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
+        DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
+        TextureHandle CreateTexture(const TextureParamHandle& params) override;
+        bool Dispatch(const CommandHandle& cmd) override;
+        void Finalize() override;
+        bool Initialize() override;
+        bool LoadShader(const std::filesystem::path& path) override;
+        bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
+        MappedResourceHandle Map(const BufferHandle& bObj) override;
+        MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
+        bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
-		const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
+        const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
-		// Not from RenderDevice
-		std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
-		BufferHandle CreateBuffer(const TextureParamHandle& params);
-		inline ID3D12Device* GetDevice() const { return device_.Get(); }
+        // Not from RenderDevice
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
+        BufferHandle CreateBuffer(const TextureParamHandle& params);
+        inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
-	private:
-		std::tuple<bool, CommandList*> CreateCommandList(EQueueType type);
-		bool CreateCommandContexts();
-		bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
-		bool CreateDevice(int adapter);
-		bool CreateSamplers();
-		bool ExecuteCommand(CommandList* cmdList);
-		bool Flush();
-		bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
-		bool LoadShaders(const std::filesystem::path& path);
-		bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
-		bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
+    private:
+        std::tuple<bool, CommandList*> CreateCommandList(EQueueType type);
+        bool CreateCommandContexts();
+        bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
+        bool CreateDevice(int adapter);
+        bool CreateSamplers();
+        bool ExecuteCommand(CommandList* cmdList);
+        bool Flush();
+        bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
+        bool LoadShaders(const std::filesystem::path& path);
+        bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
+        bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
-	private:
-		static constexpr std::string_view ShaderExt = ".dxco";
-		static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
-		static constexpr uint32_t MAX_COMMAND_QUEUE = 64;
+    private:
+        static constexpr std::string_view ShaderExt = ".dxco";
+        static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
+        static constexpr uint32_t MAX_COMMAND_QUEUE = 64;
 
-		ERenderer type_;
-		uint8_t padding_[3];
+        ERenderer type_;
+        uint8_t padding_[3];
 
-		DX12Device device_;
+        DX12Device device_;
 
-		// commands and fences
-		DX12Fence fence_;
-		uint64_t volatile fenceValue_;
-		volatile HANDLE fenceEvent_;
+        // commands and fences
+        DX12Fence fence_;
+        uint64_t volatile fenceValue_;
+        volatile HANDLE fenceEvent_;
 
-		// compute
-		DX12CommandAllocator computeCommandAllocator_;
-		DX12CommandQueue computeCommandQueue_;
+        // compute
+        DX12CommandAllocator computeCommandAllocator_;
+        DX12CommandQueue computeCommandQueue_;
 
-		// copy
-		DX12CommandAllocator copyCommandAllocator_;
-		DX12CommandQueue copyCommandQueue_;
+        // copy
+        DX12CommandAllocator copyCommandAllocator_;
+        DX12CommandQueue copyCommandQueue_;
 
-		// resource transition
-		DX12CommandAllocator transitionCommandAllocator_;
-		DX12CommandQueue transitionCommandQueue_;
+        // resource transition
+        DX12CommandAllocator transitionCommandAllocator_;
+        DX12CommandQueue transitionCommandQueue_;
 
-		// IF_SafeAndSlowDX12 only
-		DX12GraphicsCommandList copyCmdList_;
-		DX12GraphicsCommandList computeCmdList_;
-		DX12GraphicsCommandList transitionCmdList_;
+        // IF_SafeAndSlowDX12 only
+        DX12GraphicsCommandList copyCmdList_;
+        DX12GraphicsCommandList computeCmdList_;
+        DX12GraphicsCommandList transitionCmdList_;
 
-		// shader related
-		std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
-		StringMap<DX12RootSignature> rootSignatures_;
-		StringMap<D3D12_SHADER_BYTECODE> shaders_;
-		StringMap<DX12ConstantBuffer> cBuffers_;
+        // shader related
+        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
+        StringMap<DX12RootSignature> rootSignatures_;
+        StringMap<D3D12_SHADER_BYTECODE> shaders_;
+        StringMap<DX12ConstantBuffer> cBuffers_;
 
-		StringMap<MapNameSlot> resourceBindings_;
+        StringMap<MapNameSlot> resourceBindings_;
 
-		std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> commandContexts_;
+        std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> commandContexts_;
 
-		// heap
-		DX12DescriptorHeap samplerHeap_;
+        // heap
+        DX12DescriptorHeap samplerHeap_;
 
-		// tracks allocated resources
-		ObjectTracker tracker_;
+        // tracks allocated resources
+        ObjectTracker tracker_;
 
-		// Object pools
-		boost::object_pool<CommandList> poolCmd_;
+        // Object pools
+        boost::object_pool<CommandList> poolCmd_;
 
-		//boost::circular_buffer<const CommandList*> _commands;
-		std::vector<CommandList*> _commands;
-	};
+        //boost::circular_buffer<const CommandList*> _commands;
+        std::vector<CommandList*> _commands;
+    };
 } // namespace ninniku

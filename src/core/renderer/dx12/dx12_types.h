@@ -22,8 +22,8 @@
 
 #include "ninniku/core/renderer/types.h"
 
-#include "../../../utils/objectTracker.h"
-#include "../../../utils/stringMap.h"
+#include "../../../utils/object_tracker.h"
+#include "../../../utils/string_map.h"
 
 #include <d3d12.h>
 #include <d3d12shader.h>

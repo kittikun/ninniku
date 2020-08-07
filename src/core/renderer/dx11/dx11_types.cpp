@@ -19,7 +19,7 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "DX11Types.h"
+#include "dx11_types.h"
 
 #include "../../../globals.h"
 #include "../../../utils/misc.h"

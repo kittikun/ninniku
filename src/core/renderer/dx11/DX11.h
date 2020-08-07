@@ -22,74 +22,74 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
-#include "../../../utils/stringMap.h"
+#include "../../../utils/string_map.h"
 
-#include "DX11Types.h"
+#include "dx11_types.h"
 
 struct ID3D11ShaderReflection;
 
 namespace ninniku
 {
-	class DX11 final : public RenderDevice
-	{
-	public:
-		DX11(ERenderer type);
+    class DX11 final : public RenderDevice
+    {
+    public:
+        DX11(ERenderer type);
 
-		// RenderDevice
-		ERenderer GetType() const override { return type_; }
-		const std::string_view& GetShaderExtension() const override { return ShaderExt; }
+        // RenderDevice
+        ERenderer GetType() const override { return type_; }
+        const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
-		bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
-		std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
-		BufferHandle CreateBuffer(const BufferParamHandle& params) override;
-		BufferHandle CreateBuffer(const BufferHandle& src) override;
-		CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
-		DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
-		TextureHandle CreateTexture(const TextureParamHandle& params) override;
-		bool Dispatch(const CommandHandle& cmd) override;
-		void Finalize() override;
-		bool Initialize() override;
-		bool LoadShader(const std::filesystem::path& path) override;
-		bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
-		MappedResourceHandle Map(const BufferHandle& bObj) override;
-		MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
-		bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
+        bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
+        std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
+        BufferHandle CreateBuffer(const BufferParamHandle& params) override;
+        BufferHandle CreateBuffer(const BufferHandle& src) override;
+        CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
+        DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
+        TextureHandle CreateTexture(const TextureParamHandle& params) override;
+        bool Dispatch(const CommandHandle& cmd) override;
+        void Finalize() override;
+        bool Initialize() override;
+        bool LoadShader(const std::filesystem::path& path) override;
+        bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
+        MappedResourceHandle Map(const BufferHandle& bObj) override;
+        MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
+        bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
-		const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
+        const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
-		// Not from RenderDevice
-		inline ID3D11Device* GetDevice() const { return device_.Get(); }
+        // Not from RenderDevice
+        inline ID3D11Device* GetDevice() const { return device_.Get(); }
 
-	private:
-		bool CreateDevice(int adapter, ID3D11Device** pDevice);
-		std::string_view DxSRVDimensionToString(D3D_SRV_DIMENSION dimension);
-		bool LoadShader(const std::filesystem::path& path, ID3DBlob* pBlob);
-		bool LoadShaders(const std::filesystem::path& shaderPath);
-		bool MakeTextureSRV(const TextureSRVParams& params);
-		StringMap<uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
+    private:
+        bool CreateDevice(int adapter, ID3D11Device** pDevice);
+        std::string_view DxSRVDimensionToString(D3D_SRV_DIMENSION dimension);
+        bool LoadShader(const std::filesystem::path& path, ID3DBlob* pBlob);
+        bool LoadShaders(const std::filesystem::path& shaderPath);
+        bool MakeTextureSRV(const TextureSRVParams& params);
+        StringMap<uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
 
-		// Helper to cast into the correct shader resource type
-		template<typename SourceType, typename DestType, typename ReturnType>
-		static ReturnType* castGenericResourceToDX11Resource(const SourceType* src)
-		{
-			if (src == nullptr)
-				return static_cast<ReturnType*>(nullptr);
+        // Helper to cast into the correct shader resource type
+        template<typename SourceType, typename DestType, typename ReturnType>
+        static ReturnType* castGenericResourceToDX11Resource(const SourceType* src)
+        {
+            if (src == nullptr)
+                return static_cast<ReturnType*>(nullptr);
 
-			auto view = static_cast<const DestType*>(src);
-			return static_cast<ReturnType*>(view->resource_.Get());
-		}
+            auto view = static_cast<const DestType*>(src);
+            return static_cast<ReturnType*>(view->resource_.Get());
+        }
 
-	private:
-		static constexpr std::string_view ShaderExt = ".cso";
+    private:
+        static constexpr std::string_view ShaderExt = ".cso";
 
-		ERenderer type_;
-		DX11Device device_;
-		DX11Context context_;
-		StringMap<DX11ComputeShader> shaders_;
-		StringMap<DX11Buffer> cBuffers_;
-		std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
+        ERenderer type_;
+        DX11Device device_;
+        DX11Context context_;
+        StringMap<DX11ComputeShader> shaders_;
+        StringMap<DX11Buffer> cBuffers_;
+        std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
 
-		// tracks allocated resources
-		ObjectTracker tracker_;
-	};
+        // tracks allocated resources
+        ObjectTracker tracker_;
+    };
 } // namespace ninniku

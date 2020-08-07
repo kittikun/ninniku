@@ -20,6 +20,8 @@
 
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
+
 // STL
 #include <algorithm>
 #include <array>
