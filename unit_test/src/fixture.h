@@ -54,7 +54,7 @@ class SetupFixtureDX12
 {
 public:
     SetupFixtureDX12();
-    virtual ~SetupFixtureDX12() = default;
+    virtual ~SetupFixtureDX12();
 
     virtual ninniku::ERenderer GetRenderer() const { return ninniku::ERenderer::RENDERER_DX12; }
     virtual uint32_t GetExtraFlags() const { return 0; }
