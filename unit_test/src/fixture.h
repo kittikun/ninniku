@@ -23,6 +23,7 @@
 #include <ninniku/ninniku.h>
 
 #include <boost/mpl/vector.hpp>
+#include <boost/mpl/joint_view.hpp>
 #include <string_view>
 
 struct SetupFixtureNull
@@ -78,9 +79,9 @@ class SetupFixtureDX12Warp : public SetupFixtureDX12
     ninniku::ERenderer GetRenderer() override { return ninniku::ERenderer::RENDERER_WARP_DX12; }
 };
 
-typedef boost::mpl::vector<SetupFixtureDX12Slow> FixturesAll;
 typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp> FixturesWarpAll;
 typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12Slow, SetupFixtureDX12> FixturesHWAll;
+typedef boost::mpl::joint_view<FixturesHWAll, FixturesWarpAll> FixturesAll;
 
 typedef boost::mpl::vector<SetupFixtureDX11> FixtureDX11;
 typedef boost::mpl::vector<SetupFixtureDX11Warp> FixtureDX11Warp;
