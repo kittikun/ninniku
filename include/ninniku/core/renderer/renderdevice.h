@@ -28,43 +28,50 @@
 
 namespace ninniku
 {
-	class RenderDevice : NonCopyableBase
-	{
-		// no copy of any kind allowed
-		RenderDevice(const RenderDevice&) = delete;
-		RenderDevice& operator=(RenderDevice&) = delete;
-		RenderDevice(RenderDevice&&) = delete;
-		RenderDevice& operator=(RenderDevice&&) = delete;
+    enum EDeviceFeature
+    {
+        DF_NONE = 0,
+        DF_SM6_WAVE_INTRINSICS = 1 << 0
+    };
 
-	public:
-		virtual ~RenderDevice() = default;
+    class RenderDevice : NonCopyableBase
+    {
+        // no copy of any kind allowed
+        RenderDevice(const RenderDevice&) = delete;
+        RenderDevice& operator=(RenderDevice&) = delete;
+        RenderDevice(RenderDevice&&) = delete;
+        RenderDevice& operator=(RenderDevice&&) = delete;
 
-		virtual ERenderer GetType() const = 0;
-		virtual const std::string_view& GetShaderExtension() const = 0;
+    public:
+        virtual ~RenderDevice() = default;
 
-		[[nodiscard]] virtual bool CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
-		virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
-		virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
-		virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
-		virtual CommandHandle CreateCommand() const = 0;
-		virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
-		virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
-		[[nodiscard]] virtual bool Dispatch(const CommandHandle& cmd) = 0;
-		virtual void Finalize() = 0;
-		[[nodiscard]] virtual bool Initialize() = 0;
-		[[nodiscard]] virtual bool LoadShader(const std::filesystem::path& path) = 0;
-		[[nodiscard]] virtual bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) = 0;
-		[[nodiscard]] virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
-		[[nodiscard]] virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
-		[[nodiscard]] virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
+        virtual ERenderer GetType() const = 0;
+        virtual const std::string_view& GetShaderExtension() const = 0;
 
-		virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;
+        [[nodiscard]] virtual bool CheckFeatureSupport(uint32_t features) = 0;
+        [[nodiscard]] virtual bool CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
+        virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
+        virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
+        virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
+        virtual CommandHandle CreateCommand() const = 0;
+        virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
+        virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
+        [[nodiscard]] virtual bool Dispatch(const CommandHandle& cmd) = 0;
+        virtual void Finalize() = 0;
+        [[nodiscard]] virtual bool Initialize() = 0;
+        [[nodiscard]] virtual bool LoadShader(const std::filesystem::path& path) = 0;
+        [[nodiscard]] virtual bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) = 0;
+        [[nodiscard]] virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
+        [[nodiscard]] virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
+        [[nodiscard]] virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
 
-	protected:
-		RenderDevice() = default;
-	};
+        virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;
 
-	using RenderDeviceHandle = std::unique_ptr<RenderDevice>;
+    protected:
+        RenderDevice() = default;
+    };
 
-	NINNIKU_API RenderDeviceHandle& GetRenderer();
+    using RenderDeviceHandle = std::unique_ptr<RenderDevice>;
+
+    NINNIKU_API RenderDeviceHandle& GetRenderer();
 } // namespace ninniku

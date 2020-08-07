@@ -41,6 +41,13 @@ namespace ninniku
     {
     }
 
+    bool DX11::CheckFeatureSupport(uint32_t)
+    {
+        LOGW << "CheckFeatureSupport() has no effect for RENDERER_DX11";
+
+        return true;
+    }
+
     bool DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
         auto srcImpl = static_cast<const DX11BufferImpl*>(params.src);

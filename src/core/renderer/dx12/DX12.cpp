@@ -49,9 +49,27 @@ namespace ninniku
 {
     DX12::DX12(ERenderer type)
         : type_{ type }
-		, _commands{}
+        , _commands{}
     {
-		_commands.reserve(MAX_COMMAND_QUEUE);
+        _commands.reserve(MAX_COMMAND_QUEUE);
+    }
+
+    bool DX12::CheckFeatureSupport(uint32_t features)
+    {
+        auto res = true;
+
+        if ((features & DF_SM6_WAVE_INTRINSICS) != 0) {
+            D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport;
+
+            auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
+
+            if (CheckAPIFailed(hr, "CheckFeatureSupport"))
+                return false;
+
+            res = res && waveIntrinsicsSupport.WaveOps;
+        }
+
+        return res;
     }
 
     bool DX12::CopyBufferResource(const CopyBufferSubresourceParam& params)
@@ -288,7 +306,7 @@ namespace ninniku
         cmdList->gfxCmdList->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
         ExecuteCommand(cmdList);
 
-		if (!Flush())
+        if (!Flush())
             return std::tuple<uint32_t, uint32_t>();
 
         return std::make_tuple(rowPitch, offset);
@@ -437,7 +455,7 @@ namespace ninniku
                 return BufferHandle();
         }
 
-		if (!Flush())
+        if (!Flush())
             return BufferHandle();
 
         auto mapped = Map(temp);
@@ -936,7 +954,7 @@ namespace ninniku
 
             ExecuteCommand(cmdList);
 
-			if (!Flush())
+            if (!Flush())
                 return TextureHandle();
         }
 
@@ -1291,7 +1309,7 @@ namespace ninniku
             ExecuteCommand(cmdListUAV);
         }
 
-		if (!Flush())
+        if (!Flush())
             return false;
 
         return true;
@@ -1349,7 +1367,7 @@ namespace ninniku
             }
         } else {
             // put in the queue and execute when flush is called
-			_commands.push_back(cmdList);
+            _commands.push_back(cmdList);
         }
 
         return true;
@@ -1357,8 +1375,8 @@ namespace ninniku
 
     void DX12::Finalize()
     {
-		if (!_commands.empty()) {
-			if (!Flush())
+        if (!_commands.empty()) {
+            if (!Flush())
                 throw std::exception("Finalize flush failed");
         }
 
@@ -1367,22 +1385,22 @@ namespace ninniku
         tracker_.ReleaseObjects();
     }
 
-	bool DX12::Flush()
+    bool DX12::Flush()
     {
         if (Globals::Instance().safeAndSlowDX12) {
             LOGW << "Flush() has no effect when EInitializationFlags::IF_SafeAndSlowDX12 is set";
             return true;
         }
 
-		if (_commands.empty()) {
-			LOGW << "Flush() was called but the command list was empty";
-        return true;
-    }
+        if (_commands.empty()) {
+            LOGW << "Flush() was called but the command list was empty";
+            return true;
+        }
 
         std::array<ID3D12CommandList*, 1> cmdList;
         uint64_t fenceValue = std::numeric_limits<uint64_t>::max();
 
-		for (auto& iter : _commands) {
+        for (auto& iter : _commands) {
             fenceValue = InterlockedIncrement(&fenceValue_);
 
             cmdList[0] = iter->gfxCmdList.Get();
@@ -1398,7 +1416,7 @@ namespace ninniku
                     auto hr = transitionCommandQueue_->Signal(fence_.Get(), fenceValue);
 
                     if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal (QT_TRANSITION)"))
-					return false;
+                        return false;
                 }
                 break;
 
@@ -1412,7 +1430,7 @@ namespace ninniku
                     auto hr = computeCommandQueue_->Signal(fence_.Get(), fenceValue);
 
                     if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal (QT_COMPUTE)"))
-					return false;
+                        return false;
                 }
                 break;
 
@@ -1426,7 +1444,7 @@ namespace ninniku
                     auto hr = copyCommandQueue_->Signal(fence_.Get(), fenceValue);
 
                     if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal (QT_COPY)"))
-					return false;
+                        return false;
                 }
                 break;
             }
@@ -1440,14 +1458,14 @@ namespace ninniku
             auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
 
             if (CheckAPIFailed(hr, "ID3D12Fence::SetEventOnCompletion"))
-				return false;
+                return false;
 
             WaitForSingleObject(fenceEvent_, INFINITE);
         }
 
-		_commands.clear();
+        _commands.clear();
 
-		return true;
+        return true;
     }
 
     bool DX12::Initialize()
