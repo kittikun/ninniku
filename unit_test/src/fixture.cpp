@@ -35,70 +35,70 @@ static constexpr std::string_view DX12ShadersRoot = "bin\\Release\\dx12";
 
 SetupFixtureNull::SetupFixtureNull()
 {
-	auto renderer = ninniku::ERenderer::RENDERER_NULL;
+    auto renderer = ninniku::ERenderer::RENDERER_NULL;
 
-	if (!ninniku::Initialize(renderer, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL)) {
-		std::cout << "Failed to initialize Ninniku." << std::endl;
-	}
+    if (!ninniku::Initialize(renderer, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL)) {
+        std::cout << "Failed to initialize Ninniku." << std::endl;
+    }
 }
 
 SetupFixtureNull::~SetupFixtureNull()
 {
-	ninniku::Terminate();
+    ninniku::Terminate();
 }
 
 SetupFixtureDX11::SetupFixtureDX11()
-	: shaderRoot{ DX11ShadersRoot }
+    : shaderRoot{ DX11ShadersRoot }
 {
-	auto renderer = ninniku::ERenderer::RENDERER_DX11;
-	uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
+    auto renderer = ninniku::ERenderer::RENDERER_DX11;
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
-	if (IsAppVeyor()) {
-		isNull = true;
-	} else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
-		std::cout << "Failed to initialize Ninniku." << std::endl;
-	}
+    if (IsAppVeyor()) {
+        isNull = true;
+    } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+        std::cout << "Failed to initialize Ninniku." << std::endl;
+    }
 }
 
 SetupFixtureDX11::~SetupFixtureDX11()
 {
-	if (!IsAppVeyor()) {
-		ninniku::Terminate();
-	}
+    if (!IsAppVeyor()) {
+        ninniku::Terminate();
+    }
 }
 
 SetupFixtureDX11Warp::SetupFixtureDX11Warp()
-	: shaderRoot{ DX11ShadersRoot }
+    : shaderRoot{ DX11ShadersRoot }
 {
-	auto renderer = ninniku::ERenderer::RENDERER_WARP_DX11;
-	uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
+    auto renderer = ninniku::ERenderer::RENDERER_WARP_DX11;
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE;
 
-	if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
-		std::cout << "Failed to initialize Ninniku." << std::endl;
-	}
+    if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+        std::cout << "Failed to initialize Ninniku." << std::endl;
+    }
 }
 
 SetupFixtureDX11Warp::~SetupFixtureDX11Warp()
 {
-	ninniku::Terminate();
+    ninniku::Terminate();
 }
 
 SetupFixtureDX12::SetupFixtureDX12()
-	: shaderRoot{ DX12ShadersRoot }
+    : shaderRoot{ DX12ShadersRoot }
 {
-	auto renderer = GetRenderer();
-	uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE | GetExtraFlags();
+    auto renderer = GetRenderer();
+    uint32_t flags = ninniku::EInitializationFlags::IF_BC7_QUICK_MODE | GetExtraFlags();
 
-	if (IsAppVeyor()) {
-		isNull = true;
-	} else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
-		std::cout << "Failed to initialize Ninniku." << std::endl;
-	}
+    if (IsAppVeyor() && (GetRenderer() == ninniku::ERenderer::RENDERER_DX12)) {
+        isNull = true;
+    } else if (!ninniku::Initialize(renderer, flags, ninniku::ELogLevel::LL_FULL)) {
+        std::cout << "Failed to initialize Ninniku." << std::endl;
+    }
 }
 
 SetupFixtureDX12::~SetupFixtureDX12()
 {
-	if ((!IsAppVeyor()) || (GetRenderer() == ninniku::ERenderer::RENDERER_WARP_DX12)) {
-		ninniku::Terminate();
-	}
+    if ((!IsAppVeyor()) || (GetRenderer() == ninniku::ERenderer::RENDERER_WARP_DX12)) {
+        ninniku::Terminate();
+    }
 }

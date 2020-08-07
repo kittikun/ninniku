@@ -28,8 +28,12 @@
 
 BOOST_AUTO_TEST_SUITE(Misc)
 
-BOOST_FIXTURE_TEST_CASE(misc_dx12_check_feature, SetupFixtureDX12Warp)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(misc_dx12_check_feature, T, FixturesDX12, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto& dx = ninniku::GetRenderer();
 
     BOOST_REQUIRE(dx->CheckFeatureSupport(ninniku::EDeviceFeature::DF_NONE));
