@@ -1388,7 +1388,6 @@ namespace ninniku
     bool DX12::Flush()
     {
         if (Globals::Instance().safeAndSlowDX12) {
-            LOGW << "Flush() has no effect when EInitializationFlags::IF_SafeAndSlowDX12 is set";
             return true;
         }
 
