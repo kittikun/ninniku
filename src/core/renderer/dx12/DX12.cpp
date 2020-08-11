@@ -450,6 +450,10 @@ namespace ninniku
 
     DX12::CommandList* DX12::CreateCommandList(EQueueType type)
     {
+#ifdef TRACY_ENABLE
+        ZoneScoped;
+#endif
+
         auto cmd = poolCmd_.malloc();
 
         new(cmd)CommandList{};
@@ -962,6 +966,10 @@ namespace ninniku
 
     bool DX12::Dispatch(const CommandHandle& cmd)
     {
+#ifdef TRACY_ENABLE
+        ZoneScoped;
+#endif
+
         DX12Command* dxCmd = static_cast<DX12Command*>(cmd.get());
 
         auto shaderHash = dxCmd->GetHashShader();
@@ -1269,6 +1277,10 @@ namespace ninniku
 
     bool DX12::ExecuteCommand(CommandList* cmdList)
     {
+#ifdef TRACY_ENABLE
+        ZoneScoped;
+#endif
+
         cmdList->gfxCmdList->Close();
 
         if (Globals::Instance().safeAndSlowDX12) {
@@ -1313,6 +1325,10 @@ namespace ninniku
 
     bool DX12::Flush()
     {
+#ifdef TRACY_ENABLE
+        ZoneScoped;
+#endif
+
         if (Globals::Instance().safeAndSlowDX12) {
             return true;
         }
@@ -1646,6 +1662,10 @@ namespace ninniku
 
     MappedResourceHandle DX12::Map(const BufferHandle& bObj)
     {
+#ifdef TRACY_ENABLE
+        ZoneScoped;
+#endif
+
         auto impl = static_cast<const DX12BufferImpl*>(bObj.get());
 
         if (CheckWeakExpired(impl->_impl))
@@ -1779,6 +1799,10 @@ namespace ninniku
 
     bool DX12::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)
     {
+#ifdef TRACY_ENABLE
+        ZoneScoped;
+#endif
+
         auto found = cBuffers_.find(name);
 
         if (found == cBuffers_.end()) {

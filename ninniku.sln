@@ -22,24 +22,33 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
+		Trace|x64 = Trace|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0AB3D531-15B1-48CC-AD70-613B6535AE5A}.Debug|x64.ActiveCfg = Debug|x64
 		{0AB3D531-15B1-48CC-AD70-613B6535AE5A}.Debug|x64.Build.0 = Debug|x64
 		{0AB3D531-15B1-48CC-AD70-613B6535AE5A}.Release|x64.ActiveCfg = Release|x64
 		{0AB3D531-15B1-48CC-AD70-613B6535AE5A}.Release|x64.Build.0 = Release|x64
+		{0AB3D531-15B1-48CC-AD70-613B6535AE5A}.Trace|x64.ActiveCfg = Trace|x64
+		{0AB3D531-15B1-48CC-AD70-613B6535AE5A}.Trace|x64.Build.0 = Trace|x64
 		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Debug|x64.ActiveCfg = Debug|x64
 		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Debug|x64.Build.0 = Debug|x64
 		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Release|x64.ActiveCfg = Release|x64
 		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Release|x64.Build.0 = Release|x64
+		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Trace|x64.ActiveCfg = Trace|x64
+		{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}.Trace|x64.Build.0 = Trace|x64
 		{A4B19748-8979-4001-AFA3-8810C54A3140}.Debug|x64.ActiveCfg = Debug|x64
 		{A4B19748-8979-4001-AFA3-8810C54A3140}.Debug|x64.Build.0 = Debug|x64
 		{A4B19748-8979-4001-AFA3-8810C54A3140}.Release|x64.ActiveCfg = Release|x64
 		{A4B19748-8979-4001-AFA3-8810C54A3140}.Release|x64.Build.0 = Release|x64
+		{A4B19748-8979-4001-AFA3-8810C54A3140}.Trace|x64.ActiveCfg = Trace|x64
+		{A4B19748-8979-4001-AFA3-8810C54A3140}.Trace|x64.Build.0 = Trace|x64
 		{BB7909C6-0280-4132-9C7F-FF33EEEAD273}.Debug|x64.ActiveCfg = Debug|x64
 		{BB7909C6-0280-4132-9C7F-FF33EEEAD273}.Debug|x64.Build.0 = Debug|x64
 		{BB7909C6-0280-4132-9C7F-FF33EEEAD273}.Release|x64.ActiveCfg = Release|x64
 		{BB7909C6-0280-4132-9C7F-FF33EEEAD273}.Release|x64.Build.0 = Release|x64
+		{BB7909C6-0280-4132-9C7F-FF33EEEAD273}.Trace|x64.ActiveCfg = Trace|x64
+		{BB7909C6-0280-4132-9C7F-FF33EEEAD273}.Trace|x64.Build.0 = Trace|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -35,7 +35,7 @@ namespace ninniku
         IF_BC7_QUICK_MODE = 1 << 0,
         IF_DisableDX12DebugLayer = 1 << 1,
         IF_EnableCapture = 1 << 2,
-        IF_SafeAndSlowDX12 = 1 << 3
+        IF_SafeAndSlowDX12 = 1 << 4
     };
 
     enum class ELogLevel : uint8_t

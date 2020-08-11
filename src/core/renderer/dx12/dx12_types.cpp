@@ -367,6 +367,10 @@ namespace ninniku
 
     uint32_t DX12Command::GetHashShader() const
     {
+#ifdef TRACY_ENABLE
+        ZoneScoped;
+#endif
+
         boost::crc_32_type res;
 
         res.process_bytes(shader.data(), shader.size());
@@ -376,6 +380,10 @@ namespace ninniku
 
     uint32_t DX12Command::GetHashBindings() const
     {
+#ifdef TRACY_ENABLE
+#include <Tracy.hpp>
+#endif
+
         // context is common to a shader and is created after loading them
         // but since bindings can change, we need to store various descriptor heaps and other unique items
         boost::crc_32_type res;

@@ -9,6 +9,10 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Trace|x64">
+      <Configuration>Trace</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -30,6 +34,13 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Trace|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -39,6 +50,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Trace|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -56,6 +70,13 @@
     <CodeAnalysisRuleSet>cppCoreCheckFull.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Trace|x64'">
+    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)out\$(Platform)\$(Configuration)\intermediate\$(ProjectName)\</IntDir>
+    <TargetExt>.dll</TargetExt>
+    <CodeAnalysisRuleSet>cppCoreCheckFull.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -66,9 +87,9 @@
       <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TRACY_ENABLE;NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <EnablePREfast>true</EnablePREfast>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
@@ -115,9 +136,55 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
       <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TRACY_ENABLE;NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <EnablePREfast>true</EnablePREfast>
+      <StructMemberAlignment>8Bytes</StructMemberAlignment>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(ProjectDir)external\dxc\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <FxCompile>
+      <ShaderType>Compute</ShaderType>
+    </FxCompile>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile>
+      <ObjectFileOutput>$(SolutionDir)data\%(Filename).cso</ObjectFileOutput>
+      <PreprocessorDefinitions>HLSL</PreprocessorDefinitions>
+    </FxCompile>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxcompiler.dll" $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)</Command>
+      <Message>Copying 3rd Party's DLL..</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Trace|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\tracy;$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>TRACY_ENABLE;NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnablePREfast>true</EnablePREfast>
       <StructMemberAlignment>8Bytes</StructMemberAlignment>
@@ -150,6 +217,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="external\tracy\TracyClient.cpp" />
     <ClCompile Include="src\core\image\cmft.cpp" />
     <ClCompile Include="src\core\image\cmft_impl.cpp" />
     <ClCompile Include="src\core\image\dds.cpp" />
@@ -166,6 +234,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Trace|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\types.cpp" />
     <ClCompile Include="src\utils\log.cpp" />
