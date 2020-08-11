@@ -37,15 +37,25 @@ namespace ninniku
     private:
         enum EQueueType : uint8_t
         {
-            QT_COMPUTE = 0,
-            QT_COPY = 1 << 0,
-            QT_TRANSITION = 1 << 1,
+            QT_COMPUTE,
+            QT_COPY,
+            QT_TRANSITION,
+            QT_COUNT
         };
 
         struct CommandList
         {
             EQueueType type;
             DX12GraphicsCommandList gfxCmdList;
+        };
+
+        struct Queue
+        {
+            DX12CommandAllocator cmdAllocator;
+            DX12CommandQueue cmdQueue;
+
+            // IF_SafeAndSlowDX12 only
+            DX12GraphicsCommandList cmdList;
         };
 
     public:
@@ -79,11 +89,12 @@ namespace ninniku
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
-        std::tuple<bool, CommandList*> CreateCommandList(EQueueType type);
+        CommandList* CreateCommandList(EQueueType type);
         bool CreateCommandContexts();
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
         bool CreateSamplers();
+        D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
         bool ExecuteCommand(CommandList* cmdList);
         bool Flush();
         bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
@@ -106,22 +117,8 @@ namespace ninniku
         uint64_t volatile fenceValue_;
         volatile HANDLE fenceEvent_;
 
-        // compute
-        DX12CommandAllocator computeCommandAllocator_;
-        DX12CommandQueue computeCommandQueue_;
-
-        // copy
-        DX12CommandAllocator copyCommandAllocator_;
-        DX12CommandQueue copyCommandQueue_;
-
-        // resource transition
-        DX12CommandAllocator transitionCommandAllocator_;
-        DX12CommandQueue transitionCommandQueue_;
-
         // IF_SafeAndSlowDX12 only
-        DX12GraphicsCommandList copyCmdList_;
-        DX12GraphicsCommandList computeCmdList_;
-        DX12GraphicsCommandList transitionCmdList_;
+        std::array<Queue, QT_COUNT> queues_;
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;

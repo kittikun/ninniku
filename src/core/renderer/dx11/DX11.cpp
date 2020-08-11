@@ -90,7 +90,7 @@ namespace ninniku
 
         context_->CopySubresourceRegion(dstInternal->GetResource(), dstSub, 0, 0, 0, srcInternal->GetResource(), srcSub, nullptr);
 
-        return std::make_tuple(srcSub, dstSub);
+        return { srcSub, dstSub };
     }
 
     DebugMarkerHandle DX11::CreateDebugMarker(const std::string_view& name) const

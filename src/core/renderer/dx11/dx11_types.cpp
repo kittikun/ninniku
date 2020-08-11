@@ -41,7 +41,7 @@ namespace ninniku
 
         auto& data = impl_.lock()->data_;
 
-        return std::make_tuple(reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)));
+        return { reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)) };
     }
 
     const BufferParam* DX11BufferImpl::GetDesc() const

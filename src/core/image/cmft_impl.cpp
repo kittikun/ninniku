@@ -386,7 +386,7 @@ namespace ninniku
 
     const std::tuple<uint8_t*, uint32_t> cmftImageImpl::GetData() const
     {
-        return std::make_tuple(static_cast<uint8_t*>(image_.m_data), image_.m_dataSize);
+        return { static_cast<uint8_t*>(image_.m_data), image_.m_dataSize };
     }
 
     bool cmftImageImpl::SaveImage(const std::filesystem::path& path, cmftImage::SaveType type)

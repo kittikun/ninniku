@@ -50,7 +50,7 @@ namespace ninniku
 
         auto& data = _impl.lock()->_data;
 
-        return std::make_tuple(reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)));
+        return { reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)) };
     }
 
     const BufferParam* DX12BufferImpl::GetDesc() const
@@ -258,9 +258,9 @@ namespace ninniku
                             throw new std::exception("Unsupported SRV binding dimension");
                     }
 
-					auto fmt = boost::format("%1% %2%") % found->first % dxSRV->index_;
+                    auto fmt = boost::format("%1% %2%") % found->first % dxSRV->index_;
 
-					locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
+                    locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
                     device->CreateShaderResourceView(locked->texture_.Get(), &srvDesc, heapHandle);
                     heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
                 } else if (found->second.Type == D3D_SIT_STRUCTURED) {

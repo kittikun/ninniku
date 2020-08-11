@@ -58,7 +58,7 @@ namespace ninniku
             res = true;
         }
 
-        return std::make_tuple(res, tx, ty);
+        return { res, tx, ty };
     }
 
     bool ImageImpl::Load(const std::string_view& path)

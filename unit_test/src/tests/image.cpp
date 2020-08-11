@@ -742,12 +742,17 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
 #endif
 }
 
-#ifndef _DEBUG // skip BC6H/BC7 compression on debug because it will make Appveyor timeout
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
 {
     // Disable HW GPU support when running on CI
     if (T::isNull)
         return;
+
+    // skip BC6H/BC7 compression on CI debug because it will make Appveyor timeout
+#ifdef _DEBUG
+    if (IsAppVeyor())
+        return;
+#endif
 
     auto image = std::make_unique<ninniku::cmftImage>();
 
@@ -787,6 +792,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
     // Disable HW GPU support when running on CI
     if (T::isNull)
         return;
+
+    // skip BC6H/BC7 compression on CI debug because it will make Appveyor timeout
+#ifdef _DEBUG
+    if (IsAppVeyor())
+        return;
+#endif
 
     auto& dx = ninniku::GetRenderer();
 
@@ -831,7 +842,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
             break;
     }
 }
-#endif // _DEBUG
 
 BOOST_FIXTURE_TEST_CASE(generic_load, SetupFixtureNull)
 {

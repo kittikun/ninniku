@@ -163,9 +163,9 @@ namespace ninniku
         uint32_t size = width_ * height_ * bpp_;
 
         if (data16_ != nullptr)
-            return std::make_tuple(reinterpret_cast<uint8_t*>(data16_), size * 2);
+            return { reinterpret_cast<uint8_t*>(data16_), size * 2 };
 
-        return std::make_tuple(data8_, size);
+        return { data8_, size };
     }
 
     const std::vector<SubresourceParam> genericImageImpl::GetInitializationData() const

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.136
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30330.147
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmft", "external\cmft\cmft.vcxproj", "{0AB3D531-15B1-48CC-AD70-613B6535AE5A}"
 EndProject
@@ -13,6 +13,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple", "simple\simple.vcx
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1D686FB5-29AB-42AE-9009-ECBDE02ADEB0}"
 	ProjectSection(SolutionItems) = preProject
+		CONTRIBUTORS.md = CONTRIBUTORS.md
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection

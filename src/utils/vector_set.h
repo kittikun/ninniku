@@ -38,36 +38,36 @@ namespace ninniku
 
         void beginInsert() noexcept
         {
-            map_.clear();
+            keyValues.clear();
         }
 
         const ValueType* data() const noexcept { return list_.data(); }
 
         void endInsert()
         {
-            if (map_.size() > 1) {
+            if (keyValues.size() > 1) {
                 auto lamda = [](const KVP& lhs, const KVP& rhs)
                 {
                     return std::get<0>(lhs) < std::get<0>(rhs);
                 };
 
-                std::sort(map_.begin(), map_.end(), lamda);
+                std::sort(keyValues.begin(), keyValues.end(), lamda);
             }
 
             // copy sorted item to list
-            auto size = map_.size();
+            auto size = keyValues.size();
 
             list_.clear();
             list_.resize(size);
 
             for (int i = 0; i < size; ++i) {
-                list_[i] = std::get<1>(map_[i]);
+                list_[i] = std::get<1>(keyValues[i]);
             }
         }
 
         void insert(const KeyType& key, const ValueType& value)
         {
-            map_.push_back(std::make_tuple(key, value));
+            keyValues.push_back({ key, value });
         }
 
         const uint32_t size() const noexcept
@@ -76,7 +76,7 @@ namespace ninniku
         }
 
     private:
-        std::vector<std::tuple<KeyType, ValueType>> map_;
+        std::vector<std::tuple<KeyType, ValueType>> keyValues;
         std::vector<ValueType> list_;
     };
 } // namespace ninniku
