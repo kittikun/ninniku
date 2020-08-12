@@ -20,6 +20,8 @@
 
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
+
 // STL
 #include <algorithm>
 #include <array>
@@ -49,3 +51,8 @@
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>
+
+// TRACY
+#ifdef TRACY_ENABLE
+#include <Tracy.hpp>
+#endif

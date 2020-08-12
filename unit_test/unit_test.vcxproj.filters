@@ -40,6 +40,9 @@
     <ClCompile Include="src\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\tests\misc.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -92,6 +95,9 @@
     <FxCompile Include="src\shaders\dx11\resize.hlsl">
       <Filter>Source Files\shaders\dx11</Filter>
     </FxCompile>
+    <FxCompile Include="src\shaders\dx11\sameResource.hlsl">
+      <Filter>Source Files\shaders\dx11</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="src\shaders\dx12\fillBuffer.hlsl">
@@ -113,6 +119,9 @@
       <Filter>Source Files\shaders\dx12</Filter>
     </CustomBuild>
     <CustomBuild Include="src\shaders\dx12\downsample.hlsl">
+      <Filter>Source Files\shaders\dx12</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\shaders\dx12\sameResource.hlsl">
       <Filter>Source Files\shaders\dx12</Filter>
     </CustomBuild>
   </ItemGroup>

@@ -21,6 +21,7 @@
 #pragma once
 
 #include "log.h"
+#include "trace.h"
 
 #include <ninniku/types.h>
 #include <string>
@@ -66,6 +67,8 @@ namespace ninniku
     template<typename T>
     bool CheckWeakExpired(const std::weak_ptr<T>& weak)
     {
+        TRACE_SCOPED_UTILS;
+
         if (weak.expired()) {
             LOGEF(boost::format("Weak pointer to %1% is expired") % GetTypeName<T>());
 

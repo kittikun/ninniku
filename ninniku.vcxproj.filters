@@ -76,23 +76,26 @@
     <ClCompile Include="src\core\image\image_impl.cpp">
       <Filter>Source Files\core\image</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\renderer\dx11\DX11.cpp">
-      <Filter>Source Files\core\renderer\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\renderer\dx11\DX11Types.cpp">
-      <Filter>Source Files\core\renderer\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\renderer\dx12\DX12.cpp">
-      <Filter>Source Files\core\renderer\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\renderer\dx12\DX12Types.cpp">
-      <Filter>Source Files\core\renderer\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\objectTracker.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\renderer\dx12\dxc_utils.cpp">
       <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\dx11\dx11_types.cpp">
+      <Filter>Source Files\core\renderer\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\dx11\dx11.cpp">
+      <Filter>Source Files\core\renderer\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\dx12\dx12.cpp">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\renderer\dx12\dx12_types.cpp">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\object_tracker.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="external\tracy\TracyClient.cpp">
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -103,9 +106,6 @@
       <Filter>Source Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\misc.h">
-      <Filter>Source Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\vectorSet.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="src\pch.h">
@@ -156,27 +156,6 @@
     <ClInclude Include="include\ninniku\core\renderer\types.h">
       <Filter>Include\core\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\renderer\dx11\DX11.h">
-      <Filter>Source Files\core\renderer\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\renderer\dx11\DX11Types.h">
-      <Filter>Source Files\core\renderer\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\renderer\dx12\DX12.h">
-      <Filter>Source Files\core\renderer\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\renderer\dx12\DX12Types.h">
-      <Filter>Source Files\core\renderer\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\renderer\DXCommon.h">
-      <Filter>Source Files\core\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\objectTracker.h">
-      <Filter>Source Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\stringMap.h">
-      <Filter>Source Files\utils</Filter>
-    </ClInclude>
     <ClInclude Include="src\globals.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -185,6 +164,33 @@
     </ClInclude>
     <ClInclude Include="src\core\renderer\null.h">
       <Filter>Source Files\core\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\vector_set.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx11\dx11_types.h">
+      <Filter>Source Files\core\renderer\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx11\dx11.h">
+      <Filter>Source Files\core\renderer\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx12\dx12.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx12\dx12_types.h">
+      <Filter>Source Files\core\renderer\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dx_common.h">
+      <Filter>Source Files\core\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\string_map.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\object_tracker.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\trace.h">
+      <Filter>Source Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

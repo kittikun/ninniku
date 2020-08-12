@@ -22,9 +22,10 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
-#include "../../../utils/stringMap.h"
+#include "../../../utils/string_map.h"
+#include "../../../utils/trace.h"
 
-#include "DX11Types.h"
+#include "dx11_types.h"
 
 struct ID3D11ShaderReflection;
 
@@ -39,6 +40,7 @@ namespace ninniku
         ERenderer GetType() const override { return type_; }
         const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
+        bool CheckFeatureSupport(uint32_t features) override;
         bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
@@ -72,6 +74,9 @@ namespace ninniku
         template<typename SourceType, typename DestType, typename ReturnType>
         static ReturnType* castGenericResourceToDX11Resource(const SourceType* src)
         {
+            if (src == nullptr)
+                return static_cast<ReturnType*>(nullptr);
+
             auto view = static_cast<const DestType*>(src);
             return static_cast<ReturnType*>(view->resource_.Get());
         }

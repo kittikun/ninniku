@@ -33,6 +33,7 @@ namespace ninniku
         ERenderer GetType() const override { return ERenderer::RENDERER_NULL; }
 
         const std::string_view& GetShaderExtension() const override { throw std::exception("Invalid for RENDERER_NULL"); }
+        bool CheckFeatureSupport(uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool CopyBufferResource(const CopyBufferSubresourceParam&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         BufferHandle CreateBuffer(const BufferParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }

@@ -22,8 +22,11 @@
 
 #include "ninniku/core/renderer/renderdevice.h"
 
-#include "../../../utils/stringMap.h"
-#include "DX12Types.h"
+#include "../../../utils/string_map.h"
+#include "../../../utils/trace.h"
+#include "dx12_types.h"
+
+#include <boost/pool/object_pool.hpp>
 
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
@@ -32,12 +35,37 @@ namespace ninniku
 {
     class DX12 final : public RenderDevice
     {
+    private:
+        enum EQueueType : uint8_t
+        {
+            QT_COMPUTE,
+            QT_COPY,
+            QT_TRANSITION,
+            QT_COUNT
+        };
+
+        struct CommandList
+        {
+            EQueueType type;
+            DX12GraphicsCommandList gfxCmdList;
+        };
+
+        struct Queue
+        {
+            DX12CommandAllocator cmdAllocator;
+            DX12CommandQueue cmdQueue;
+
+            // IF_SafeAndSlowDX12 only
+            DX12GraphicsCommandList cmdList;
+        };
+
     public:
         DX12(ERenderer type);
 
         ERenderer GetType() const override { return type_; }
         const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
+        bool CheckFeatureSupport(uint32_t features) override;
         bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
@@ -62,11 +90,14 @@ namespace ninniku
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
+        CommandList* CreateCommandList(EQueueType type);
         bool CreateCommandContexts();
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
         bool CreateDevice(int adapter);
         bool CreateSamplers();
-        bool ExecuteCommand(const DX12CommandQueue& queue, const DX12GraphicsCommandList& cmdList);
+        D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
+        bool ExecuteCommand(CommandList* cmdList);
+        bool Flush();
         bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::filesystem::path& path);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
@@ -75,26 +106,20 @@ namespace ninniku
     private:
         static constexpr std::string_view ShaderExt = ".dxco";
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
+        static constexpr uint32_t MAX_COMMAND_QUEUE = 64;
+
         ERenderer type_;
         uint8_t padding_[3];
 
         DX12Device device_;
 
         // commands and fences
-        DX12CommandQueue commandQueue_;
         DX12Fence fence_;
         uint64_t volatile fenceValue_;
         volatile HANDLE fenceEvent_;
 
-        // copy
-        DX12CommandAllocator copyCommandAllocator_;
-        DX12CommandQueue copyCommandQueue_;
-        DX12GraphicsCommandList copyCmdList_;
-
-        // resource transition
-        DX12CommandAllocator transitionCommandAllocator_;
-        DX12CommandQueue transitionCommandQueue_;
-        DX12GraphicsCommandList transitionCmdList_;
+        // IF_SafeAndSlowDX12 only
+        std::array<Queue, QT_COUNT> queues_;
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
@@ -111,5 +136,11 @@ namespace ninniku
 
         // tracks allocated resources
         ObjectTracker tracker_;
+
+        // Object pools
+        boost::object_pool<CommandList> poolCmd_;
+
+        //boost::circular_buffer<const CommandList*> _commands;
+        std::vector<CommandList*> _commands;
     };
 } // namespace ninniku

@@ -25,7 +25,7 @@
 #include "ninniku/core/renderer/types.h"
 #include "ninniku/core/image/cmft.h"
 
-#include "../renderer/dx11/DX11Types.h"
+#include "../renderer/dx11/dx11_types.h"
 #include "../renderer/dx12/DX12.h"
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
@@ -386,7 +386,7 @@ namespace ninniku
 
     const std::tuple<uint8_t*, uint32_t> cmftImageImpl::GetData() const
     {
-        return std::make_tuple(static_cast<uint8_t*>(image_.m_data), image_.m_dataSize);
+        return { static_cast<uint8_t*>(image_.m_data), image_.m_dataSize };
     }
 
     bool cmftImageImpl::SaveImage(const std::filesystem::path& path, cmftImage::SaveType type)

@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include <ninniku/ninniku.h>
+
+#include <boost/mpl/joint_view.hpp>
 #include <boost/mpl/vector.hpp>
 #include <string_view>
 
@@ -56,6 +59,15 @@ struct SetupFixtureDX12
     bool isNull = false;
 };
 
+struct SetupFixtureDX12Slow
+{
+    SetupFixtureDX12Slow();
+    ~SetupFixtureDX12Slow();
+
+    std::string_view shaderRoot;
+    bool isNull = false;
+};
+
 struct SetupFixtureDX12Warp
 {
     SetupFixtureDX12Warp();
@@ -65,12 +77,24 @@ struct SetupFixtureDX12Warp
     bool isNull = false;
 };
 
-typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12, SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesAll;
-typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12Warp> FixturesWarpAll;
-typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12> FixturesHWAll;
+struct SetupFixtureDX12WarpSlow
+{
+    SetupFixtureDX12WarpSlow();
+    ~SetupFixtureDX12WarpSlow();
 
-typedef boost::mpl::vector<SetupFixtureDX11> FixturesDX11;
-typedef boost::mpl::vector<SetupFixtureDX11Warp> FixturesDX11Warp;
+    std::string_view shaderRoot;
+    bool isNull = false;
+};
 
-typedef boost::mpl::vector<SetupFixtureDX12> FixturesDX12;
-typedef boost::mpl::vector<SetupFixtureDX12Warp> FixturesDX12Warp;
+typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp> FixturesWarpAll;
+typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12Slow, SetupFixtureDX12> FixturesHWAll;
+typedef boost::mpl::joint_view<FixturesHWAll, FixturesWarpAll> FixturesAll;
+
+typedef boost::mpl::vector<SetupFixtureDX11> FixtureDX11;
+typedef boost::mpl::vector<SetupFixtureDX11Warp> FixtureDX11Warp;
+
+typedef boost::mpl::vector<SetupFixtureDX12Slow, SetupFixtureDX12> FixturesDX12;
+typedef boost::mpl::vector<SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp> FixturesDX12Warp;
+
+typedef boost::mpl::vector<SetupFixtureDX12Slow> FixtureDX12Slow;
+typedef boost::mpl::vector<SetupFixtureDX12> FixtureDX12;

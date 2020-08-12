@@ -46,6 +46,8 @@ namespace ninniku
 
     bool CheckAPIFailed(HRESULT hr, const std::string_view& apiName)
     {
+        TRACE_SCOPED_UTILS;
+
         if (FAILED(hr)) {
             _com_error err(hr);
             LOGEF(boost::format("Failed to %1% with: %2%") % apiName % wstrToStr(err.ErrorMessage()));
@@ -353,6 +355,8 @@ namespace ninniku
 
     const std::string wstrToStr(const std::wstring& wstr)
     {
+        TRACE_SCOPED_UTILS;
+
         std::string res;
 
         if (!wstr.empty()) {
@@ -367,6 +371,8 @@ namespace ninniku
 
     const std::wstring strToWStr(const std::string_view& str)
     {
+        TRACE_SCOPED_UTILS;
+
         std::wstring res;
 
         if (!str.empty()) {

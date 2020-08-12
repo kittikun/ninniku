@@ -74,7 +74,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesAll, T)
     CheckCRC(std::get<0>(data), std::get<1>(data), 1279329145);
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, FixturesDX11, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, FixturesAll, T)
 {
     // Disable HW GPU support when running on CI
     if (T::isNull)
@@ -748,6 +748,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
     if (T::isNull)
         return;
 
+    // skip BC6H/BC7 compression on CI debug because it will make Appveyor timeout
+#ifdef _DEBUG
+    if (IsAppVeyor())
+        return;
+#endif
+
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
@@ -786,6 +792,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
     // Disable HW GPU support when running on CI
     if (T::isNull)
         return;
+
+    // skip BC6H/BC7 compression on CI debug because it will make Appveyor timeout
+#ifdef _DEBUG
+    if (IsAppVeyor())
+        return;
+#endif
 
     auto& dx = ninniku::GetRenderer();
 
