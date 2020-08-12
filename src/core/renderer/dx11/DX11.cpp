@@ -50,6 +50,8 @@ namespace ninniku
 
     bool DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
+        TRACE_SCOPED_DX11;
+
         auto srcImpl = static_cast<const DX11BufferImpl*>(params.src);
 
         if (CheckWeakExpired(srcImpl->impl_))
@@ -71,6 +73,8 @@ namespace ninniku
 
     std::tuple<uint32_t, uint32_t> DX11::CopyTextureSubresource(const CopyTextureSubresourceParam& params)
     {
+        TRACE_SCOPED_DX11;
+
         auto srcImpl = static_cast<const DX11TextureImpl*>(params.src);
 
         if (CheckWeakExpired(srcImpl->impl_))
@@ -106,6 +110,8 @@ namespace ninniku
 
     BufferHandle DX11::CreateBuffer(const BufferParamHandle& params)
     {
+        TRACE_SCOPED_NAMED_DX11("ninniku::DX11::CreateBuffer (BufferParamHandle)");
+
         auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
         auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
         auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
@@ -199,6 +205,8 @@ namespace ninniku
 
     BufferHandle DX11::CreateBuffer(const BufferHandle& src)
     {
+        TRACE_SCOPED_NAMED_DX11("ninniku::DX11::CreateBuffer (BufferHandle)");
+
         auto implSrc = static_cast<const DX11BufferImpl*>(src.get());
 
         if (CheckWeakExpired(implSrc->impl_))
@@ -259,6 +267,8 @@ namespace ninniku
 
     bool DX11::CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
     {
+        TRACE_SCOPED_DX11;
+
         LOGD << "Creating ID3D11Device..";
 
         if (!pDevice)
@@ -339,6 +349,8 @@ namespace ninniku
 
     TextureHandle DX11::CreateTexture(const TextureParamHandle& params)
     {
+        TRACE_SCOPED_DX11;
+
         auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
         auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
         auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
@@ -552,6 +564,8 @@ namespace ninniku
 
     bool DX11::Dispatch(const CommandHandle& cmd)
     {
+        TRACE_SCOPED_DX11;
+
         auto found = shaders_.find(cmd->shader);
 
         if (found == shaders_.end()) {
@@ -649,11 +663,15 @@ namespace ninniku
 
     void DX11::Finalize()
     {
+        TRACE_SCOPED_DX11;
+
         tracker_.ReleaseObjects();
     }
 
     bool DX11::Initialize()
     {
+        TRACE_SCOPED_DX11;
+
         auto adapter = 0;
 
         if ((type_ & ERenderer::RENDERER_WARP) != 0)
@@ -707,6 +725,8 @@ namespace ninniku
 
     bool DX11::LoadShader(const std::filesystem::path& path)
     {
+        TRACE_SCOPED_NAMED_DX11("ninniku::DX11::LoadShader (path)");
+
         if (std::filesystem::is_directory(path)) {
             return LoadShaders(path);
         } else if (path.extension() == ShaderExt) {
@@ -739,6 +759,8 @@ namespace ninniku
 
     bool DX11::LoadShader(const std::string_view& name, const void* pData, const uint32_t size)
     {
+        TRACE_SCOPED_NAMED_DX11("ninniku::DX11::LoadShader (string, void*, uint32_t)");
+
         auto fmt = boost::format("Loading %1% directly from memory..") % name;
 
         LOG_INDENT_START << boost::str(fmt);
@@ -760,6 +782,8 @@ namespace ninniku
 
     bool DX11::LoadShader(const std::filesystem::path& path, ID3DBlob* pBlob)
     {
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path, IDxID3DBlobBlobEncoding)");
+
         // reflection
         ID3D11ShaderReflection* reflect = nullptr;
         D3D11_SHADER_DESC desc;
@@ -806,6 +830,8 @@ namespace ninniku
     /// </summary>
     bool DX11::LoadShaders(const std::filesystem::path& shaderPath)
     {
+        TRACE_SCOPED_DX11;
+
         // check if directory is valid
         if (!std::filesystem::is_directory(shaderPath)) {
             auto fmt = boost::format("Failed to open directory: %1%") % shaderPath;
@@ -836,6 +862,8 @@ namespace ninniku
 
     bool DX11::MakeTextureSRV(const TextureSRVParams& params)
     {
+        TRACE_SCOPED_DX11;
+
         auto impl = static_cast<DX11TextureImpl*>(params.obj);
 
         if (CheckWeakExpired(impl->impl_))
@@ -951,6 +979,8 @@ namespace ninniku
 
     MappedResourceHandle DX11::Map(const BufferHandle& bObj)
     {
+        TRACE_SCOPED_NAMED_DX11("ninniku::DX11::Map (BufferHandle)");
+
         auto res = std::make_unique<DX11MappedResource>(context_, bObj);
         auto impl = static_cast<const DX11BufferImpl*>(bObj.get());
 
@@ -969,6 +999,8 @@ namespace ninniku
 
     MappedResourceHandle DX11::Map(const TextureHandle& tObj, const uint32_t index)
     {
+        TRACE_SCOPED_NAMED_DX11("ninniku::DX11::Map (TextureHandle, uint32_t)");
+
         auto res = std::make_unique<DX11MappedResource>(context_, tObj, index);
         auto impl = static_cast<const DX11TextureImpl*>(tObj.get());
 
@@ -987,6 +1019,8 @@ namespace ninniku
 
     StringMap<uint32_t> DX11::ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection)
     {
+        TRACE_SCOPED_DX11;
+
         StringMap<uint32_t> res;
 
         // parse parameter bind slots
@@ -1047,6 +1081,8 @@ namespace ninniku
 
     bool DX11::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)
     {
+        TRACE_SCOPED_DX11;
+
         auto found = cBuffers_.find(name);
 
         if (found == cBuffers_.end()) {

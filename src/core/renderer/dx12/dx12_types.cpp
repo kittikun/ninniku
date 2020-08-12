@@ -24,6 +24,7 @@
 #include "../../../globals.h"
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
+#include "../../../utils/trace.h"
 
 #pragma warning(push)
 #pragma warning(disable:4100)
@@ -87,6 +88,8 @@ namespace ninniku
 
     bool DX12CommandInternal::CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings)
     {
+        TRACE_SCOPED_DX12;
+
         auto iter = subContexts_.emplace(hash, DX12CommandSubContext{});
         auto& subContext = iter.first->second;
 
@@ -109,6 +112,8 @@ namespace ninniku
 
     bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12Command* cmd, const MapNameSlot& bindings, const StringMap<DX12ConstantBuffer>& cbuffers)
     {
+        TRACE_SCOPED_DX12;
+
         if (CheckWeakExpired(cmd->impl_))
             return false;
 
@@ -367,9 +372,7 @@ namespace ninniku
 
     uint32_t DX12Command::GetHashShader() const
     {
-#ifdef TRACY_ENABLE
-        ZoneScoped;
-#endif
+        TRACE_SCOPED_DX12;
 
         boost::crc_32_type res;
 
@@ -380,9 +383,7 @@ namespace ninniku
 
     uint32_t DX12Command::GetHashBindings() const
     {
-#ifdef TRACY_ENABLE
-#include <Tracy.hpp>
-#endif
+        TRACE_SCOPED_DX12;
 
         // context is common to a shader and is created after loading them
         // but since bindings can change, we need to store various descriptor heaps and other unique items

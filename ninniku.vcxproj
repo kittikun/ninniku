@@ -276,6 +276,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClInclude Include="src\utils\misc.h" />
     <ClInclude Include="src\utils\object_tracker.h" />
     <ClInclude Include="src\utils\string_map.h" />
+    <ClInclude Include="src\utils\trace.h" />
     <ClInclude Include="src\utils\vector_set.h" />
   </ItemGroup>
   <ItemGroup>

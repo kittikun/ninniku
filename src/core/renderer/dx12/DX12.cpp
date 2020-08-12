@@ -56,6 +56,8 @@ namespace ninniku
 
     bool DX12::CheckFeatureSupport(uint32_t features)
     {
+        TRACE_SCOPED_DX12;
+
         auto res = true;
 
         if ((features & DF_SM6_WAVE_INTRINSICS) != 0) {
@@ -74,6 +76,8 @@ namespace ninniku
 
     bool DX12::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
+        TRACE_SCOPED_DX12;
+
         auto srcImpl = static_cast<const DX12BufferImpl*>(params.src);
 
         if (CheckWeakExpired(srcImpl->_impl))
@@ -142,6 +146,8 @@ namespace ninniku
 
     std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresource(const CopyTextureSubresourceParam& params)
     {
+        TRACE_SCOPED_DX12;
+
         auto srcImpl = static_cast<const DX12TextureImpl*>(params.src);
 
         if (CheckWeakExpired(srcImpl->impl_))
@@ -216,6 +222,8 @@ namespace ninniku
 
     std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params)
     {
+        TRACE_SCOPED_DX12;
+
         auto texImpl = static_cast<const DX12TextureImpl*>(params.tex);
 
         if (CheckWeakExpired(texImpl->impl_))
@@ -296,6 +304,8 @@ namespace ninniku
 
     BufferHandle DX12::CreateBuffer(const BufferParamHandle& params)
     {
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::CreateBuffer (BufferParamHandle)");
+
         auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
         auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
         auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
@@ -355,6 +365,8 @@ namespace ninniku
 
     BufferHandle DX12::CreateBuffer(const TextureParamHandle& params)
     {
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::CreateBuffer (TextureParamHandle)");
+
         // Special case because we cannot read back a texture from the GPU since dx12
         // intended to be used with CopyTextureSubresourceToBuffer
         auto bytesPPx = DXGIFormatToNumBytes(NinnikuTFToDXGIFormat(params->format));
@@ -386,6 +398,8 @@ namespace ninniku
 
     BufferHandle DX12::CreateBuffer(const BufferHandle& src)
     {
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::CreateBuffer (BufferHandle)");
+
         auto implSrc = static_cast<const DX12BufferImpl*>(src.get());
 
         if (CheckWeakExpired(implSrc->_impl))
@@ -450,9 +464,7 @@ namespace ninniku
 
     DX12::CommandList* DX12::CreateCommandList(EQueueType type)
     {
-#ifdef TRACY_ENABLE
-        ZoneScoped;
-#endif
+        TRACE_SCOPED_DX12;
 
         auto cmd = poolCmd_.malloc();
 
@@ -476,6 +488,8 @@ namespace ninniku
 
     bool DX12::CreateCommandContexts()
     {
+        TRACE_SCOPED_DX12;
+
         for (auto& kvp : resourceBindings_) {
             boost::crc_32_type res;
 
@@ -534,6 +548,8 @@ namespace ninniku
 
     bool DX12::CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size)
     {
+        TRACE_SCOPED_DX12;
+
         // Constant buffers are created during the shaders resource bindings parsing but
         // we don't know the size at that point so we must allocate resource at the first update
 
@@ -618,6 +634,8 @@ namespace ninniku
 
     bool DX12::CreateDevice(int adapter)
     {
+        TRACE_SCOPED_DX12;
+
         LOGD << "Creating ID3D12Device..";
 
         auto hModD3D12 = LoadLibrary(L"d3d12.dll");
@@ -718,6 +736,8 @@ namespace ninniku
 
     bool DX12::CreateSamplers()
     {
+        TRACE_SCOPED_DX12;
+
         // samplers, point first
         auto sampler = new DX12SamplerState();
 
@@ -769,6 +789,8 @@ namespace ninniku
 
     TextureHandle DX12::CreateTexture(const TextureParamHandle& params)
     {
+        TRACE_SCOPED_DX12;
+
         if ((params->viewflags & EResourceViews::RV_CPU_READ) != 0) {
             LOGE << "Textures cannot be created with EResourceViews::RV_CPU_READ";
             return TextureHandle();
@@ -966,9 +988,7 @@ namespace ninniku
 
     bool DX12::Dispatch(const CommandHandle& cmd)
     {
-#ifdef TRACY_ENABLE
-        ZoneScoped;
-#endif
+        TRACE_SCOPED_DX12;
 
         DX12Command* dxCmd = static_cast<DX12Command*>(cmd.get());
 
@@ -1277,9 +1297,7 @@ namespace ninniku
 
     bool DX12::ExecuteCommand(CommandList* cmdList)
     {
-#ifdef TRACY_ENABLE
-        ZoneScoped;
-#endif
+        TRACE_SCOPED_DX12;
 
         cmdList->gfxCmdList->Close();
 
@@ -1313,6 +1331,8 @@ namespace ninniku
 
     void DX12::Finalize()
     {
+        TRACE_SCOPED_DX12;
+
         if (!_commands.empty()) {
             if (!Flush())
                 throw std::exception("Finalize flush failed");
@@ -1325,9 +1345,7 @@ namespace ninniku
 
     bool DX12::Flush()
     {
-#ifdef TRACY_ENABLE
-        ZoneScoped;
-#endif
+        TRACE_SCOPED_DX12;
 
         if (Globals::Instance().safeAndSlowDX12) {
             return true;
@@ -1405,6 +1423,8 @@ namespace ninniku
 
     bool DX12::Initialize()
     {
+        TRACE_SCOPED_DX12;
+
         auto adapter = 0;
 
         if ((type_ & ERenderer::RENDERER_WARP) != 0)
@@ -1476,6 +1496,8 @@ namespace ninniku
 
     bool DX12::LoadShader(const std::filesystem::path& path)
     {
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path)");
+
         if (std::filesystem::is_directory(path)) {
             return LoadShaders(path);
         } else if (path.extension() == ShaderExt) {
@@ -1517,6 +1539,8 @@ namespace ninniku
 
     bool DX12::LoadShader(const std::string_view& name, const void* pData, const uint32_t size)
     {
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (string, void*, uint32_t)");
+
         auto fmt = boost::format("Loading %1% directly from memory..") % name;
 
         LOG_INDENT_START << boost::str(fmt);
@@ -1554,6 +1578,8 @@ namespace ninniku
 
     bool DX12::LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob)
     {
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path, IDxcBlobEncoding)");
+
         auto name = path.stem().string();
         Microsoft::WRL::ComPtr<IDxcContainerReflection> pContainerReflection;
 
@@ -1632,6 +1658,8 @@ namespace ninniku
     /// </summary>
     bool DX12::LoadShaders(const std::filesystem::path& shaderPath)
     {
+        TRACE_SCOPED_DX12;
+
         // check if directory is valid
         if (!std::filesystem::is_directory(shaderPath)) {
             auto fmt = boost::format("Failed to open directory: %1%") % shaderPath;
@@ -1662,9 +1690,7 @@ namespace ninniku
 
     MappedResourceHandle DX12::Map(const BufferHandle& bObj)
     {
-#ifdef TRACY_ENABLE
-        ZoneScoped;
-#endif
+        TRACE_SCOPED_DX12;
 
         auto impl = static_cast<const DX12BufferImpl*>(bObj.get());
 
@@ -1689,6 +1715,8 @@ namespace ninniku
 
     bool DX12::ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob)
     {
+        TRACE_SCOPED_DX12;
+
         DX12RootSignature rootSignature;
 
         auto hr = device_->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
@@ -1708,6 +1736,8 @@ namespace ninniku
 
     bool DX12::ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection)
     {
+        TRACE_SCOPED_DX12;
+
         // parse parameter bind slots
         auto fmt = boost::format("Found %1% resources") % numBoundResources;
 
@@ -1799,9 +1829,7 @@ namespace ninniku
 
     bool DX12::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)
     {
-#ifdef TRACY_ENABLE
-        ZoneScoped;
-#endif
+        TRACE_SCOPED_DX12;
 
         auto found = cBuffers_.find(name);
 

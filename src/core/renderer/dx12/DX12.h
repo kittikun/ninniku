@@ -23,6 +23,7 @@
 #include "ninniku/core/renderer/renderdevice.h"
 
 #include "../../../utils/string_map.h"
+#include "../../../utils/trace.h"
 #include "dx12_types.h"
 
 #include <boost/pool/object_pool.hpp>

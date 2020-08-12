@@ -189,5 +189,8 @@
     <ClInclude Include="src\utils\object_tracker.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\trace.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

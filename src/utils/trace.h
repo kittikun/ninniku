@@ -20,39 +20,25 @@
 
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-
-// STL
-#include <algorithm>
-#include <array>
-#include <atomic>
-#include <cassert>
-#include <filesystem>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <variant>
-#include <vector>
-
-// DX/WIN
-#include <wrl/client.h>
-#include <atlbase.h>
-#include <comdef.h>
-#include <d3d11_1.h>
-#include <d3d12.h>
-
-// BOOST
-#pragma warning(push)
-#pragma warning(disable:4701)
-#include <boost/crc.hpp>
-#pragma warning(pop)
-
-#include <boost/format.hpp>
-#include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-
-// TRACY
 #ifdef TRACY_ENABLE
+
 #include <Tracy.hpp>
+
+enum ETraceCategories
+{
+    TC_DX11 = 1 << 0,
+    TC_DX12 = 1 << 1,
+    TC_UTILS = 1 << 2
+};
+
+#define TRACE_CATEGORIES (TC_DX11 | TC_DX12 | TC_UTILS)
+
+#define TRACE_SCOPED_DX11 ZoneNamed(__tracy, TRACE_CATEGORIES & TC_DX11);
+#define TRACE_SCOPED_NAMED_DX11(X) ZoneNamedN(__tracy, X, TRACE_CATEGORIES & TC_DX11);
+
+#define TRACE_SCOPED_DX12 ZoneNamed(__tracy, TRACE_CATEGORIES & TC_DX12);
+#define TRACE_SCOPED_NAMED_DX12(X) ZoneNamedN(__tracy, X, TRACE_CATEGORIES & TC_DX12);
+
+#define TRACE_SCOPED_UTILS ZoneNamed(__tracy, TRACE_CATEGORIES & TC_UTILS);
+
 #endif
