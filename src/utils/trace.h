@@ -20,7 +20,17 @@
 
 #pragma once
 
-#ifdef TRACY_ENABLE
+#ifndef TRACY_ENABLE
+
+#define TRACE_SCOPED_DX11
+#define TRACE_SCOPED_NAMED_DX11
+
+#define TRACE_SCOPED_DX12
+#define TRACE_SCOPED_NAMED_DX12
+
+#define TRACE_SCOPED_UTILS
+
+#else
 
 #include <Tracy.hpp>
 
