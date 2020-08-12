@@ -17,6 +17,7 @@
 - Can capture commands with [RenderDoc](https://renderdoc.org/) for DX11 and [PIX](https://devblogs.microsoft.com/pix/) for DX12
   * Renderdoc captures will be called ninniku_frame0.rdc
 - DX12 shaders are compiled using the [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler)
+- Profiling using [Tracy](https://github.com/wolfpld/tracy)
 
 #### Prerequisites:
 - You must install the [Windows 10 SDK (10.0.19041.0)](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/)

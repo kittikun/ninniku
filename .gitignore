@@ -16,3 +16,4 @@ simple/*.dds
 *.idb
 *.json
 *.txt
+*.gv
