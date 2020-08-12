@@ -67,7 +67,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesAll, T)
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex.get()));
 
     auto& data = res->GetData();
 
@@ -90,7 +90,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, Fix
     auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex, 1));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex.get(), 1));
 
     std::string filename = "cmft_from_texture_object_array_specific.hdr";
 
@@ -225,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesAll, T)
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex.get()));
 
     std::string filename = "cmft_saveImage_longlat.hdr";
 
@@ -305,7 +305,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesAll, T)
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex.get()));
 
     auto& data = res->GetData();
 
@@ -332,7 +332,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
     auto resTex = Generate2DTexWithMips(dx, image.get(), T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex.get()));
 
     std::string filename = "dds_saveImage_raw_mips.dds";
 
@@ -367,7 +367,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
     auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex.get()));
 
     std::string filename = "dds_saveImage_raw_cube_mips.dds";
 
@@ -403,7 +403,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
     auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex.get()));
 
     std::string filename = "dds_saveImage_raw_cube_array_mips.dds";
 
@@ -447,7 +447,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized.get()));
 
     std::string filename = "dds_saveImage_bc1.dds";
 
@@ -494,7 +494,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized.get()));
 
     std::string filename = "dds_saveImage_bc3.dds";
 
@@ -541,7 +541,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized.get()));
 
     std::string filename = "dds_saveImage_bc4.dds";
 
@@ -635,7 +635,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
     auto res = std::make_unique<ninniku::ddsImage>();
     std::string filename = "dds_saveImage_bc5_8.dds";
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, dst));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, dst.get()));
     BOOST_REQUIRE(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
@@ -704,7 +704,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
     auto res = std::make_unique<ninniku::ddsImage>();
     std::string filename = "dds_saveImage_bc5_16.dds";
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, dst));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, dst.get()));
     BOOST_REQUIRE(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC5_UNORM));
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
@@ -763,7 +763,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
     auto srcTex = dx->CreateTexture(srcParam);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex.get()));
 
     std::string filename = "dds_saveImage_bc6h.dds";
 
@@ -816,7 +816,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
     auto resized = ResizeImage(dx, srcTex, needFix, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized));
+    BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized.get()));
 
     std::string_view filename = "dds_saveImage_bc7.dds";
 

@@ -45,12 +45,12 @@ namespace ninniku
         return impl_->GetData();
     }
 
-    bool cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
     {
         return impl_->InitializeFromTextureObject(dx, srcTex);
     }
 
-    bool cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex, const uint32_t cubeIndex)
+    bool cmftImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex, const uint32_t cubeIndex)
     {
         return impl_->InitializeFromTextureObject(dx, srcTex, cubeIndex);
     }

@@ -84,7 +84,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\dxc\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -133,7 +133,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\dxc\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -179,7 +179,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\tracy;$(ProjectDir)include;$(ProjectDir)external\dxc\include;$(ProjectDir)external\cmft\include;$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\dxc\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external\tracy;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>TRACY_ENABLE;NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -230,6 +230,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClCompile Include="src\core\renderer\dx12\dx12.cpp" />
     <ClCompile Include="src\core\renderer\dx12\dx12_types.cpp" />
     <ClCompile Include="src\core\renderer\dx12\dxc_utils.cpp" />
+    <ClCompile Include="src\core\renderer\rendergraph.cpp" />
     <ClCompile Include="src\ninniku.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -253,6 +254,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClInclude Include="include\ninniku\core\image\generic.h" />
     <ClInclude Include="include\ninniku\core\image\image.h" />
     <ClInclude Include="include\ninniku\core\renderer\renderdevice.h" />
+    <ClInclude Include="include\ninniku\core\renderer\rendergraph.h" />
     <ClInclude Include="include\ninniku\core\renderer\types.h" />
     <ClInclude Include="include\ninniku\export.h" />
     <ClInclude Include="include\ninniku\ninniku.h" />

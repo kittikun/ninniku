@@ -43,13 +43,13 @@ namespace ninniku
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transferring data back from the GPU
-        bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) override;
+        bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex) override;
 
         bool LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format) override;
 
         bool SaveImage(const std::filesystem::path& path, cmftImage::SaveType type);
 
-        bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex, const uint32_t cubeIndex);
+        bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex, const uint32_t cubeIndex);
 
     protected:
         TextureParamHandle CreateTextureParamInternal(const EResourceViews viewFlags) const override;

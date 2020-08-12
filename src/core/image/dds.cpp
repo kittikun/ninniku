@@ -50,7 +50,7 @@ namespace ninniku
         return impl_->GetData();
     }
 
-    bool ddsImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool ddsImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
     {
         return impl_->InitializeFromTextureObject(dx, srcTex);
     }

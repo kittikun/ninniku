@@ -135,7 +135,7 @@ namespace ninniku
         throw std::exception("not implemented");
     }
 
-    bool ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
     {
         // DirectXTex
         meta_ = DirectX::TexMetadata{};
@@ -187,7 +187,7 @@ namespace ninniku
                 auto readBack = dx->CreateTexture(param);
 
                 ninniku::CopyTextureSubresourceParam params = {};
-                params.src = srcTex.get();
+                params.src = srcTex;
                 params.srcMip = mip;
                 params.dst = readBack.get();
 
@@ -216,7 +216,7 @@ namespace ninniku
 
                 CopyTextureSubresourceToBufferParam cpyParams = {};
 
-                cpyParams.tex = srcTex.get();
+                cpyParams.tex = srcTex;
                 cpyParams.texMip = mip;
                 cpyParams.buffer = readback.get();
 

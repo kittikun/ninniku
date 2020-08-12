@@ -263,12 +263,12 @@ namespace ninniku
         return true;
     }
 
-    bool cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex)
+    bool cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
     {
         return InitializeFromTextureObject(dx, srcTex, 0);
     }
 
-    bool cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex, const uint32_t cubeIndex)
+    bool cmftImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex, const uint32_t cubeIndex)
     {
         // we want to enforce 1:1 for now
         if (srcTex->GetDesc()->width != srcTex->GetDesc()->height) {
@@ -318,7 +318,7 @@ namespace ninniku
                 auto readBack = dx->CreateTexture(param);
 
                 CopyTextureSubresourceParam params = {};
-                params.src = srcTex.get();
+                params.src = srcTex;
                 params.srcMip = mip;
                 params.dst = readBack.get();
 
@@ -347,7 +347,7 @@ namespace ninniku
 
                 CopyTextureSubresourceToBufferParam cpyParams = {};
 
-                cpyParams.tex = srcTex.get();
+                cpyParams.tex = srcTex;
                 cpyParams.texMip = mip;
                 cpyParams.buffer = readback.get();
 

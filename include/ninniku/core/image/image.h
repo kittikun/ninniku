@@ -47,7 +47,7 @@ namespace ninniku
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(nullptr, 0); }
 
         // Used when transferring data back from the GPU
-        virtual bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureHandle& srcTex) = 0;
+        virtual bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex) = 0;
 
         /// <summary>
         /// Check if a image is a power of 2 and return a 2 item tuple

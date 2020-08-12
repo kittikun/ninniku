@@ -97,6 +97,9 @@
     <ClCompile Include="external\tracy\TracyClient.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\renderer\rendergraph.cpp">
+      <Filter>Source Files\core\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -191,6 +194,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\trace.h">
       <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ninniku\core\renderer\rendergraph.h">
+      <Filter>Include\core\renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

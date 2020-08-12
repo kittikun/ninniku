@@ -19,39 +19,3 @@
 // SOFTWARE.
 
 #include "pch.h"
-#include "ninniku/core/image/generic.h"
-
-#include "generic_impl.h"
-
-namespace ninniku
-{
-    TextureParamHandle genericImage::CreateTextureParam(const EResourceViews viewFlags) const
-    {
-        return impl_->CreateTextureParam(viewFlags);
-    }
-
-    bool genericImage::Load(const std::string_view& path)
-    {
-        return impl_->Load(path);
-    }
-
-    bool genericImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-    {
-        return impl_->LoadRaw(pData, size, width, height, format);
-    }
-
-    const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
-    {
-        return impl_->GetData();
-    }
-
-    bool genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
-    {
-        return impl_->InitializeFromTextureObject(dx, srcTex);
-    }
-
-    const SizeFixResult genericImage::IsRequiringFix() const
-    {
-        return impl_->IsRequiringFix();
-    }
-} // namespace ninniku

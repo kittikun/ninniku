@@ -18,40 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "pch.h"
-#include "ninniku/core/image/generic.h"
+#pragma once
 
-#include "generic_impl.h"
+#include <ninniku/core/renderer/renderdevice.h>
+#include <ninniku/core/renderer/types.h>
+
+#include <fg/framegraph.hpp>
 
 namespace ninniku
 {
-    TextureParamHandle genericImage::CreateTextureParam(const EResourceViews viewFlags) const
-    {
-        return impl_->CreateTextureParam(viewFlags);
-    }
+    using TextureResource = fg::resource<std::shared_ptr<ninniku::TextureParam>, const ninniku::TextureObject>;
+}
 
-    bool genericImage::Load(const std::string_view& path)
+namespace fg
+{
+    template<>
+    std::unique_ptr<const ninniku::TextureObject> realize(const std::shared_ptr<ninniku::TextureParam>& description)
     {
-        return impl_->Load(path);
-    }
+        auto& dx = ninniku::GetRenderer();
 
-    bool genericImage::LoadRaw(const void* pData, const size_t size, const uint32_t width, const uint32_t height, const int32_t format)
-    {
-        return impl_->LoadRaw(pData, size, width, height, format);
+        return dx->CreateTexture(description);
     }
-
-    const std::tuple<uint8_t*, uint32_t> genericImage::GetData() const
-    {
-        return impl_->GetData();
-    }
-
-    bool genericImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
-    {
-        return impl_->InitializeFromTextureObject(dx, srcTex);
-    }
-
-    const SizeFixResult genericImage::IsRequiringFix() const
-    {
-        return impl_->IsRequiringFix();
-    }
-} // namespace ninniku
+}

@@ -20,22 +20,27 @@
 
 #include <ninniku/ninniku.h>
 #include <ninniku/core/renderer/renderdevice.h>
+#include <ninniku/core/renderer/rendergraph.h>
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
 
-#include <fg/framegraph.hpp>
+#include <filesystem>
 
-using TextureResource = fg::resource<std::shared_ptr<ninniku::TextureParam>, const ninniku::TextureObject>;
+#include "../unit_test/src/shaders/cbuffers.h"
+#include "../unit_test/src/shaders/dispatch.h"
 
-namespace fg
+#ifdef _DEBUG
+static constexpr std::string_view DX12ShadersRoot = "..\\unit_test\\bin\\Debug\\dx12\\";
+#else
+static constexpr std::string_view DX12ShadersRoot = "..\\unit_test\\bin\\Release\\dx12\\";
+#endif
+
+bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string& name)
 {
-    template<>
-    std::unique_ptr<const ninniku::TextureObject> realize(const std::shared_ptr<ninniku::TextureParam>& description)
-    {
-        auto& dx = ninniku::GetRenderer();
+    auto absolutePath = std::filesystem::absolute(DX12ShadersRoot);
+    auto path = absolutePath.string() + name + std::string(dx->GetShaderExtension());
 
-        return dx->CreateTexture(description);
-    }
+    return dx->LoadShader(path);
 }
 
 int main()
@@ -43,126 +48,122 @@ int main()
     if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
         return -1;
 
+    auto& dx = ninniku::GetRenderer();
+
+    LoadShader(dx, "sameResource");
+
     fg::framegraph framegraph;
 
+    // Final result texture
     auto param = ninniku::TextureParam::Create();
 
-    param->width = 1024;
-    param->height = 768;
-    param->numMips = 1;
-    param->arraySize = 1;
+    param->width = param->height = 512;
+
+    auto numMips = ninniku::CountMips(param->width);
+
+    param->numMips = numMips;
+    param->arraySize = ninniku::CUBEMAP_NUM_FACES;
     param->depth = 1;
     param->format = ninniku::TF_R8G8B8A8_UNORM;
-    param->viewflags = ninniku::RV_SRV;
+    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
-    auto retained_resource = framegraph.add_retained_resource("Retained Resource 1", param, static_cast<const ninniku::TextureObject*>(nullptr));
+    auto finalOut = framegraph.add_retained_resource("Final Output", param, static_cast<const ninniku::TextureObject*>(nullptr));
 
-    // First render task declaration.
-    struct render_task_1_data
+    CBGlobal cb = {};
+
+    // Pass 0 : Initialize mip 0
+    struct PassData_0
     {
-        TextureResource* output1;
-        TextureResource* output2;
-        TextureResource* output3;
-        TextureResource* output4;
+        ninniku::TextureResource* output;
     };
 
-    auto render_task_1 = framegraph.add_render_task<render_task_1_data>(
-        "Render Task 1",
-        [&](render_task_1_data& data, fg::render_task_builder& builder)
+    auto pass0 = framegraph.add_render_task<PassData_0>(
+        "Initialize Mip 0",
+        [&finalOut](PassData_0& data, fg::render_task_builder& builder)
     {
-        auto param = ninniku::TextureParam::Create();
-
-        param->width = 1024;
-        param->height = 768;
-        param->numMips = 1;
-        param->arraySize = 1;
-        param->depth = 1;
-        param->format = ninniku::TF_R8G8B8A8_UNORM;
-        param->viewflags = ninniku::RV_SRV;
-
-        data.output1 = builder.create<TextureResource>("Resource 1", param);
-        data.output2 = builder.create<TextureResource>("Resource 2", param);
-        data.output3 = builder.create<TextureResource>("Resource 3", param);
-        data.output4 = builder.write <TextureResource>(retained_resource);
+        data.output = builder.write <ninniku::TextureResource>(finalOut);
     },
-        [=](const render_task_1_data& data)
+        [&dx, &cb](const PassData_0& data)
     {
-        // Perform actual rendering. You may load resources from CPU by capturing them.
-        auto actual1 = data.output1->actual();
-        auto actual2 = data.output2->actual();
-        auto actual3 = data.output3->actual();
-        auto actual4 = data.output4->actual();
+        auto cmd = dx->CreateCommand();
+
+        cmd->shader = "sameResource";
+        cmd->cbufferStr = "CBGlobal";
+        cmd->srvBindings.insert(std::make_pair("srcTex", nullptr));
+
+        auto output = data.output->actual();
+
+        cmd->uavBindings.insert(std::make_pair("dstTex", output->GetUAV(0)));
+
+        auto& param = data.output->description();
+
+        cmd->dispatch[0] = param->width / SAME_RESOURCE_X;
+        cmd->dispatch[1] = param->height / SAME_RESOURCE_Y;
+        cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
+
+        // constant buffer
+        cb.targetMip = 0;
+
+        auto res = dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
+        res = dx->Dispatch(cmd);
     });
 
-    auto& data_1 = render_task_1->data();
+    auto& pass0Data = pass0->data();
 
-    // Second render pass declaration.
-    struct render_task_2_data
+    // Pass 1 : Other mips
+    struct PassData_1
     {
-        TextureResource* input1;
-        TextureResource* input2;
-        TextureResource* output1;
-        TextureResource* output2;
+        ninniku::TextureResource* input;
+        ninniku::TextureResource* output;
     };
 
-    auto render_task_2 = framegraph.add_render_task<render_task_2_data>(
-        "Render Task 2",
-        [&](render_task_2_data& data, fg::render_task_builder& builder)
+    auto pass1 = framegraph.add_render_task<PassData_1>(
+        "Other Mips",
+        [&pass0Data, &finalOut](PassData_1& data, fg::render_task_builder& builder)
     {
-        data.input1 = builder.read(data_1.output1);
-        data.input2 = builder.read(data_1.output2);
-        data.output1 = builder.write(data_1.output3);
-
-        auto param = ninniku::TextureParam::Create();
-
-        param->width = 1024;
-        param->height = 768;
-        param->numMips = 1;
-        param->arraySize = 1;
-        param->depth = 1;
-        param->format = ninniku::TF_R8G8B8A8_UNORM;
-        param->viewflags = ninniku::RV_SRV;
-
-        data.output2 = builder.create<TextureResource>("Resource 4", param);
+        data.input = builder.read(pass0Data.output);
+        data.output = builder.write(pass0Data.output);
     },
-        [=](const render_task_2_data& data)
+        [&dx, &cb, &numMips](const PassData_1& data)
     {
-        // Perform actual rendering. You may load resources from CPU by capturing them.
-        auto actual1 = data.input1->actual();
-        auto actual2 = data.input2->actual();
-        auto actual3 = data.output1->actual();
-        auto actual4 = data.output2->actual();
+        for (uint32_t i = 1; i < numMips; ++i) {
+            auto cmd = dx->CreateCommand();
+
+            cmd->shader = "sameResource";
+            cmd->cbufferStr = "CBGlobal";
+
+            auto input = data.input->actual();
+            auto output = data.output->actual();
+
+            cmd->srvBindings["srcTex"] = input->GetSRVArray(i - 1);
+            cmd->uavBindings["dstTex"] = output->GetUAV(i);
+
+            auto& param = data.input->description();
+
+            cmd->dispatch[0] = std::max(1u, (param->width >> i) / SAME_RESOURCE_X);
+            cmd->dispatch[1] = std::max(1u, (param->height >> i) / SAME_RESOURCE_Y);
+
+            cb.targetMip = i;
+
+            auto res = dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal));
+            res = dx->Dispatch(cmd);
+        }
     });
 
-    auto& data_2 = render_task_2->data();
-
-    // Third pass
-    struct render_task_3_data
-    {
-        TextureResource* input1;
-        TextureResource* input2;
-        TextureResource* output;
-    };
-
-    auto render_task_3 = framegraph.add_render_task<render_task_3_data>(
-        "Render Task 3",
-        [&](render_task_3_data& data, fg::render_task_builder& builder)
-    {
-        data.input1 = builder.read(data_2.output1);
-        data.input2 = builder.read(data_2.output2);
-        data.output = builder.write(retained_resource);
-    },
-        [=](const render_task_3_data& data)
-    {
-        // Perform actual rendering. You may load resources from CPU by capturing them.
-        auto actual1 = data.input1->actual();
-        auto actual2 = data.input2->actual();
-        auto actual3 = data.output->actual();
-    });
+    auto& pass1Data = pass1->data();
 
     framegraph.compile();
-    for (auto i = 0; i < 100; i++)
-        framegraph.execute();
+    framegraph.execute();
+
+    // Save to disk
+    auto image = std::make_unique<ninniku::ddsImage>();
+
+    auto res = image->InitializeFromTextureObject(dx, pass1Data.output->actual());
+
+    std::string filename = "shader_SRV_UAV_same_resource.dds";
+
+    res = image->SaveImage(filename);
+
     framegraph.export_graphviz("framegraph.gv");
     framegraph.clear();
 
