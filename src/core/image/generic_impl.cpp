@@ -18,7 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NO_PCH
 #include "pch.h"
+#endif
+
 #include "generic_impl.h"
 
 #include "ninniku/core/image/generic.h"
@@ -31,6 +34,7 @@
 #include <stb/stb_image.h>
 #pragma warning(pop)
 
+#include <boost/format.hpp>
 #include <array>
 #include <filesystem>
 #include <DirectXPackedVector.h>

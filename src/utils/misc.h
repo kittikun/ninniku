@@ -24,6 +24,8 @@
 #include "trace.h"
 
 #include <ninniku/types.h>
+
+#include <boost/format.hpp>
 #include <string>
 
 // https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
@@ -51,7 +53,7 @@ namespace ninniku
     NINNIKU_API constexpr uint32_t DXGIFormatToNinnikuTF(uint32_t);
     NINNIKU_API constexpr uint32_t NinnikuTFToDXGIFormat(uint32_t);
     NINNIKU_API constexpr uint32_t DXGIFormatToNumBytes(uint32_t format);
-    uint32_t Align(UINT uLocation, uint32_t uAlign);
+    uint32_t Align(uint32_t uLocation, uint32_t uAlign);
 
     const std::wstring strToWStr(const std::string_view&);
     const std::string wstrToStr(const std::wstring&);

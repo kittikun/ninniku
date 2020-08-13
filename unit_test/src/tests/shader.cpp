@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NO_PCH
+
 #include "../shaders/cbuffers.h"
 #include "../shaders/dispatch.h"
 #include "../check.h"
@@ -404,3 +406,5 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif // NO_PCH

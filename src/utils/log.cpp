@@ -18,11 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NO_PCH
 #include "pch.h"
+#endif
+
 #include "log.h"
 
 #include "ninniku/ninniku.h"
 #include "ninniku/core/renderer/renderdevice.h"
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 #pragma warning(push)
 #pragma warning(disable:6330 6326 220 6388 28251)
@@ -89,7 +95,7 @@ namespace ninniku
                 auto getColor = [](BoostLogLevel level)
                 {
                     // default is white
-                    WORD res = 7;
+                    uint16_t res = 7;
 
                     switch (level) {
                         case BoostLogLevel::Log_DX:

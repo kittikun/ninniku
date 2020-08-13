@@ -18,7 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NO_PCH
 #include "pch.h"
+#endif
+
 #include "DX11.h"
 
 #pragma comment(lib, "D3DCompiler.lib")

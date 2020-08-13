@@ -18,7 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NO_PCH
 #include "pch.h"
+#endif
+
 #include "dx12_types.h"
 
 #include "../../../globals.h"
@@ -36,7 +39,10 @@
 #include <d3dx12/d3dx12.h>
 #pragma warning(pop)
 
+#pragma warning(push)
+#pragma warning(disable:4701 6001)
 #include <boost/crc.hpp>
+#pragma warning(pop)
 
 namespace ninniku
 {

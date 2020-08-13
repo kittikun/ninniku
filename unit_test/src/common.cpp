@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NO_PCH
+
 #include "common.h"
 
 #include "shaders/dispatch.h"
@@ -212,3 +214,5 @@ ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninnik
 
     return std::move(dst);
 }
+
+#endif // NO_PCH

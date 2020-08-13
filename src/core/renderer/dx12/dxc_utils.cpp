@@ -18,12 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef NO_PCH
 #include "pch.h"
+#endif
+
 #include "dxc_utils.h"
 
 #include "../../../utils/misc.h"
 #include "../../../utils/log.h"
 
+#include <wrl/client.h>
 #include <dxcapi.h>
 
 namespace ninniku

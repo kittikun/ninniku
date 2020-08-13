@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 struct IDxcBlobEncoding;
 struct IDxcLibrary;
 

@@ -25,8 +25,11 @@
 #include "../../../utils/object_tracker.h"
 #include "../../../utils/string_map.h"
 
+#include <wrl/client.h>
+#include <atomic>
 #include <d3d12.h>
 #include <d3d12shader.h>
+#include <variant>
 
 namespace ninniku
 {
