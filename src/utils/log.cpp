@@ -24,6 +24,8 @@
 #include "ninniku/ninniku.h"
 #include "ninniku/core/renderer/renderdevice.h"
 
+#pragma warning(push)
+#pragma warning(disable:6330 6326 220 6388 28251)
 #include <boost/date_time.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
@@ -31,6 +33,7 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
+#pragma warning(pop)
 
 namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;

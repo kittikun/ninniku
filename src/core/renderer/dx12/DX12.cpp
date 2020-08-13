@@ -42,7 +42,12 @@
 #include <comdef.h>
 #include <dxgi1_4.h>
 #include <dxcapi.h>
+
+#pragma warning(push)
+#pragma warning(disable:6001)
 #include <d3dx12/d3dx12.h>
+#pragma warning(pop)
+
 #include <boost/crc.hpp>
 
 namespace ninniku
@@ -61,7 +66,7 @@ namespace ninniku
         auto res = true;
 
         if ((features & DF_SM6_WAVE_INTRINSICS) != 0) {
-            D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport;
+            D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
 
             auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
 
@@ -906,7 +911,7 @@ namespace ninniku
             auto cmdList = CreateCommandList(QT_TRANSITION);
 
             if (cmdList == nullptr) {
-                return false;
+                return TextureHandle();
             }
 
             auto push = CD3DX12_RESOURCE_BARRIER::Transition(impl->texture_.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -921,7 +926,7 @@ namespace ninniku
             cmdList = CreateCommandList(QT_TRANSITION);
 
             if (cmdList == nullptr) {
-                return false;
+                return TextureHandle();
             }
 
             auto pop = CD3DX12_RESOURCE_BARRIER::Transition(impl->texture_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);

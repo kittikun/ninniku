@@ -43,16 +43,18 @@
 
 // BOOST
 #pragma warning(push)
-#pragma warning(disable:4701)
+#pragma warning(disable:4701 6001 28251 26110)
 #include <boost/crc.hpp>
-#pragma warning(pop)
-
 #include <boost/format.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>
+#pragma warning(pop)
 
 // TRACY
 #ifdef TRACY_ENABLE
+#pragma warning(push)
+#pragma warning(disable:4324 6201)
 #include <Tracy.hpp>
+#pragma warning(pop)
 #endif

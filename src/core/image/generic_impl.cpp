@@ -25,8 +25,11 @@
 
 #include "../../utils/log.h"
 
+#pragma warning(push)
+#pragma warning(disable:6011 6308 6262 28182)
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+#pragma warning(pop)
 
 #include <array>
 #include <filesystem>

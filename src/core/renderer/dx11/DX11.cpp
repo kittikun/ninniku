@@ -210,7 +210,7 @@ namespace ninniku
         auto implSrc = static_cast<const DX11BufferImpl*>(src.get());
 
         if (CheckWeakExpired(implSrc->impl_))
-            return false;
+            return BufferHandle();
 
         auto internalSrc = implSrc->impl_.lock();
 
@@ -265,7 +265,7 @@ namespace ninniku
         return dst;
     }
 
-    bool DX11::CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
+    bool DX11::CreateDevice(int adapter, ID3D11Device** pDevice)
     {
         TRACE_SCOPED_DX11;
 
@@ -985,7 +985,7 @@ namespace ninniku
         auto impl = static_cast<const DX11BufferImpl*>(bObj.get());
 
         if (CheckWeakExpired(impl->impl_))
-            return false;
+            return std::unique_ptr<MappedResource>();
 
         auto internal = impl->impl_.lock();
 

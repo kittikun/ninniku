@@ -31,7 +31,11 @@
 #include "pix3.h"
 #pragma warning(pop)
 
+#pragma warning(push)
+#pragma warning(disable:6001)
 #include <d3dx12/d3dx12.h>
+#pragma warning(pop)
+
 #include <boost/crc.hpp>
 
 namespace ninniku

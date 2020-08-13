@@ -45,12 +45,12 @@ bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, c
 
 bool IsAppVeyor()
 {
-    char* value;
+    char* value = nullptr;
     size_t len;
 
-    auto ret = _dupenv_s(&value, &len, "APPVEYOR");
+    _dupenv_s(&value, &len, "APPVEYOR");
 
-    if ((len > 0) && (strcmp(value, "True") == 0))
+    if ((value != nullptr) && (len > 0) && (strcmp(value, "True") == 0))
         return true;
 
     return false;

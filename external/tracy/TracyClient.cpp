@@ -13,9 +13,9 @@
 
 #include <pch.h>
 
-#include "common/TracySystem.cpp"
-
 #ifdef TRACY_ENABLE
+
+#include "common/TracySystem.cpp"
 
 #pragma warning(push)
 #pragma warning(disable:4100)

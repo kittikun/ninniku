@@ -29,7 +29,11 @@
 #include "../renderer/dx11/DX11.h"
 #include "../renderer/dx12/DX12.h"
 
+#pragma warning(push)
+#pragma warning(disable:6001)
 #include <d3dx12/d3dx12.h>
+#pragma warning(pop)
+
 #include <comdef.h>
 
 namespace ninniku
