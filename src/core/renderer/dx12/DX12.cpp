@@ -18,10 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef NO_PCH
-#include "pch.h"
-#endif
-
 #include "DX12.h"
 
 #pragma comment(lib, "dxcompiler.lib")

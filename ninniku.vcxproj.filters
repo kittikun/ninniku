@@ -43,9 +43,6 @@
     <ClCompile Include="src\utils\misc.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\ninniku.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -107,9 +104,6 @@
     </ClInclude>
     <ClInclude Include="src\utils\misc.h">
       <Filter>Source Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\pch.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ninniku\types.h">
       <Filter>Include</Filter>
