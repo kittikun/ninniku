@@ -29,7 +29,6 @@
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
 #include "../../../utils/object_tracker.h"
-#include "../dx_common.h"
 #include "dxc_utils.h"
 
 #pragma warning(push)
@@ -56,9 +55,9 @@ namespace ninniku
 {
     DX12::DX12(ERenderer type)
         : type_{ type }
-        , _commands{}
+        , commands_{}
     {
-        _commands.reserve(MAX_COMMAND_QUEUE);
+        commands_.reserve(MAX_COMMAND_QUEUE);
     }
 
     bool DX12::CheckFeatureSupport(uint32_t features)
@@ -313,9 +312,9 @@ namespace ninniku
     {
         TRACE_SCOPED_NAMED_DX12("ninniku::DX12::CreateBuffer (BufferParamHandle)");
 
-        auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
-        auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
-        auto isCPURead = (params->viewflags & EResourceViews::RV_CPU_READ) != 0;
+        auto isSRV = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_SRV)) != 0;
+        auto isUAV = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_UAV)) != 0;
+        auto isCPURead = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_CPU_READ)) != 0;
         auto bufferSize = params->numElements * params->elementSize;
 
         LOGDF(boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize);
@@ -703,27 +702,27 @@ namespace ninniku
         }
 
         Microsoft::WRL::ComPtr<IDXGIAdapter> pAdapter;
-        Microsoft::WRL::ComPtr<IDXGIFactory4> dxgiFactory;
+        auto dxgiFactory = DXGI::GetDXGIFactory5();
 
-        if (DXCommon::GetDXGIFactory<IDXGIFactory4>(dxgiFactory.GetAddressOf())) {
+        if (dxgiFactory != nullptr) {
             if (adapter < 0) {
                 // WARP
                 hr = dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pAdapter));
 
-                if (CheckAPIFailed(hr, "IDXGIFactory4::EnumWarpAdapter"))
+                if (CheckAPIFailed(hr, "IDXGIFactory5::EnumWarpAdapter"))
                     return false;
             } else {
                 hr = dxgiFactory->EnumAdapters(adapter, pAdapter.GetAddressOf());
 
-                if (CheckAPIFailed(hr, "IDXGIFactory4::EnumAdapters"))
+                if (CheckAPIFailed(hr, "IDXGIFactory5::EnumAdapters"))
                     return false;
             }
         } else {
-            LOGE << "Failed to to create IDXGIFactory4";
+            LOGE << "Failed to create IDXGIFactory5";
             return false;
         }
 
-        auto minFeatureLevel = D3D_FEATURE_LEVEL_12_0;
+        auto minFeatureLevel = D3D_FEATURE_LEVEL_12_1;
 
         hr = s_DynamicD3D12CreateDevice(pAdapter.Get(), minFeatureLevel, IID_PPV_ARGS(&device_));
 
@@ -794,17 +793,22 @@ namespace ninniku
         return true;
     }
 
+    bool DX12::CreateSwapChain(const SwapchainParam& param)
+    {
+        return DXGI::CreateSwapchain(queues_[QT_TRANSITION].cmdQueue.Get(), param, swapchain_);
+    }
+
     TextureHandle DX12::CreateTexture(const TextureParamHandle& params)
     {
         TRACE_SCOPED_DX12;
 
-        if ((params->viewflags & EResourceViews::RV_CPU_READ) != 0) {
+        if ((params->viewflags & static_cast<uint8_t>(EResourceViews::RV_CPU_READ)) != 0) {
             LOGE << "Textures cannot be created with EResourceViews::RV_CPU_READ";
             return TextureHandle();
         }
 
-        auto isSRV = (params->viewflags & EResourceViews::RV_SRV) != 0;
-        auto isUAV = (params->viewflags & EResourceViews::RV_UAV) != 0;
+        auto isSRV = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_SRV)) != 0;
+        auto isUAV = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_UAV)) != 0;
         auto is3d = params->depth > 1;
         auto is1d = params->height == 1;
         auto is2d = (!is3d) && (!is1d);
@@ -1330,7 +1334,7 @@ namespace ninniku
             queues_[cmdList->type].cmdList->Reset(queues_[cmdList->type].cmdAllocator.Get(), nullptr);
         } else {
             // put in the queue and execute when flush is called
-            _commands.push_back(cmdList);
+            commands_.push_back(cmdList);
         }
 
         return true;
@@ -1340,7 +1344,7 @@ namespace ninniku
     {
         TRACE_SCOPED_DX12;
 
-        if (!_commands.empty()) {
+        if (!commands_.empty()) {
             if (!Flush())
                 throw std::exception("Finalize flush failed");
         }
@@ -1348,6 +1352,8 @@ namespace ninniku
         CloseHandle(fenceEvent_);
 
         tracker_.ReleaseObjects();
+
+        DXGI::ReleaseDXGIFactory();
     }
 
     bool DX12::Flush()
@@ -1358,7 +1364,7 @@ namespace ninniku
             return true;
         }
 
-        if (_commands.empty()) {
+        if (commands_.empty()) {
             LOGW << "Flush() was called but the command list was empty";
             return true;
         }
@@ -1381,7 +1387,7 @@ namespace ninniku
             return true;
         };
 
-        for (auto& iter : _commands) {
+        for (auto& iter : commands_) {
             fenceValue = InterlockedIncrement(&fenceValue_);
 
             cmdList[0] = iter->gfxCmdList.Get();
@@ -1423,7 +1429,7 @@ namespace ninniku
             WaitForSingleObject(fenceEvent_, INFINITE);
         }
 
-        _commands.clear();
+        commands_.clear();
 
         return true;
     }

@@ -23,9 +23,6 @@
 #include "ninniku/ninniku.h"
 #include "ninniku/core/renderer/renderdevice.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #pragma warning(push)
 #pragma warning(disable:6330 6326 220 6388 28251)
 #include <boost/date_time.hpp>

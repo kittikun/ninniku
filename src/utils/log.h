@@ -21,7 +21,7 @@
 #pragma once
 
 #pragma warning(push)
-#pragma warning(disable:4103 28251)
+#pragma warning(disable:4103 26439 26451 28251)
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>

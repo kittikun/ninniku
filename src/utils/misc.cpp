@@ -29,11 +29,10 @@
 
 #include <atlbase.h>
 #include <comdef.h>
-#include <windows.h>
 
 namespace ninniku
 {
-    uint32_t Align(UINT uLocation, uint32_t uAlign)
+    uint32_t Align(uint32_t uLocation, uint32_t uAlign)
     {
         // https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resources
         if ((0 == uAlign) || (uAlign & (uAlign - 1))) {
@@ -260,7 +259,7 @@ namespace ninniku
         return res;
     }
 
-    constexpr uint32_t DXGIFormatToNinnikuTF(uint32_t fmt)
+    constexpr uint8_t DXGIFormatToNinnikuTF(uint32_t fmt)
     {
         ETextureFormat res = TF_UNKNOWN;
 

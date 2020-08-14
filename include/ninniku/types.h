@@ -27,6 +27,10 @@
 #include <memory>
 #include <vector>
 
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
 namespace ninniku
 {
     static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
@@ -116,6 +120,15 @@ namespace ninniku
         TF_R32G32B32A32_FLOAT
     };
 
+    struct SwapchainParam : NonCopyable
+    {
+        uint8_t format;
+        uint8_t bufferCount;
+        uint32_t height;
+        HWND hwnd;
+        uint32_t width;
+    };
+
     struct TextureParam : NonCopyable
     {
         static NINNIKU_API std::shared_ptr<TextureParam> Create();
@@ -126,8 +139,8 @@ namespace ninniku
         uint32_t width;
         uint32_t height;
         uint32_t depth;
-        uint32_t viewflags;
-        uint32_t format;
+        uint8_t viewflags;
+        uint8_t format;
 
         // one per face/mip/array etc..
         std::vector<SubresourceParam> imageDatas;

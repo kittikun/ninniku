@@ -24,7 +24,10 @@
 
 #include "ninniku/core/image/cmft.h"
 
+#pragma warning(push)
+#pragma warning(disable:26812)
 #include <cmft/image.h>
+#pragma warning(pop)
 
 namespace ninniku
 {

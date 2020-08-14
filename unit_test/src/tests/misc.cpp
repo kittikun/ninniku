@@ -25,6 +25,7 @@
 #include <ninniku/core/renderer/renderdevice.h>
 
 #include <ninniku/ninniku.h>
+#include <ninniku/utils.h>
 
 BOOST_AUTO_TEST_SUITE(Misc)
 
@@ -38,6 +39,25 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(misc_dx12_check_feature, T, FixturesDX12, T)
 
     BOOST_REQUIRE(dx->CheckFeatureSupport(ninniku::EDeviceFeature::DF_NONE));
     BOOST_REQUIRE(dx->CheckFeatureSupport(ninniku::EDeviceFeature::DF_SM6_WAVE_INTRINSICS));
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(misc_swapchain, T, FixturesAll, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    ninniku::SwapchainParam param;
+
+    param.bufferCount = 2;
+    param.format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
+    param.height = 768;
+    param.width = 1024;
+    param.hwnd = ninniku::MakeWindow(param.width, param.height, false);
+
+    auto& dx = ninniku::GetRenderer();
+
+    BOOST_REQUIRE(dx->CreateSwapChain(param));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

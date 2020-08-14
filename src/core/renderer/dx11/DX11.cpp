@@ -27,7 +27,6 @@
 #include "../../../utils/misc.h"
 #include "../../../utils/object_tracker.h"
 #include "../../../utils/vector_set.h"
-#include "../dx_common.h"
 
 #include <comdef.h>
 #include <d3d11shader.h>
@@ -291,9 +290,9 @@ namespace ninniku
         D3D_DRIVER_TYPE driverType;
 
         if (adapter >= 0) {
-            Microsoft::WRL::ComPtr<IDXGIFactory1> dxgiFactory;
+            auto dxgiFactory = DXGI::GetDXGIFactory5();
 
-            if (DXCommon::GetDXGIFactory<IDXGIFactory1>(dxgiFactory.GetAddressOf())) {
+            if (dxgiFactory != nullptr) {
                 if (FAILED(dxgiFactory->EnumAdapters(adapter, pAdapter.GetAddressOf()))) {
                     auto fmt = boost::format("Invalid GPU adapter index (%1%)!") % adapter;
                     LOGE << boost::str(fmt);
@@ -344,6 +343,11 @@ namespace ninniku
         }
 
         return false;
+    }
+
+    bool DX11::CreateSwapChain(const SwapchainParam& param)
+    {
+        return DXGI::CreateSwapchain(device_.Get(), param, swapchain_);
     }
 
     TextureHandle DX11::CreateTexture(const TextureParamHandle& params)
@@ -665,6 +669,8 @@ namespace ninniku
         TRACE_SCOPED_DX11;
 
         tracker_.ReleaseObjects();
+
+        DXGI::ReleaseDXGIFactory();
     }
 
     bool DX11::Initialize()

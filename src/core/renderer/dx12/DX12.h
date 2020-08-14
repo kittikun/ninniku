@@ -24,6 +24,7 @@
 
 #include "../../../utils/string_map.h"
 #include "../../../utils/trace.h"
+#include "../dxgi.h"
 #include "dx12_types.h"
 
 #include <boost/pool/object_pool.hpp>
@@ -72,6 +73,7 @@ namespace ninniku
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
+        bool CreateSwapChain(const SwapchainParam& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
@@ -129,6 +131,7 @@ namespace ninniku
 
         StringMap<MapNameSlot> resourceBindings_;
 
+        // command contexts
         std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> commandContexts_;
 
         // heap
@@ -140,7 +143,9 @@ namespace ninniku
         // Object pools
         boost::object_pool<CommandList> poolCmd_;
 
-        //boost::circular_buffer<const CommandList*> _commands;
-        std::vector<CommandList*> _commands;
+        std::vector<CommandList*> commands_;
+
+        // swap chain
+        DXGISwapChain swapchain_;
     };
 } // namespace ninniku

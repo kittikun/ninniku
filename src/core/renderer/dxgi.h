@@ -18,28 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ninniku/ninniku.h>
-#include <ninniku/core/renderer/renderdevice.h>
-#include <ninniku/core/renderer/rendergraph.h>
-#include <ninniku/core/image/cmft.h>
-#include <ninniku/core/image/dds.h>
+#pragma once
 
-int main()
+#include <wrl/client.h>
+#include <dxgi1_5.h>
+
+namespace ninniku
 {
-    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
-        return -1;
+    struct SwapchainParam;
 
-    ninniku::SwapchainParam param;
+    using DXGISwapChain = Microsoft::WRL::ComPtr<IDXGISwapChain4>;
 
-    param.bufferCount = 2;
-    param.format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
-    param.height = 768;
-    param.width = 1024;
-    param.hwnd = ninniku::MakeWindow(param.width, param.height, true);
+    class DXGI
+    {
+        // not supposed to be instanced
+        DXGI() = delete;
+        ~DXGI() = delete;
 
-    auto& dx = ninniku::GetRenderer();
-
-    bool res = dx->CreateSwapChain(param);
-
-    ninniku::Terminate();
-}
+    public:
+        static bool CreateSwapchain(IUnknown* device, const SwapchainParam& param, DXGISwapChain& dst);
+        static IDXGIFactory5* GetDXGIFactory5();
+        static void ReleaseDXGIFactory();
+    };
+} // namespace ninniku

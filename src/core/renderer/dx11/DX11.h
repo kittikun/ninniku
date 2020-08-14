@@ -24,7 +24,7 @@
 
 #include "../../../utils/string_map.h"
 #include "../../../utils/trace.h"
-
+#include "../dxgi.h"
 #include "dx11_types.h"
 
 struct ID3D11ShaderReflection;
@@ -48,6 +48,7 @@ namespace ninniku
         CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
+        bool CreateSwapChain(const SwapchainParam& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
         bool Initialize() override;
@@ -93,5 +94,8 @@ namespace ninniku
 
         // tracks allocated resources
         ObjectTracker tracker_;
+
+        // swap chain
+        DXGISwapChain swapchain_;
     };
 } // namespace ninniku

@@ -94,6 +94,12 @@
     <ClCompile Include="external\tracy\TracyClient.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\renderer\dxgi.cpp">
+      <Filter>Source Files\core\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\window.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -174,9 +180,6 @@
     <ClInclude Include="src\core\renderer\dx12\dx12_types.h">
       <Filter>Source Files\core\renderer\dx12</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\renderer\dx_common.h">
-      <Filter>Source Files\core\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils\string_map.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
@@ -188,6 +191,12 @@
     </ClInclude>
     <ClInclude Include="include\ninniku\core\renderer\rendergraph.h">
       <Filter>Include\core\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\renderer\dxgi.h">
+      <Filter>Source Files\core\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\window.h">
+      <Filter>Source Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -85,7 +85,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NINNIKU_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnablePREfast>true</EnablePREfast>
@@ -94,6 +94,7 @@
       <StructMemberAlignment>8Bytes</StructMemberAlignment>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,7 +138,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <PreprocessorDefinitions>NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NINNIKU_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
@@ -186,7 +187,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <PreprocessorDefinitions>TRACY_ENABLE;NINNIKU_EXPORT;NOMINMAX;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TRACY_ENABLE;NINNIKU_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
@@ -236,12 +237,14 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClCompile Include="src\core\renderer\dx12\dx12.cpp" />
     <ClCompile Include="src\core\renderer\dx12\dx12_types.cpp" />
     <ClCompile Include="src\core\renderer\dx12\dxc_utils.cpp" />
+    <ClCompile Include="src\core\renderer\dxgi.cpp" />
     <ClCompile Include="src\ninniku.cpp" />
     <ClCompile Include="src\types.cpp" />
     <ClCompile Include="src\utils\log.cpp" />
     <ClCompile Include="src\utils\mathUtils.cpp" />
     <ClCompile Include="src\utils\misc.cpp" />
     <ClCompile Include="src\utils\object_tracker.cpp" />
+    <ClCompile Include="src\utils\window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -269,7 +272,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClInclude Include="src\core\renderer\dx12\dx12.h" />
     <ClInclude Include="src\core\renderer\dx12\dx12_types.h" />
     <ClInclude Include="src\core\renderer\dx12\dxc_utils.h" />
-    <ClInclude Include="src\core\renderer\dx_common.h" />
+    <ClInclude Include="src\core\renderer\dxgi.h" />
     <ClInclude Include="src\core\renderer\null.h" />
     <ClInclude Include="src\globals.h" />
     <ClInclude Include="src\utils\log.h" />
@@ -279,6 +282,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClInclude Include="src\utils\string_map.h" />
     <ClInclude Include="src\utils\trace.h" />
     <ClInclude Include="src\utils\vector_set.h" />
+    <ClInclude Include="src\utils\window.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="external\cmft\cmft.vcxproj">

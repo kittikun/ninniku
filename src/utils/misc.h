@@ -50,7 +50,7 @@ namespace internal
 
 namespace ninniku
 {
-    NINNIKU_API constexpr uint32_t DXGIFormatToNinnikuTF(uint32_t);
+    NINNIKU_API constexpr uint8_t DXGIFormatToNinnikuTF(uint32_t);
     NINNIKU_API constexpr uint32_t NinnikuTFToDXGIFormat(uint32_t);
     NINNIKU_API constexpr uint32_t DXGIFormatToNumBytes(uint32_t format);
     uint32_t Align(uint32_t uLocation, uint32_t uAlign);

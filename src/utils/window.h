@@ -20,39 +20,14 @@
 
 #pragma once
 
+#include "ninniku/export.h"
+
+#include <cstdint>
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 namespace ninniku
 {
-    class DXCommon
-    {
-        // not supposed to be instanced
-        DXCommon() = delete;
-        ~DXCommon() = delete;
-
-    public:
-        template<typename T>
-        static bool GetDXGIFactory(T** pFactory)
-        {
-            if (!pFactory)
-                return false;
-
-            *pFactory = nullptr;
-
-            typedef HRESULT(WINAPI * pfn_CreateDXGIFactory1)(REFIID riid, _Out_ void** ppFactory);
-
-            static pfn_CreateDXGIFactory1 s_CreateDXGIFactory1 = nullptr;
-
-            if (!s_CreateDXGIFactory1) {
-                auto hModDXGI = LoadLibrary(L"dxgi.dll");
-                if (!hModDXGI)
-                    return false;
-
-                s_CreateDXGIFactory1 = reinterpret_cast<pfn_CreateDXGIFactory1>(reinterpret_cast<void*>(GetProcAddress(hModDXGI, "CreateDXGIFactory1")));
-
-                if (!s_CreateDXGIFactory1)
-                    return false;
-            }
-
-            return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
-        }
-    };
+    NINNIKU_API HWND MakeWindow(uint32_t width, uint32_t height, bool show);
 } // namespace ninniku

@@ -34,7 +34,6 @@
 #include <DXProgrammableCapture.h>
 #include <dxgi1_4.h>
 #include <dxgidebug.h>
-#include <Windows.h>
 
 namespace ninniku
 {

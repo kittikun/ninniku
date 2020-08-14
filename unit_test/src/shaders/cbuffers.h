@@ -33,6 +33,7 @@
 
 CBUFFER CBGlobal{
     int targetMip;
+    int padding[3];
 };
 
 #endif // CBUFFER_H
