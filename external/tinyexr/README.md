@@ -14,6 +14,8 @@
 `tinyexr` is written in portable C++ (no library dependency except for STL), thus `tinyexr` is good to embed into your application.
 To use `tinyexr`, simply copy `tinyexr.h` into your project.
 
+# Features
+
 Current status of `tinyexr` is:
 
 - OpenEXR v1 image
@@ -69,12 +71,35 @@ Current status of `tinyexr` is:
 * C interface.
   * You can easily write language bindings (e.g. golang)
 
+# Supported platform
+
+* [x] x86-64
+  * [x] Windows 7 or later
+  * [x] Linux(posix) system
+  * [x] macOS
+* [x] AARCH64
+  * [x] aarch64 linux(e.g. Raspberry Pi)
+  * [x] Android
+  * [x] iOS
+  * [ ] macOS(Should work)
+* [ ] RISC-V(Should work)
+* [x] Big endian machine(not maintained, but should work)
+  * SPARC, PowerPC, ...
+* [x] WebAssembly(JavaScript)
+  * Loader only(See ![js](experimental/js/))
+* [x] Python binding
+  * Loader only https://pypi.org/project/pytinyexr/
+
+# Requirements
+
+* C++ compiler(C++11 recommended. C++03 may work)
+
 # Use case
 
 ## New TinyEXR (v0.9.5+)
 
 * Godot. Multi-platform 2D and 3D game engine https://godotengine.org/
-* Filament. PBR engine. https://github.com/google/filament
+* Filament. PBR engine(used in a converter tool). https://github.com/google/filament
 * PyEXR. Loading OpenEXR (.exr) images using Python. https://github.com/ialhashim/PyEXR
 * The-Forge. The Forge Cross-Platform Rendering Framework PC, Linux, Ray Tracing, macOS / iOS, Android, XBOX, PS4 https://github.com/ConfettiFX/The-Forge
 * Your project here!
