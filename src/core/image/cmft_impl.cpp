@@ -29,11 +29,8 @@
 #include "../../utils/log.h"
 #include "../../utils/misc.h"
 
-#pragma warning(push)
-#pragma warning(disable:4018 4389 6001 6011 6385 6386 6387 7438 7499 26451 26495 26812 26819)
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr/tinyexr.h>
-#pragma warning(pop)
 
 #include <array>
 #include <filesystem>
@@ -377,7 +374,7 @@ namespace ninniku
         const uint32_t bytesPerPixel = getImageDataInfo(image_.m_format).m_bytesPerPixel;
         std::vector<SubresourceParam> res(CUBEMAP_NUM_FACES);
 
-        for (auto i = 0; i < CUBEMAP_NUM_FACES; ++i) {
+        for (auto i = 0u; i < CUBEMAP_NUM_FACES; ++i) {
             res[i].data = static_cast<void*>(static_cast<uint8_t*>(image_.m_data) + offsets[i]);
             res[i].rowPitch = image_.m_width * bytesPerPixel;
             res[i].depthPitch = 0;

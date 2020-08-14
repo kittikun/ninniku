@@ -28,10 +28,7 @@
 #include "../renderer/dx11/DX11.h"
 #include "../renderer/dx12/DX12.h"
 
-#pragma warning(push)
-#pragma warning(disable:6001)
 #include <d3dx12/d3dx12.h>
-#pragma warning(pop)
 
 #include <comdef.h>
 
@@ -290,6 +287,10 @@ namespace ninniku
             case DXGI_FORMAT_BC6H_UF16:
             case DXGI_FORMAT_BC6H_SF16:
                 bc6hbc7 = true;
+                break;
+
+            default:
+                // nothing to do
                 break;
         };
 

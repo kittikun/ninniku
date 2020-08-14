@@ -403,7 +403,7 @@ namespace ninniku
         auto numImageImpls = params->imageDatas.size();
         std::vector<D3D11_SUBRESOURCE_DATA> initialData(numImageImpls);
 
-        for (auto i = 0; i < numImageImpls; ++i) {
+        for (auto i = 0u; i < numImageImpls; ++i) {
             auto& subParam = params->imageDatas[i];
             auto& initData = initialData[i];
 

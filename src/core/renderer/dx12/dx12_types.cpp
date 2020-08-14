@@ -25,20 +25,14 @@
 #include "../../../utils/misc.h"
 #include "../../../utils/trace.h"
 
-#pragma warning(push)
-#pragma warning(disable:4100)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #include "pix3.h"
-#pragma warning(pop)
+#pragma clang diagnostic pop
 
-#pragma warning(push)
-#pragma warning(disable:6001)
 #include <d3dx12/d3dx12.h>
-#pragma warning(pop)
 
-#pragma warning(push)
-#pragma warning(disable:4701 6001)
 #include <boost/crc.hpp>
-#pragma warning(pop)
 
 namespace ninniku
 {
@@ -203,7 +197,7 @@ namespace ninniku
                     srvDesc.ViewDimension = static_cast<D3D12_SRV_DIMENSION>(found->second.Dimension);
 
                     switch (found->second.Dimension) {
-                        case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
+                        case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
                         {
                             srvDesc.TextureCubeArray = {};
                             srvDesc.TextureCubeArray.MipLevels = locked->desc_->numMips;
@@ -211,14 +205,14 @@ namespace ninniku
                         }
                         break;
 
-                        case D3D12_SRV_DIMENSION_TEXTURECUBE:
+                        case D3D_SRV_DIMENSION_TEXTURECUBE:
                         {
                             srvDesc.TextureCube = {};
                             srvDesc.TextureCube.MipLevels = locked->desc_->numMips;
                         }
                         break;
 
-                        case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
+                        case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
                         {
                             srvDesc.Texture2DArray = {};
                             srvDesc.Texture2DArray.ArraySize = locked->desc_->arraySize;
@@ -235,7 +229,7 @@ namespace ninniku
                         }
                         break;
 
-                        case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
+                        case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
                         {
                             srvDesc.Texture1DArray = {};
                             srvDesc.Texture1DArray.ArraySize = locked->desc_->arraySize;
@@ -244,21 +238,21 @@ namespace ninniku
                         }
                         break;
 
-                        case D3D12_SRV_DIMENSION_TEXTURE1D:
+                        case D3D_SRV_DIMENSION_TEXTURE1D:
                         {
                             srvDesc.Texture1D = {};
                             srvDesc.Texture1D.MipLevels = locked->desc_->numMips;
                         }
                         break;
 
-                        case D3D12_SRV_DIMENSION_TEXTURE2D:
+                        case D3D_SRV_DIMENSION_TEXTURE2D:
                         {
                             srvDesc.Texture2D = {};
                             srvDesc.Texture2D.MipLevels = locked->desc_->numMips;
                         }
                         break;
 
-                        case D3D12_SRV_DIMENSION_TEXTURE3D:
+                        case D3D_SRV_DIMENSION_TEXTURE3D:
                         {
                             srvDesc.Texture3D = {};
                             srvDesc.Texture3D.MipLevels = locked->desc_->numMips;

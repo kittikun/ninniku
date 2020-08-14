@@ -21,10 +21,7 @@
 #include "check.h"
 #include "utils.h"
 
-#pragma warning(push)
-#pragma warning(disable:6001)
 #include <boost/crc.hpp>
-#pragma warning(pop)
 
 #include <boost/test/unit_test.hpp>
 #include <array>

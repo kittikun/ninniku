@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "image_Impl.h"
+#include "image_impl.h"
 
 namespace ninniku
 {

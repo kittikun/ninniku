@@ -111,7 +111,6 @@ namespace ninniku
         static constexpr uint32_t MAX_COMMAND_QUEUE = 64;
 
         ERenderer type_;
-        uint8_t padding_[3];
 
         DX12Device device_;
 

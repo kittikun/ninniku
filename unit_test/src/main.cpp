@@ -21,4 +21,9 @@
 #include "fixture.h"
 
 #define BOOST_TEST_MODULE ninniku
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/test/included/unit_test.hpp>
+#pragma clang diagnostic pop

@@ -23,16 +23,18 @@
 #include "ninniku/ninniku.h"
 #include "ninniku/core/renderer/renderdevice.h"
 
-#pragma warning(push)
-#pragma warning(disable:6330 6326 220 6388 28251)
 #include <boost/date_time.hpp>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/log/expressions.hpp>
+#pragma clang diagnostic pop
+
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/debug_output_backend.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-#pragma warning(pop)
 
 namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
@@ -99,6 +101,10 @@ namespace ninniku
                             break;
                         case BoostLogLevel::Log_Error:
                             res = 12;  // red
+                            break;
+
+                        default:
+                            // nothing to do
                             break;
                     }
 
@@ -186,6 +192,10 @@ namespace ninniku
                 case ELogLevel::LL_WARN_ERROR:
                     colorSink->set_filter(severity > Log_Core);
                     debugSink->set_filter(severity > Log_Core);
+                    break;
+
+                default:
+                    // nothing to do
                     break;
             }
 

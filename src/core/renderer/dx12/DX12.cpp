@@ -31,25 +31,19 @@
 #include "../../../utils/object_tracker.h"
 #include "dxc_utils.h"
 
-#pragma warning(push)
-#pragma warning(disable:4100)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #include "pix3.h"
-#pragma warning(pop)
+#pragma clang diagnostic pop
 
 #include <atlbase.h>
 #include <comdef.h>
 #include <dxgi1_4.h>
 #include <dxcapi.h>
 
-#pragma warning(push)
-#pragma warning(disable:6001)
 #include <d3dx12/d3dx12.h>
-#pragma warning(pop)
 
-#pragma warning(push)
-#pragma warning(disable:4701 6001)
 #include <boost/crc.hpp>
-#pragma warning(pop)
 
 namespace ninniku
 {
@@ -1413,6 +1407,10 @@ namespace ninniku
                         return false;
                 }
                 break;
+
+                default:
+                    throw new std::exception("Invalid queue type");
+                    break;
             }
 
             iter->~CommandList();
@@ -1473,7 +1471,7 @@ namespace ninniku
             if (CheckAPIFailed(hr, "ID3D12Device::CreateCommandAllocator"))
                 return false;
 
-            D3D12_COMMAND_QUEUE_DESC queueDesc = { listType, 0, D3D12_COMMAND_QUEUE_FLAG_NONE };
+            D3D12_COMMAND_QUEUE_DESC queueDesc = { listType, 0, D3D12_COMMAND_QUEUE_FLAG_NONE, 0 };
 
             hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&queues_[iter].cmdQueue));
 

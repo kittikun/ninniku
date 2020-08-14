@@ -24,11 +24,11 @@
 
 #include "../../utils/log.h"
 
-#pragma warning(push)
-#pragma warning(disable:6011 6262 6308 26451 26819 28182)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-compare"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
-#pragma warning(pop)
+#pragma clang diagnostic pop
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

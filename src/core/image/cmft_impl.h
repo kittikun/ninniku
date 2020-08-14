@@ -20,14 +20,11 @@
 
 #pragma once
 
-#include "image_Impl.h"
+#include "image_impl.h"
 
 #include "ninniku/core/image/cmft.h"
 
-#pragma warning(push)
-#pragma warning(disable:26812)
 #include <cmft/image.h>
-#pragma warning(pop)
 
 namespace ninniku
 {

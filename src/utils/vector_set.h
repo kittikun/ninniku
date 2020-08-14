@@ -60,7 +60,7 @@ namespace ninniku
             list_.clear();
             list_.resize(size);
 
-            for (int i = 0; i < size; ++i) {
+            for (auto i = 0u; i < size; ++i) {
                 list_[i] = std::get<1>(keyValues[i]);
             }
         }
@@ -70,7 +70,7 @@ namespace ninniku
             keyValues.push_back({ key, value });
         }
 
-        const uint32_t size() const noexcept
+        uint32_t size() const noexcept
         {
             return static_cast<uint32_t>(list_.size());
         }

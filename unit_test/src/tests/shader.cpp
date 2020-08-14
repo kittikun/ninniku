@@ -25,7 +25,12 @@
 #include "../fixture.h"
 #include "../utils.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/test/unit_test.hpp>
+#pragma clang diagnostic pop
+
 #include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/core/renderer/rendergraph.h>
 #include <ninniku/core/renderer/types.h>
@@ -129,6 +134,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
@@ -278,6 +287,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
             break;
+
+        default:
+            throw std::exception("case should not happen");
+            break;
     }
 }
 
@@ -326,6 +339,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
@@ -448,6 +465,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
             break;
+
+        default:
+            throw std::exception("case should not happen");
+            break;
     }
 }
 
@@ -504,6 +525,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
             break;
+
+        default:
+            throw std::exception("case should not happen");
+            break;
     }
 }
 
@@ -551,6 +576,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_WARP_DX11:
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }

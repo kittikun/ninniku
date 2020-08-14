@@ -25,7 +25,12 @@
 #include "../fixture.h"
 #include "../utils.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/test/unit_test.hpp>
+#pragma clang diagnostic pop
+
 #include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
@@ -136,6 +141,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, Fix
             case ninniku::ERenderer::RENDERER_WARP_DX12:
                 throw new std::exception("Invalid test, shouldn't happen");
                 break;
+
+            default:
+                throw std::exception("case should not happen");
+                break;
         }
     }
 }
@@ -202,7 +211,7 @@ BOOST_FIXTURE_TEST_CASE(cmft_saveImage_faceList, SetupFixtureNull)
         3989661171
     };
 
-    for (auto i = 0; i < suffixes.size(); ++i) {
+    for (auto i = 0u; i < suffixes.size(); ++i) {
         auto filename = "cmft_saveImageFace_" + suffixes[i] + ".dds";
 
         BOOST_REQUIRE(std::filesystem::exists(filename));
@@ -347,6 +356,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+
+            break;
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
@@ -384,6 +397,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
             break;
+
+        default:
+            throw std::exception("case should not happen");
+            break;
     }
 }
 
@@ -420,6 +437,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
@@ -468,6 +489,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
             break;
+
+        default:
+            throw std::exception("case should not happen");
+            break;
     }
 }
 
@@ -514,6 +539,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
@@ -567,6 +596,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
             break;
+
+        default:
+            throw std::exception("case should not happen");
+            break;
     }
 #else
     switch (dx->GetType()) {
@@ -581,6 +614,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 #endif
@@ -651,6 +688,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
@@ -723,7 +764,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
             break;
-    }
+
+        default:
+            throw std::exception("case should not happen");
+            break;
+}
 #else
     switch (dx->GetType()) {
         case ninniku::ERenderer::RENDERER_DX11:
@@ -737,6 +782,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 #endif
@@ -783,6 +832,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
             CheckFileCRC(filename, 842772517);
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
@@ -839,6 +892,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
             throw new std::exception("Invalid test, shouldn't happen");
+            break;
+
+        default:
+            throw std::exception("case should not happen");
             break;
     }
 }
