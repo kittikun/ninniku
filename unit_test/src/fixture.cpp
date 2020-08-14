@@ -18,8 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef NO_PCH
-
 #include "fixture.h"
 
 #include "utils.h"
@@ -156,5 +154,3 @@ SetupFixtureDX12WarpSlow::~SetupFixtureDX12WarpSlow()
 {
     ninniku::Terminate();
 }
-
-#endif // NO_PCH

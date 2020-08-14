@@ -18,8 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef NO_PCH
-
 #include "../shaders/cbuffers.h"
 #include "../shaders/dispatch.h"
 #include "../check.h"
@@ -29,6 +27,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <ninniku/core/renderer/renderdevice.h>
+#include <ninniku/core/renderer/rendergraph.h>
 #include <ninniku/core/renderer/types.h>
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
@@ -113,6 +112,154 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
     std::string filename = "shader_SRV_UAV_same_resource.dds";
 
     BOOST_REQUIRE(image->SaveImage(filename));
+    BOOST_REQUIRE(std::filesystem::exists(filename));
+
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+            CheckFileCRC(filename, 1517223776);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            CheckFileCRC(filename, 1737166122);
+            break;
+
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            throw new std::exception("Invalid test, shouldn't happen");
+            break;
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, FixturesAll, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
+
+    BOOST_REQUIRE(LoadShader(dx, "sameResource", T::shaderRoot));
+
+    fg::framegraph framegraph;
+
+    // Final result texture
+    auto param = ninniku::TextureParam::Create();
+
+    param->width = param->height = 512;
+
+    auto numMips = ninniku::CountMips(param->width);
+
+    param->numMips = numMips;
+    param->arraySize = ninniku::CUBEMAP_NUM_FACES;
+    param->depth = 1;
+    param->format = ninniku::TF_R8G8B8A8_UNORM;
+    param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
+
+    auto finalOut = framegraph.add_retained_resource("Final Output", param, static_cast<const ninniku::TextureObject*>(nullptr));
+
+    CBGlobal cb = {};
+
+    // Pass 0 : Initialize mip 0
+    struct PassData_0
+    {
+        ninniku::TextureResource* output;
+    };
+
+    auto pass0 = framegraph.add_render_task<PassData_0>(
+        "Initialize Mip 0",
+        [&](PassData_0& data, fg::render_task_builder& builder)
+    {
+        data.output = builder.write <ninniku::TextureResource>(finalOut);
+    },
+        [&dx, &cb](const PassData_0& data)
+    {
+        auto cmd = dx->CreateCommand();
+
+        cmd->shader = "sameResource";
+        cmd->cbufferStr = "CBGlobal";
+        cmd->srvBindings.insert(std::make_pair("srcTex", nullptr));
+
+        auto output = data.output->actual();
+
+        cmd->uavBindings.insert(std::make_pair("dstTex", output->GetUAV(0)));
+
+        auto& param = data.output->description();
+
+        cmd->dispatch[0] = param->width / SAME_RESOURCE_X;
+        cmd->dispatch[1] = param->height / SAME_RESOURCE_Y;
+        cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
+
+        // constant buffer
+        cb.targetMip = 0;
+
+        BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+        BOOST_REQUIRE(dx->Dispatch(cmd));
+    });
+
+    auto& pass0Data = pass0->data();
+
+    // Pass 1 : Other mips
+    struct PassData_1
+    {
+        ninniku::TextureResource* input;
+        ninniku::TextureResource* output;
+    };
+
+    auto pass1 = framegraph.add_render_task<PassData_1>(
+        "Other Mips",
+        [&pass0Data, &finalOut](PassData_1& data, fg::render_task_builder& builder)
+    {
+        data.input = builder.read(pass0Data.output);
+        data.output = builder.write<ninniku::TextureResource>(finalOut);
+    },
+        [&](const PassData_1& data)
+    {
+        for (uint32_t i = 1; i < numMips; ++i) {
+            auto cmd = dx->CreateCommand();
+
+            cmd->shader = "sameResource";
+            cmd->cbufferStr = "CBGlobal";
+
+            auto input = data.input->actual();
+            auto output = data.output->actual();
+
+            cmd->srvBindings["srcTex"] = input->GetSRVArray(i - 1);
+            cmd->uavBindings["dstTex"] = output->GetUAV(i);
+
+            auto& param = data.input->description();
+
+            cmd->dispatch[0] = std::max(1u, (param->width >> i) / SAME_RESOURCE_X);
+            cmd->dispatch[1] = std::max(1u, (param->height >> i) / SAME_RESOURCE_Y);
+            cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
+
+            cb.targetMip = i;
+
+            BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+            BOOST_REQUIRE(dx->Dispatch(cmd));
+        }
+    });
+
+    auto& pass1Data = pass1->data();
+
+    framegraph.compile();
+    framegraph.execute();
+
+    // Save to disk
+    auto image = std::make_unique<ninniku::ddsImage>();
+
+    BOOST_REQUIRE(image->InitializeFromTextureObject(dx, pass1Data.output->actual()));
+
+    std::string filename = "shader_SRV_UAV_same_resource.dds";
+
+    BOOST_REQUIRE(image->SaveImage(filename));
+
+    framegraph.clear();
+
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
     switch (dx->GetType()) {
@@ -406,5 +553,3 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif // NO_PCH

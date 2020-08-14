@@ -18,8 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef NO_PCH
-
 #include <boost/test/unit_test.hpp>
 
 #include "../fixture.h"
@@ -43,5 +41,3 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(misc_dx12_check_feature, T, FixturesDX12, T)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif // NO_PCH
