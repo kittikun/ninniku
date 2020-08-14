@@ -30,7 +30,7 @@
 #include "../../utils/misc.h"
 
 #pragma warning(push)
-#pragma warning(disable:6001 6011 6385 6386 6387)
+#pragma warning(disable:4018 4389 6001 6011 6385 6386 6387)
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr/tinyexr.h>
 #pragma warning(pop)
