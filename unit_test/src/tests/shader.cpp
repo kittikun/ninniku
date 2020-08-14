@@ -35,7 +35,10 @@
 #include <ninniku/types.h>
 #include <ninniku/utils.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/format.hpp>
+#pragma clang diagnostic pop
 
 BOOST_AUTO_TEST_SUITE(Shader)
 

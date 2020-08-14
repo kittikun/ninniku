@@ -25,28 +25,12 @@
 
 #include <ninniku/types.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/format.hpp>
+#pragma clang diagnostic pop
+
 #include <string>
-
-// https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
-namespace internal
-{
-    static const unsigned int FRONT_SIZE = sizeof("internal::GetTypeNameHelper<") - 1u;
-    static const unsigned int BACK_SIZE = sizeof(">::GetTypeName") - 1u;
-
-    template <typename T>
-    struct GetTypeNameHelper
-    {
-        static const char* GetTypeName(void)
-        {
-            static const size_t size = sizeof(__FUNCTION__) - FRONT_SIZE - BACK_SIZE;
-            static char typeName[size] = {};
-            memcpy(typeName, __FUNCTION__ + FRONT_SIZE, size - 1u);
-
-            return typeName;
-        }
-    };
-}
 
 namespace ninniku
 {
@@ -60,19 +44,13 @@ namespace ninniku
 
     bool CheckAPIFailed(HRESULT hr, const std::string_view& apiName);
 
-    template <typename T>
-    const char* GetTypeName(void)
-    {
-        return internal::GetTypeNameHelper<T>::GetTypeName();
-    }
-
     template<typename T>
     bool CheckWeakExpired(const std::weak_ptr<T>& weak)
     {
         TRACE_SCOPED_UTILS;
 
         if (weak.expired()) {
-            LOGEF(boost::format("Weak pointer to %1% is expired") % GetTypeName<T>());
+            LOGE << "Weak pointer expired..";
 
             return true;
         }

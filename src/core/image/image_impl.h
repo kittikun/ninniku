@@ -36,9 +36,9 @@ namespace ninniku
         ImageImpl() = default;
         virtual ~ImageImpl() = default;
 
-        TextureParamHandle CreateTextureParam(const EResourceViews viewFlags) const;
+        TextureParamHandle CreateTextureParam(const EResourceViews viewFlags) const override;
 
-        virtual const std::tuple<uint8_t*, uint32_t> GetData() const { return std::tuple<uint8_t*, uint32_t>(); }
+        virtual const std::tuple<uint8_t*, uint32_t> GetData() const override { return std::tuple<uint8_t*, uint32_t>(); }
 
         const SizeFixResult IsRequiringFix() const override;
 

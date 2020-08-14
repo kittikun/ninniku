@@ -20,12 +20,12 @@
 
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable:4103 26439 26451 28251)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wassume"
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>
-#pragma warning(push)
+#pragma clang diagnostic pop
 
 #include "ninniku/ninniku.h"
 
@@ -36,9 +36,9 @@
 #define LOGEF(X) BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Error) << ninniku::Log::GetIndent() << boost::str(X)
 #define LOGW BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Warning) << ninniku::Log::GetIndent()
 
-#define LOG_INDENT_START ninniku::Log::StartIndent(); ## LOG
-#define LOGD_INDENT_START ninniku::Log::StartIndent(); ## LOGD
-#define LOGE_INDENT_START ninniku::Log::StartIndent(); ## LOGE
+#define LOG_INDENT_START ninniku::Log::StartIndent(); LOG
+#define LOGD_INDENT_START ninniku::Log::StartIndent(); LOGD
+#define LOGE_INDENT_START ninniku::Log::StartIndent(); LOGE
 
 #define LOG_INDENT_END LOG << "..done"; ninniku::Log::EndIndent()
 #define LOGD_INDENT_END LOGD << "..done"; ninniku::Log::EndIndent()

@@ -20,7 +20,11 @@
 
 #include "utils.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/format.hpp>
+#pragma clang diagnostic pop
+
 #include <fstream>
 
 std::vector<uint8_t> LoadFile(const std::filesystem::path& path)

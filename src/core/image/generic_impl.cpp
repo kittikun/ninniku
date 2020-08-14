@@ -30,7 +30,11 @@
 #include <stb/stb_image.h>
 #pragma warning(pop)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/format.hpp>
+#pragma clang diagnostic pop
+
 #include <array>
 #include <filesystem>
 #include <DirectXPackedVector.h>

@@ -23,7 +23,10 @@
 #include "../../utils/mathUtils.h"
 #include "../../utils/log.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/format.hpp>
+#pragma clang diagnostic pop
 
 namespace ninniku
 {
