@@ -25,13 +25,15 @@
 #include "types.h"
 
 #include <filesystem>
+#include <string_view>
 
 namespace ninniku
 {
-    enum EDeviceFeature
+    enum EDeviceFeature : uint8_t
     {
-        DF_NONE = 0,
-        DF_SM6_WAVE_INTRINSICS = 1 << 0
+        DF_ALLOW_TEARING,
+        DF_SM6_WAVE_INTRINSICS,
+        DF_COUNT
     };
 
     class RenderDevice : NonCopyableBase
@@ -48,7 +50,7 @@ namespace ninniku
         virtual ERenderer GetType() const = 0;
         virtual const std::string_view& GetShaderExtension() const = 0;
 
-        [[nodiscard]] virtual bool CheckFeatureSupport(uint32_t features) = 0;
+        [[nodiscard]] virtual bool CheckFeatureSupport(EDeviceFeature feature, bool& result) = 0;
         [[nodiscard]] virtual bool CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
         virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;

@@ -177,7 +177,7 @@
     <ClCompile Include="src\fixture.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\tests\image.cpp" />
-    <ClCompile Include="src\tests\misc.cpp" />
+    <ClCompile Include="src\tests\renderdevice.cpp" />
     <ClCompile Include="src\tests\shader.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>

@@ -39,11 +39,11 @@ namespace ninniku
     {
     }
 
-    bool DX11::CheckFeatureSupport(uint32_t)
+    bool DX11::CheckFeatureSupport(EDeviceFeature, bool&)
     {
         LOGW << "CheckFeatureSupport() has no effect for RENDERER_DX11";
 
-        return true;
+        return false;
     }
 
     bool DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)

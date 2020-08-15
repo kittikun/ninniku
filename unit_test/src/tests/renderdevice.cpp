@@ -33,7 +33,7 @@
 
 BOOST_AUTO_TEST_SUITE(Misc)
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(misc_dx12_check_feature, T, FixturesDX12, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_dx12_check_feature, T, FixturesAll, T)
 {
     // Disable HW GPU support when running on CI
     if (T::isNull)
@@ -41,11 +41,30 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(misc_dx12_check_feature, T, FixturesDX12, T)
 
     auto& dx = ninniku::GetRenderer();
 
-    BOOST_REQUIRE(dx->CheckFeatureSupport(ninniku::EDeviceFeature::DF_NONE));
-    BOOST_REQUIRE(dx->CheckFeatureSupport(ninniku::EDeviceFeature::DF_SM6_WAVE_INTRINSICS));
+    auto res = false;
+
+    for (auto i = 0u; i < ninniku::DF_COUNT; ++i) {
+        auto check = dx->CheckFeatureSupport(static_cast<ninniku::EDeviceFeature>(i), res);
+
+        switch (dx->GetType()) {
+            case ninniku::ERenderer::RENDERER_DX11:
+            case ninniku::ERenderer::RENDERER_WARP_DX11:
+                BOOST_REQUIRE(!check);
+                break;
+
+            case ninniku::ERenderer::RENDERER_DX12:
+            case ninniku::ERenderer::RENDERER_WARP_DX12:
+                BOOST_REQUIRE(check);
+                break;
+
+            default:
+                throw std::exception("case should not happen");
+                break;
+        }
+    }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(misc_swapchain, T, FixturesAll, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_swapchain, T, FixturesAll, T)
 {
     // Disable HW GPU support when running on CI
     if (T::isNull)

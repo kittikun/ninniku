@@ -54,24 +54,53 @@ namespace ninniku
         commands_.reserve(MAX_COMMAND_QUEUE);
     }
 
-    bool DX12::CheckFeatureSupport(uint32_t features)
+    bool DX12::CheckFeatureSupport(EDeviceFeature feature, bool& result)
     {
         TRACE_SCOPED_DX12;
 
-        auto res = true;
+        switch (feature) {
+            case ninniku::DF_ALLOW_TEARING:
+            {
+                auto dxgiFactory = DXGI::GetDXGIFactory5();
 
-        if ((features & DF_SM6_WAVE_INTRINSICS) != 0) {
-            D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
+                if (dxgiFactory != nullptr) {
+                    BOOL allowTearing = false;
 
-            auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
+                    auto hr = dxgiFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 
-            if (CheckAPIFailed(hr, "CheckFeatureSupport"))
-                return false;
+                    if (CheckAPIFailed(hr, "CheckFeatureSupport"))
+                        return false;
 
-            res = res && waveIntrinsicsSupport.WaveOps;
+                    result = allowTearing;
+
+                    return true;
+                } else {
+                    LOGE << "Failed to create IDXGIFactory5";
+                }
+            }
+            break;
+
+            case ninniku::DF_SM6_WAVE_INTRINSICS:
+            {
+                D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
+
+                auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
+
+                if (CheckAPIFailed(hr, "CheckFeatureSupport"))
+                    return false;
+
+                result = waveIntrinsicsSupport.WaveOps;
+
+                return true;
+            }
+            break;
+
+            default:
+                LOGE << "Unsupported EDeviceFeature";
+                break;
         }
 
-        return res;
+        return false;
     }
 
     bool DX12::CopyBufferResource(const CopyBufferSubresourceParam& params)
