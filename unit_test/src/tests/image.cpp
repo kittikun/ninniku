@@ -88,10 +88,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, Fix
     // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
 
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
-
     auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
 
@@ -135,11 +131,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, Fix
             case ninniku::ERenderer::RENDERER_DX11:
             case ninniku::ERenderer::RENDERER_DX12:
             case ninniku::ERenderer::RENDERER_WARP_DX11:
-                CheckFileCRC(outFiles[i], outHash[i]);
-                break;
-
             case ninniku::ERenderer::RENDERER_WARP_DX12:
-                throw new std::exception("Invalid test, shouldn't happen");
+                CheckFileCRC(outFiles[i], outHash[i]);
                 break;
 
             default:
@@ -330,10 +323,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
     // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
 
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
-
     auto image = std::make_unique<ninniku::ddsImage>();
 
     BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
@@ -351,13 +340,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_DX11:
         case ninniku::ERenderer::RENDERER_DX12:
         case ninniku::ERenderer::RENDERER_WARP_DX11:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
             CheckFileCRC(filename, 4173211496);
             break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
-
-            break;
         default:
             throw std::exception("case should not happen");
             break;
@@ -373,10 +359,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
     // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
 
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
-
     auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
@@ -391,11 +373,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
         case ninniku::ERenderer::RENDERER_DX11:
         case ninniku::ERenderer::RENDERER_DX12:
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 567904825);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 567904825);
             break;
 
         default:
@@ -413,10 +392,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
     // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
 
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
-
     auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
 
@@ -432,11 +407,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
         case ninniku::ERenderer::RENDERER_DX11:
         case ninniku::ERenderer::RENDERER_DX12:
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 3517905);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 3517905);
             break;
 
         default:
@@ -483,11 +455,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 1032956914);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 1032956914);
             break;
 
         default:
@@ -503,11 +472,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
         return;
 
     auto& dx = ninniku::GetRenderer();
-
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
 
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -538,7 +502,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 821195920);
             break;
 
         default:
@@ -554,11 +518,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
         return;
 
     auto& dx = ninniku::GetRenderer();
-
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
 
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -594,7 +553,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 3324017732);
             break;
 
         default:
@@ -613,7 +572,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 2312058583);
             break;
 
         default:
@@ -630,11 +589,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
         return;
 
     auto& dx = ninniku::GetRenderer();
-
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
 
     BOOST_REQUIRE(LoadShader(dx, "packNormals", T::shaderRoot));
 
@@ -683,11 +637,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 3356479526);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 3356479526);
             break;
 
         default:
@@ -703,11 +654,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
         return;
 
     auto& dx = ninniku::GetRenderer();
-
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
 
     BOOST_REQUIRE(LoadShader(dx, "packNormals", T::shaderRoot));
 
@@ -758,11 +704,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 3254186394);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 3254186394);
             break;
 
         default:
@@ -777,11 +720,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 2118249824);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 2118249824);
             break;
 
         default:
@@ -846,18 +786,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
     if (T::isNull)
         return;
 
-    // skip BC6H/BC7 compression on CI debug because it will make Appveyor timeout
-#ifdef _DEBUG
-    if (IsAppVeyor())
-        return;
-#endif
-
     auto& dx = ninniku::GetRenderer();
-
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
 
     auto image = std::make_unique<ninniku::genericImage>();
 
@@ -891,7 +820,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 222998642);
             break;
 
         default:

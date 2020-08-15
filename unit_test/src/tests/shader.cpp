@@ -55,11 +55,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
 
     auto& dx = ninniku::GetRenderer();
 
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
-
     BOOST_REQUIRE(LoadShader(dx, "sameResource", T::shaderRoot));
 
     auto param = ninniku::TextureParam::Create();
@@ -129,11 +124,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 1737166122);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 1737166122);
             break;
 
         default:
@@ -149,11 +141,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
         return;
 
     auto& dx = ninniku::GetRenderer();
-
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
 
     BOOST_REQUIRE(LoadShader(dx, "sameResource", T::shaderRoot));
 
@@ -281,11 +268,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 1737166122);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckFileCRC(filename, 1737166122);
             break;
 
         default:
@@ -480,11 +464,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 
     auto& dx = ninniku::GetRenderer();
 
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
-    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
-        return;
-    }
-
     auto image = std::make_unique<ninniku::cmftImage>();
 
     BOOST_REQUIRE(image->Load("data/Cathedral01.hdr"));
@@ -519,11 +498,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
             break;
 
         case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
-            break;
-
         case ninniku::ERenderer::RENDERER_WARP_DX12:
-            throw new std::exception("Invalid test, shouldn't happen");
+            CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
             break;
 
         default:
