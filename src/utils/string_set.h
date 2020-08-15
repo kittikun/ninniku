@@ -18,16 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ninniku/ninniku.h>
-#include <ninniku/core/renderer/renderdevice.h>
-#include <ninniku/core/renderer/rendergraph.h>
-#include <ninniku/core/image/cmft.h>
-#include <ninniku/core/image/dds.h>
+#pragma once
 
-int main()
+#include <unordered_set>
+
+namespace ninniku
 {
-    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
-        return -1;
+    class StringSet : public std::unordered_set<std::string>
+    {
+    public:
+        typename std::unordered_set<std::string>::iterator find(const std::string_view& str)
+        {
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
+            return std::unordered_set<std::string>::find(tmp_);
+        }
 
-    ninniku::Terminate();
-}
+        typename std::unordered_set<std::string>::const_iterator find(const std::string_view& str) const
+        {
+            tmp_.reserve(str.size());
+            tmp_.assign(str.data(), str.size());
+            return std::unordered_set<std::string>::find(tmp_);
+        }
+
+    private:
+        thread_local static std::string tmp_;
+    };
+} // namespace ninniku

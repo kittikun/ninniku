@@ -1073,7 +1073,7 @@ namespace ninniku
 
             LOGD << boost::str(fmt);
 
-            // if the texture is a constant buffer, we want to create it a slot for it in the map
+            // if the type is a constant buffer, we want to create it a slot for it in the map
             if (bindDesc.Type == D3D_SIT_CBUFFER) {
                 cBuffers_.emplace(bindDesc.Name, DX11Buffer{});
             }

@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <unordered_map>
+
 namespace ninniku
 {
     template<typename ValueType>

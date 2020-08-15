@@ -29,6 +29,7 @@
 #include <atomic>
 #include <d3d12.h>
 #include <d3d12shader.h>
+#include <string_view>
 #include <variant>
 
 namespace ninniku
@@ -42,23 +43,41 @@ namespace ninniku
     using DX12RootSignature = Microsoft::WRL::ComPtr<ID3D12RootSignature>;
     using DX12Resource = Microsoft::WRL::ComPtr<ID3D12Resource>;
     using DX12DescriptorHeap = Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>;
-
     using MapNameSlot = StringMap<D3D12_SHADER_INPUT_BIND_DESC>;
+
+    enum EQueueType : uint8_t
+    {
+        QT_COMPUTE,
+        QT_COPY,
+        QT_DIRECT,
+        QT_COUNT
+    };
+
+    static constexpr uint32_t CONSTANT_BUFFER_POOL_SIZE = 32;
+
+    //////////////////////////////////////////////////////////////////////////
+    // CommandList
+    //////////////////////////////////////////////////////////////////////////
+    struct CommandList : NonCopyable
+    {
+        EQueueType type_;
+        DX12GraphicsCommandList gfxCmdList_;
+    };
 
     //////////////////////////////////////////////////////////////////////////
     // DX12BufferObject
     //////////////////////////////////////////////////////////////////////////
     struct DX12BufferInternal final : TrackedObject
     {
-        DX12Resource _buffer;
-        SRVHandle _srv;
-        UAVHandle _uav;
+        DX12Resource buffer_;
+        SRVHandle srv_;
+        UAVHandle uav_;
 
         // leave data here to support update later on
-        std::vector<uint32_t> _data;
+        std::vector<uint32_t> data_;
 
         // Initial desc that was used to create the resource
-        std::shared_ptr<const BufferParam> _desc;
+        std::shared_ptr<const BufferParam> desc_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -73,19 +92,19 @@ namespace ninniku
         const ShaderResourceView* GetSRV() const override;
         const UnorderedAccessView* GetUAV() const override;
 
-        std::weak_ptr<DX12BufferInternal> _impl;
+        std::weak_ptr<DX12BufferInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////
-    // DX12Command
+    // DX12Command / DX12CommandInternal / DX12CommandSubContext
     //////////////////////////////////////////////////////////////////////////
     struct DX12CommandSubContext
     {
-        bool Initialize(const DX12Device& device, struct DX12Command* cmd, const MapNameSlot& bindings, const StringMap<struct DX12ConstantBuffer>& cbuffers);
+        bool Initialize(const DX12Device& device, struct DX12Command* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize);
 
-        DX12DescriptorHeap _descriptorHeap;
+        DX12DescriptorHeap descriptorHeap_;
 
-        static inline std::array<uint32_t, 2> _heapIncrementSizes;
+        static inline std::array<uint32_t, 2> heapIncrementSizes_;
     };
 
     struct DX12CommandInternal
@@ -118,7 +137,18 @@ namespace ninniku
     {
         DX12Resource resource_;
         DX12Resource upload_;
-        uint32_t size_ = 0;
+    };
+
+    struct CommandBufferPool
+    {
+        std::array<DX12ConstantBuffer, CONSTANT_BUFFER_POOL_SIZE> buffers_;
+        uint32_t size_;
+
+        // pool also track buffer usage, might want to move that somewhere else
+        StringMap<ID3D12Resource*> cbHandles_;
+
+        std::atomic<uint32_t> lastFlush_ = 0;
+        std::atomic<uint32_t> current_ = 0;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -239,5 +269,17 @@ namespace ninniku
         uint32_t texFace;
         uint32_t texMip;
         const BufferObject* buffer;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // Queue
+    //////////////////////////////////////////////////////////////////////////
+    struct Queue : NonCopyable
+    {
+        DX12CommandAllocator cmdAllocator;
+        DX12CommandQueue cmdQueue;
+
+        // IF_SafeAndSlowDX12 only
+        DX12GraphicsCommandList cmdList;
     };
 } // namespace ninniku

@@ -23,11 +23,13 @@
 #include "ninniku/core/renderer/renderdevice.h"
 
 #include "../../../utils/string_map.h"
+#include "../../../utils/string_set.h"
 #include "../../../utils/trace.h"
 #include "../dxgi.h"
 #include "dx12_types.h"
 
 #include <boost/pool/object_pool.hpp>
+#include <atomic>
 
 struct IDxcBlobEncoding;
 struct ID3D12ShaderReflection;
@@ -36,30 +38,6 @@ namespace ninniku
 {
     class DX12 final : public RenderDevice
     {
-    private:
-        enum EQueueType : uint8_t
-        {
-            QT_COMPUTE,
-            QT_COPY,
-            QT_TRANSITION,
-            QT_COUNT
-        };
-
-        struct CommandList
-        {
-            EQueueType type;
-            DX12GraphicsCommandList gfxCmdList;
-        };
-
-        struct Queue
-        {
-            DX12CommandAllocator cmdAllocator;
-            DX12CommandQueue cmdQueue;
-
-            // IF_SafeAndSlowDX12 only
-            DX12GraphicsCommandList cmdList;
-        };
-
     public:
         DX12(ERenderer type);
 
@@ -94,7 +72,7 @@ namespace ninniku
     private:
         CommandList* CreateCommandList(EQueueType type);
         bool CreateCommandContexts();
-        bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const std::string_view& name, void* data, const uint32_t size);
+        bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const uint32_t size);
         bool CreateDevice(int adapter);
         bool CreateSamplers();
         D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
@@ -108,30 +86,27 @@ namespace ninniku
     private:
         static constexpr std::string_view ShaderExt = ".dxco";
         static constexpr uint32_t MAX_DESCRIPTOR_COUNT = 32;
-        static constexpr uint32_t MAX_COMMAND_QUEUE = 64;
+        static constexpr uint32_t DEFAULT_COMMAND_QUEUE_SIZE = 64;
 
         ERenderer type_;
-
         DX12Device device_;
 
-        // commands and fences
+        // commands
+        std::vector<CommandList*> commands_;
+        std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> commandContexts_;
+        std::array<Queue, QT_COUNT> queues_;
+
+        // fence
         DX12Fence fence_;
         uint64_t volatile fenceValue_;
         volatile HANDLE fenceEvent_;
-
-        // IF_SafeAndSlowDX12 only
-        std::array<Queue, QT_COUNT> queues_;
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
         StringMap<DX12RootSignature> rootSignatures_;
         StringMap<D3D12_SHADER_BYTECODE> shaders_;
-        StringMap<DX12ConstantBuffer> cBuffers_;
-
+        StringSet cBuffers_;
         StringMap<MapNameSlot> resourceBindings_;
-
-        // command contexts
-        std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> commandContexts_;
 
         // heap
         DX12DescriptorHeap samplerHeap_;
@@ -140,9 +115,8 @@ namespace ninniku
         ObjectTracker tracker_;
 
         // Object pools
+        CommandBufferPool poolCBSmall_;
         boost::object_pool<CommandList> poolCmd_;
-
-        std::vector<CommandList*> commands_;
 
         // swap chain
         DXGISwapChain swapchain_;

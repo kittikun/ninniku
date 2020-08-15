@@ -18,16 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ninniku/ninniku.h>
-#include <ninniku/core/renderer/renderdevice.h>
-#include <ninniku/core/renderer/rendergraph.h>
-#include <ninniku/core/image/cmft.h>
-#include <ninniku/core/image/dds.h>
+#include "string_set.h"
 
-int main()
+namespace ninniku
 {
-    if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
-        return -1;
-
-    ninniku::Terminate();
-}
+    thread_local std::string StringSet::tmp_;
+} // namespace ninniku

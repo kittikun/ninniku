@@ -40,42 +40,42 @@ namespace ninniku
     // DX12BufferImpl
     //////////////////////////////////////////////////////////////////////////
     DX12BufferImpl::DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl) noexcept
-        : _impl{ impl }
+        : impl_{ impl }
     {
     }
 
     const std::tuple<uint8_t*, uint32_t> DX12BufferImpl::GetData() const
     {
-        if (CheckWeakExpired(_impl))
+        if (CheckWeakExpired(impl_))
             return std::tuple<uint8_t*, uint32_t>();
 
-        auto& data = _impl.lock()->_data;
+        auto& data = impl_.lock()->data_;
 
         return { reinterpret_cast<uint8_t*>(data.data()), static_cast<uint32_t>(data.size() * sizeof(uint32_t)) };
     }
 
     const BufferParam* DX12BufferImpl::GetDesc() const
     {
-        if (CheckWeakExpired(_impl))
+        if (CheckWeakExpired(impl_))
             return nullptr;
 
-        return _impl.lock()->_desc.get();
+        return impl_.lock()->desc_.get();
     }
 
     const ShaderResourceView* DX12BufferImpl::GetSRV() const
     {
-        if (CheckWeakExpired(_impl))
+        if (CheckWeakExpired(impl_))
             return nullptr;
 
-        return _impl.lock()->_srv.get();
+        return impl_.lock()->srv_.get();
     }
 
     const UnorderedAccessView* DX12BufferImpl::GetUAV() const
     {
-        if (CheckWeakExpired(_impl))
+        if (CheckWeakExpired(impl_))
             return nullptr;
 
-        return _impl.lock()->_uav.get();
+        return impl_.lock()->uav_.get();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -99,18 +99,18 @@ namespace ninniku
         heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-        auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&subContext._descriptorHeap));
+        auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&subContext.descriptorHeap_));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap"))
             return false;
 
         auto fmt = boost::format("%1%_%2%") % name % hash;
-        subContext._descriptorHeap->SetName(strToWStr(boost::str(fmt)).c_str());
+        subContext.descriptorHeap_->SetName(strToWStr(boost::str(fmt)).c_str());
 
         return true;
     }
 
-    bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12Command* cmd, const MapNameSlot& bindings, const StringMap<DX12ConstantBuffer>& cbuffers)
+    bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12Command* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize)
     {
         TRACE_SCOPED_DX12;
 
@@ -119,36 +119,22 @@ namespace ninniku
 
         auto cmdImpl = cmd->impl_.lock();
 
-        if (_heapIncrementSizes[0] == 0) {
+        if (heapIncrementSizes_[0] == 0) {
             // increment size are fixed per hardware but we still need to query them
-            _heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            _heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+            heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
         }
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE heapHandle{ _descriptorHeap->GetCPUDescriptorHandleForHeapStart() };
+        CD3DX12_CPU_DESCRIPTOR_HANDLE heapHandle{ descriptorHeap_->GetCPUDescriptorHandleForHeapStart() };
 
         // create constant buffer view, just one supported at the moment
-        if (!cmd->cbufferStr.empty()) {
-            auto found = bindings.find(cmd->cbufferStr);
-
-            if (found == bindings.end()) {
-                LOGEF(boost::format("DX12CommandInternal::Initialize: could not find constant buffer binding \"%1%\"") % cmd->cbufferStr);
-                return false;
-            }
-
-            auto foundCB = cbuffers.find(cmd->cbufferStr);
-
-            if (foundCB == cbuffers.end()) {
-                LOGEF(boost::format("Constant buffer \"%1%\" was not found in any of the shaders parsed") % cmd->cbufferStr);
-                return false;
-            }
-
+        if (cbuffer != nullptr) {
             D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-            cbvDesc.BufferLocation = foundCB->second.resource_->GetGPUVirtualAddress();
-            cbvDesc.SizeInBytes = foundCB->second.size_;
+            cbvDesc.BufferLocation = cbuffer->GetGPUVirtualAddress();
+            cbvDesc.SizeInBytes = cbSize;
 
             device->CreateConstantBufferView(&cbvDesc, heapHandle);
-            heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+            heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
         }
 
         // create srv bindings to the resource
@@ -168,7 +154,7 @@ namespace ninniku
                 srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
                 srvDesc.ViewDimension = static_cast<D3D12_SRV_DIMENSION>(found->second.Dimension);
                 device->CreateShaderResourceView(nullptr, &srvDesc, heapHandle);
-                heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             } else {
                 if (found->second.Type == D3D_SIT_TEXTURE) {
                     if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_)) {
@@ -267,7 +253,7 @@ namespace ninniku
 
                     locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
                     device->CreateShaderResourceView(locked->texture_.Get(), &srvDesc, heapHandle);
-                    heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                    heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
                 } else if (found->second.Type == D3D_SIT_STRUCTURED) {
                     if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_)) {
                         LOGEF(boost::format("SRV binding should have been a buffer \"%1%\"") % found->first);
@@ -286,13 +272,13 @@ namespace ninniku
                     srvDesc.Format = DXGI_FORMAT_UNKNOWN;
                     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
                     srvDesc.Buffer.FirstElement = 0;
-                    srvDesc.Buffer.NumElements = locked->_desc->numElements;
-                    srvDesc.Buffer.StructureByteStride = locked->_desc->elementSize;
+                    srvDesc.Buffer.NumElements = locked->desc_->numElements;
+                    srvDesc.Buffer.StructureByteStride = locked->desc_->elementSize;
                     srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-                    locked->_buffer->SetName(strToWStr(found->first).c_str());
-                    device->CreateShaderResourceView(locked->_buffer.Get(), &srvDesc, heapHandle);
-                    heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                    locked->buffer_->SetName(strToWStr(found->first).c_str());
+                    device->CreateShaderResourceView(locked->buffer_.Get(), &srvDesc, heapHandle);
+                    heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
                 }
             }
         }
@@ -338,7 +324,7 @@ namespace ninniku
 
                 locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
                 device->CreateUnorderedAccessView(locked->texture_.Get(), nullptr, &uavDesc, heapHandle);
-                heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             } else if (found->second.Type == D3D_SIT_UAV_RWSTRUCTURED) {
                 if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->resource_)) {
                     LOGEF(boost::format("UAV binding should have been a buffer \"%1%\"") % found->first);
@@ -356,14 +342,14 @@ namespace ninniku
                 uavDesc.Format = DXGI_FORMAT_UNKNOWN;
                 uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
                 uavDesc.Buffer.FirstElement = 0;
-                uavDesc.Buffer.NumElements = locked->_desc->numElements;
-                uavDesc.Buffer.StructureByteStride = locked->_desc->elementSize;
+                uavDesc.Buffer.NumElements = locked->desc_->numElements;
+                uavDesc.Buffer.StructureByteStride = locked->desc_->elementSize;
                 uavDesc.Buffer.CounterOffsetInBytes = 0;
                 uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-                locked->_buffer->SetName(strToWStr(found->first).c_str());
-                device->CreateUnorderedAccessView(locked->_buffer.Get(), nullptr, &uavDesc, heapHandle);
-                heapHandle.Offset(_heapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                locked->buffer_->SetName(strToWStr(found->first).c_str());
+                device->CreateUnorderedAccessView(locked->buffer_.Get(), nullptr, &uavDesc, heapHandle);
+                heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             }
         }
 

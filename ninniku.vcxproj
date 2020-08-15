@@ -244,6 +244,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClCompile Include="src\utils\mathUtils.cpp" />
     <ClCompile Include="src\utils\misc.cpp" />
     <ClCompile Include="src\utils\object_tracker.cpp" />
+    <ClCompile Include="src\utils\string_set.cpp" />
     <ClCompile Include="src\utils\window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +281,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClInclude Include="src\utils\misc.h" />
     <ClInclude Include="src\utils\object_tracker.h" />
     <ClInclude Include="src\utils\string_map.h" />
+    <ClInclude Include="src\utils\string_set.h" />
     <ClInclude Include="src\utils\trace.h" />
     <ClInclude Include="src\utils\vector_set.h" />
     <ClInclude Include="src\utils\window.h" />

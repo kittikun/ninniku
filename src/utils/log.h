@@ -31,10 +31,11 @@
 
 #define LOG BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Core) << ninniku::Log::GetIndent()
 #define LOGD BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_DX) << ninniku::Log::GetIndent()
-#define LOGDF(X) BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_DX) << ninniku::Log::GetIndent() << boost::str(X)
+#define LOGDF(X) LOGD << boost::str(X)
 #define LOGE BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Error) << ninniku::Log::GetIndent()
-#define LOGEF(X) BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Error) << ninniku::Log::GetIndent() << boost::str(X)
+#define LOGEF(X) LOGE << boost::str(X)
 #define LOGW BOOST_LOG_SEV(ninniku::Log::boost_log::get(), ninniku::Log::Log_Warning) << ninniku::Log::GetIndent()
+#define LOGWF(X) LOGW << boost::str(X)
 
 #define LOG_INDENT_START ninniku::Log::StartIndent(); LOG
 #define LOGD_INDENT_START ninniku::Log::StartIndent(); LOGD
