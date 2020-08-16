@@ -64,7 +64,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_dx12_check_feature, T, FixturesAll
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_swapchain, T, FixturesAll, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_swapchain, T, FixturesDX12All, T)
 {
     // Disable HW GPU support when running on CI
     if (T::isNull)
@@ -77,10 +77,18 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_swapchain, T, FixturesAll, T)
     param.height = 768;
     param.width = 1024;
     param.hwnd = ninniku::MakeWindow(param.width, param.height, false);
+    param.vsync = false;
 
     auto& dx = ninniku::GetRenderer();
 
-    BOOST_REQUIRE(dx->CreateSwapChain(param));
+    auto sc = dx->CreateSwapChain(param);
+
+    BOOST_REQUIRE(sc);
+    BOOST_REQUIRE(sc->GetRTCount() == 2);
+
+    for (auto i = 0u; i < sc->GetRTCount(); ++i) {
+        BOOST_REQUIRE(sc->GetRT(i) != nullptr);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

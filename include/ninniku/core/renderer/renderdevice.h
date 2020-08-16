@@ -21,7 +21,6 @@
 #pragma once
 
 #include "../../ninniku.h"
-#include "../../types.h"
 #include "types.h"
 
 #include <filesystem>
@@ -51,13 +50,14 @@ namespace ninniku
         virtual const std::string_view& GetShaderExtension() const = 0;
 
         [[nodiscard]] virtual bool CheckFeatureSupport(EDeviceFeature feature, bool& result) = 0;
+        [[nodiscard]] virtual bool ClearRenderTarget(const ClearRenderTargetParam& params) = 0;
         [[nodiscard]] virtual bool CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
         virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
         virtual CommandHandle CreateCommand() const = 0;
         virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
-        [[nodiscard]] virtual bool CreateSwapChain(const SwapchainParam& params) = 0;
+        [[nodiscard]] virtual SwapChainHandle CreateSwapChain(const SwapchainParam& params) = 0;
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
         [[nodiscard]] virtual bool Dispatch(const CommandHandle& cmd) = 0;
         virtual void Finalize() = 0;
@@ -66,6 +66,7 @@ namespace ninniku
         [[nodiscard]] virtual bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
+        [[nodiscard]] virtual bool Present(const SwapChainHandle& swapchain) = 0;
         [[nodiscard]] virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
 
         virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;

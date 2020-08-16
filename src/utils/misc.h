@@ -23,7 +23,7 @@
 #include "log.h"
 #include "trace.h"
 
-#include <ninniku/types.h>
+#include <ninniku/core/renderer/types.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

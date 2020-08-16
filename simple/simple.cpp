@@ -24,10 +24,58 @@
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
 
+#include <DirectXColors.h>
+
 int main()
 {
     if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
         return -1;
+
+    ninniku::SwapchainParam scDesc;
+
+    scDesc.bufferCount = 2;
+    scDesc.format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
+    scDesc.height = 768;
+    scDesc.width = 1024;
+    scDesc.hwnd = ninniku::MakeWindow(scDesc.width, scDesc.height, true);
+    scDesc.vsync = false;
+
+    auto& dx = ninniku::GetRenderer();
+
+    std::vector<ninniku::RTVHandle> swapchainRTs;
+
+    auto swapChain = dx->CreateSwapChain(scDesc);
+
+    MSG msg;
+    bool running = true;
+    uint32_t frame = 0;
+
+    while (running) {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        if (msg.message == WM_QUIT) {
+            running = false;
+        } else {
+            auto frameRT = swapChain->GetRT(frame % 2);
+
+            ninniku::ClearRenderTargetParam clearParam;
+
+            clearParam.color = DirectX::Colors::Cyan;
+            clearParam.dstRT = frameRT;
+            clearParam.index = frame % 2;
+
+            if (!dx->ClearRenderTarget(clearParam))
+                throw std::exception("failed to clear");
+
+            if (!dx->Present(swapChain))
+                throw std::exception("failed to present");
+
+            ++frame;
+        }
+    };
 
     ninniku::Terminate();
 }

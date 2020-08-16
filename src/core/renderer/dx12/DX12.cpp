@@ -37,6 +37,7 @@
 #pragma clang diagnostic pop
 
 #include <atlbase.h>
+#include <bitset>
 #include <comdef.h>
 #include <dxgi1_4.h>
 #include <dxcapi.h>
@@ -58,6 +59,16 @@ namespace ninniku
     {
         TRACE_SCOPED_DX12;
 
+        // cache queries
+        static std::bitset<DF_COUNT> queried;
+        static std::bitset<DF_COUNT> queryRes;
+
+        // use cache
+        if (queried[feature]) {
+            result = queryRes[feature];
+            return true;
+        }
+
         switch (feature) {
             case ninniku::DF_ALLOW_TEARING:
             {
@@ -72,10 +83,9 @@ namespace ninniku
                         return false;
 
                     result = allowTearing;
-
-                    return true;
                 } else {
                     LOGE << "Failed to create IDXGIFactory5";
+                    return false;
                 }
             }
             break;
@@ -90,17 +100,41 @@ namespace ninniku
                     return false;
 
                 result = waveIntrinsicsSupport.WaveOps;
-
-                return true;
             }
             break;
 
             default:
                 LOGE << "Unsupported EDeviceFeature";
-                break;
+                return false;
         }
 
-        return false;
+        queried[feature] = true;
+        queryRes[feature] = result;
+
+        return true;
+    }
+
+    bool DX12::ClearRenderTarget(const ClearRenderTargetParam& params)
+    {
+        auto cmdList = CreateCommandList(QT_DIRECT);
+
+        auto rt = static_cast<const DX12RenderTargetView*>(params.dstRT);
+
+        // transition
+        auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
+
+        // clear
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap_->GetCPUDescriptorHandleForHeapStart(), params.index, rtvDescriptorSize_);
+        cmdList->gfxCmdList_->ClearRenderTargetView(rtvHandle, params.color, 0, nullptr);
+
+        // revert transition
+        barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
+
+        ExecuteCommand(cmdList);
+
+        return true;
     }
 
     bool DX12::CopyBufferResource(const CopyBufferSubresourceParam& params)
@@ -573,16 +607,6 @@ namespace ninniku
     {
         TRACE_SCOPED_DX12;
 
-        //// Constant buffers are created during the shaders resource bindings parsing but
-        //// we don't know the size at that point so we must allocate resource at the first update
-
-        //if ((cbuffer.size_ != 0) && (cbuffer.size_ != size)) {
-        //    LOGEF(boost::format("Constant buffer \"%1%\"'s size have changed. Was %2% now %3%") % name % cbuffer.size_ % size);
-        //    return false;
-        //}
-
-        //cbuffer.size_ = Align(size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(size);
 
@@ -597,9 +621,6 @@ namespace ninniku
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (resource)"))
             return false;
 
-        //auto fmt = boost::format("Constant Buffer \"%1%\"") % name;
-        //cbuffer.resource_->SetName(strToWStr(boost::str(fmt)).c_str());
-
         heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         hr = device_->CreateCommittedResource(
             &heapProperties,
@@ -611,42 +632,6 @@ namespace ninniku
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (upload)"))
             return false;
-
-        //fmt = boost::format("Constant Buffer \"%1%\" Upload") % name;
-        //cbuffer.upload_->SetName(strToWStr(boost::str(fmt)).c_str());
-
-        //// copy
-        //auto cmdList = CreateCommandList(QT_COPY);
-
-        //if (cmdList == nullptr) {
-        //    return false;
-        //}
-
-        //auto transition = CD3DX12_RESOURCE_BARRIER::Transition(cbuffer.resource_.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-
-        //cmdList->gfxCmdList->ResourceBarrier(1, &transition);
-
-        //D3D12_SUBRESOURCE_DATA subdata = {};
-        //subdata.pData = data;
-        //subdata.RowPitch = cbuffer.size_;
-        //subdata.SlicePitch = subdata.RowPitch;
-
-        //UpdateSubresources(cmdList->gfxCmdList.Get(), cbuffer.resource_.Get(), cbuffer.upload_.Get(), 0, 0, 1, &subdata);
-
-        //ExecuteCommand(cmdList);
-
-        //// transitions
-        //cmdList = CreateCommandList(QT_DIRECT);
-
-        //if (cmdList == nullptr) {
-        //    return false;
-        //}
-
-        //transition = CD3DX12_RESOURCE_BARRIER::Transition(cbuffer.resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-        //cmdList->gfxCmdList->ResourceBarrier(1, &transition);
-
-        //ExecuteCommand(cmdList);
 
         return true;
     }
@@ -811,9 +796,61 @@ namespace ninniku
         return true;
     }
 
-    bool DX12::CreateSwapChain(const SwapchainParam& param)
+    SwapChainHandle DX12::CreateSwapChain(const SwapchainParam& params)
     {
-        return DXGI::CreateSwapchain(queues_[QT_DIRECT].cmdQueue.Get(), param, swapchain_);
+        auto impl = std::make_shared<DX12SwapChainInternal>();
+
+        tracker_.RegisterObject(impl);
+
+        bool allowTearing;
+
+        if (!CheckFeatureSupport(DF_ALLOW_TEARING, allowTearing))
+            return SwapChainHandle();
+
+        if (!DXGI::CreateSwapchain(queues_[QT_DIRECT].cmdQueue.Get(), params, allowTearing, impl->swapchain_))
+            return SwapChainHandle();
+
+        // Create descriptor heaps.
+        {
+            // Describe and create a render target view (RTV) descriptor heap.
+            D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+            rtvHeapDesc.NumDescriptors = params.bufferCount;
+            rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+            rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+            auto hr = device_->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap_));
+
+            if (CheckAPIFailed(hr, "Failed to create swap chain's RTs CreateDescriptorHeap"))
+                return SwapChainHandle();
+
+            rtvDescriptorSize_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        }
+
+        // Create frame resources.
+        {
+            impl->renderTargets_.resize(params.bufferCount);
+
+            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap_->GetCPUDescriptorHandleForHeapStart());
+
+            // Create a RTV for each frame.
+            for (auto i = 0u; i < params.bufferCount; i++) {
+                auto rtv = new DX12RenderTargetView();
+
+                auto hr = impl->swapchain_->GetBuffer(i, IID_PPV_ARGS(&rtv->texture_));
+
+                if (CheckAPIFailed(hr, "Failed to get swap chain buffer"))
+                    return SwapChainHandle();
+
+                device_->CreateRenderTargetView(rtv->texture_.Get(), nullptr, rtvHandle);
+                rtvHandle.Offset(1, rtvDescriptorSize_);
+
+                impl->renderTargets_[i].reset(rtv);
+            }
+        }
+
+        impl->vsync_ = params.vsync;
+
+        return std::make_unique<DX12SwapChainImpl>(impl);
     }
 
     TextureHandle DX12::CreateTexture(const TextureParamHandle& params)
@@ -1888,6 +1925,31 @@ namespace ninniku
             default:
                 throw std::exception("Invalid EQueueType");
         }
+    }
+
+    bool DX12::Present(const SwapChainHandle& swapchain)
+    {
+        if (!Flush())
+            return false;
+
+        auto dx12sc = static_cast<const DX12SwapChainImpl*>(swapchain.get());
+
+        if (CheckWeakExpired(dx12sc->impl_))
+            return false;
+
+        auto scInternal = dx12sc->impl_.lock();
+
+        bool tearing;
+
+        if (!CheckFeatureSupport(DF_ALLOW_TEARING, tearing))
+            return false;
+
+        uint32_t interval = scInternal->vsync_ ? 1 : 0;
+        uint32_t flags = ((!scInternal->vsync_) && tearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
+        scInternal->swapchain_->Present(interval, flags);
+
+        return true;
     }
 
     bool DX12::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)

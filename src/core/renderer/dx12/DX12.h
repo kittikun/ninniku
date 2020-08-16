@@ -25,7 +25,6 @@
 #include "../../../utils/string_map.h"
 #include "../../../utils/string_set.h"
 #include "../../../utils/trace.h"
-#include "../dxgi.h"
 #include "dx12_types.h"
 
 #include <boost/pool/object_pool.hpp>
@@ -45,13 +44,14 @@ namespace ninniku
         const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
         bool CheckFeatureSupport(EDeviceFeature feature, bool& result) override;
+        bool ClearRenderTarget(const ClearRenderTargetParam& params) override;
         bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
-        bool CreateSwapChain(const SwapchainParam& params) override;
+        SwapChainHandle CreateSwapChain(const SwapchainParam& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
@@ -60,6 +60,7 @@ namespace ninniku
         bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
+        bool Present(const SwapChainHandle& swapchain) override;
         bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
@@ -118,7 +119,8 @@ namespace ninniku
         CommandBufferPool poolCBSmall_;
         boost::object_pool<CommandList> poolCmd_;
 
-        // swap chain
-        DXGISwapChain swapchain_;
+        // for swap chain (move that into contexts like the other views)
+        DX12DescriptorHeap rtvHeap_;
+        uint32_t rtvDescriptorSize_;
     };
 } // namespace ninniku

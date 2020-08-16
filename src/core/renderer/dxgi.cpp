@@ -64,7 +64,7 @@ namespace ninniku
         return DXGIFactory.Get();
     }
 
-    bool DXGI::CreateSwapchain(IUnknown* device, const SwapchainParam& param, DXGISwapChain& dst)
+    bool DXGI::CreateSwapchain(IUnknown* device, const SwapchainParam& param, bool allowTearing, DXGISwapChain& dst)
     {
         // this will happen for DX11 devices
         if (DXGIFactory == nullptr)
@@ -83,6 +83,7 @@ namespace ninniku
             scDesc.Scaling = DXGI_SCALING_NONE;
             scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
             scDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+            scDesc.Flags = allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
             Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
 

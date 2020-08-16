@@ -41,6 +41,7 @@ namespace ninniku
         const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
         bool CheckFeatureSupport(EDeviceFeature feature, bool& result) override;
+        bool ClearRenderTarget(const ClearRenderTargetParam& params) override;
         bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
@@ -48,7 +49,7 @@ namespace ninniku
         CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
-        bool CreateSwapChain(const SwapchainParam& params) override;
+        SwapChainHandle CreateSwapChain(const SwapchainParam& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
         bool Initialize() override;
@@ -56,6 +57,7 @@ namespace ninniku
         bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
+        bool Present(const SwapChainHandle&) override;
         bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }

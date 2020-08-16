@@ -20,39 +20,66 @@
 
 #pragma once
 
-#include "../../types.h"
 #include "../../utils.h"
 
 #include <array>
+#include <DirectXMath.h>
 #include <memory>
+#include <string_view>
 #include <unordered_map>
 
 namespace ninniku
 {
+    static constexpr uint32_t CUBEMAP_NUM_FACES = 6;
+
     //////////////////////////////////////////////////////////////////////////
-    // Shader Resources
+    // Common enumerations
     //////////////////////////////////////////////////////////////////////////
-    struct ShaderResourceView : NonCopyable
+    enum EResourceViews : uint8_t
     {
+        RV_None = 0,                        // Should not be used
+        RV_SRV = 1 << 0,
+        RV_UAV = 1 << 1,
+        RV_CPU_READ = 1 << 2
     };
 
-    using SRVHandle = std::unique_ptr<ShaderResourceView>;
-
-    struct UnorderedAccessView : NonCopyable
+    enum class ESamplerState : uint8_t
     {
+        SS_Point,
+        SS_Linear,
+        SS_Count
     };
 
-    using UAVHandle = std::unique_ptr<UnorderedAccessView>;
-
-    struct SamplerState : NonCopyable
+    enum ETextureFormat : uint8_t
     {
+        TF_UNKNOWN,
+        TF_R8_UNORM,
+        TF_R8G8_UNORM,
+        TF_R8G8B8A8_UNORM,
+        TF_R11G11B10_FLOAT,
+        TF_R16_UNORM,
+        TF_R16G16_UNORM,
+        TF_R16G16B16A16_FLOAT,
+        TF_R16G16B16A16_UNORM,
+        TF_R32_FLOAT,
+        TF_R32G32B32A32_FLOAT
     };
-
-    using SSHandle = std::unique_ptr<SamplerState>;
 
     //////////////////////////////////////////////////////////////////////////
     // Buffers
     //////////////////////////////////////////////////////////////////////////
+    struct BufferParam : NonCopyable
+    {
+        uint32_t numElements;
+        uint32_t elementSize;        // If != 0, this will create a StructuredBuffer, otherwise a ByteAddressBuffer will be created
+        uint8_t viewflags;
+
+        static NINNIKU_API std::shared_ptr<BufferParam> Create();
+        NINNIKU_API std::shared_ptr<BufferParam> Duplicate() const;
+    };
+
+    using BufferParamHandle = std::shared_ptr<const BufferParam>;
+
     struct BufferObject : NonCopyable
     {
         // This will only be filled when copied from another buffer (they are mapped)
@@ -60,8 +87,8 @@ namespace ninniku
         virtual const std::tuple<uint8_t*, uint32_t> GetData() const = 0;
 
         virtual const BufferParam* GetDesc() const = 0;
-        virtual const ShaderResourceView* GetSRV() const = 0;
-        virtual const UnorderedAccessView* GetUAV() const = 0;
+        virtual const struct ShaderResourceView* GetSRV() const = 0;
+        virtual const struct UnorderedAccessView* GetUAV() const = 0;
     };
 
     using BufferHandle = std::unique_ptr<const BufferObject>;
@@ -74,12 +101,47 @@ namespace ninniku
         std::string_view shader;
         std::string_view cbufferStr;
         std::array<uint32_t, 3> dispatch;
-        std::unordered_map<std::string_view, const ShaderResourceView*> srvBindings;
-        std::unordered_map<std::string_view, const UnorderedAccessView*> uavBindings;
-        std::unordered_map<std::string_view, const SamplerState*> ssBindings;
+        std::unordered_map<std::string_view, const struct ShaderResourceView*> srvBindings;
+        std::unordered_map<std::string_view, const struct UnorderedAccessView*> uavBindings;
+        std::unordered_map<std::string_view, const struct RenderTargetView*> rtvBindings;
+        std::unordered_map<std::string_view, const struct SamplerState*> ssBindings;
     };
 
     using CommandHandle = std::unique_ptr<Command>;
+
+    struct ClearRenderTargetParam
+    {
+        DirectX::XMVECTORF32 color;
+        const RenderTargetView* dstRT;
+        uint32_t index; // change this later
+    };
+
+    struct CopyBufferSubresourceParam : NonCopyable
+    {
+        const BufferObject* src;
+        const BufferObject* dst;
+    };
+
+    struct CopyTextureSubresourceParam : NonCopyable
+    {
+        const struct TextureObject* src;
+        uint32_t srcFace;
+        uint32_t srcMip;
+        const struct TextureObject* dst;
+        uint32_t dstFace;
+        uint32_t dstMip;
+    };
+
+    struct SubresourceParam
+    {
+        void* data;
+
+        // No need for 1D textures
+        uint32_t rowPitch;
+
+        // only for 3D textures
+        uint32_t depthPitch;
+    };
 
     //////////////////////////////////////////////////////////////////////////
     // Debug
@@ -103,8 +165,75 @@ namespace ninniku
     using MappedResourceHandle = std::unique_ptr<const MappedResource>;
 
     //////////////////////////////////////////////////////////////////////////
+    // Shader Resources
+    //////////////////////////////////////////////////////////////////////////
+    struct ShaderResourceView : NonCopyable
+    {
+    };
+
+    using SRVHandle = std::unique_ptr<ShaderResourceView>;
+
+    struct UnorderedAccessView : NonCopyable
+    {
+    };
+
+    using UAVHandle = std::unique_ptr<UnorderedAccessView>;
+
+    struct RenderTargetView : NonCopyable
+    {
+    };
+
+    using RTVHandle = std::unique_ptr<RenderTargetView>;
+
+    struct SamplerState : NonCopyable
+    {
+    };
+
+    using SSHandle = std::unique_ptr<SamplerState>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Swap chain
+    //////////////////////////////////////////////////////////////////////////
+    struct SwapchainParam : NonCopyable
+    {
+        uint8_t format;
+        uint8_t bufferCount;
+        uint32_t height;
+        HWND hwnd;
+        bool vsync;
+        uint32_t width;
+    };
+
+    struct SwapChain : NonCopyable
+    {
+        virtual const RenderTargetView* GetRT(uint32_t index) const = 0;
+        virtual uint32_t GetRTCount() const = 0;
+    };
+
+    using SwapChainHandle = std::unique_ptr<const SwapChain>;
+
+    //////////////////////////////////////////////////////////////////////////
     // Textures
     //////////////////////////////////////////////////////////////////////////
+    struct TextureParam : NonCopyable
+    {
+        static NINNIKU_API std::shared_ptr<TextureParam> Create();
+        NINNIKU_API std::shared_ptr<TextureParam> Duplicate() const;
+
+        uint32_t numMips;
+        uint32_t arraySize;
+        uint32_t width;
+        uint32_t height;
+        uint32_t depth;
+        uint8_t viewflags;
+        uint8_t format;
+
+        // one per face/mip/array etc..
+        std::vector<SubresourceParam> imageDatas;
+    };
+
+    using TextureParamHandle = std::shared_ptr<const TextureParam>;
+
     struct TextureObject : NonCopyable
     {
         virtual const TextureParam* GetDesc() const = 0;

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "ninniku/types.h"
+#include "ninniku/core/renderer/types.h"
 
 namespace ninniku
 {

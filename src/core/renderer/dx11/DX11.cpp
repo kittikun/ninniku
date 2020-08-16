@@ -46,6 +46,11 @@ namespace ninniku
         return false;
     }
 
+    bool DX11::ClearRenderTarget(const ClearRenderTargetParam&)
+    {
+        throw std::exception("Not yet implemented");
+    }
+
     bool DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
         TRACE_SCOPED_DX11;
@@ -345,9 +350,10 @@ namespace ninniku
         return false;
     }
 
-    bool DX11::CreateSwapChain(const SwapchainParam& param)
+    SwapChainHandle DX11::CreateSwapChain(const SwapchainParam&)
     {
-        return DXGI::CreateSwapchain(device_.Get(), param, swapchain_);
+        throw std::exception("not implemented yet");
+        //return DXGI::CreateSwapchain(device_.Get(), param, swapchain_);
     }
 
     TextureHandle DX11::CreateTexture(const TextureParamHandle& params)
@@ -1082,6 +1088,11 @@ namespace ninniku
         }
 
         return res;
+    }
+
+    bool DX11::Present(const SwapChainHandle&)
+    {
+        throw std::exception("Not yet implemented");
     }
 
     bool DX11::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)

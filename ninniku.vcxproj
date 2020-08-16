@@ -262,7 +262,6 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <ClInclude Include="include\ninniku\core\renderer\types.h" />
     <ClInclude Include="include\ninniku\export.h" />
     <ClInclude Include="include\ninniku\ninniku.h" />
-    <ClInclude Include="include\ninniku\types.h" />
     <ClInclude Include="include\ninniku\utils.h" />
     <ClInclude Include="src\core\image\cmft_impl.h" />
     <ClInclude Include="src\core\image\dds_impl.h" />

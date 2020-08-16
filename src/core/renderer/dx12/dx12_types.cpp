@@ -120,9 +120,10 @@ namespace ninniku
         auto cmdImpl = cmd->impl_.lock();
 
         if (heapIncrementSizes_[0] == 0) {
-            // increment size are fixed per hardware but we still need to query them
+            // increment size are vendor specific so we still need to query them once
             heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+            heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_RTV] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         }
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE heapHandle{ descriptorHeap_->GetCPUDescriptorHandleForHeapStart() };
@@ -438,6 +439,30 @@ namespace ninniku
     DX12ShaderResourceView::DX12ShaderResourceView(uint32_t index) noexcept
         : index_{ index }
     {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12SwapChainImpl
+    //////////////////////////////////////////////////////////////////////////
+    DX12SwapChainImpl::DX12SwapChainImpl(const std::shared_ptr<DX12SwapChainInternal>& impl) noexcept
+        : impl_{ impl }
+    {
+    }
+
+    const RenderTargetView* DX12SwapChainImpl::GetRT(uint32_t index) const
+    {
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->renderTargets_[index].get();
+    }
+
+    uint32_t DX12SwapChainImpl::GetRTCount() const
+    {
+        if (CheckWeakExpired(impl_))
+            return 0;
+
+        return static_cast<uint32_t>(impl_.lock()->renderTargets_.size());
     }
 
     //////////////////////////////////////////////////////////////////////////

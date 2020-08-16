@@ -24,11 +24,13 @@
 
 #include "../../../utils/object_tracker.h"
 #include "../../../utils/string_map.h"
+#include "../dxgi.h"
 
 #include <wrl/client.h>
 #include <atomic>
 #include <d3d12.h>
 #include <d3d12shader.h>
+
 #include <string_view>
 #include <variant>
 
@@ -104,7 +106,7 @@ namespace ninniku
 
         DX12DescriptorHeap descriptorHeap_;
 
-        static inline std::array<uint32_t, 2> heapIncrementSizes_;
+        static inline std::array<uint32_t, 3> heapIncrementSizes_;
     };
 
     struct DX12CommandInternal
@@ -195,6 +197,11 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12 Shader Resources
     //////////////////////////////////////////////////////////////////////////
+    struct DX12RenderTargetView final : public RenderTargetView
+    {
+        DX12Resource texture_;
+    };
+
     struct DX12ShaderResourceView final : public ShaderResourceView
     {
         DX12ShaderResourceView(uint32_t index) noexcept;
@@ -213,6 +220,29 @@ namespace ninniku
 
         // only when array, std::numeric_limits<uint32_t>::max() otherwise
         uint32_t index_;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12SwapChainInternal
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12SwapChainInternal final : TrackedObject
+    {
+        DXGISwapChain swapchain_;
+        std::vector<RTVHandle> renderTargets_;
+        bool vsync_;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12SwapChainImpl
+    //////////////////////////////////////////////////////////////////////////
+    struct DX12SwapChainImpl final : public SwapChain
+    {
+        DX12SwapChainImpl(const std::shared_ptr<DX12SwapChainInternal>& impl) noexcept;
+
+        const RenderTargetView* GetRT(uint32_t index) const override;
+        uint32_t GetRTCount() const override;
+
+        std::weak_ptr<DX12SwapChainInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////

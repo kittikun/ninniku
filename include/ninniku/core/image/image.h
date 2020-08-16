@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "../../types.h"
 #include "../renderer/renderdevice.h"
 #include "../renderer/types.h"
 

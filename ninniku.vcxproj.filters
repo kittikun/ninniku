@@ -114,9 +114,6 @@
     <ClInclude Include="src\utils\misc.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="include\ninniku\types.h">
-      <Filter>Include</Filter>
-    </ClInclude>
     <ClInclude Include="include\ninniku\ninniku.h">
       <Filter>Include</Filter>
     </ClInclude>
