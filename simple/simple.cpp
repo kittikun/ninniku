@@ -31,14 +31,14 @@ int main()
     if (!ninniku::Initialize(ninniku::ERenderer::RENDERER_DX12, ninniku::EInitializationFlags::IF_None, ninniku::ELogLevel::LL_FULL))
         return -1;
 
-    ninniku::SwapchainParam scDesc;
+    auto scDesc = ninniku::SwapchainParam::Create();
 
-    scDesc.bufferCount = 2;
-    scDesc.format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
-    scDesc.height = 768;
-    scDesc.width = 1024;
-    scDesc.hwnd = ninniku::MakeWindow(scDesc.width, scDesc.height, true);
-    scDesc.vsync = false;
+    scDesc->bufferCount = 2;
+    scDesc->format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
+    scDesc->height = 768;
+    scDesc->width = 1024;
+    scDesc->hwnd = ninniku::MakeWindow(scDesc->width, scDesc->height, true);
+    scDesc->vsync = false;
 
     auto& dx = ninniku::GetRenderer();
 
@@ -74,6 +74,12 @@ int main()
                 throw std::exception("failed to present");
         }
     };
+
+    auto image = std::make_unique<ninniku::ddsImage>();
+
+    image->InitializeFromSwapChain(dx, swapChain);
+
+    image->SaveImage("test.dds");
 
     ninniku::Terminate();
 }

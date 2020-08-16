@@ -49,6 +49,11 @@ namespace ninniku
         return impl_->GetData();
     }
 
+    bool ddsImage::InitializeFromSwapChain(RenderDeviceHandle& dx, const SwapChainHandle& src)
+    {
+        return impl_->InitializeFromSwapChain(dx, src);
+    }
+
     bool ddsImage::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
     {
         return impl_->InitializeFromTextureObject(dx, srcTex);

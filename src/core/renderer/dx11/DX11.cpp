@@ -350,10 +350,9 @@ namespace ninniku
         return false;
     }
 
-    SwapChainHandle DX11::CreateSwapChain(const SwapchainParam&)
+    SwapChainHandle DX11::CreateSwapChain(const SwapchainParamHandle&)
     {
         throw std::exception("not implemented yet");
-        //return DXGI::CreateSwapchain(device_.Get(), param, swapchain_);
     }
 
     TextureHandle DX11::CreateTexture(const TextureParamHandle& params)

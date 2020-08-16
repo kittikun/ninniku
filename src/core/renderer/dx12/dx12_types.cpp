@@ -457,6 +457,14 @@ namespace ninniku
         return impl_.lock()->swapchain_->GetCurrentBackBufferIndex();
     }
 
+    const SwapchainParam* DX12SwapChainImpl::GetDesc() const
+    {
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->desc_.get();
+    }
+
     const RenderTargetView* DX12SwapChainImpl::GetRT(uint32_t index) const
     {
         if (CheckWeakExpired(impl_))

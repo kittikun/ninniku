@@ -64,7 +64,7 @@ namespace ninniku
         return DXGIFactory.Get();
     }
 
-    bool DXGI::CreateSwapchain(IUnknown* device, const SwapchainParam& param, bool allowTearing, DXGISwapChain& dst)
+    bool DXGI::CreateSwapchain(IUnknown* device, const SwapchainParamHandle& param, bool allowTearing, DXGISwapChain& dst)
     {
         // this will happen for DX11 devices
         if (DXGIFactory == nullptr)
@@ -73,13 +73,13 @@ namespace ninniku
         if (DXGIFactory != nullptr) {
             DXGI_SWAP_CHAIN_DESC1 scDesc = {};
 
-            scDesc.Width = param.width;
-            scDesc.Height = param.height;
-            scDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(param.format));
+            scDesc.Width = param->width;
+            scDesc.Height = param->height;
+            scDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(param->format));
             scDesc.SampleDesc.Count = 1;
             scDesc.SampleDesc.Quality = 0;
             scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            scDesc.BufferCount = param.bufferCount;
+            scDesc.BufferCount = param->bufferCount;
             scDesc.Scaling = DXGI_SCALING_NONE;
             scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
             scDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
@@ -87,7 +87,7 @@ namespace ninniku
 
             Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
 
-            auto hr = DXGIFactory->CreateSwapChainForHwnd(device, param.hwnd, &scDesc, nullptr, nullptr, &swapChain);
+            auto hr = DXGIFactory->CreateSwapChainForHwnd(device, param->hwnd, &scDesc, nullptr, nullptr, &swapChain);
 
             if (CheckAPIFailed(hr, "Failed to create swap chain"))
                 return false;

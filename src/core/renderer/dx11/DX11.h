@@ -49,7 +49,7 @@ namespace ninniku
         CommandHandle CreateCommand() const override { return std::make_unique<Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
-        SwapChainHandle CreateSwapChain(const SwapchainParam& params) override;
+        SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
         bool Initialize() override;

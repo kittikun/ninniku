@@ -39,6 +39,8 @@ namespace ninniku
 
         const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
+        bool InitializeFromSwapChain(RenderDeviceHandle& dx, const SwapChainHandle& src);
+
         // Used when transferring data back from the GPU
         bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex) override;
 

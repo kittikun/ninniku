@@ -74,6 +74,27 @@ namespace ninniku
     };
 
     //////////////////////////////////////////////////////////////////////////
+    // CopySwapChainToBufferParam
+    //////////////////////////////////////////////////////////////////////////
+    struct CopySwapChainToBufferParam : NonCopyable
+    {
+        const SwapChainObject* swapchain;
+        uint32_t rtIndex;
+        const BufferObject* buffer;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // CopyTextureSubresourceToBufferParam
+    //////////////////////////////////////////////////////////////////////////
+    struct CopyTextureSubresourceToBufferParam : NonCopyable
+    {
+        const TextureObject* tex;
+        uint32_t texFace;
+        uint32_t texMip;
+        const BufferObject* buffer;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
     // DX12BufferObject
     //////////////////////////////////////////////////////////////////////////
     struct DX12BufferInternal final : TrackedObject
@@ -237,16 +258,20 @@ namespace ninniku
         DXGISwapChain swapchain_;
         std::vector<RTVHandle> renderTargets_;
         bool vsync_;
+
+        // Initial desc that was used to create the resource
+        std::shared_ptr<const SwapchainParam> desc_;
     };
 
     //////////////////////////////////////////////////////////////////////////
     // DX12SwapChainImpl
     //////////////////////////////////////////////////////////////////////////
-    struct DX12SwapChainImpl final : public SwapChain
+    struct DX12SwapChainImpl final : public SwapChainObject
     {
         DX12SwapChainImpl(const std::shared_ptr<DX12SwapChainInternal>& impl) noexcept;
 
         uint32_t GetCurrentBackBufferIndex() const override;
+        const SwapchainParam* GetDesc() const override;
         const RenderTargetView* GetRT(uint32_t index) const override;
         uint32_t GetRTCount() const override;
 
@@ -296,17 +321,6 @@ namespace ninniku
         const UnorderedAccessView* GetUAV(uint32_t index) const override;
 
         std::weak_ptr<DX12TextureInternal> impl_;
-    };
-
-    //////////////////////////////////////////////////////////////////////////
-    // DX12TextureImpl
-    //////////////////////////////////////////////////////////////////////////
-    struct CopyTextureSubresourceToBufferParam : NonCopyable
-    {
-        const TextureObject* tex;
-        uint32_t texFace;
-        uint32_t texMip;
-        const BufferObject* buffer;
     };
 
     //////////////////////////////////////////////////////////////////////////

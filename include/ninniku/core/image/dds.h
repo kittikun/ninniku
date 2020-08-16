@@ -48,6 +48,7 @@ namespace ninniku
         NINNIKU_API const std::tuple<uint8_t*, uint32_t> GetData() const override;
 
         // Used when transferring data back from the GPU
+        NINNIKU_API bool InitializeFromSwapChain(RenderDeviceHandle& dx, const SwapChainHandle& src);
         [[nodiscard]] NINNIKU_API bool InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex) override;
 
         NINNIKU_API virtual const SizeFixResult IsRequiringFix() const override;

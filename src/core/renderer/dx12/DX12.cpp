@@ -207,6 +207,68 @@ namespace ninniku
         return true;
     }
 
+    std::tuple<uint32_t, uint32_t> DX12::CopySwapChainToBuffer(const CopySwapChainToBufferParam& params)
+    {
+        // get our src texture
+        auto scImpl = static_cast<const DX12SwapChainImpl*>(params.swapchain);
+
+        if (CheckWeakExpired(scImpl->impl_))
+            return std::tuple<uint32_t, uint32_t>();
+
+        auto rtv = static_cast<DX12RenderTargetView*>(scImpl->impl_.lock()->renderTargets_[params.rtIndex].get());
+
+        // get dst buffer
+        auto bufferImpl = static_cast<const DX12BufferImpl*>(params.buffer);
+
+        if (CheckWeakExpired(bufferImpl->impl_))
+            return std::tuple<uint32_t, uint32_t>();
+
+        auto bufferInternal = bufferImpl->impl_.lock();
+
+        // manually copy
+
+        uint32_t texSub = D3D12CalcSubresource(0, 0, 0, 1, 1);
+        auto texLoc = CD3DX12_TEXTURE_COPY_LOCATION(rtv->texture_.Get(), texSub);
+        auto scDesc = params.swapchain->GetDesc();
+        auto format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(scDesc->format));
+        auto rowPitch = Align(DXGIFormatToNumBytes(format) * scDesc->width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+
+        D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint = {};
+
+        bufferFootprint.Footprint = CD3DX12_SUBRESOURCE_FOOTPRINT{ format, scDesc->width, scDesc->height, 1, rowPitch };
+        bufferFootprint.Offset = 0;
+
+        auto bufferLoc = CD3DX12_TEXTURE_COPY_LOCATION{ bufferInternal->buffer_.Get(), bufferFootprint };
+
+        // copy
+        auto cmdList = CreateCommandList(QT_COPY);
+
+        if (cmdList == nullptr)
+            return std::tuple<uint32_t, uint32_t>();
+
+        // Buffer should be in state D3D12_RESOURCE_STATE_PRESENT which is the same as D3D12_RESOURCE_STATE_COMMON alreasy
+        auto common2src = CD3DX12_RESOURCE_BARRIER::Transition(rtv->texture_.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+        cmdList->gfxCmdList_->ResourceBarrier(1, &common2src);
+        cmdList->gfxCmdList_->CopyTextureRegion(&bufferLoc, 0, 0, 0, &texLoc, nullptr);
+        ExecuteCommand(cmdList);
+
+        // transitions
+        cmdList = CreateCommandList(QT_DIRECT);
+
+        if (cmdList == nullptr)
+            return std::tuple<uint32_t, uint32_t>();
+
+        std::array<D3D12_RESOURCE_BARRIER, 1> barriers = {
+            CD3DX12_RESOURCE_BARRIER::Transition(rtv->texture_.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_PRESENT),
+        };
+
+        cmdList->gfxCmdList_->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
+        ExecuteCommand(cmdList);
+
+        return { rowPitch, 0 };
+    }
+
     std::tuple<uint32_t, uint32_t> DX12::CopyTextureSubresource(const CopyTextureSubresourceParam& params)
     {
         TRACE_SCOPED_DX12;
@@ -234,9 +296,8 @@ namespace ninniku
         // transitions states in
         auto cmdList = CreateCommandList(QT_DIRECT);
 
-        if (cmdList == nullptr) {
+        if (cmdList == nullptr)
             return std::tuple<uint32_t, uint32_t>();
-        }
 
         std::array<D3D12_RESOURCE_BARRIER, 2> barriers = {
             CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->texture_.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON),
@@ -250,9 +311,8 @@ namespace ninniku
         // actual copy
         cmdList = CreateCommandList(QT_COPY);
 
-        if (cmdList == nullptr) {
+        if (cmdList == nullptr)
             return std::tuple<uint32_t, uint32_t>();
-        }
 
         barriers = {
             CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->texture_.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE),
@@ -267,9 +327,8 @@ namespace ninniku
         // transitions states out
         cmdList = CreateCommandList(QT_DIRECT);
 
-        if (cmdList == nullptr) {
+        if (cmdList == nullptr)
             return std::tuple<uint32_t, uint32_t>();
-        }
 
         barriers = {
             CD3DX12_RESOURCE_BARRIER::Transition(srcInternal->texture_.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
@@ -309,12 +368,10 @@ namespace ninniku
         auto height = texDesc->height >> params.texMip;
         auto rowPitch = Align(DXGIFormatToNumBytes(format) * width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
 
-        uint32_t offset = 0;
-
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint = {};
 
         bufferFootprint.Footprint = CD3DX12_SUBRESOURCE_FOOTPRINT{ format, width, height, 1, rowPitch };
-        bufferFootprint.Offset = offset;
+        bufferFootprint.Offset = 0;
 
         auto bufferLoc = CD3DX12_TEXTURE_COPY_LOCATION{ bufferInternal->buffer_.Get(), bufferFootprint };
 
@@ -359,7 +416,7 @@ namespace ninniku
         cmdList->gfxCmdList_->ResourceBarrier(static_cast<uint32_t>(barriers.size()), barriers.data());
         ExecuteCommand(cmdList);
 
-        return { rowPitch, offset };
+        return { rowPitch, 0 };
     }
 
     BufferHandle DX12::CreateBuffer(const BufferParamHandle& params)
@@ -796,11 +853,13 @@ namespace ninniku
         return true;
     }
 
-    SwapChainHandle DX12::CreateSwapChain(const SwapchainParam& params)
+    SwapChainHandle DX12::CreateSwapChain(const SwapchainParamHandle& params)
     {
         auto impl = std::make_shared<DX12SwapChainInternal>();
 
         tracker_.RegisterObject(impl);
+
+        impl->desc_ = params;
 
         bool allowTearing;
 
@@ -814,7 +873,7 @@ namespace ninniku
         {
             // Describe and create a render target view (RTV) descriptor heap.
             D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-            rtvHeapDesc.NumDescriptors = params.bufferCount;
+            rtvHeapDesc.NumDescriptors = params->bufferCount;
             rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
             rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
@@ -828,12 +887,12 @@ namespace ninniku
 
         // Create frame resources.
         {
-            impl->renderTargets_.resize(params.bufferCount);
+            impl->renderTargets_.resize(params->bufferCount);
 
             CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap_->GetCPUDescriptorHandleForHeapStart());
 
             // Create a RTV for each frame.
-            for (auto i = 0u; i < params.bufferCount; i++) {
+            for (auto i = 0u; i < params->bufferCount; i++) {
                 auto rtv = new DX12RenderTargetView();
 
                 auto hr = impl->swapchain_->GetBuffer(i, IID_PPV_ARGS(&rtv->texture_));
@@ -848,7 +907,7 @@ namespace ninniku
             }
         }
 
-        impl->vsync_ = params.vsync;
+        impl->vsync_ = params->vsync;
 
         return std::make_unique<DX12SwapChainImpl>(impl);
     }

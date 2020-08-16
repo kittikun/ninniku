@@ -70,12 +70,12 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct BufferParam : NonCopyable
     {
+        static NINNIKU_API std::shared_ptr<BufferParam> Create();
+        NINNIKU_API std::shared_ptr<BufferParam> Duplicate() const;
+
         uint32_t numElements;
         uint32_t elementSize;        // If != 0, this will create a StructuredBuffer, otherwise a ByteAddressBuffer will be created
         uint8_t viewflags;
-
-        static NINNIKU_API std::shared_ptr<BufferParam> Create();
-        NINNIKU_API std::shared_ptr<BufferParam> Duplicate() const;
     };
 
     using BufferParamHandle = std::shared_ptr<const BufferParam>;
@@ -196,6 +196,8 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct SwapchainParam : NonCopyable
     {
+        static NINNIKU_API std::shared_ptr<SwapchainParam> Create();
+
         uint8_t format;
         uint8_t bufferCount;
         uint32_t height;
@@ -204,14 +206,17 @@ namespace ninniku
         uint32_t width;
     };
 
-    struct SwapChain : NonCopyable
+    using SwapchainParamHandle = std::shared_ptr<const SwapchainParam>;
+
+    struct SwapChainObject : NonCopyable
     {
         virtual uint32_t GetCurrentBackBufferIndex() const = 0;
+        virtual const SwapchainParam* GetDesc() const = 0;
         virtual const RenderTargetView* GetRT(uint32_t index) const = 0;
         virtual uint32_t GetRTCount() const = 0;
     };
 
-    using SwapChainHandle = std::unique_ptr<const SwapChain>;
+    using SwapChainHandle = std::unique_ptr<const SwapChainObject>;
 
     //////////////////////////////////////////////////////////////////////////
     // Textures

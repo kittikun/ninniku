@@ -135,16 +135,71 @@ namespace ninniku
         throw std::exception("not implemented");
     }
 
-    bool ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
+    bool ddsImageImpl::InitializeFromSwapChain(RenderDeviceHandle& dx, const SwapChainHandle& srcSC)
     {
+        auto srcDesc = srcSC->GetDesc();
+
         // DirectXTex
         meta_ = DirectX::TexMetadata{};
-        meta_.width = srcTex->GetDesc()->width;
-        meta_.height = srcTex->GetDesc()->height;
-        meta_.depth = srcTex->GetDesc()->depth;
-        meta_.arraySize = srcTex->GetDesc()->arraySize;
-        meta_.mipLevels = srcTex->GetDesc()->numMips;
-        meta_.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcTex->GetDesc()->format));
+        meta_.width = srcDesc->width;
+        meta_.height = srcDesc->height;
+        meta_.depth = 1;
+        meta_.arraySize = 1;
+        meta_.mipLevels = 1;
+        meta_.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcDesc->format));
+        meta_.dimension = DirectX::TEX_DIMENSION_TEXTURE2D;
+
+        auto fmt = boost::format("ddsImageImpl::InitializeFromSwapChain with Width=%1%, Height=%2%") % meta_.width % meta_.height;
+        LOG << boost::str(fmt);
+
+        auto hr = scratch_.Initialize(meta_);
+
+        if (CheckAPIFailed(hr, "DirectX::ScratchImage::Initialize"))
+            return false;
+
+        auto marker = dx->CreateDebugMarker("ddsFromTextureSwapchain");
+
+        if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
+            // todo
+        } else {
+            // dx12 needs to use an intermediate buffer
+            auto dx12 = static_cast<DX12*>(dx.get());
+
+            auto param = TextureParam::Create();
+
+            param->width = srcDesc->width;
+            param->height = srcDesc->height;
+            param->format = srcDesc->format;
+
+            auto readback = dx12->CreateBuffer(param);
+
+            CopySwapChainToBufferParam copyParam;
+
+            copyParam.swapchain = srcSC.get();
+            copyParam.rtIndex = 0;
+            copyParam.buffer = readback.get();
+
+            auto cpyRes = dx12->CopySwapChainToBuffer(copyParam);
+            auto mapped = dx->Map(readback);
+
+            UpdateSubImage(0, 0, static_cast<uint8_t*>(mapped->GetData()), std::get<0>(cpyRes));
+        }
+
+        return true;
+    }
+
+    bool ddsImageImpl::InitializeFromTextureObject(RenderDeviceHandle& dx, const TextureObject* srcTex)
+    {
+        auto srcDesc = srcTex->GetDesc();
+
+        // DirectXTex
+        meta_ = DirectX::TexMetadata{};
+        meta_.width = srcDesc->width;
+        meta_.height = srcDesc->height;
+        meta_.depth = srcDesc->depth;
+        meta_.arraySize = srcDesc->arraySize;
+        meta_.mipLevels = srcDesc->numMips;
+        meta_.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcDesc->format));
 
         if (meta_.depth > 1) {
             meta_.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;
@@ -169,8 +224,6 @@ namespace ninniku
         auto marker = dx->CreateDebugMarker("ddsFromTextureObject");
 
         // we have to copy each mip with a read back texture of the same size for each face
-        auto srcDesc = srcTex->GetDesc();
-
         if ((dx->GetType() & ERenderer::RENDERER_DX11) != 0) {
             // dx11 can read back from a texture
             for (uint32_t mip = 0; mip < srcDesc->numMips; ++mip) {

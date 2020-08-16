@@ -36,7 +36,7 @@ namespace ninniku
         ~DXGI() = delete;
 
     public:
-        static bool CreateSwapchain(IUnknown* device, const SwapchainParam& param, bool allowTearing, DXGISwapChain& dst);
+        static bool CreateSwapchain(IUnknown* device, const SwapchainParamHandle& param, bool allowTearing, DXGISwapChain& dst);
         static IDXGIFactory5* GetDXGIFactory5();
         static void ReleaseDXGIFactory();
     };

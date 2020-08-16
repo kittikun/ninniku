@@ -51,7 +51,7 @@ namespace ninniku
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
-        SwapChainHandle CreateSwapChain(const SwapchainParam& params) override;
+        SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
@@ -66,6 +66,7 @@ namespace ninniku
         const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
 
         // Not from RenderDevice
+        std::tuple<uint32_t, uint32_t> CopySwapChainToBuffer(const CopySwapChainToBufferParam& params);
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
