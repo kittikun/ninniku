@@ -48,7 +48,6 @@ int main()
 
     MSG msg;
     bool running = true;
-    uint32_t frame = 0;
 
     while (running) {
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -59,21 +58,20 @@ int main()
         if (msg.message == WM_QUIT) {
             running = false;
         } else {
-            auto frameRT = swapChain->GetRT(frame % 2);
+            auto bufferIndex = swapChain->GetCurrentBackBufferIndex();
+            auto frameRT = swapChain->GetRT(bufferIndex);
 
             ninniku::ClearRenderTargetParam clearParam;
 
             clearParam.color = DirectX::Colors::Cyan;
             clearParam.dstRT = frameRT;
-            clearParam.index = frame % 2;
+            clearParam.index = bufferIndex;
 
             if (!dx->ClearRenderTarget(clearParam))
                 throw std::exception("failed to clear");
 
             if (!dx->Present(swapChain))
                 throw std::exception("failed to present");
-
-            ++frame;
         }
     };
 

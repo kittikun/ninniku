@@ -449,6 +449,14 @@ namespace ninniku
     {
     }
 
+    uint32_t DX12SwapChainImpl::GetCurrentBackBufferIndex() const
+    {
+        if (CheckWeakExpired(impl_))
+            return -1;
+
+        return impl_.lock()->swapchain_->GetCurrentBackBufferIndex();
+    }
+
     const RenderTargetView* DX12SwapChainImpl::GetRT(uint32_t index) const
     {
         if (CheckWeakExpired(impl_))

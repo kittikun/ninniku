@@ -206,6 +206,7 @@ namespace ninniku
 
     struct SwapChain : NonCopyable
     {
+        virtual uint32_t GetCurrentBackBufferIndex() const = 0;
         virtual const RenderTargetView* GetRT(uint32_t index) const = 0;
         virtual uint32_t GetRTCount() const = 0;
     };

@@ -239,6 +239,7 @@ namespace ninniku
     {
         DX12SwapChainImpl(const std::shared_ptr<DX12SwapChainInternal>& impl) noexcept;
 
+        uint32_t GetCurrentBackBufferIndex() const override;
         const RenderTargetView* GetRT(uint32_t index) const override;
         uint32_t GetRTCount() const override;
 

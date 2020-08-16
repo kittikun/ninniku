@@ -1939,13 +1939,13 @@ namespace ninniku
 
         auto scInternal = dx12sc->impl_.lock();
 
-        bool tearing;
+        bool allowTearing;
 
-        if (!CheckFeatureSupport(DF_ALLOW_TEARING, tearing))
+        if (!CheckFeatureSupport(DF_ALLOW_TEARING, allowTearing))
             return false;
 
         uint32_t interval = scInternal->vsync_ ? 1 : 0;
-        uint32_t flags = ((!scInternal->vsync_) && tearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+        uint32_t flags = ((!scInternal->vsync_) && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
         scInternal->swapchain_->Present(interval, flags);
 

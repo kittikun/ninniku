@@ -95,6 +95,7 @@ typedef boost::mpl::vector<SetupFixtureDX11Warp> FixtureDX11Warp;
 
 typedef boost::mpl::vector<SetupFixtureDX12Slow, SetupFixtureDX12> FixturesDX12;
 typedef boost::mpl::vector<SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp> FixturesDX12Warp;
+typedef boost::mpl::joint_view<FixturesDX12, FixturesDX12Warp> FixturesDX12All;
 
 typedef boost::mpl::vector<SetupFixtureDX12Slow> FixtureDX12Slow;
 typedef boost::mpl::vector<SetupFixtureDX12> FixtureDX12;
