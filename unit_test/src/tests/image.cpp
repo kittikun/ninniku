@@ -36,7 +36,6 @@
 #include <ninniku/core/image/dds.h>
 #include <ninniku/core/image/generic.h>
 #include <ninniku/ninniku.h>
-#include <ninniku/types.h>
 #include <ninniku/utils.h>
 #include <filesystem>
 

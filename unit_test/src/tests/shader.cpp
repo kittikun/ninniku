@@ -37,7 +37,6 @@
 #include <ninniku/core/image/cmft.h>
 #include <ninniku/core/image/dds.h>
 #include <ninniku/ninniku.h>
-#include <ninniku/types.h>
 #include <ninniku/utils.h>
 
 #pragma clang diagnostic push
