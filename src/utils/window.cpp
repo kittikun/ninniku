@@ -27,7 +27,9 @@ namespace ninniku
         // sort through and find what code to run for the message given
         switch (message) {
             // this message is read when the window is closed
+            case WM_CLOSE:
             case WM_DESTROY:
+            case WM_QUIT:
             {
                 // close the application entirely
                 PostQuitMessage(0);

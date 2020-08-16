@@ -47,6 +47,13 @@ namespace ninniku
     using DX12DescriptorHeap = Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>;
     using MapNameSlot = StringMap<D3D12_SHADER_INPUT_BIND_DESC>;
 
+    enum EFlushType : uint8_t
+    {
+        FT_DEFAULT,         // Execute then wait
+        FT_EXECUTE_ONLY,
+        FT_WAIT_ONLY
+    };
+
     enum EQueueType : uint8_t
     {
         QT_COMPUTE,

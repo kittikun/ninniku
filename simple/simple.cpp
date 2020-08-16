@@ -55,7 +55,7 @@ int main()
             DispatchMessage(&msg);
         }
 
-        if (msg.message == WM_QUIT) {
+        if ((msg.message == WM_QUIT) || (msg.message == WM_CLOSE)) {
             running = false;
         } else {
             auto bufferIndex = swapChain->GetCurrentBackBufferIndex();

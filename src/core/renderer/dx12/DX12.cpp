@@ -996,7 +996,7 @@ namespace ninniku
 
             ExecuteCommand(cmdList);
 
-            if (!Flush())
+            if (!Flush(FT_DEFAULT))
                 return TextureHandle();
         }
 
@@ -1417,7 +1417,7 @@ namespace ninniku
         TRACE_SCOPED_DX12;
 
         if (!commands_.empty()) {
-            if (!Flush())
+            if (!Flush(FT_DEFAULT))
                 throw std::exception("Finalize flush failed");
         }
 
@@ -1428,7 +1428,7 @@ namespace ninniku
         DXGI::ReleaseDXGIFactory();
     }
 
-    bool DX12::Flush()
+    bool DX12::Flush(EFlushType type)
     {
         TRACE_SCOPED_DX12;
 
@@ -1436,73 +1436,83 @@ namespace ninniku
             return true;
         }
 
-        if (commands_.empty()) {
-            LOGW << "Flush() was called but the command list was empty";
-            return true;
-        }
+        static uint64_t fenceValue = std::numeric_limits<uint64_t>::max();
 
-        std::array<ID3D12CommandList*, 1> cmdList;
-        uint64_t fenceValue = std::numeric_limits<uint64_t>::max();
-
-        auto lmbd = [&](Queue& executeQueue, Queue& waitA, Queue& waitB)
-        {
-            waitA.cmdQueue->Wait(fence_.Get(), fenceValue);
-            waitB.cmdQueue->Wait(fence_.Get(), fenceValue);
-
-            executeQueue.cmdQueue->ExecuteCommandLists(1, cmdList.data());
-
-            auto hr = executeQueue.cmdQueue->Signal(fence_.Get(), fenceValue);
-
-            if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
-                return false;
-
-            return true;
-        };
-
-        for (auto& iter : commands_) {
-            fenceValue = InterlockedIncrement(&fenceValue_);
-
-            cmdList[0] = iter->gfxCmdList_.Get();
-
-            switch (iter->type_) {
-                case ninniku::QT_DIRECT:
-                {
-                    if (!lmbd(queues_[QT_DIRECT], queues_[QT_COPY], queues_[QT_COMPUTE]))
-                        return false;
-                }
-                break;
-
-                case ninniku::QT_COMPUTE:
-                {
-                    if (!lmbd(queues_[QT_COMPUTE], queues_[QT_COPY], queues_[QT_DIRECT]))
-                        return false;
-                }
-                break;
-
-                case ninniku::QT_COPY:
-                {
-                    if (!lmbd(queues_[QT_COPY], queues_[QT_COMPUTE], queues_[QT_DIRECT]))
-                        return false;
-                }
-                break;
-
-                default:
-                    throw new std::exception("Invalid queue type");
-                    break;
+        if ((type == FT_DEFAULT) || (type == FT_EXECUTE_ONLY)) {
+            if (commands_.empty()) {
+                LOGW << "Flush() was called but the command list was empty";
+                return true;
             }
 
-            iter->~CommandList();
-            poolCmd_.free(iter);
+            std::array<ID3D12CommandList*, 1> cmdList;
+
+            auto lmbd = [&](Queue& executeQueue, Queue& waitA, Queue& waitB)
+            {
+                waitA.cmdQueue->Wait(fence_.Get(), fenceValue);
+                waitB.cmdQueue->Wait(fence_.Get(), fenceValue);
+
+                executeQueue.cmdQueue->ExecuteCommandLists(1, cmdList.data());
+
+                auto hr = executeQueue.cmdQueue->Signal(fence_.Get(), fenceValue);
+
+                if (CheckAPIFailed(hr, "ID3D12CommandQueue::Signal"))
+                    return false;
+
+                return true;
+            };
+
+            for (auto& iter : commands_) {
+                fenceValue = InterlockedIncrement(&fenceValue_);
+
+                cmdList[0] = iter->gfxCmdList_.Get();
+
+                switch (iter->type_) {
+                    case ninniku::QT_DIRECT:
+                    {
+                        if (!lmbd(queues_[QT_DIRECT], queues_[QT_COPY], queues_[QT_COMPUTE]))
+                            return false;
+                    }
+                    break;
+
+                    case ninniku::QT_COMPUTE:
+                    {
+                        if (!lmbd(queues_[QT_COMPUTE], queues_[QT_COPY], queues_[QT_DIRECT]))
+                            return false;
+                    }
+                    break;
+
+                    case ninniku::QT_COPY:
+                    {
+                        if (!lmbd(queues_[QT_COPY], queues_[QT_COMPUTE], queues_[QT_DIRECT]))
+                            return false;
+                    }
+                    break;
+
+                    default:
+                        throw new std::exception("Invalid queue type");
+                        break;
+                }
+
+                iter->~CommandList();
+                poolCmd_.free(iter);
+            }
         }
 
-        if (fenceValue != std::numeric_limits<uint64_t>::max()) {
-            // we still need to wait for commands to finish running
-            auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
+        if (type == FT_WAIT_ONLY) {
+            fenceValue = InterlockedIncrement(&fenceValue_);
+            queues_[QT_DIRECT].cmdQueue->Signal(fence_.Get(), fenceValue);
+        }
 
-            if (CheckAPIFailed(hr, "ID3D12Fence::SetEventOnCompletion"))
-                return false;
+        if ((type == FT_DEFAULT) || (type == FT_WAIT_ONLY)) {
+            if (fenceValue != std::numeric_limits<uint64_t>::max()) {
+                // we still need to wait for commands to finish running
+                auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
 
-            WaitForSingleObject(fenceEvent_, INFINITE);
+                if (CheckAPIFailed(hr, "ID3D12Fence::SetEventOnCompletion"))
+                    return false;
+
+                WaitForSingleObject(fenceEvent_, INFINITE);
+            }
         }
 
         commands_.clear();
@@ -1794,7 +1804,7 @@ namespace ninniku
             return MappedResourceHandle();
 
         // make sure data is up to date
-        if (!Flush())
+        if (!Flush(FT_DEFAULT))
             return MappedResourceHandle();
 
         auto internal = impl->impl_.lock();
@@ -1929,7 +1939,7 @@ namespace ninniku
 
     bool DX12::Present(const SwapChainHandle& swapchain)
     {
-        if (!Flush())
+        if (!Flush(FT_EXECUTE_ONLY))
             return false;
 
         auto dx12sc = static_cast<const DX12SwapChainImpl*>(swapchain.get());
@@ -1948,6 +1958,9 @@ namespace ninniku
         uint32_t flags = ((!scInternal->vsync_) && allowTearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
         scInternal->swapchain_->Present(interval, flags);
+
+        if (!Flush(FT_WAIT_ONLY))
+            return false;
 
         return true;
     }
@@ -1975,7 +1988,7 @@ namespace ninniku
         if (poolIndex >= CONSTANT_BUFFER_POOL_SIZE) {
             LOGW << "Reached CONSTANT_BUFFER_POOL_SIZE so trigerring an early flush";
 
-            if (!Flush())
+            if (!Flush(FT_DEFAULT))
                 return false;
 
             poolCBSmall_.lastFlush_.store(poolCBSmall_.current_);

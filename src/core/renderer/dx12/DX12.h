@@ -78,7 +78,7 @@ namespace ninniku
         bool CreateSamplers();
         D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
         bool ExecuteCommand(CommandList* cmdList);
-        bool Flush();
+        bool Flush(EFlushType type);
         bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
         bool LoadShaders(const std::filesystem::path& path);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
