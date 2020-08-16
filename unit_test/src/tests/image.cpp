@@ -85,8 +85,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, Fix
     if (T::isNull)
         return;
 
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
 
     auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
@@ -356,8 +360,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
     if (T::isNull)
         return;
 
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
 
     auto resTex = GenerateColoredMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
@@ -389,8 +397,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
     if (T::isNull)
         return;
 
-    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
     auto& dx = ninniku::GetRenderer();
+
+    // There is something wrong with WARP but it's working fine for DX12 HW so disable it
+    if (dx->GetType() == ninniku::ERenderer::RENDERER_WARP_DX12) {
+        return;
+    }
 
     auto resTex = GenerateColoredCubeArrayMips(dx, T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
