@@ -51,7 +51,7 @@ namespace ninniku
     {
         FT_DEFAULT,         // Execute then wait
         FT_EXECUTE_ONLY,
-        FT_WAIT_ONLY
+        FT_WAIT_ONLY        // Usually used by Present
     };
 
     enum EQueueType : uint8_t
