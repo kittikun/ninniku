@@ -43,6 +43,9 @@
     <ClCompile Include="src\tests\renderdevice.cpp">
       <Filter>Source Files\tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\tests\long.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\utility.hlsl">

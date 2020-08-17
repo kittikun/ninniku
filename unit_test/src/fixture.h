@@ -28,74 +28,74 @@
 
 struct SetupFixtureNull
 {
-    SetupFixtureNull();
-    ~SetupFixtureNull();
+	SetupFixtureNull();
+	~SetupFixtureNull();
 };
 
 struct SetupFixtureDX11
 {
-    SetupFixtureDX11();
-    ~SetupFixtureDX11();
+	SetupFixtureDX11();
+	~SetupFixtureDX11();
 
-    std::string_view shaderRoot;
-    bool isNull = false;
+	std::string_view shaderRoot;
+	bool isNull = false;
 };
 
 struct SetupFixtureDX11Warp
 {
-    SetupFixtureDX11Warp();
-    ~SetupFixtureDX11Warp();
+	SetupFixtureDX11Warp();
+	~SetupFixtureDX11Warp();
 
-    std::string_view shaderRoot;
-    bool isNull = false;
+	std::string_view shaderRoot;
+	bool isNull = false;
 };
 
 struct SetupFixtureDX12
 {
-    SetupFixtureDX12();
-    ~SetupFixtureDX12();
+	SetupFixtureDX12();
+	~SetupFixtureDX12();
 
-    std::string_view shaderRoot;
-    bool isNull = false;
+	std::string_view shaderRoot;
+	bool isNull = false;
 };
 
 struct SetupFixtureDX12Slow
 {
-    SetupFixtureDX12Slow();
-    ~SetupFixtureDX12Slow();
+	SetupFixtureDX12Slow();
+	~SetupFixtureDX12Slow();
 
-    std::string_view shaderRoot;
-    bool isNull = false;
+	std::string_view shaderRoot;
+	bool isNull = false;
 };
 
 struct SetupFixtureDX12Warp
 {
-    SetupFixtureDX12Warp();
-    ~SetupFixtureDX12Warp();
+	SetupFixtureDX12Warp();
+	~SetupFixtureDX12Warp();
 
-    std::string_view shaderRoot;
-    bool isNull = false;
+	std::string_view shaderRoot;
+	bool isNull = false;
 };
 
 struct SetupFixtureDX12WarpSlow
 {
-    SetupFixtureDX12WarpSlow();
-    ~SetupFixtureDX12WarpSlow();
+	SetupFixtureDX12WarpSlow();
+	~SetupFixtureDX12WarpSlow();
 
-    std::string_view shaderRoot;
-    bool isNull = false;
+	std::string_view shaderRoot;
+	bool isNull = false;
 };
 
-typedef boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp> FixturesWarpAll;
-typedef boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12Slow, SetupFixtureDX12> FixturesHWAll;
-typedef boost::mpl::joint_view<FixturesHWAll, FixturesWarpAll> FixturesAll;
+using FixturesWarpAll = boost::mpl::vector<SetupFixtureDX11Warp, SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp>;
+using FixturesHWAll = boost::mpl::vector<SetupFixtureDX11, SetupFixtureDX12Slow, SetupFixtureDX12>;
+using FixturesAll = boost::mpl::joint_view<FixturesHWAll, FixturesWarpAll>;
 
-typedef boost::mpl::vector<SetupFixtureDX11> FixtureDX11;
-typedef boost::mpl::vector<SetupFixtureDX11Warp> FixtureDX11Warp;
+using FixtureDX11 = boost::mpl::vector<SetupFixtureDX11>;
+using FixtureDX11Warp = boost::mpl::vector<SetupFixtureDX11Warp>;
 
-typedef boost::mpl::vector<SetupFixtureDX12Slow, SetupFixtureDX12> FixturesDX12;
-typedef boost::mpl::vector<SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp> FixturesDX12Warp;
-typedef boost::mpl::joint_view<FixturesDX12, FixturesDX12Warp> FixturesDX12All;
+using FixturesDX12 = boost::mpl::vector<SetupFixtureDX12Slow, SetupFixtureDX12>;
+using FixturesDX12Warp = boost::mpl::vector<SetupFixtureDX12WarpSlow, SetupFixtureDX12Warp>;
+using FixturesDX12All = boost::mpl::joint_view<FixturesDX12, FixturesDX12Warp>;
 
-typedef boost::mpl::vector<SetupFixtureDX12Slow> FixtureDX12Slow;
-typedef boost::mpl::vector<SetupFixtureDX12> FixtureDX12;
+using FixtureDX12Slow = boost::mpl::vector<SetupFixtureDX12Slow>;
+using FixtureDX12 = boost::mpl::vector<SetupFixtureDX12>;
