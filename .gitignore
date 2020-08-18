@@ -17,3 +17,4 @@ simple/*.dds
 *.json
 *.txt
 *.gv
+obj/
