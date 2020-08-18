@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using CommandLine;
 
 namespace shader_compiler
 {
@@ -13,6 +14,12 @@ namespace shader_compiler
             var parser = new Parser(dataDir);
 
             parser.Parse("shaders.xml");
+        }
+
+        public class Options
+        {
+            [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
+            public bool Verbose { get; set; }
         }
     }
 }

@@ -81,7 +81,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\dxc\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -113,7 +113,8 @@
     <PostBuildEvent>
       <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
 xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxcompiler.dll" $(OutDir)
-xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)</Command>
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe" $(OutDir)</Command>
       <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -134,7 +135,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\dxc\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -170,7 +171,8 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <PostBuildEvent>
       <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
 xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxcompiler.dll" $(OutDir)
-xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)</Command>
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe" $(OutDir)</Command>
       <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -183,7 +185,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\dxc\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external\tracy;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external\tracy;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -219,7 +221,8 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     <PostBuildEvent>
       <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
 xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxcompiler.dll" $(OutDir)
-xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)</Command>
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)
+xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe" $(OutDir)</Command>
       <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
