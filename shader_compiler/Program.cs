@@ -8,18 +8,47 @@ namespace shader_compiler
     {
         private static void Main(string[] args)
         {
-            var projectDir = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
-            var dataDir = Path.Combine(projectDir, "data");
+            CommandLine.Parser.Default.ParseArguments<Options>(args)
+                  .WithParsed<Options>(o =>
+                  {
+                      if (o.InputPath.Length > 0)
+                      {
+                          if (!File.Exists(o.CompilerPath))
+                              throw new System.IO.FileNotFoundException(o.CompilerPath);
 
-            var parser = new Parser(dataDir);
+                          if (!File.Exists(o.InputPath))
+                              throw new System.IO.FileNotFoundException(o.InputPath);
 
-            parser.Parse("shaders.xml");
-        }
+                          if (!Directory.Exists(o.OutDir))
+                              throw new System.IO.FileNotFoundException(o.OutDir);
 
-        public class Options
-        {
-            [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
-            public bool Verbose { get; set; }
+                          if ((o.Configuration != "Debug") && (o.Configuration != "Release"))
+                              throw new ArgumentException("Configuration must be either \"Debug\" or \"Release\"");
+
+                          o.IsDebug = o.Configuration == "Debug";
+
+                          var baseDir = Path.GetDirectoryName(o.InputPath);
+                          var filename = Path.GetFileName(o.InputPath);
+
+                          // Parse list of files to compile
+                          var parser = new Parser(baseDir, o);
+
+                          var shaders = parser.Parse(filename);
+
+                          var compiler = new Compiler(o);
+
+                          compiler.CompileShaders(shaders);
+
+                          // need to clean up temp files
+                          foreach (var shader in shaders)
+                          {
+                              if (shader.type_ == ShaderType.RootSignature)
+                              {
+                                  File.Delete(shader.path_);
+                              }
+                          }
+                      }
+                  });
         }
     }
 }

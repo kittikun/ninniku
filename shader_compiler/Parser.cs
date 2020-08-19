@@ -9,17 +9,27 @@ namespace shader_compiler
 {
     public class Parser
     {
+        private const string rsTemplate = @"
+[numthreads(1, 1, 1)]
+void main(uint3 DTI : SV_DispatchThreadID)
+{
+}";
+
         private string dataDir_;
+        private Options options_;
 
         #region Public Methods
 
-        public Parser(string dataPath)
+        public Parser(string dataPath, Options o)
         {
             dataDir_ = dataPath;
+            options_ = o;
         }
 
-        public void Parse(string filename)
+        public List<Shader> Parse(string filename)
         {
+            List<Shader> result = new List<Shader>();
+
             var tocPath = Path.Combine(dataDir_, filename);
 
             var document = XDocument.Load(tocPath);
@@ -28,6 +38,7 @@ namespace shader_compiler
 
             if (item != null)
             {
+                // Root signature
                 var rs = item.Descendants().Where(d => d.Name.LocalName == "RootSignature").SingleOrDefault();
 
                 var rsPath = Path.Combine(dataDir_, rs.Attribute("path").Value);
@@ -35,15 +46,23 @@ namespace shader_compiler
                 if (!File.Exists(rsPath))
                     throw new System.IO.FileNotFoundException(rsPath);
 
-                GenerateRootShaderDummy(rsPath);
+                Shader shader = new Shader();
+
+                shader.name_ = rs.Attribute("name").Value;
+                shader.type_ = ShaderType.RootSignature;
+                shader.path_ = GenerateRootShaderDummy(rsPath);
+
+                result.Add(shader);
             }
+
+            return result;
         }
 
         #endregion Public Methods
 
         #region Private Methods
 
-        private void GenerateRootShaderDummy(string path)
+        private string GenerateRootShaderDummy(string path)
         {
             List<string> lines = File.ReadAllLines(path).ToList();
             List<string> cleaned = new List<string>();
@@ -56,24 +75,19 @@ namespace shader_compiler
             for (var i = 0; i < cleaned.Count; ++i)
             {
                 if (i == (cleaned.Count - 1))
-                    formatted.Add(string.Format("\"{0}\"", cleaned[i]));
+                    formatted.Add(string.Format("{0}", cleaned[i]));
                 else
-                    formatted.Add(string.Format("\"{0}\" \\", cleaned[i]));
+                    formatted.Add(string.Format("{0} \\", cleaned[i]));
             }
 
             var builder = new StringBuilder();
 
-            builder.Append("#define RS \"");
+            builder.Append("#define RS ");
 
             foreach (var str in formatted)
                 builder.Append(string.Format("{0}\n", str));
 
-            builder.Append(
-@"
-[numthreads(1, 1, 1)]
-void main(uint3 DTI : SV_DispatchThreadID)
-{
-}");
+            builder.Append(rsTemplate);
 
             var tempFile = Path.Combine(System.IO.Path.GetTempPath(), Path.GetRandomFileName());
 
@@ -82,9 +96,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
                 writer.Write(builder.ToString());
             }
 
-            File.Delete(tempFile);
-
-            Console.WriteLine(builder.ToString());
+            return tempFile;
         }
 
         #endregion Private Methods

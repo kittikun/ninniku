@@ -222,7 +222,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe
       <Command>xcopy /d /y /s $(ProjectDir)external\renderdoc\renderdoc.dll $(OutDir)
 xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxcompiler.dll" $(OutDir)
 xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dll" $(OutDir)
-xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe" $(OutDir)</Command>
+</Command>
       <Message>Copying 3rd Party's DLL..</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
