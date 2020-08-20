@@ -27,6 +27,25 @@
 
 #include <fstream>
 
+void ChangeDirectory(std::string_view dir)
+{
+    // For output files, create an platform folder in out/ if it doesn't already exist
+    // then change working directory to that folder
+
+    static std::filesystem::path currentDir;
+
+    if (currentDir.empty())
+        currentDir = std::filesystem::current_path();
+
+    auto outDir = currentDir / "out" / dir;
+
+    if (!std::filesystem::is_directory(outDir) || !std::filesystem::exists(outDir)) {
+        std::filesystem::create_directories(outDir);
+    }
+
+    std::filesystem::current_path(outDir);
+}
+
 std::vector<uint8_t> LoadFile(const std::filesystem::path& path)
 {
     std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);

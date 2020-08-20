@@ -23,6 +23,7 @@
 #include <ninniku/core/renderer/renderdevice.h>
 #include <string_view>
 
+void ChangeDirectory(std::string_view dir);
 bool IsAppVeyor();
 [[nodiscard]] bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, const std::string_view& shaderRoot);
 std::vector<uint8_t> LoadFile(const std::filesystem::path& path);
