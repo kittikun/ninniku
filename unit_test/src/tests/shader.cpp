@@ -411,15 +411,21 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesAll, T)
 
 	auto srcImg = std::make_unique<ninniku::ddsImage>();
 
+	auto srcName = "shader_cubemapDirToArray_src.dds";
+
 	BOOST_REQUIRE(srcImg->InitializeFromTextureObject(dx, srcTex.get()));
-	BOOST_REQUIRE(srcImg->SaveImage("shader_cubemapDirToArray_src.dds"));
+	BOOST_REQUIRE(srcImg->SaveImage(srcName));
+
+	CheckFileCRC(srcName, 3411418430);
 
 	auto srcData = srcImg->GetData();
 	auto srcHash = GetCRC(std::get<0>(srcData), std::get<1>(srcData));
+	BOOST_REQUIRE(srcHash == 2474634886);
+
 	auto dstImg = std::make_unique<ninniku::ddsImage>();
 
-	BOOST_REQUIRE(dstImg->InitializeFromTextureObject(dx, srcTex.get()));
-	BOOST_REQUIRE(srcImg->SaveImage("shader_cubemapDirToArray_dst.dds"));
+	BOOST_REQUIRE(dstImg->InitializeFromTextureObject(dx, dstTex.get()));
+	BOOST_REQUIRE(dstImg->SaveImage("shader_cubemapDirToArray_dst.dds"));
 	auto dstData = dstImg->GetData();
 	auto dstHash = GetCRC(std::get<0>(dstData), std::get<1>(dstData));
 
