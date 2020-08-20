@@ -26,6 +26,7 @@
 
 #include "../check.h"
 #include "../fixture.h"
+#include "../utils.h"
 
 #include <ninniku/core/image/dds.h>
 #include <ninniku/core/renderer/renderdevice.h>
@@ -130,6 +131,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX1
 	image->InitializeFromSwapChain(dx, swapChain);
 
 	std::string filename = "renderdevice_clear_rendertarget.dds";
+
+	ChangeDirectory(T::platform);
 
 	BOOST_REQUIRE(image->SaveImage(filename));
 	BOOST_REQUIRE(std::filesystem::exists(filename));

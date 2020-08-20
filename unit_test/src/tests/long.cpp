@@ -78,6 +78,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
 
 	BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex.get()));
 
+	ChangeDirectory(T::platform);
+
 	std::string filename = "dds_saveImage_bc6h.dds";
 
 	BOOST_REQUIRE(res->SaveCompressedImage(filename, dx, DXGI_FORMAT_BC6H_UF16));
@@ -123,6 +125,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
 	auto res = std::make_unique<ninniku::ddsImage>();
 
 	BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized.get()));
+
+	ChangeDirectory(T::platform);
 
 	std::string_view filename = "dds_saveImage_bc7.dds";
 

@@ -83,6 +83,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, Fix
 
 	std::string filename = "cmft_from_texture_object_array_specific.hdr";
 
+	ChangeDirectory(T::platform);
+
 	// check we can save
 	BOOST_REQUIRE(res->SaveImage(filename, ninniku::cmftImage::SaveType::LatLong));
 
@@ -166,6 +168,8 @@ BOOST_FIXTURE_TEST_CASE(cmft_saveImage_cubemap, SetupFixtureNull)
 
 	BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
 
+	ChangeDirectory(platform);
+
 	std::string filename = "cmft_saveImage_cubemap.dds";
 
 	BOOST_REQUIRE(image->SaveImage(filename, ninniku::cmftImage::SaveType::Cubemap));
@@ -179,6 +183,8 @@ BOOST_FIXTURE_TEST_CASE(cmft_saveImage_faceList, SetupFixtureNull)
 	auto image = std::make_unique<ninniku::cmftImage>();
 
 	BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+
+	ChangeDirectory(platform);
 
 	BOOST_REQUIRE(image->SaveImage("cmft_saveImageFace.dds", ninniku::cmftImage::SaveType::Facelist));
 
@@ -217,6 +223,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesAll, T)
 
 	BOOST_REQUIRE(res->InitializeFromTextureObject(dx, srcTex.get()));
 
+	ChangeDirectory(T::platform);
+
 	std::string filename = "cmft_saveImage_longlat.hdr";
 
 	BOOST_REQUIRE(res->SaveImage(filename, ninniku::cmftImage::SaveType::LatLong));
@@ -230,6 +238,8 @@ BOOST_FIXTURE_TEST_CASE(cmft_saveImage_vcross, SetupFixtureNull)
 	auto image = std::make_unique<ninniku::cmftImage>();
 
 	BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+
+	ChangeDirectory(platform);
 
 	std::string filename = "cmft_saveImage_vcross.dds";
 
@@ -324,6 +334,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
 
 	BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex.get()));
 
+	ChangeDirectory(T::platform);
+
 	std::string filename = "dds_saveImage_raw_mips.dds";
 
 	BOOST_REQUIRE(res->SaveImage(filename));
@@ -359,6 +371,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
 	auto res = std::make_unique<ninniku::ddsImage>();
 
 	BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex.get()));
+
+	ChangeDirectory(T::platform);
 
 	std::string filename = "dds_saveImage_raw_cube_mips.dds";
 
@@ -396,6 +410,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
 	auto res = std::make_unique<ninniku::ddsImage>();
 
 	BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resTex.get()));
+
+	ChangeDirectory(T::platform);
 
 	std::string filename = "dds_saveImage_raw_cube_array_mips.dds";
 
@@ -441,6 +457,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
 	auto res = std::make_unique<ninniku::ddsImage>();
 
 	BOOST_REQUIRE(res->InitializeFromTextureObject(dx, resized.get()));
+
+	ChangeDirectory(T::platform);
 
 	std::string filename = "dds_saveImage_bc1.dds";
 

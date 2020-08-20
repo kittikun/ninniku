@@ -116,6 +116,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
 
 	BOOST_REQUIRE(image->InitializeFromTextureObject(dx, res.get()));
 
+	ChangeDirectory(T::platform);
+
 	std::string filename = "shader_SRV_UAV_same_resource.dds";
 
 	BOOST_REQUIRE(image->SaveImage(filename));
@@ -262,6 +264,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
 
 	BOOST_REQUIRE(image->InitializeFromTextureObject(dx, pass1Data.output->actual()));
 
+	ChangeDirectory(T::platform);
+
 	std::string filename = "shader_SRV_UAV_same_resource.dds";
 
 	BOOST_REQUIRE(image->SaveImage(filename));
@@ -402,6 +406,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_cubemapDirToArray, T, FixturesAll, T)
 
 		BOOST_REQUIRE(dx->Dispatch(cmd));
 	}
+
+	ChangeDirectory(T::platform);
 
 	auto srcImg = std::make_unique<ninniku::ddsImage>();
 

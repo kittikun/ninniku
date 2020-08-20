@@ -27,54 +27,60 @@
 
 #include <fstream>
 
+static std::filesystem::path CurrentDir;
+
 void ChangeDirectory(std::string_view dir)
 {
-    // For output files, create an platform folder in out/ if it doesn't already exist
-    // then change working directory to that folder
+	// For output files, create an platform folder in out/ if it doesn't already exist
+	// then change working directory to that folder
 
-    static std::filesystem::path currentDir;
+	if (CurrentDir.empty())
+		CurrentDir = std::filesystem::current_path();
 
-    if (currentDir.empty())
-        currentDir = std::filesystem::current_path();
+	auto outDir = CurrentDir / "out" / dir;
 
-    auto outDir = currentDir / "out" / dir;
+	if (!std::filesystem::is_directory(outDir) || !std::filesystem::exists(outDir)) {
+		std::filesystem::create_directories(outDir);
+	}
 
-    if (!std::filesystem::is_directory(outDir) || !std::filesystem::exists(outDir)) {
-        std::filesystem::create_directories(outDir);
-    }
+	std::filesystem::current_path(outDir);
+}
 
-    std::filesystem::current_path(outDir);
+void RestoreDirectory()
+{
+	if (!CurrentDir.empty())
+		std::filesystem::current_path(CurrentDir);
 }
 
 std::vector<uint8_t> LoadFile(const std::filesystem::path& path)
 {
-    std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
-    std::ifstream::pos_type pos = ifs.tellg();
+	std::ifstream ifs(path.c_str(), std::ios::binary | std::ios::ate);
+	std::ifstream::pos_type pos = ifs.tellg();
 
-    std::vector<uint8_t> result(pos);
+	std::vector<uint8_t> result(pos);
 
-    ifs.seekg(0, std::ios::beg);
-    ifs.read(reinterpret_cast<char*>(result.data()), pos);
+	ifs.seekg(0, std::ios::beg);
+	ifs.read(reinterpret_cast<char*>(result.data()), pos);
 
-    return result;
+	return result;
 }
 
 bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, const std::string_view& shaderRoot)
 {
-    auto fmt = boost::format("%1%\\%2%%3%") % shaderRoot % name % dx->GetShaderExtension();
+	auto fmt = boost::format("%1%\\%2%%3%") % shaderRoot % name % dx->GetShaderExtension();
 
-    return dx->LoadShader(boost::str(fmt));
+	return dx->LoadShader(boost::str(fmt));
 }
 
 bool IsAppVeyor()
 {
-    char* value = nullptr;
-    size_t len;
+	char* value = nullptr;
+	size_t len;
 
-    _dupenv_s(&value, &len, "APPVEYOR");
+	_dupenv_s(&value, &len, "APPVEYOR");
 
-    if ((value != nullptr) && (len > 0) && (strcmp(value, "True") == 0))
-        return true;
+	if ((value != nullptr) && (len > 0) && (strcmp(value, "True") == 0))
+		return true;
 
-    return false;
+	return false;
 }

@@ -30,6 +30,8 @@ struct SetupFixtureNull
 {
 	SetupFixtureNull();
 	~SetupFixtureNull();
+
+	std::string_view platform = "null";
 };
 
 struct SetupFixtureDX11
@@ -37,6 +39,7 @@ struct SetupFixtureDX11
 	SetupFixtureDX11();
 	~SetupFixtureDX11();
 
+	std::string_view platform = "dx11";
 	std::string_view shaderRoot;
 	bool isNull = false;
 };
@@ -46,6 +49,7 @@ struct SetupFixtureDX11Warp
 	SetupFixtureDX11Warp();
 	~SetupFixtureDX11Warp();
 
+	std::string_view platform = "dx11_warp";
 	std::string_view shaderRoot;
 	bool isNull = false;
 };
@@ -55,6 +59,7 @@ struct SetupFixtureDX12
 	SetupFixtureDX12();
 	~SetupFixtureDX12();
 
+	std::string_view platform = "dx12";
 	std::string_view shaderRoot;
 	bool isNull = false;
 };
@@ -64,6 +69,7 @@ struct SetupFixtureDX12Slow
 	SetupFixtureDX12Slow();
 	~SetupFixtureDX12Slow();
 
+	std::string_view platform = "dx12_slow";
 	std::string_view shaderRoot;
 	bool isNull = false;
 };
@@ -73,6 +79,7 @@ struct SetupFixtureDX12Warp
 	SetupFixtureDX12Warp();
 	~SetupFixtureDX12Warp();
 
+	std::string_view platform = "dx12_warp";
 	std::string_view shaderRoot;
 	bool isNull = false;
 };
@@ -82,6 +89,7 @@ struct SetupFixtureDX12WarpSlow
 	SetupFixtureDX12WarpSlow();
 	~SetupFixtureDX12WarpSlow();
 
+	std::string_view platform = "dx12_warp_slow";
 	std::string_view shaderRoot;
 	bool isNull = false;
 };
