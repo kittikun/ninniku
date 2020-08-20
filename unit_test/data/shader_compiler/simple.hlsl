@@ -18,14 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+};
 
-#include <ninniku/core/renderer/renderdevice.h>
-#include <string_view>
+PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
+{
+    PSInput result;
 
-void ChangeToDataDirectory(std::string_view dir);
-void ChangeToOutDirectory(std::string_view dir);
-void RestoreDirectory();
-bool IsAppVeyor();
-[[nodiscard]] bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, const std::string_view& shaderRoot);
-std::vector<uint8_t> LoadFile(const std::filesystem::path& path);
+    result.position = position;
+    result.color = color;
+
+    return result;
+}
+
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    return input.color;
+}

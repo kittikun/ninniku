@@ -9,7 +9,8 @@ namespace shader_compiler
 {
     public class Compiler
     {
-        private const string rsDebug = "-T cs_6_5 -Od -Zi -Qembed_debug -rootsig-define RS -extractrootsignature {0} -Fo {1}";
+        private const string rsDebug = "-T cs_6_5 -D HLSL -Od -Zi -Qembed_debug -rootsig-define RS -extractrootsignature {0} -Fo {1}";
+        private const string rsRelease = "-T cs_6_5 -D HLSL -rootsig-define RS {0} -Fo {1}";
 
         private Options options_;
 
@@ -31,6 +32,8 @@ namespace shader_compiler
                     case ShaderType.RootSignature:
                         if (options_.IsDebug)
                             cmd = string.Format(rsDebug, shader.path_, $"{shader.name_}.rso");
+                        else
+                            cmd = string.Format(rsRelease, shader.path_, $"{shader.name_}.rso");
                         break;
 
                     default:

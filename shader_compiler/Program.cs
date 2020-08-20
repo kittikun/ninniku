@@ -24,8 +24,8 @@ namespace shader_compiler
                               Directory.CreateDirectory(o.OutDir);
                           }
 
-                          if ((o.Configuration != "Debug") && (o.Configuration != "Release"))
-                              throw new ArgumentException("Configuration must be either \"Debug\" or \"Release\"");
+                          if ((o.Configuration != "Debug") && (o.Configuration != "Release") && (o.Configuration != "Trace"))
+                              throw new ArgumentException("Configuration must be either \"Debug\", \"Release\", \"Trace\"");
 
                           o.IsDebug = o.Configuration == "Debug";
 
@@ -46,8 +46,9 @@ namespace shader_compiler
                           {
                               if (shader.type_ == ShaderType.RootSignature)
                               {
-                                  Console.WriteLine(shader.path_);
-                                  //File.Delete(shader.path_);
+                                  // somehow deleting the temp files make Appveyor fail..
+                                  if (Environment.GetEnvironmentVariable("APPVEYOR") != null)
+                                      File.Delete(shader.path_);
                               }
                           }
                       }
