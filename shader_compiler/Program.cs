@@ -20,7 +20,9 @@ namespace shader_compiler
                               throw new System.IO.FileNotFoundException(o.InputPath);
 
                           if (!Directory.Exists(o.OutDir))
-                              throw new System.IO.FileNotFoundException(o.OutDir);
+                          {
+                              Directory.CreateDirectory(o.OutDir);
+                          }
 
                           if ((o.Configuration != "Debug") && (o.Configuration != "Release"))
                               throw new ArgumentException("Configuration must be either \"Debug\" or \"Release\"");
@@ -44,7 +46,8 @@ namespace shader_compiler
                           {
                               if (shader.type_ == ShaderType.RootSignature)
                               {
-                                  File.Delete(shader.path_);
+                                  Console.WriteLine(shader.path_);
+                                  //File.Delete(shader.path_);
                               }
                           }
                       }

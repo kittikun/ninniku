@@ -8,6 +8,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ninniku", "ninniku.vcxproj", "{AD7CE19B-0383-4590-8CED-F0EA6EBDC8AF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_test", "unit_test\unit_test.vcxproj", "{A4B19748-8979-4001-AFA3-8810C54A3140}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5C106EDC-821B-45D2-A5B6-D3971FDEB5E4} = {5C106EDC-821B-45D2-A5B6-D3971FDEB5E4}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple", "simple\simple.vcxproj", "{BB7909C6-0280-4132-9C7F-FF33EEEAD273}"
 EndProject
@@ -18,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shader_compiler", "shader_compiler\shader_compiler.csproj", "{5C106EDC-821B-45D2-A5B6-D3971FDEB5E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "shader_compiler", "shader_compiler\shader_compiler.csproj", "{5C106EDC-821B-45D2-A5B6-D3971FDEB5E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
