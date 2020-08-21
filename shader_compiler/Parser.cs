@@ -89,7 +89,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
 
             builder.Append(rsTemplate);
 
-            var tempFile = Path.Combine(options_.OutDir, Path.GetRandomFileName());
+            var tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
             using (StreamWriter writer = new StreamWriter(tempFile))
             {
