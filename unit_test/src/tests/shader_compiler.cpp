@@ -32,16 +32,24 @@
 #include <fstream>
 #include <vector>
 
-struct RootSignature
+enum ComponentType
 {
-    std::string_view name_;
+    RootSignature,
+    VertexShader,
+    PixelShader
+};
+
+struct Component
+{
+    std::string_view entry_;
     std::string_view path_;
+    ComponentType type_;
 };
 
 struct PipelineState
 {
     std::string_view name_;
-    std::unique_ptr<RootSignature> rs_;
+    std::vector<std::unique_ptr<Component>> components_;
 };
 
 BOOST_AUTO_TEST_SUITE(ShaderCompiler)
@@ -61,21 +69,56 @@ BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
     buffer.push_back('\0');
     doc.parse<0>(&buffer[0]);
 
+    auto root = doc.first_node("PipelineStates");
+
     // Parse the buffer using the xml file parsing library into doc
-    for (auto iter = doc.first_node("PipelineState"); iter; iter = iter->next_sibling()) {
+    for (auto iter = root->first_node("PipelineState"); iter; iter = iter->next_sibling()) {
         auto ps = new PipelineState();
 
         ps->name_ = iter->first_attribute("name")->value();
 
-        auto rsXml = iter->first_node("RootSignature");
+        // RootSignature
+        {
+            auto rsXml = iter->first_node("RootSignature");
 
-        if (rsXml != nullptr) {
-            auto rs = new RootSignature();
+            if (rsXml != nullptr) {
+                auto component = new Component();
 
-            rs->name_ = rsXml->first_attribute("name")->value();
-            rs->path_ = rsXml->first_attribute("path")->value();
+                component->type_ = ComponentType::RootSignature;
+                component->path_ = rsXml->first_attribute("path")->value();
 
-            ps->rs_.reset(rs);
+                ps->components_.emplace_back(component);
+            }
+        }
+
+        // VertexShader
+        {
+            auto vsXml = iter->first_node("VertexShader");
+
+            if (vsXml != nullptr) {
+                auto component = new Component();
+
+                component->type_ = ComponentType::VertexShader;
+                component->path_ = vsXml->first_attribute("path")->value();
+                component->entry_ = vsXml->first_attribute("entry")->value();
+
+                ps->components_.emplace_back(component);
+            }
+        }
+
+        // PixelShader
+        {
+            auto vsXml = iter->first_node("PixelShader");
+
+            if (vsXml != nullptr) {
+                auto component = new Component();
+
+                component->type_ = ComponentType::PixelShader;
+                component->path_ = vsXml->first_attribute("path")->value();
+                component->entry_ = vsXml->first_attribute("entry")->value();
+
+                ps->components_.emplace_back(component);
+            }
         }
 
         pipelineStates.emplace_back(ps);
@@ -84,9 +127,34 @@ BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
     ChangeToOutDirectory("shader_compiler");
 
     for (auto& ps : pipelineStates) {
-        auto filename = std::string(ps->rs_->name_) + ".rso";
+        for (auto& component : ps->components_) {
+            std::string filename = std::string{ ps->name_ };
 
-        BOOST_REQUIRE(std::filesystem::exists(filename));
+            switch (component->type_) {
+                case ComponentType::RootSignature:
+                {
+                    filename += ".rso";
+                }
+                break;
+
+                case ComponentType::VertexShader:
+                {
+                    filename += ".vso";
+                }
+                break;
+
+                case ComponentType::PixelShader:
+                {
+                    filename += ".pso";
+                }
+                break;
+
+                default:
+                    break;
+            }
+
+            BOOST_REQUIRE(std::filesystem::exists(filename));
+        }
     }
 }
 

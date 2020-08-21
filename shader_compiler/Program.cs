@@ -35,20 +35,23 @@ namespace shader_compiler
                           // Parse list of files to compile
                           var parser = new Parser(baseDir, o);
 
-                          var shaders = parser.Parse(filename);
+                          var pipelineStates = parser.Parse(filename);
 
                           var compiler = new Compiler(o);
 
-                          compiler.CompileShaders(shaders);
+                          compiler.CompileShaders(pipelineStates);
 
                           // need to clean up temp files
-                          foreach (var shader in shaders)
+                          foreach (var pipelineState in pipelineStates)
                           {
-                              if (shader.type_ == ShaderType.RootSignature)
+                              foreach (var component in pipelineState.components_)
                               {
-                                  // somehow deleting the temp files make Appveyor fail..
-                                  if (Environment.GetEnvironmentVariable("APPVEYOR") == null)
-                                      File.Delete(shader.path_);
+                                  if (component.type_ == ShaderType.RootSignature)
+                                  {
+                                      // somehow deleting the temp files make Appveyor fail..
+                                      if (Environment.GetEnvironmentVariable("APPVEYOR") == null)
+                                          File.Delete(component.path_);
+                                  }
                               }
                           }
                       }

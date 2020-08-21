@@ -1,15 +1,18 @@
 ﻿using CommandLine;
+using System.Collections.Generic;
 
 namespace shader_compiler
 {
     public enum ShaderType
     {
-        RootSignature
+        RootSignature,
+        VertexShader,
+        PixelShader
     }
 
-    public struct Shader
+    public struct ShaderComponent
     {
-        public string name_;
+        public string entry_;
         public string path_;
         public ShaderType type_;
     }
@@ -29,5 +32,11 @@ namespace shader_compiler
 
         [Option('o', "outDir", Required = true, HelpText = "Output folder")]
         public string OutDir { get; set; }
+    }
+
+    public class PipelineState
+    {
+        public List<ShaderComponent> components_ = new List<ShaderComponent>();
+        public string name_;
     }
 }

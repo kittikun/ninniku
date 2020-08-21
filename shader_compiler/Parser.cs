@@ -26,33 +26,37 @@ void main(uint3 DTI : SV_DispatchThreadID)
             options_ = o;
         }
 
-        public List<Shader> Parse(string filename)
+        public List<PipelineState> Parse(string filename)
         {
-            List<Shader> result = new List<Shader>();
+            List<PipelineState> result = new List<PipelineState>();
 
             var tocPath = Path.Combine(dataDir_, filename);
 
             var document = XDocument.Load(tocPath);
 
-            var item = document.Descendants().Where(d => d.Name.LocalName == "PipelineState").SingleOrDefault();
+            var items = document.Descendants().Where(d => d.Name.LocalName == "PipelineState").ToList();
 
-            if (item != null)
+            foreach (var item in items)
             {
+                var pipelineState = new PipelineState();
+
+                pipelineState.name_ = item.Attribute("name").Value;
+
                 // Root signature
                 var rs = item.Descendants().Where(d => d.Name.LocalName == "RootSignature").SingleOrDefault();
 
-                var rsPath = Path.Combine(dataDir_, rs.Attribute("path").Value);
+                ParseRootSignature(rs, pipelineState);
 
-                if (!File.Exists(rsPath))
-                    throw new System.IO.FileNotFoundException(rsPath);
+                // Vertex shader
+                var vs = item.Descendants().Where(d => d.Name.LocalName == "VertexShader").SingleOrDefault();
 
-                Shader shader = new Shader();
+                ParseShader(vs, ShaderType.VertexShader, pipelineState);
 
-                shader.name_ = rs.Attribute("name").Value;
-                shader.type_ = ShaderType.RootSignature;
-                shader.path_ = GenerateRootShaderDummy(rsPath);
+                // Pixel shader
+                var ps = item.Descendants().Where(d => d.Name.LocalName == "PixelShader").SingleOrDefault();
+                ParseShader(ps, ShaderType.PixelShader, pipelineState);
 
-                result.Add(shader);
+                result.Add(pipelineState);
             }
 
             return result;
@@ -97,6 +101,50 @@ void main(uint3 DTI : SV_DispatchThreadID)
             }
 
             return tempFile;
+        }
+
+        private void ParseRootSignature(XElement rs, PipelineState pipelineState)
+        {
+            if (rs == null)
+                throw new Exception("RootSignature must be specified");
+            else
+            {
+                var path = Path.Combine(dataDir_, rs.Attribute("path").Value);
+
+                if (!File.Exists(path))
+                    throw new System.IO.FileNotFoundException(path);
+
+                ShaderComponent component = new ShaderComponent();
+
+                component.type_ = ShaderType.RootSignature;
+                component.path_ = GenerateRootShaderDummy(path);
+
+                pipelineState.components_.Add(component);
+            }
+        }
+
+        private void ParseShader(XElement shader, ShaderType type, PipelineState pipelineState)
+        {
+            if (shader != null)
+            {
+                var path = Path.Combine(dataDir_, shader.Attribute("path").Value);
+
+                if (!File.Exists(path))
+                    throw new FileNotFoundException(path);
+
+                var entry = shader.Attribute("entry").Value;
+
+                if (entry == null)
+                    throw new Exception("Entry point must be specified");
+
+                var component = new ShaderComponent();
+
+                component.path_ = path;
+                component.type_ = type;
+                component.entry_ = entry;
+
+                pipelineState.components_.Add(component);
+            }
         }
 
         #endregion Private Methods

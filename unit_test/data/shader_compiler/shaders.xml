@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>  
-<PipelineState name="test">
-	<RootSignature name="simple" path="test.rs" />
-</PipelineState>
+<PipelineStates>
+    <PipelineState name="rs_test">
+        <RootSignature path="rs_test.rs" />
+    </PipelineState>
+    <PipelineState name="simple">
+        <RootSignature path="simple.rs" />
+        <VertexShader path="simple.hlsl" entry="VSMain" />
+        <PixelShader path="simple.hlsl" entry="PSMain" />
+    </PipelineState>
+</PipelineStates>
