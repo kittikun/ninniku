@@ -47,8 +47,8 @@ namespace shader_compiler
                               if (shader.type_ == ShaderType.RootSignature)
                               {
                                   // somehow deleting the temp files make Appveyor fail..
-                                  if (Environment.GetEnvironmentVariable("APPVEYOR") != null)
-                                      File.Delete(shader.path_);
+                                  if (Environment.GetEnvironmentVariable("APPVEYOR") == null) { }
+                                  File.Delete(shader.path_);
                               }
                           }
                       }
