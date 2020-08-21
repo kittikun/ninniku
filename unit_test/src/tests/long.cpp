@@ -44,13 +44,13 @@ BOOST_FIXTURE_TEST_CASE(cmft_load, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
 
     auto& data = image->GetData();
 
     CheckCRC(std::get<0>(data), std::get<1>(data), 3196376208);
 
-    BOOST_REQUIRE(image->Load("data/park02.exr"));
+    BOOST_REQUIRE(image->Load("data/images/park02.exr"));
     auto& data2 = image->GetData();
     CheckCRC(std::get<0>(data2), std::get<1>(data2), 2283193732);
 }
@@ -69,7 +69,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc6h, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
@@ -116,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc7, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/banner.png"));
+    BOOST_REQUIRE(image->Load("data/images/banner.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);

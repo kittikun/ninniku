@@ -447,7 +447,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.dds"));
 
     auto resTex = Generate2DTexWithMips(dx, image.get(), T::shaderRoot);
     auto res = std::make_unique<ninniku::cmftImage>();
@@ -484,7 +484,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.hdr"));
 
     auto needFix = image->IsRequiringFix();
     auto newSize = std::get<1>(needFix);

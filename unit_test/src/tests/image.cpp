@@ -49,7 +49,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.hdr"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
@@ -136,7 +136,7 @@ BOOST_FIXTURE_TEST_CASE(cmft_need_resize, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.hdr"));
 
     auto needFix = image->IsRequiringFix();
 
@@ -149,7 +149,7 @@ BOOST_FIXTURE_TEST_CASE(cmft_texture_param, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
 
     auto param = image->CreateTextureParam(ninniku::RV_SRV);
 
@@ -166,7 +166,7 @@ BOOST_FIXTURE_TEST_CASE(cmft_saveImage_cubemap, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
 
     ChangeToOutDirectory(platform);
 
@@ -182,7 +182,7 @@ BOOST_FIXTURE_TEST_CASE(cmft_saveImage_faceList, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
 
     ChangeToOutDirectory(platform);
 
@@ -214,7 +214,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_saveImage_latlong, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.dds"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
@@ -237,7 +237,7 @@ BOOST_FIXTURE_TEST_CASE(cmft_saveImage_vcross, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
 
     ChangeToOutDirectory(platform);
 
@@ -253,7 +253,7 @@ BOOST_FIXTURE_TEST_CASE(dds_load, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.dds"));
 
     auto& data = image->GetData();
 
@@ -264,7 +264,7 @@ BOOST_FIXTURE_TEST_CASE(dds_need_resize, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.dds"));
 
     auto needFix = image->IsRequiringFix();
 
@@ -277,7 +277,7 @@ BOOST_FIXTURE_TEST_CASE(dds_texture_param, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.dds"));
 
     auto param = image->CreateTextureParam(ninniku::RV_SRV);
 
@@ -298,7 +298,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_from_texture_object, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::cmftImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.hdr"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto& dx = ninniku::GetRenderer();
@@ -327,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::ddsImage>();
 
-    BOOST_REQUIRE(image->Load("data/Cathedral01.dds"));
+    BOOST_REQUIRE(image->Load("data/images/Cathedral01.dds"));
 
     auto resTex = Generate2DTexWithMips(dx, image.get(), T::shaderRoot);
     auto res = std::make_unique<ninniku::ddsImage>();
@@ -448,7 +448,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/banner.png"));
+    BOOST_REQUIRE(image->Load("data/images/banner.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
@@ -498,7 +498,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/Rainbow_to_alpha_gradient.png"));
+    BOOST_REQUIRE(image->Load("data/images/Rainbow_to_alpha_gradient.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
@@ -549,7 +549,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/toshi-1072059-unsplash.png"));
+    BOOST_REQUIRE(image->Load("data/images/toshi-1072059-unsplash.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
@@ -627,7 +627,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/weave_8.png"));
+    BOOST_REQUIRE(image->Load("data/images/weave_8.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
@@ -697,7 +697,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
 
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/weave_16.png"));
+    BOOST_REQUIRE(image->Load("data/images/weave_16.png"));
 
     auto srcParam = image->CreateTextureParam(ninniku::RV_SRV);
     auto srcTex = dx->CreateTexture(srcParam);
@@ -773,17 +773,17 @@ BOOST_FIXTURE_TEST_CASE(generic_load, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/banner.png"));
+    BOOST_REQUIRE(image->Load("data/images/banner.png"));
 
     auto& data = image->GetData();
 
     CheckCRC(std::get<0>(data), std::get<1>(data), 2997017566);
 
-    BOOST_REQUIRE(image->Load("data/architecture-buildings-city-1769347.jpg"));
+    BOOST_REQUIRE(image->Load("data/images/architecture-buildings-city-1769347.jpg"));
     auto& data2 = image->GetData();
     CheckCRC(std::get<0>(data2), std::get<1>(data2), 2282433845);
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
     auto& data3 = image->GetData();
     CheckCRC(std::get<0>(data3), std::get<1>(data3), 3486869451);
 }
@@ -792,7 +792,7 @@ BOOST_FIXTURE_TEST_CASE(generic_need_resize, SetupFixtureNull)
 {
     auto image = std::make_unique<ninniku::genericImage>();
 
-    BOOST_REQUIRE(image->Load("data/banner.png"));
+    BOOST_REQUIRE(image->Load("data/images/banner.png"));
 
     auto needFix = image->IsRequiringFix();
 
@@ -800,14 +800,14 @@ BOOST_FIXTURE_TEST_CASE(generic_need_resize, SetupFixtureNull)
     BOOST_REQUIRE(std::get<1>(needFix) == 1024);
     BOOST_REQUIRE(std::get<2>(needFix) == 2048);
 
-    BOOST_REQUIRE(image->Load("data/architecture-buildings-city-1769347.jpg"));
+    BOOST_REQUIRE(image->Load("data/images/architecture-buildings-city-1769347.jpg"));
     needFix = image->IsRequiringFix();
 
     BOOST_REQUIRE(std::get<0>(needFix));
     BOOST_REQUIRE(std::get<1>(needFix) == 2048);
     BOOST_REQUIRE(std::get<2>(needFix) == 2048);
 
-    BOOST_REQUIRE(image->Load("data/whipple_creek_regional_park_01_2k.hdr"));
+    BOOST_REQUIRE(image->Load("data/images/whipple_creek_regional_park_01_2k.hdr"));
     needFix = image->IsRequiringFix();
 
     BOOST_REQUIRE(std::get<0>(needFix) == false);
