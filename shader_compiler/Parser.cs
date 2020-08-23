@@ -111,6 +111,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
             {
                 var path = Path.Combine(dataDir_, rs.Attribute("path").Value);
 
+                // root signatures are mandatory
                 if (!File.Exists(path))
                     throw new System.IO.FileNotFoundException(path);
 
@@ -119,7 +120,16 @@ void main(uint3 DTI : SV_DispatchThreadID)
                 component.type_ = ShaderType.RootSignature;
                 component.path_ = GenerateRootShaderDummy(path);
 
-                pipelineState.components_.Add(component);
+                // root signatures can be shared across shaders, so rely on path to add them to
+                if (RootSignatures.signatures_.ContainsKey(path))
+                {
+                    pipelineState.components_.Add(ShaderType.RootSignature, RootSignatures.signatures_[path]);
+                }
+                else
+                {
+                    RootSignatures.signatures_.Add(path, component);
+                    pipelineState.components_.Add(ShaderType.RootSignature, component);
+                }
             }
         }
 
@@ -143,7 +153,7 @@ void main(uint3 DTI : SV_DispatchThreadID)
                 component.type_ = type;
                 component.entry_ = entry;
 
-                pipelineState.components_.Add(component);
+                pipelineState.components_.Add(type, component);
             }
         }
 

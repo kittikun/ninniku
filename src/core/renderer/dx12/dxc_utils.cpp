@@ -28,6 +28,60 @@
 
 namespace ninniku
 {
+    constexpr hlsl::DxilFourCC ShaderTypeToDXILFourCC(EShaderType type)
+    {
+        switch (type) {
+            case ninniku::ST_Root_Signature:
+                return hlsl::DFCC_RootSignature;
+                break;
+
+            default:
+                return hlsl::DxilFourCC::DFCC_DXIL;
+                break;
+        }
+    }
+
+    bool IsTypeMatching(IDxcBlobEncoding* pBlob, EShaderType type, bool& result)
+    {
+        Microsoft::WRL::ComPtr<IDxcContainerReflection> pContainerReflection;
+
+        auto hr = DxcCreateInstance(CLSID_DxcContainerReflection, __uuidof(IDxcContainerReflection), (void**)&pContainerReflection);
+
+        if (CheckAPIFailed(hr, "DxcCreateInstance for CLSID_DxcContainerReflection"))
+            return false;
+
+        hr = pContainerReflection->Load(pBlob);
+
+        if (CheckAPIFailed(hr, "IDxcContainerReflection::Load"))
+            return false;
+
+        uint32_t partCount;
+
+        hr = pContainerReflection->GetPartCount(&partCount);
+
+        if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartCount"))
+            return false;
+
+        auto wanted4CC = ShaderTypeToDXILFourCC(type);
+
+        for (uint32_t i = 0; i < partCount; ++i) {
+            uint32_t partKind;
+
+            hr = pContainerReflection->GetPartKind(i, &partKind);
+
+            if (CheckAPIFailed(hr, "IDxcContainerReflection::GetPartKind"))
+                return false;
+
+            if (partKind == wanted4CC) {
+                result = true;
+                return true;
+            }
+        }
+
+        result = false;
+        return true;
+    }
+
     IDxcLibrary* GetDXCLibrary()
     {
         static IDxcLibrary* pLibrary = nullptr;

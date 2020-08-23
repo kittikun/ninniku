@@ -8,4 +8,9 @@
         <VertexShader path="simple.hlsl" entry="VSMain" />
         <PixelShader path="simple.hlsl" entry="PSMain" />
     </PipelineState>
+    <PipelineState name="simple_dup">
+        <RootSignature path="simple.rs" />
+        <VertexShader path="simple.hlsl" entry="VSMain" />
+        <PixelShader path="simple.hlsl" entry="PSMain" />
+    </PipelineState>    
 </PipelineStates>

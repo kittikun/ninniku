@@ -56,8 +56,8 @@ namespace ninniku
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
         bool Initialize() override;
-        bool LoadShader(const std::filesystem::path& path) override;
-        bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
+        bool LoadShader(EShaderType type, const std::filesystem::path& path) override;
+        bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
         bool Present(const SwapChainHandle& swapchain) override;
@@ -69,19 +69,18 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopySwapChainToBuffer(const CopySwapChainToBufferParam& params);
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
+        bool CreateCommandContexts();
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
         CommandList* CreateCommandList(EQueueType type);
-        bool CreateCommandContexts();
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const uint32_t size);
         bool CreateDevice(int adapter);
         bool CreateSamplers();
         D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
         bool ExecuteCommand(CommandList* cmdList);
         bool Flush(EFlushType type);
-        bool LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
-        bool LoadShaders(const std::filesystem::path& path);
+        bool LoadShader(EShaderType type, const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
@@ -106,7 +105,8 @@ namespace ninniku
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
         StringMap<DX12RootSignature> rootSignatures_;
-        StringMap<D3D12_SHADER_BYTECODE> shaders_;
+
+        StringMap<PipelineStateShaders> shaders_;
         StringSet cBuffers_;
         StringMap<MapNameSlot> resourceBindings_;
 

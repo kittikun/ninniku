@@ -24,39 +24,40 @@
 #include <boost/test/unit_test.hpp>
 #pragma clang diagnostic pop
 
+#include <ninniku/ninniku.h>
+#include <ninniku/core/renderer/renderdevice.h>
+
 #include "../fixture.h"
 #include "../utils.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#include <boost/format.hpp>
+#pragma clang diagnostic pop
 
 #include <rapidxml/rapidxml.hpp>
 #include <filesystem>
 #include <fstream>
 #include <vector>
 
-enum ComponentType
-{
-    RootSignature,
-    VertexShader,
-    PixelShader
-};
-
 struct Component
 {
-    std::string_view entry_;
-    std::string_view path_;
-    ComponentType type_;
+    std::string entry_;
+    std::string path_;
+    ninniku::EShaderType type_;
 };
 
 struct PipelineState
 {
-    std::string_view name_;
+    std::string name_;
     std::vector<std::unique_ptr<Component>> components_;
 };
 
 BOOST_AUTO_TEST_SUITE(ShaderCompiler)
 
-BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
+std::vector<std::unique_ptr<PipelineState>> ParseTOC()
 {
-    std::vector<std::unique_ptr<PipelineState>> pipelineStates;
+    std::vector<std::unique_ptr<PipelineState>> res;
 
     ChangeToDataDirectory("shader_compiler");
 
@@ -84,76 +85,96 @@ BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
             if (rsXml != nullptr) {
                 auto component = new Component();
 
-                component->type_ = ComponentType::RootSignature;
+                component->type_ = ninniku::EShaderType::ST_Root_Signature;
                 component->path_ = rsXml->first_attribute("path")->value();
 
                 ps->components_.emplace_back(component);
             }
         }
 
-        // VertexShader
+        auto lmbd = [&](const std::string_view& typeName, ninniku::EShaderType type)
         {
-            auto vsXml = iter->first_node("VertexShader");
+            auto xml = iter->first_node(typeName.data());
 
-            if (vsXml != nullptr) {
+            if (xml != nullptr) {
                 auto component = new Component();
 
-                component->type_ = ComponentType::VertexShader;
-                component->path_ = vsXml->first_attribute("path")->value();
-                component->entry_ = vsXml->first_attribute("entry")->value();
+                component->type_ = type;
+                component->path_ = xml->first_attribute("path")->value();
+                component->entry_ = xml->first_attribute("entry")->value();
 
                 ps->components_.emplace_back(component);
             }
-        }
+        };
 
-        // PixelShader
-        {
-            auto vsXml = iter->first_node("PixelShader");
+        lmbd("VertexShader", ninniku::EShaderType::ST_Vertex);
+        lmbd("PixelShader", ninniku::EShaderType::ST_Pixel);
 
-            if (vsXml != nullptr) {
-                auto component = new Component();
-
-                component->type_ = ComponentType::PixelShader;
-                component->path_ = vsXml->first_attribute("path")->value();
-                component->entry_ = vsXml->first_attribute("entry")->value();
-
-                ps->components_.emplace_back(component);
-            }
-        }
-
-        pipelineStates.emplace_back(ps);
+        res.emplace_back(ps);
     }
+
+    return res;
+}
+
+std::string GetFilename(const std::string& psName, ninniku::EShaderType type, const std::string_view& ext)
+{
+    std::string res;
+    boost::format fmt;
+
+    switch (type) {
+        case ninniku::EShaderType::ST_Root_Signature:
+        {
+            fmt = boost::format("%1%_rs%2%") % psName % ext;
+        }
+        break;
+
+        case ninniku::EShaderType::ST_Vertex:
+        {
+            fmt = boost::format("%1%_vs%2%") % psName % ext;
+        }
+        break;
+
+        case ninniku::EShaderType::ST_Pixel:
+        {
+            fmt = boost::format("%1%_ps%2%") % psName % ext;
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    return boost::str(fmt);
+}
+
+//BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
+//{
+//    auto pipelineStates = ParseTOC();
+//
+//    ChangeToOutDirectory("shader_compiler");
+//
+//    for (auto& ps : pipelineStates) {
+//        for (auto& component : ps->components_) {
+//            auto filename = GetFilename(ps->name_, component->type_, ".dxco");
+//
+//            BOOST_REQUIRE(std::filesystem::exists(filename));
+//        }
+//    }
+//}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
+{
+    auto pipelineStates = ParseTOC();
 
     ChangeToOutDirectory("shader_compiler");
 
+    auto& dx = ninniku::GetRenderer();
+
     for (auto& ps : pipelineStates) {
         for (auto& component : ps->components_) {
-            std::string filename = std::string{ ps->name_ };
+            auto filename = GetFilename(ps->name_, component->type_, dx->GetShaderExtension());
 
-            switch (component->type_) {
-                case ComponentType::RootSignature:
-                {
-                    filename += ".rso";
-                }
-                break;
-
-                case ComponentType::VertexShader:
-                {
-                    filename += ".vso";
-                }
-                break;
-
-                case ComponentType::PixelShader:
-                {
-                    filename += ".pso";
-                }
-                break;
-
-                default:
-                    break;
-            }
-
-            BOOST_REQUIRE(std::filesystem::exists(filename));
+            BOOST_REQUIRE(dx->LoadShader(component->type_, filename));
         }
     }
 }

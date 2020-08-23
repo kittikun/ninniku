@@ -70,42 +70,42 @@ namespace ninniku
         }
 
         switch (feature) {
-        case ninniku::DF_ALLOW_TEARING:
-        {
-            auto dxgiFactory = DXGI::GetDXGIFactory5();
+            case ninniku::DF_ALLOW_TEARING:
+            {
+                auto dxgiFactory = DXGI::GetDXGIFactory5();
 
-            if (dxgiFactory != nullptr) {
-                BOOL allowTearing = false;
+                if (dxgiFactory != nullptr) {
+                    BOOL allowTearing = false;
 
-                auto hr = dxgiFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+                    auto hr = dxgiFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+
+                    if (CheckAPIFailed(hr, "CheckFeatureSupport"))
+                        return false;
+
+                    result = allowTearing;
+                } else {
+                    LOGE << "Failed to create IDXGIFactory5";
+                    return false;
+                }
+            }
+            break;
+
+            case ninniku::DF_SM6_WAVE_INTRINSICS:
+            {
+                D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
+
+                auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
 
                 if (CheckAPIFailed(hr, "CheckFeatureSupport"))
                     return false;
 
-                result = allowTearing;
-            } else {
-                LOGE << "Failed to create IDXGIFactory5";
-                return false;
+                result = waveIntrinsicsSupport.WaveOps;
             }
-        }
-        break;
+            break;
 
-        case ninniku::DF_SM6_WAVE_INTRINSICS:
-        {
-            D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
-
-            auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
-
-            if (CheckAPIFailed(hr, "CheckFeatureSupport"))
+            default:
+                LOGE << "Unsupported EDeviceFeature";
                 return false;
-
-            result = waveIntrinsicsSupport.WaveOps;
-        }
-        break;
-
-        default:
-            LOGE << "Unsupported EDeviceFeature";
-            return false;
         }
 
         queried[feature] = true;
@@ -638,7 +638,7 @@ namespace ninniku
 
             // Create pipeline state
             D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-            desc.CS = foundShader->second;
+            desc.CS = foundShader->second.shaders_[EShaderType::ST_Compute];
             desc.pRootSignature = foundRS->second.Get();
 
             if (type_ == ERenderer::RENDERER_WARP_DX12)
@@ -1529,30 +1529,30 @@ namespace ninniku
                 cmdList[0] = iter->gfxCmdList_.Get();
 
                 switch (iter->type_) {
-                case ninniku::QT_DIRECT:
-                {
-                    if (!lmbd(queues_[QT_DIRECT], queues_[QT_COPY], queues_[QT_COMPUTE]))
-                        return false;
-                }
-                break;
-
-                case ninniku::QT_COMPUTE:
-                {
-                    if (!lmbd(queues_[QT_COMPUTE], queues_[QT_COPY], queues_[QT_DIRECT]))
-                        return false;
-                }
-                break;
-
-                case ninniku::QT_COPY:
-                {
-                    if (!lmbd(queues_[QT_COPY], queues_[QT_COMPUTE], queues_[QT_DIRECT]))
-                        return false;
-                }
-                break;
-
-                default:
-                    throw new std::exception("Invalid queue type");
+                    case ninniku::QT_DIRECT:
+                    {
+                        if (!lmbd(queues_[QT_DIRECT], queues_[QT_COPY], queues_[QT_COMPUTE]))
+                            return false;
+                    }
                     break;
+
+                    case ninniku::QT_COMPUTE:
+                    {
+                        if (!lmbd(queues_[QT_COMPUTE], queues_[QT_COPY], queues_[QT_DIRECT]))
+                            return false;
+                    }
+                    break;
+
+                    case ninniku::QT_COPY:
+                    {
+                        if (!lmbd(queues_[QT_COPY], queues_[QT_COMPUTE], queues_[QT_DIRECT]))
+                            return false;
+                    }
+                    break;
+
+                    default:
+                        throw new std::exception("Invalid queue type");
+                        break;
                 }
 
                 iter->~CommandList();
@@ -1662,50 +1662,59 @@ namespace ninniku
         return true;
     }
 
-    bool DX12::LoadShader(const std::filesystem::path& path)
+    bool DX12::LoadShader(EShaderType type, const std::filesystem::path& path)
     {
         TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path)");
 
-        if (std::filesystem::is_directory(path)) {
-            return LoadShaders(path);
-        } else if (path.extension() == ShaderExt) {
-            auto fmt = boost::format("Loading %1%..") % path;
-
-            LOG_INDENT_START << boost::str(fmt);
-
-            IDxcLibrary* pLibrary = GetDXCLibrary();
-
-            if (pLibrary == nullptr) {
-                LOG_INDENT_END;
-                return false;
-            }
-
-            Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
-
-            auto hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path.string()).c_str(), nullptr, &pBlob);
-
-            if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile")) {
-                LOG_INDENT_END;
-                return false;
-            }
-
-            if (!ValidateDXCBlob(pBlob.Get(), pLibrary)) {
-                LOG_INDENT_END;
-                return false;
-            }
-
-            if (!LoadShader(path, pBlob.Get())) {
-                LOG_INDENT_END;
-                return false;
-            }
-
-            LOG_INDENT_END;
+        if (path.extension() != ShaderExt) {
+            LOGEF(boost::format("LoadShader path extension \"%1%\" does not match \"%2%\"") % path % ShaderExt);
+            return false;
         }
+
+        auto fmt = boost::format("Loading %1%..") % path;
+
+        LOG_INDENT_START << boost::str(fmt);
+
+        IDxcLibrary* pLibrary = GetDXCLibrary();
+
+        if (pLibrary == nullptr) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        Microsoft::WRL::ComPtr<IDxcBlobEncoding> pBlob = nullptr;
+
+        auto hr = pLibrary->CreateBlobFromFile(ninniku::strToWStr(path.string()).c_str(), nullptr, &pBlob);
+
+        if (CheckAPIFailed(hr, "IDxcLibrary::CreateBlobFromFile")) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        bool isMatch;
+
+        if (!IsTypeMatching(pBlob.Get(), type, isMatch)) {
+            LOGEF(boost::format("Contents of shader \"%1%\" does not match with type \"%2%\"") % path % type);
+            LOG_INDENT_END;
+            return false;
+        }
+
+        if (!ValidateDXCBlob(pBlob.Get(), pLibrary)) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        if (!LoadShader(type, path, pBlob.Get())) {
+            LOG_INDENT_END;
+            return false;
+        }
+
+        LOG_INDENT_END;
 
         return true;
     }
 
-    bool DX12::LoadShader(const std::string_view& name, const void* pData, const uint32_t size)
+    bool DX12::LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size)
     {
         TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (string, void*, uint32_t)");
 
@@ -1729,12 +1738,20 @@ namespace ninniku
             return false;
         }
 
+        bool isMatch;
+
+        if (!IsTypeMatching(pBlob.Get(), type, isMatch)) {
+            LOGEF(boost::format("Contents of shader \"%1%\" does not match with type \"%2%\"") % name % type);
+            LOG_INDENT_END;
+            return false;
+        }
+
         if (!ValidateDXCBlob(pBlob.Get(), pLibrary)) {
             LOG_INDENT_END;
             return false;
         }
 
-        if (!LoadShader(name, pBlob.Get())) {
+        if (!LoadShader(type, name, pBlob.Get())) {
             LOG_INDENT_END;
             return false;
         }
@@ -1744,7 +1761,7 @@ namespace ninniku
         return true;
     }
 
-    bool DX12::LoadShader(const std::filesystem::path& path, IDxcBlobEncoding* pBlob)
+    bool DX12::LoadShader(EShaderType type, const std::filesystem::path& path, IDxcBlobEncoding* pBlob)
     {
         TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path, IDxcBlobEncoding)");
 
@@ -1798,6 +1815,22 @@ namespace ninniku
 
                 if (!ParseShaderResources(name, pShaderDesc.BoundResources, pShaderReflection.Get()))
                     return false;
+
+                // store shader
+                LOGDF(boost::format("Adding shader: \"%1%\" to library") % name);
+
+                // Shaders might be created bits by bits (eg: VS then PS)
+                auto found = shaders_.find(name);
+
+                if (found != shaders_.end()) {
+                    found->second.shaders_[type] = CD3DX12_SHADER_BYTECODE(pBlob->GetBufferPointer(), pBlob->GetBufferSize());
+                } else {
+                    PipelineStateShaders pss;
+
+                    pss.shaders_[type] = CD3DX12_SHADER_BYTECODE(pBlob->GetBufferPointer(), pBlob->GetBufferSize());
+
+                    shaders_.emplace(name, pss);
+                }
             } else if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_RootSignature)) {
                 Microsoft::WRL::ComPtr<IDxcBlob> pRSBlob;
                 hr = pContainerReflection->GetPartContent(i, &pRSBlob);
@@ -1810,47 +1843,10 @@ namespace ninniku
             }
         }
 
-        // store shader
-        LOGDF(boost::format("Adding CS: \"%1%\" to library") % name);
-        shaders_.emplace(name, CD3DX12_SHADER_BYTECODE(pBlob->GetBufferPointer(), pBlob->GetBufferSize()));
-
-        // Create command contexts for all the shaders we just found
-        if (!CreateCommandContexts())
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
-    /// Load all shaders in /data
-    /// </summary>
-    bool DX12::LoadShaders(const std::filesystem::path& shaderPath)
-    {
-        TRACE_SCOPED_DX12;
-
-        // check if directory is valid
-        if (!std::filesystem::is_directory(shaderPath)) {
-            auto fmt = boost::format("Failed to open directory: %1%") % shaderPath;
-            LOGE << boost::str(fmt);
-
-            return false;
-        }
-
-        // Count the number of .dxco found
-        std::filesystem::directory_iterator begin(shaderPath), end;
-
-        auto fileCounter = [&](const std::filesystem::directory_entry& d)
-        {
-            return (!is_directory(d.path()) && (d.path().extension() == ShaderExt));
-        };
-
-        auto numFiles = std::count_if(begin, end, fileCounter);
-        auto fmt = boost::format("Found %1% compiled shaders in %2%") % numFiles % shaderPath;
-
-        LOGD << boost::str(fmt);
-
-        for (auto& iter : std::filesystem::recursive_directory_iterator(shaderPath)) {
-            LoadShader(iter.path());
+        if (type == ST_Finished) {
+            // Create command contexts for all the shaders we just found
+            if (!CreateCommandContexts())
+                return false;
         }
 
         return true;
@@ -1930,34 +1926,34 @@ namespace ninniku
             std::string_view restypeStr;
 
             switch (bindDesc.Type) {
-            case D3D_SIT_CBUFFER:
-                restypeStr = "D3D_SIT_CBUFFER";
-                break;
+                case D3D_SIT_CBUFFER:
+                    restypeStr = "D3D_SIT_CBUFFER";
+                    break;
 
-            case D3D_SIT_SAMPLER:
-                restypeStr = "D3D_SIT_SAMPLER";
-                break;
+                case D3D_SIT_SAMPLER:
+                    restypeStr = "D3D_SIT_SAMPLER";
+                    break;
 
-            case D3D_SIT_STRUCTURED:
-                restypeStr = "D3D_SIT_STRUCTURED";
-                break;
+                case D3D_SIT_STRUCTURED:
+                    restypeStr = "D3D_SIT_STRUCTURED";
+                    break;
 
-            case D3D_SIT_TEXTURE:
-                restypeStr = "D3D_SIT_TEXTURE";
-                break;
+                case D3D_SIT_TEXTURE:
+                    restypeStr = "D3D_SIT_TEXTURE";
+                    break;
 
-            case D3D_SIT_UAV_RWTYPED:
-                restypeStr = "D3D_SIT_UAV_RWTYPED";
-                break;
+                case D3D_SIT_UAV_RWTYPED:
+                    restypeStr = "D3D_SIT_UAV_RWTYPED";
+                    break;
 
-            case D3D_SIT_UAV_RWSTRUCTURED:
-                restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
-                break;
+                case D3D_SIT_UAV_RWSTRUCTURED:
+                    restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
+                    break;
 
-            default:
-                LOG << "DX12::ParseShaderResources unsupported type";
-                LOGD_INDENT_END;
-                return false;
+                default:
+                    LOG << "DX12::ParseShaderResources unsupported type";
+                    LOGD_INDENT_END;
+                    return false;
             }
 
             fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;
@@ -1982,20 +1978,20 @@ namespace ninniku
     D3D12_COMMAND_LIST_TYPE  DX12::QueueTypeToDX12ComandListType(EQueueType type) const
     {
         switch (type) {
-        case ninniku::QT_COMPUTE:
-            return D3D12_COMMAND_LIST_TYPE_COMPUTE;
-            break;
+            case ninniku::QT_COMPUTE:
+                return D3D12_COMMAND_LIST_TYPE_COMPUTE;
+                break;
 
-        case ninniku::QT_COPY:
-            return D3D12_COMMAND_LIST_TYPE_COPY;
-            break;
+            case ninniku::QT_COPY:
+                return D3D12_COMMAND_LIST_TYPE_COPY;
+                break;
 
-        case ninniku::QT_DIRECT:
-            return D3D12_COMMAND_LIST_TYPE_DIRECT;
-            break;
+            case ninniku::QT_DIRECT:
+                return D3D12_COMMAND_LIST_TYPE_DIRECT;
+                break;
 
-        default:
-            throw std::exception("Invalid EQueueType");
+            default:
+                throw std::exception("Invalid EQueueType");
         }
     }
 

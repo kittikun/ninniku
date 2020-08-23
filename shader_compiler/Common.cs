@@ -5,9 +5,12 @@ namespace shader_compiler
 {
     public enum ShaderType
     {
+        // should match ninniku:EShaderType for simplicity
+        ComputeShader,
+
         RootSignature,
-        VertexShader,
-        PixelShader
+        PixelShader,
+        VertexShader
     }
 
     public struct ShaderComponent
@@ -36,7 +39,15 @@ namespace shader_compiler
 
     public class PipelineState
     {
-        public List<ShaderComponent> components_ = new List<ShaderComponent>();
+        public Dictionary<ShaderType, ShaderComponent> components_ = new Dictionary<ShaderType, ShaderComponent>();
         public string name_;
+    }
+
+    /// <summary>
+    /// Root signatures can be shared across pipeline states
+    /// </summary>
+    public class RootSignatures
+    {
+        public static Dictionary<string, ShaderComponent> signatures_ = new Dictionary<string, ShaderComponent>();
     }
 }

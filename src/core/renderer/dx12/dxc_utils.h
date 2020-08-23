@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "ninniku/core/renderer/types.h"
 #include <cstdint>
 
 struct IDxcBlobEncoding;
@@ -53,6 +54,7 @@ namespace hlsl
 
 namespace ninniku
 {
+    [[nodiscard]] bool IsTypeMatching(IDxcBlobEncoding* pBlob, EShaderType type, bool& result);
     [[nodiscard]] IDxcLibrary* GetDXCLibrary();
     [[nodiscard]] bool ValidateDXCBlob(IDxcBlobEncoding* pBlob, IDxcLibrary* pLibrary);
 } // namespace ninniku

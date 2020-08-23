@@ -11,10 +11,12 @@ namespace shader_compiler
     {
         private const string psDebug = "-T ps_6_5 -D HLSL -Od -Zi -Qembed_debug -E {0} {1} -Fo {2}";
         private const string psRelease = "-T ps_6_5 -D HLSL -E {0} {1} -Fo {2}";
+        private const string psVerify = "-T ps_6_5 -verifyrootsignature {0} {1}";
         private const string rsDebug = "-T cs_6_5 -D HLSL -Od -Zi -Qembed_debug -rootsig-define RS -extractrootsignature {0} -Fo {1}";
         private const string rsRelease = "-T cs_6_5 -D HLSL -rootsig-define RS {0} -Fo {1}";
         private const string vsDebug = "-T vs_6_5 -D HLSL -Od -Zi -Qembed_debug -E {0} {1} -Fo {2}";
         private const string vsRelease = "-T vs_6_5 -D HLSL -E {0} {1} -Fo {2}";
+        private const string vsVerify = "-T vs_6_5 -verifyrootsignature {0} {1}";
         private Options options_;
 
         #region Public Methods
@@ -28,31 +30,31 @@ namespace shader_compiler
         {
             foreach (var pipelineState in pipelineStates)
             {
-                foreach (var componment in pipelineState.components_)
+                foreach (var kvp in pipelineState.components_)
                 {
                     var cmd = string.Empty;
 
-                    switch (componment.type_)
+                    switch (kvp.Value.type_)
                     {
                         case ShaderType.RootSignature:
                             if (options_.IsDebug)
-                                cmd = string.Format(rsDebug, componment.path_, $"{pipelineState.name_}.rso");
+                                cmd = string.Format(rsDebug, kvp.Value.path_, $"{pipelineState.name_}_rs.dxco");
                             else
-                                cmd = string.Format(rsRelease, componment.path_, $"{pipelineState.name_}.rso");
-                            break;
-
-                        case ShaderType.VertexShader:
-                            if (options_.IsDebug)
-                                cmd = string.Format(vsDebug, componment.entry_, componment.path_, $"{pipelineState.name_}.vso");
-                            else
-                                cmd = string.Format(vsRelease, componment.entry_, componment.path_, $"{pipelineState.name_}.vso");
+                                cmd = string.Format(rsRelease, kvp.Value.path_, $"{pipelineState.name_}_rs.dxco");
                             break;
 
                         case ShaderType.PixelShader:
                             if (options_.IsDebug)
-                                cmd = string.Format(psDebug, componment.entry_, componment.path_, $"{pipelineState.name_}.pso");
+                                cmd = string.Format(psDebug, kvp.Value.entry_, kvp.Value.path_, $"{pipelineState.name_}_ps.dxco");
                             else
-                                cmd = string.Format(psRelease, componment.entry_, componment.path_, $"{pipelineState.name_}.pso");
+                                cmd = string.Format(psRelease, kvp.Value.entry_, kvp.Value.path_, $"{pipelineState.name_}_ps.dxco");
+                            break;
+
+                        case ShaderType.VertexShader:
+                            if (options_.IsDebug)
+                                cmd = string.Format(vsDebug, kvp.Value.entry_, kvp.Value.path_, $"{pipelineState.name_}_vs.dxco");
+                            else
+                                cmd = string.Format(vsRelease, kvp.Value.entry_, kvp.Value.path_, $"{pipelineState.name_}_vs.dxco");
                             break;
 
                         default:
@@ -66,6 +68,34 @@ namespace shader_compiler
                     process.StartInfo.Arguments = cmd;
 
                     process.Start();
+
+                    // validate shader against root signature
+                    // seems broken so disable for now
+                    //var validate = false;
+
+                    //switch (kvp.Value.type_)
+                    //{
+                    //    case ShaderType.PixelShader:
+                    //        cmd = string.Format(psVerify, $"{pipelineState.name_}_rs.dxco", $"{pipelineState.name_}_ps.dxco");
+                    //        validate = true;
+                    //        break;
+
+                    //    case ShaderType.VertexShader:
+                    //        cmd = string.Format(vsVerify, $"{pipelineState.name_}_rs.dxco", $"{pipelineState.name_}_vs.dxco");
+                    //        validate = true;
+                    //        break;
+                    //}
+
+                    //if (validate)
+                    //{
+                    //    process = new Process();
+
+                    //    process.StartInfo.FileName = options_.CompilerPath;
+                    //    process.StartInfo.WorkingDirectory = options_.OutDir;
+                    //    process.StartInfo.Arguments = cmd;
+
+                    //    process.Start();
+                    //}
                 }
             }
         }

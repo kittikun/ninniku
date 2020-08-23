@@ -168,7 +168,7 @@ namespace ninniku
             flags = 0;
     }
 
-    bool Initialize(const ERenderer renderer, const std::vector<std::filesystem::path>& shaderPaths, uint32_t flags, const ELogLevel logLevel)
+    bool Initialize(const ERenderer renderer, uint32_t flags, const ELogLevel logLevel)
     {
         InitializeLog(logLevel);
         FixFlags(renderer, flags);
@@ -177,27 +177,7 @@ namespace ninniku
         if (!Initialize_(renderer))
             return false;
 
-        if ((shaderPaths.size() > 0)) {
-            auto& dx = GetRenderer();
-
-            for (auto& path : shaderPaths) {
-                if (!dx->LoadShader(path)) {
-                    LOGEF(boost::format("Failed to load shaders in: %1%") % path);
-                    return false;
-                }
-            }
-        }
-
         return true;
-    }
-
-    bool Initialize(const ERenderer renderer, uint32_t flags, const ELogLevel logLevel)
-    {
-        InitializeLog(logLevel);
-        FixFlags(renderer, flags);
-        InitializeGlobals(flags);
-
-        return Initialize_(renderer);
     }
 
     void Terminate()

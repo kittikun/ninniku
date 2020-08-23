@@ -733,13 +733,16 @@ namespace ninniku
         return true;
     }
 
-    bool DX11::LoadShader(const std::filesystem::path& path)
+    bool DX11::LoadShader(EShaderType type, const std::filesystem::path& path)
     {
+        if (type != ST_Compute) {
+            LOGE << "RENDERER_DX11 only supports compute shaders for now";
+            return false;
+        }
+
         TRACE_SCOPED_NAMED_DX11("ninniku::DX11::LoadShader (path)");
 
-        if (std::filesystem::is_directory(path)) {
-            return LoadShaders(path);
-        } else if (path.extension() == ShaderExt) {
+        if (path.extension() == ShaderExt) {
             auto fmt = boost::format("Loading %1%..") % path;
 
             LOG_INDENT_START << boost::str(fmt);
@@ -756,7 +759,7 @@ namespace ninniku
                 return false;
             }
 
-            if (!LoadShader(path, blob)) {
+            if (!LoadShader(type, path, blob)) {
                 LOG_INDENT_END;
                 return false;
             }
@@ -767,8 +770,13 @@ namespace ninniku
         return true;
     }
 
-    bool DX11::LoadShader(const std::string_view& name, const void* pData, const uint32_t size)
+    bool DX11::LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size)
     {
+        if (type != ST_Compute) {
+            LOGE << "RENDERER_DX11 only supports compute shaders for now";
+            return false;
+        }
+
         TRACE_SCOPED_NAMED_DX11("ninniku::DX11::LoadShader (string, void*, uint32_t)");
 
         auto fmt = boost::format("Loading %1% directly from memory..") % name;
@@ -787,11 +795,15 @@ namespace ninniku
 
         LOG_INDENT_END;
 
-        return LoadShader(name, pBlob);
+        return LoadShader(type, name, pBlob);
     }
 
-    bool DX11::LoadShader(const std::filesystem::path& path, ID3DBlob* pBlob)
+    bool DX11::LoadShader(EShaderType type, const std::filesystem::path& path, ID3DBlob* pBlob)
     {
+        if (type != ST_Compute) {
+            LOGE << "RENDERER_DX11 only supports compute shaders for now";
+        }
+
         TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path, IDxID3DBlobBlobEncoding)");
 
         // reflection
@@ -830,41 +842,6 @@ namespace ninniku
             LOGDF(boost::format("Adding CS: \"%1%\" to library") % name);
 
             shaders_.emplace(name, DX11ComputeShader{ shader, bindings });
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Load all shaders in /data
-    /// </summary>
-    bool DX11::LoadShaders(const std::filesystem::path& shaderPath)
-    {
-        TRACE_SCOPED_DX11;
-
-        // check if directory is valid
-        if (!std::filesystem::is_directory(shaderPath)) {
-            auto fmt = boost::format("Failed to open directory: %1%") % shaderPath;
-            LOGE << boost::str(fmt);
-
-            return false;
-        }
-
-        // Count the number of .cso found
-        std::filesystem::directory_iterator begin(shaderPath), end;
-
-        auto fileCounter = [&](const std::filesystem::directory_entry& d)
-        {
-            return (!is_directory(d.path()) && (d.path().extension() == ShaderExt));
-        };
-
-        auto numFiles = std::count_if(begin, end, fileCounter);
-        auto fmt = boost::format("Found %1% compiled shaders in /%2%") % numFiles % shaderPath;
-
-        LOGD << boost::str(fmt);
-
-        for (auto& iter : std::filesystem::recursive_directory_iterator(shaderPath)) {
-            LoadShader(iter.path());
         }
 
         return true;

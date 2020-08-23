@@ -82,7 +82,7 @@
       <EnablePREfast>true</EnablePREfast>
       <DisableSpecificWarnings>6269;6387;6330;4189;6320;6322;6246;6335;6011;6031;4702;26812;26495;4701</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <FxCompile>
       <ObjectFileOutput>$(ProjectDir)bin\$(Configuration)\dx11\%(Filename).cso</ObjectFileOutput>
@@ -117,7 +117,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnablePREfast>true</EnablePREfast>
       <DisableSpecificWarnings>6269;6387;6330;4189;6320;6322;6246;6335;6011;6031;4702;26812;26495;4701</DisableSpecificWarnings>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -154,7 +154,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnablePREfast>true</EnablePREfast>
       <DisableSpecificWarnings>6269;6387;6330;4189;6320;6322;6246;6335;6011;6031;4702;26812;26495;4701</DisableSpecificWarnings>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

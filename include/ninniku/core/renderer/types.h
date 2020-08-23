@@ -35,12 +35,29 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Common enumerations
     //////////////////////////////////////////////////////////////////////////
+    enum EDeviceFeature : uint8_t
+    {
+        DF_ALLOW_TEARING,
+        DF_SM6_WAVE_INTRINSICS,
+        DF_COUNT
+    };
+
     enum EResourceViews : uint8_t
     {
         RV_None = 0,                        // Should not be used
         RV_SRV = 1 << 0,
         RV_UAV = 1 << 1,
         RV_CPU_READ = 1 << 2
+    };
+
+    enum EShaderType : uint8_t
+    {
+        ST_Compute,
+        ST_Finished,
+        ST_Pixel,
+        ST_Root_Signature,
+        ST_Vertex,
+        ST_Count
     };
 
     enum class ESamplerState : uint8_t

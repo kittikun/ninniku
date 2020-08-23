@@ -46,8 +46,8 @@ namespace ninniku
         bool Dispatch(const CommandHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         void Finalize() override {}
         bool Initialize() override { return true; }
-        bool LoadShader(const std::filesystem::path&) override { throw std::exception("Invalid for RENDERER_NULL"); }
-        bool LoadShader(const std::string_view&, const void*, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
+        bool LoadShader(EShaderType, const std::filesystem::path&) override { throw std::exception("Invalid for RENDERER_NULL"); }
+        bool LoadShader(EShaderType, const std::string_view&, const void*, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
         MappedResourceHandle Map(const BufferHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         MappedResourceHandle Map(const TextureHandle&, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool Present(const SwapChainHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }

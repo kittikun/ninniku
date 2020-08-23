@@ -53,8 +53,8 @@ namespace ninniku
         bool Dispatch(const CommandHandle& cmd) override;
         void Finalize() override;
         bool Initialize() override;
-        bool LoadShader(const std::filesystem::path& path) override;
-        bool LoadShader(const std::string_view& name, const void* pData, const uint32_t size) override;
+        bool LoadShader(EShaderType type, const std::filesystem::path& path) override;
+        bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
         bool Present(const SwapChainHandle&) override;
@@ -68,8 +68,7 @@ namespace ninniku
     private:
         bool CreateDevice(int adapter, ID3D11Device** pDevice);
         std::string_view DxSRVDimensionToString(D3D_SRV_DIMENSION dimension);
-        bool LoadShader(const std::filesystem::path& path, ID3DBlob* pBlob);
-        bool LoadShaders(const std::filesystem::path& shaderPath);
+        bool LoadShader(EShaderType type, const std::filesystem::path& path, ID3DBlob* pBlob);
         bool MakeTextureSRV(const TextureSRVParams& params);
         StringMap<uint32_t> ParseShaderResources(uint32_t numBoundResources, ID3D11ShaderReflection* reflection);
 

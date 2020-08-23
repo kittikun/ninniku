@@ -44,13 +44,13 @@ namespace shader_compiler
                           // need to clean up temp files
                           foreach (var pipelineState in pipelineStates)
                           {
-                              foreach (var component in pipelineState.components_)
+                              foreach (var kvp in pipelineState.components_)
                               {
-                                  if (component.type_ == ShaderType.RootSignature)
+                                  if (kvp.Value.type_ == ShaderType.RootSignature)
                                   {
                                       // somehow deleting the temp files make Appveyor fail..
                                       if (Environment.GetEnvironmentVariable("APPVEYOR") == null)
-                                          File.Delete(component.path_);
+                                          File.Delete(kvp.Value.path_);
                                   }
                               }
                           }

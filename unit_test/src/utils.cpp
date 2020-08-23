@@ -79,7 +79,7 @@ bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, c
 {
     auto fmt = boost::format("%1%\\%2%%3%") % shaderRoot % name % dx->GetShaderExtension();
 
-    return dx->LoadShader(boost::str(fmt));
+    return dx->LoadShader(ninniku::ST_Compute, boost::str(fmt));
 }
 
 bool IsAppVeyor()
