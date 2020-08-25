@@ -81,12 +81,12 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
-    DX12CommandInternal::DX12CommandInternal(uint32_t shaderHash) noexcept
+    DX12ComputeCommandInternal::DX12ComputeCommandInternal(uint32_t shaderHash) noexcept
         : contextShaderHash_{ shaderHash }
     {
     }
 
-    bool DX12CommandInternal::CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings)
+    bool DX12ComputeCommandInternal::CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings)
     {
         TRACE_SCOPED_DX12;
 
@@ -110,7 +110,7 @@ namespace ninniku
         return true;
     }
 
-    bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12Command* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize)
+    bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12ComputeCommand* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize)
     {
         TRACE_SCOPED_DX12;
 
@@ -357,7 +357,7 @@ namespace ninniku
         return true;
     }
 
-    uint32_t DX12Command::GetHashShader() const
+    uint32_t DX12ComputeCommand::GetHashShader() const
     {
         TRACE_SCOPED_DX12;
 
@@ -368,7 +368,7 @@ namespace ninniku
         return res.checksum();
     }
 
-    uint32_t DX12Command::GetHashBindings() const
+    uint32_t DX12ComputeCommand::GetHashBindings() const
     {
         TRACE_SCOPED_DX12;
 

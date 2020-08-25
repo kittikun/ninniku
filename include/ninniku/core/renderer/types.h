@@ -53,7 +53,6 @@ namespace ninniku
     enum EShaderType : uint8_t
     {
         ST_Compute,
-        ST_Finished,
         ST_Pixel,
         ST_Root_Signature,
         ST_Vertex,
@@ -113,7 +112,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Commands
     //////////////////////////////////////////////////////////////////////////
-    struct Command : NonCopyable
+    struct ComputeCommand : NonCopyable
     {
         std::string_view shader;
         std::string_view cbufferStr;
@@ -124,7 +123,7 @@ namespace ninniku
         std::unordered_map<std::string_view, const struct SamplerState*> ssBindings;
     };
 
-    using CommandHandle = std::unique_ptr<Command>;
+    using CommandHandle = std::unique_ptr<ComputeCommand>;
 
     struct ClearRenderTargetParam
     {
@@ -180,6 +179,14 @@ namespace ninniku
     };
 
     using MappedResourceHandle = std::unique_ptr<const MappedResource>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Pipeline State
+    //////////////////////////////////////////////////////////////////////////
+    struct PipelineStateParam : NonCopyable
+    {
+        std::array<std::string, EShaderType::ST_Count> shaders_;
+    };
 
     //////////////////////////////////////////////////////////////////////////
     // Shader Resources

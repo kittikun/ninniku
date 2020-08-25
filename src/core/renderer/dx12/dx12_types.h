@@ -130,16 +130,16 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct DX12CommandSubContext
     {
-        bool Initialize(const DX12Device& device, struct DX12Command* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize);
+        bool Initialize(const DX12Device& device, struct DX12ComputeCommand* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize);
 
         DX12DescriptorHeap descriptorHeap_;
 
         static inline std::array<uint32_t, 3> heapIncrementSizes_;
     };
 
-    struct DX12CommandInternal
+    struct DX12ComputeCommandInternal
     {
-        DX12CommandInternal(uint32_t shaderHash) noexcept;
+        DX12ComputeCommandInternal(uint32_t shaderHash) noexcept;
 
         DX12RootSignature rootSignature_;
         DX12PipelineState pipelineState_;
@@ -152,12 +152,12 @@ namespace ninniku
         std::unordered_map<uint32_t, DX12CommandSubContext> subContexts_;
     };
 
-    struct DX12Command final : public Command
+    struct DX12ComputeCommand final : public ComputeCommand
     {
         uint32_t GetHashShader() const;
         uint32_t GetHashBindings() const;
 
-        std::weak_ptr<DX12CommandInternal> impl_;
+        std::weak_ptr<DX12ComputeCommandInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////

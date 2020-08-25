@@ -41,6 +41,7 @@ namespace ninniku
         BufferHandle CreateBuffer(const BufferHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         CommandHandle CreateCommand() const override { throw std::exception("Invalid for RENDERER_NULL"); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view&) const override { throw std::exception("Invalid for RENDERER_NULL"); }
+        bool CreatePipelineState(const PipelineStateParam&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         TextureHandle CreateTexture(const TextureParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool Dispatch(const CommandHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }

@@ -50,6 +50,7 @@ namespace ninniku
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
         virtual CommandHandle CreateCommand() const = 0;
         virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
+        [[nodiscard]] virtual bool CreatePipelineState(const PipelineStateParam& params) = 0;
         [[nodiscard]] virtual SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) = 0;
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
         [[nodiscard]] virtual bool Dispatch(const CommandHandle& cmd) = 0;

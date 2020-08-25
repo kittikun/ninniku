@@ -600,39 +600,41 @@ namespace ninniku
         return cmd;
     }
 
-    bool DX12::CreateCommandContexts()
+    bool DX12::CreateCommandContexts(bool isCompute, const std::string_view& shader)
     {
         TRACE_SCOPED_DX12;
 
-        for (auto& kvp : resourceBindings_) {
+        auto found = resourceBindings_.find(shader);
+
+        if (isCompute) {
             boost::crc_32_type res;
 
-            res.process_bytes(kvp.first.c_str(), kvp.first.size());
+            res.process_bytes(shader.data(), shader.size());
 
-            auto context = std::make_shared<DX12CommandInternal>(res.checksum());
+            auto context = std::make_shared<DX12ComputeCommandInternal>(res.checksum());
 
             // find the shader bytecode
-            auto foundShader = shaders_.find(kvp.first);
+            auto foundShader = shaders_.find(shader);
 
             if (foundShader == shaders_.end()) {
-                LOGEF(boost::format("CreateCommandContexts: could not find shader \"%1%\"") % kvp.first);
+                LOGEF(boost::format("CreateCommandContexts: could not find shader \"%1%\"") % shader);
                 return false;
             }
 
-            auto foundRS = rootSignatures_.find(kvp.first);
+            auto foundRS = rootSignatures_.find(shader);
 
             if (foundRS == rootSignatures_.end()) {
-                LOGEF(boost::format("CreateCommandContexts: could not find the root signature for shader \"%1%\"") % kvp.first);
+                LOGEF(boost::format("CreateCommandContexts: could not find the root signature for shader \"%1%\"") % shader);
                 return false;
             }
 
             // keep a reference to the root signature for access without lookup
             context->rootSignature_ = foundRS->second;
 
-            auto foundBindings = resourceBindings_.find(kvp.first);
+            auto foundBindings = resourceBindings_.find(shader);
 
             if (foundBindings == resourceBindings_.end()) {
-                LOGEF(boost::format("CreateCommandContexts: could not find the resource bindings for shader \"%1%\"") % kvp.first);
+                LOGEF(boost::format("CreateCommandContexts: could not find the resource bindings for shader \"%1%\"") % shader);
                 return false;
             }
 
@@ -651,10 +653,11 @@ namespace ninniku
             if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
                 return false;
 
-            context->pipelineState_->SetName(strToWStr(kvp.first).c_str());
+            context->pipelineState_->SetName(strToWStr(shader).c_str());
 
             // no need to track contexts because they will be released upon destruction anyway
             commandContexts_.emplace(res.checksum(), std::move(context));
+        } else {
         }
 
         return true;
@@ -849,6 +852,31 @@ namespace ninniku
 
         sampler->descriptorHeap_->SetName(L"SS_Linear");
         samplers_[static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Linear)].reset(sampler);
+
+        return true;
+    }
+
+    bool DX12::CreatePipelineState(const PipelineStateParam& param)
+    {
+        if (param.shaders_[ST_Root_Signature].empty()) {
+            LOGE << "PipelineStateParam's root signature must be set";
+            return false;
+        }
+
+        if ((param.shaders_[ST_Compute].empty()) && ((param.shaders_[ST_Vertex].empty()) || (param.shaders_[ST_Pixel].empty()))) {
+            LOGE << "if PipelineStateParam's compute shader is empty then both VS and PS must be set";
+            return false;
+        }
+
+        // Create command contexts for all the shaders we just found
+
+        for (auto& component : param.shaders_) {
+            if (component.empty())
+                continue;
+
+            if (!CreateCommandContexts(!param.shaders_[ST_Root_Signature].empty(), component))
+                return false;
+        }
 
         return true;
     }
@@ -1118,7 +1146,7 @@ namespace ninniku
     {
         TRACE_SCOPED_DX12;
 
-        DX12Command* dxCmd = static_cast<DX12Command*>(cmd.get());
+        DX12ComputeCommand* dxCmd = static_cast<DX12ComputeCommand*>(cmd.get());
 
         auto shaderHash = dxCmd->GetHashShader();
 
@@ -1699,7 +1727,7 @@ namespace ninniku
             return false;
         }
 
-        if (!ValidateDXCBlob(pBlob.Get(), pLibrary)) {
+        if ((type != EShaderType::ST_Root_Signature) && (!ValidateDXCBlob(pBlob.Get(), pLibrary))) {
             LOG_INDENT_END;
             return false;
         }
@@ -1746,7 +1774,7 @@ namespace ninniku
             return false;
         }
 
-        if (!ValidateDXCBlob(pBlob.Get(), pLibrary)) {
+        if ((type != EShaderType::ST_Root_Signature) && (!ValidateDXCBlob(pBlob.Get(), pLibrary))) {
             LOG_INDENT_END;
             return false;
         }
@@ -1841,12 +1869,6 @@ namespace ninniku
                 if (!ParseRootSignature(name, pBlob))
                     return false;
             }
-        }
-
-        if (type == ST_Finished) {
-            // Create command contexts for all the shaders we just found
-            if (!CreateCommandContexts())
-                return false;
         }
 
         return true;

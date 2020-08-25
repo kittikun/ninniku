@@ -49,8 +49,9 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
-        CommandHandle CreateCommand() const override { return std::make_unique<DX12Command>(); }
+        CommandHandle CreateCommand() const override { return std::make_unique<DX12ComputeCommand>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
+        bool CreatePipelineState(const PipelineStateParam& params) override;
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         bool Dispatch(const CommandHandle& cmd) override;
@@ -69,7 +70,7 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopySwapChainToBuffer(const CopySwapChainToBufferParam& params);
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
-        bool CreateCommandContexts();
+        bool CreateCommandContexts(bool isCompute, const std::string_view& shader);
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
@@ -94,7 +95,7 @@ namespace ninniku
 
         // commands
         std::vector<CommandList*> commands_;
-        std::unordered_map<uint32_t, std::shared_ptr<DX12CommandInternal>> commandContexts_;
+        std::unordered_map<uint32_t, std::shared_ptr<DX12ComputeCommandInternal>> commandContexts_;
         std::array<Queue, QT_COUNT> queues_;
 
         // fence

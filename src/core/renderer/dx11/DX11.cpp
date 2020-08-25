@@ -350,6 +350,11 @@ namespace ninniku
         return false;
     }
 
+    bool DX11::CreatePipelineState(const PipelineStateParam&)
+    {
+        throw std::exception("not implemented yet");
+    }
+
     SwapChainHandle DX11::CreateSwapChain(const SwapchainParamHandle&)
     {
         throw std::exception("not implemented yet");
