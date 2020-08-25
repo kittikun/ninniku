@@ -46,12 +46,13 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
-        CommandHandle CreateCommand() const override { return std::make_unique<ComputeCommand>(); }
+        ComputeCommandHandle CreateComputeCommand() const override { return std::make_unique<ComputeCommand>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
+        GraphicCommandHandle CreateGraphicCommand() const override { return std::make_unique<GraphicCommand>(); }
         bool CreatePipelineState(const PipelineStateParam& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
-        bool Dispatch(const CommandHandle& cmd) override;
+        bool Dispatch(const ComputeCommandHandle& cmd) override;
         void Finalize() override;
         bool Initialize() override;
         bool LoadShader(EShaderType type, const std::filesystem::path& path) override;

@@ -48,12 +48,13 @@ namespace ninniku
         virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
-        virtual CommandHandle CreateCommand() const = 0;
+        virtual ComputeCommandHandle CreateComputeCommand() const = 0;
         virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
+        virtual GraphicCommandHandle CreateGraphicCommand() const = 0;
         [[nodiscard]] virtual bool CreatePipelineState(const PipelineStateParam& params) = 0;
         [[nodiscard]] virtual SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) = 0;
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
-        [[nodiscard]] virtual bool Dispatch(const CommandHandle& cmd) = 0;
+        [[nodiscard]] virtual bool Dispatch(const ComputeCommandHandle& cmd) = 0;
         virtual void Finalize() = 0;
         [[nodiscard]] virtual bool Initialize() = 0;
         [[nodiscard]] virtual bool LoadShader(EShaderType type, const std::filesystem::path& path) = 0;

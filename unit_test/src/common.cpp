@@ -48,7 +48,7 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx, cons
 
     for (uint32_t i = 0; i < param->numMips; ++i) {
         // dispatch
-        auto cmd = dx->CreateCommand();
+        auto cmd = dx->CreateComputeCommand();
         cmd->shader = "colorMips";
         cmd->cbufferStr = "CBGlobal";
 
@@ -88,7 +88,7 @@ ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle&
 
     for (uint32_t i = 0; i < param->numMips; ++i) {
         // dispatch
-        auto cmd = dx->CreateCommand();
+        auto cmd = dx->CreateComputeCommand();
         cmd->shader = "colorMips";
         cmd->cbufferStr = "CBGlobal";
 
@@ -151,7 +151,7 @@ ninniku::TextureHandle Generate2DTexWithMips(ninniku::RenderDeviceHandle& dx, co
 
         for (uint32_t srcMip = 0; srcMip < param->numMips - 1; ++srcMip) {
             // dispatch
-            auto cmd = dx->CreateCommand();
+            auto cmd = dx->CreateComputeCommand();
             cmd->shader = "downsample";
 
             static_assert((DOWNSAMPLE_NUMTHREAD_X == DOWNSAMPLE_NUMTHREAD_Y) && (DOWNSAMPLE_NUMTHREAD_Z == 1));
@@ -189,7 +189,7 @@ ninniku::TextureHandle ResizeImage(ninniku::RenderDeviceHandle& dx, const ninnik
 
     for (uint32_t mip = 0; mip < dstParam->numMips; ++mip) {
         // dispatch
-        auto cmd = dx->CreateCommand();
+        auto cmd = dx->CreateComputeCommand();
         cmd->shader = "resize";
         cmd->ssBindings.insert(std::make_pair("ssLinear", dx->GetSampler(ninniku::ESamplerState::SS_Linear)));
 

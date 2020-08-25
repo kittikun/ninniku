@@ -79,7 +79,16 @@ bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, c
 {
     auto fmt = boost::format("%1%\\%2%%3%") % shaderRoot % name % dx->GetShaderExtension();
 
-    return dx->LoadShader(ninniku::ST_Compute, boost::str(fmt));
+    // most legacy tests have embedded root signatures as #define RS
+    if (!dx->LoadShader(ninniku::ST_Compute, boost::str(fmt)))
+        return false;
+
+    ninniku::PipelineStateParam params;
+
+    params.shaders_[ninniku::EShaderType::ST_Root_Signature] = name;
+    params.shaders_[ninniku::EShaderType::ST_Compute] = name;
+
+    return dx->CreatePipelineState(params);
 }
 
 bool IsAppVeyor()

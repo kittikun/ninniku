@@ -42,6 +42,24 @@ namespace ninniku
     }
 
     //////////////////////////////////////////////////////////////////////////
+    // Command
+    //////////////////////////////////////////////////////////////////////////
+    Command::Command(ECommandType type) noexcept
+        : type_{ type }
+    {
+    }
+
+    ComputeCommand::ComputeCommand() noexcept
+        : Command(ECommandType::CT_Compute)
+    {
+    }
+
+    GraphicCommand::GraphicCommand() noexcept
+        : Command(ECommandType::CT_Graphic)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // Swap chain
     //////////////////////////////////////////////////////////////////////////
     std::shared_ptr<SwapchainParam> SwapchainParam::Create()

@@ -49,12 +49,13 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
-        CommandHandle CreateCommand() const override { return std::make_unique<DX12ComputeCommand>(); }
+        ComputeCommandHandle CreateComputeCommand() const override { return std::make_unique<DX12ComputeCommand>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
+        GraphicCommandHandle CreateGraphicCommand() const override { return std::make_unique<DX12GraphicCommand>(); }
         bool CreatePipelineState(const PipelineStateParam& params) override;
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
-        bool Dispatch(const CommandHandle& cmd) override;
+        bool Dispatch(const ComputeCommandHandle& cmd) override;
         void Finalize() override;
         bool Initialize() override;
         bool LoadShader(EShaderType type, const std::filesystem::path& path) override;
@@ -70,7 +71,7 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopySwapChainToBuffer(const CopySwapChainToBufferParam& params);
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
-        bool CreateCommandContexts(bool isCompute, const std::string_view& shader);
+        bool CreateComputeCommandContext(const std::string_view& shader, const std::string_view& rootsignature);
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:

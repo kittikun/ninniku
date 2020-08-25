@@ -600,65 +600,67 @@ namespace ninniku
         return cmd;
     }
 
-    bool DX12::CreateCommandContexts(bool isCompute, const std::string_view& shader)
+    bool DX12::CreateComputeCommandContext(const std::string_view& shader, const std::string_view& rootsignature)
     {
         TRACE_SCOPED_DX12;
 
         auto found = resourceBindings_.find(shader);
 
-        if (isCompute) {
-            boost::crc_32_type res;
-
-            res.process_bytes(shader.data(), shader.size());
-
-            auto context = std::make_shared<DX12ComputeCommandInternal>(res.checksum());
-
-            // find the shader bytecode
-            auto foundShader = shaders_.find(shader);
-
-            if (foundShader == shaders_.end()) {
-                LOGEF(boost::format("CreateCommandContexts: could not find shader \"%1%\"") % shader);
-                return false;
-            }
-
-            auto foundRS = rootSignatures_.find(shader);
-
-            if (foundRS == rootSignatures_.end()) {
-                LOGEF(boost::format("CreateCommandContexts: could not find the root signature for shader \"%1%\"") % shader);
-                return false;
-            }
-
-            // keep a reference to the root signature for access without lookup
-            context->rootSignature_ = foundRS->second;
-
-            auto foundBindings = resourceBindings_.find(shader);
-
-            if (foundBindings == resourceBindings_.end()) {
-                LOGEF(boost::format("CreateCommandContexts: could not find the resource bindings for shader \"%1%\"") % shader);
-                return false;
-            }
-
-            // Create pipeline state
-            D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-            desc.CS = foundShader->second.shaders_[EShaderType::ST_Compute];
-            desc.pRootSignature = foundRS->second.Get();
-
-            if (type_ == ERenderer::RENDERER_WARP_DX12)
-                desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
-
-            LOGDF(boost::format("Creating pipeling state with byte code: Pointer=%1%, Size=%2%") % desc.CS.pShaderBytecode % desc.CS.BytecodeLength);
-
-            auto hr = device_->CreateComputePipelineState(&desc, IID_PPV_ARGS(&context->pipelineState_));
-
-            if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
-                return false;
-
-            context->pipelineState_->SetName(strToWStr(shader).c_str());
-
-            // no need to track contexts because they will be released upon destruction anyway
-            commandContexts_.emplace(res.checksum(), std::move(context));
-        } else {
+        if (found == resourceBindings_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % shader);
+            return false;
         }
+
+        boost::crc_32_type res;
+
+        res.process_bytes(shader.data(), shader.size());
+
+        auto context = std::make_shared<DX12ComputeCommandInternal>(res.checksum());
+
+        // find the shader bytecode
+        auto foundShader = shaders_.find(shader);
+
+        if (foundShader == shaders_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find shader \"%1%\"") % shader);
+            return false;
+        }
+
+        auto foundRS = rootSignatures_.find(rootsignature);
+
+        if (foundRS == rootSignatures_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find the root signature for shader \"%1%\"") % rootsignature);
+            return false;
+        }
+
+        // keep a reference to the root signature for access without lookup
+        context->rootSignature_ = foundRS->second;
+
+        auto foundBindings = resourceBindings_.find(shader);
+
+        if (foundBindings == resourceBindings_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find the resource bindings for shader \"%1%\"") % shader);
+            return false;
+        }
+
+        // Create pipeline state
+        D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
+        desc.CS = foundShader->second.shaders_[EShaderType::ST_Compute];
+        desc.pRootSignature = foundRS->second.Get();
+
+        if (type_ == ERenderer::RENDERER_WARP_DX12)
+            desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
+
+        LOGDF(boost::format("Creating pipeling state with byte code: Pointer=%1%, Size=%2%") % desc.CS.pShaderBytecode % desc.CS.BytecodeLength);
+
+        auto hr = device_->CreateComputePipelineState(&desc, IID_PPV_ARGS(&context->pipelineState_));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
+            return false;
+
+        context->pipelineState_->SetName(strToWStr(shader).c_str());
+
+        // no need to track contexts because they will be released upon destruction anyway
+        commandContexts_.emplace(res.checksum(), std::move(context));
 
         return true;
     }
@@ -870,12 +872,14 @@ namespace ninniku
 
         // Create command contexts for all the shaders we just found
 
-        for (auto& component : param.shaders_) {
+        for (auto i = 0u; i < param.shaders_.size(); ++i) {
+            auto& component = param.shaders_[i];
+
             if (component.empty())
                 continue;
 
-            if (!CreateCommandContexts(!param.shaders_[ST_Root_Signature].empty(), component))
-                return false;
+            if (i == EShaderType::ST_Compute)
+                return CreateComputeCommandContext(component, param.shaders_[ST_Root_Signature]);
         }
 
         return true;
@@ -1142,7 +1146,7 @@ namespace ninniku
         return std::make_unique<DX12TextureImpl>(impl);
     }
 
-    bool DX12::Dispatch(const CommandHandle& cmd)
+    bool DX12::Dispatch(const ComputeCommandHandle& cmd)
     {
         TRACE_SCOPED_DX12;
 

@@ -152,12 +152,21 @@ namespace ninniku
         std::unordered_map<uint32_t, DX12CommandSubContext> subContexts_;
     };
 
+    struct DX12GraphicCommandInternal
+    {
+    };
+
     struct DX12ComputeCommand final : public ComputeCommand
     {
         uint32_t GetHashShader() const;
         uint32_t GetHashBindings() const;
 
         std::weak_ptr<DX12ComputeCommandInternal> impl_;
+    };
+
+    struct DX12GraphicCommand final : public GraphicCommand
+    {
+        std::weak_ptr<DX12GraphicCommandInternal> impl_;
     };
 
     //////////////////////////////////////////////////////////////////////////

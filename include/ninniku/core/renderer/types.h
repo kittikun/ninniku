@@ -35,6 +35,12 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Common enumerations
     //////////////////////////////////////////////////////////////////////////
+    enum ECommandType : uint8_t
+    {
+        CT_Compute,
+        CT_Graphic
+    };
+
     enum EDeviceFeature : uint8_t
     {
         DF_ALLOW_TEARING,
@@ -112,18 +118,35 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Commands
     //////////////////////////////////////////////////////////////////////////
-    struct ComputeCommand : NonCopyable
+    struct Command : NonCopyable
     {
-        std::string_view shader;
+        Command(ECommandType type) noexcept;
+        virtual ~Command() = default;
+
+        ECommandType type_;
         std::string_view cbufferStr;
-        std::array<uint32_t, 3> dispatch;
         std::unordered_map<std::string_view, const struct ShaderResourceView*> srvBindings;
         std::unordered_map<std::string_view, const struct UnorderedAccessView*> uavBindings;
         std::unordered_map<std::string_view, const struct RenderTargetView*> rtvBindings;
         std::unordered_map<std::string_view, const struct SamplerState*> ssBindings;
     };
 
-    using CommandHandle = std::unique_ptr<ComputeCommand>;
+    struct ComputeCommand : Command
+    {
+        ComputeCommand() noexcept;
+
+        std::string_view shader;
+        std::array<uint32_t, 3> dispatch;
+    };
+
+    using ComputeCommandHandle = std::unique_ptr<ComputeCommand>;
+
+    struct GraphicCommand : Command
+    {
+        GraphicCommand() noexcept;
+    };
+
+    using GraphicCommandHandle = std::unique_ptr<GraphicCommand>;
 
     struct ClearRenderTargetParam
     {
@@ -170,7 +193,7 @@ namespace ninniku
     using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
 
     //////////////////////////////////////////////////////////////////////////
-    // MappedResource: GPU to CPU readback
+    // MappedResource: GPU to CPU read back
     //////////////////////////////////////////////////////////////////////////
 
     struct MappedResource : NonCopyable

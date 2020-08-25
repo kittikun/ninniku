@@ -350,9 +350,17 @@ namespace ninniku
         return false;
     }
 
-    bool DX11::CreatePipelineState(const PipelineStateParam&)
+    bool DX11::CreatePipelineState(const PipelineStateParam& param)
     {
-        throw std::exception("not implemented yet");
+        if (param.shaders_[ST_Root_Signature].empty()) {
+            LOGE << "PipelineStateParam's root signature must be set";
+            return false;
+        }
+
+        if (param.shaders_[ST_Compute].empty())
+            throw std::exception("not implemented yet");
+
+        return true;
     }
 
     SwapChainHandle DX11::CreateSwapChain(const SwapchainParamHandle&)
@@ -575,7 +583,7 @@ namespace ninniku
         return res;
     }
 
-    bool DX11::Dispatch(const CommandHandle& cmd)
+    bool DX11::Dispatch(const ComputeCommandHandle& cmd)
     {
         TRACE_SCOPED_DX11;
 

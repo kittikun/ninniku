@@ -39,12 +39,13 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         BufferHandle CreateBuffer(const BufferParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         BufferHandle CreateBuffer(const BufferHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
-        CommandHandle CreateCommand() const override { throw std::exception("Invalid for RENDERER_NULL"); }
+        ComputeCommandHandle CreateComputeCommand() const override { throw std::exception("Invalid for RENDERER_NULL"); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view&) const override { throw std::exception("Invalid for RENDERER_NULL"); }
+        GraphicCommandHandle CreateGraphicCommand() const override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool CreatePipelineState(const PipelineStateParam&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         TextureHandle CreateTexture(const TextureParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
-        bool Dispatch(const CommandHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
+        bool Dispatch(const ComputeCommandHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         void Finalize() override {}
         bool Initialize() override { return true; }
         bool LoadShader(EShaderType, const std::filesystem::path&) override { throw std::exception("Invalid for RENDERER_NULL"); }
