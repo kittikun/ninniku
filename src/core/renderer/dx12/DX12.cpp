@@ -625,6 +625,7 @@ namespace ninniku
             return false;
         }
 
+        // find the root signature
         auto foundRS = rootSignatures_.find(rootsignature);
 
         if (foundRS == rootSignatures_.end()) {
@@ -805,6 +806,50 @@ namespace ninniku
         return false;
     }
 
+    bool DX12::CreateGraphicCommandContext(const std::string_view& vs, const std::string_view& ps, [[maybe_unused]] const std::string_view& rootsignature)
+    {
+        TRACE_SCOPED_DX12;
+
+        auto foundBindingVS = resourceBindings_.find(vs);
+
+        if (foundBindingVS == resourceBindings_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % vs);
+            return false;
+        }
+
+        auto foundBindingPS = resourceBindings_.find(vs);
+
+        if (foundBindingPS == resourceBindings_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % ps);
+            return false;
+        }
+
+        // find the shader bytecode
+        auto foundShaderVS = shaders_.find(vs);
+
+        if (foundShaderVS == shaders_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find shader \"%1%\"") % vs);
+            return false;
+        }
+
+        auto foundShaderPS = shaders_.find(ps);
+
+        if (foundShaderPS == shaders_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find shader \"%1%\"") % ps);
+            return false;
+        }
+
+        // find the root signature
+        auto foundRS = rootSignatures_.find(rootsignature);
+
+        if (foundRS == rootSignatures_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find the root signature for shader \"%1%\"") % rootsignature);
+            return false;
+        }
+
+        return true;
+    }
+
     bool DX12::CreateSamplers()
     {
         TRACE_SCOPED_DX12;
@@ -870,16 +915,11 @@ namespace ninniku
             return false;
         }
 
-        // Create command contexts for all the shaders we just found
-
-        for (auto i = 0u; i < param.shaders_.size(); ++i) {
-            auto& component = param.shaders_[i];
-
-            if (component.empty())
-                continue;
-
-            if (i == EShaderType::ST_Compute)
-                return CreateComputeCommandContext(component, param.shaders_[ST_Root_Signature]);
+        // Can be either compute or graphic
+        if (param.shaders_[ST_Compute].empty()) {
+            return CreateGraphicCommandContext(param.shaders_[ST_Vertex], param.shaders_[ST_Pixel], param.shaders_[ST_Root_Signature]);
+        } else {
+            return CreateComputeCommandContext(param.shaders_[ST_Compute], param.shaders_[ST_Root_Signature]);
         }
 
         return true;

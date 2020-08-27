@@ -162,30 +162,28 @@ BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
     }
 }
 
-//BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
-//{
-//    auto pipelineStates = ParseTOC();
-//
-//    ChangeToOutDirectory("shader_compiler");
-//
-//    auto& dx = ninniku::GetRenderer();
-//
-//    for (auto i = 0u; i < pipelineStates.size(); ++i) {
-//        auto& ps = pipelineStates[i];
-//        ninniku::PipelineStateParam param;
-//
-//        for (auto& component : ps->components_) {
-//            auto filename = GetFilename(ps->name_, component->type_, dx->GetShaderExtension());
-//
-//            param.shaders_[component->type_] = filename.stem().string();
-//
-//            BOOST_REQUIRE(dx->LoadShader(component->type_, filename));
-//        }
-//
-//        auto res = dx->CreatePipelineState(param);
-//
-//        BOOST_REQUIRE((i == 0) ? !res : res);
-//    }
-//}
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
+{
+    auto pipelineStates = ParseTOC();
+
+    ChangeToOutDirectory("shader_compiler");
+
+    auto& dx = ninniku::GetRenderer();
+
+    for (auto i = 0u; i < pipelineStates.size(); ++i) {
+        auto& ps = pipelineStates[i];
+        ninniku::PipelineStateParam param;
+
+        for (auto& component : ps->components_) {
+            auto filename = GetFilename(ps->name_, component->type_, dx->GetShaderExtension());
+
+            param.shaders_[component->type_] = filename.stem().string();
+
+            BOOST_REQUIRE(dx->LoadShader(component->type_, filename));
+        }
+
+        BOOST_REQUIRE(dx->CreatePipelineState(param));
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()

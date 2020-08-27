@@ -72,6 +72,7 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
         bool CreateComputeCommandContext(const std::string_view& shader, const std::string_view& rootsignature);
+        bool CreateGraphicCommandContext(const std::string_view& vs, const std::string_view& ps, const std::string_view& rootsignature);
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:

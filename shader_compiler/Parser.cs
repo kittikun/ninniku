@@ -45,16 +45,25 @@ void main(uint3 DTI : SV_DispatchThreadID)
                 // Root signature
                 var rs = item.Descendants().Where(d => d.Name.LocalName == "RootSignature").SingleOrDefault();
 
+                if (rs == null)
+                    throw new Exception("RootSignature must be specified");
+
                 ParseRootSignature(rs, pipelineState);
 
                 // Vertex shader
                 var vs = item.Descendants().Where(d => d.Name.LocalName == "VertexShader").SingleOrDefault();
 
-                ParseShader(vs, ShaderType.VertexShader, pipelineState);
+                if (vs != null)
+                    ParseShader(vs, ShaderType.VertexShader, pipelineState);
 
                 // Pixel shader
                 var ps = item.Descendants().Where(d => d.Name.LocalName == "PixelShader").SingleOrDefault();
-                ParseShader(ps, ShaderType.PixelShader, pipelineState);
+
+                if (ps != null)
+                    ParseShader(ps, ShaderType.PixelShader, pipelineState);
+
+                if ((rs == null) || (vs == null))
+                    throw new Exception("VS and PS must both be specified");
 
                 result.Add(pipelineState);
             }
@@ -105,56 +114,48 @@ void main(uint3 DTI : SV_DispatchThreadID)
 
         private void ParseRootSignature(XElement rs, PipelineState pipelineState)
         {
-            if (rs == null)
-                throw new Exception("RootSignature must be specified");
+            var path = Path.Combine(dataDir_, rs.Attribute("path").Value);
+
+            // root signatures are mandatory
+            if (!File.Exists(path))
+                throw new System.IO.FileNotFoundException(path);
+
+            ShaderComponent component = new ShaderComponent();
+
+            component.type_ = ShaderType.RootSignature;
+            component.path_ = GenerateRootShaderDummy(path);
+
+            // root signatures can be shared across shaders, so rely on path to add them to
+            if (RootSignatures.signatures_.ContainsKey(path))
+            {
+                pipelineState.components_.Add(ShaderType.RootSignature, RootSignatures.signatures_[path]);
+            }
             else
             {
-                var path = Path.Combine(dataDir_, rs.Attribute("path").Value);
-
-                // root signatures are mandatory
-                if (!File.Exists(path))
-                    throw new System.IO.FileNotFoundException(path);
-
-                ShaderComponent component = new ShaderComponent();
-
-                component.type_ = ShaderType.RootSignature;
-                component.path_ = GenerateRootShaderDummy(path);
-
-                // root signatures can be shared across shaders, so rely on path to add them to
-                if (RootSignatures.signatures_.ContainsKey(path))
-                {
-                    pipelineState.components_.Add(ShaderType.RootSignature, RootSignatures.signatures_[path]);
-                }
-                else
-                {
-                    RootSignatures.signatures_.Add(path, component);
-                    pipelineState.components_.Add(ShaderType.RootSignature, component);
-                }
+                RootSignatures.signatures_.Add(path, component);
+                pipelineState.components_.Add(ShaderType.RootSignature, component);
             }
         }
 
         private void ParseShader(XElement shader, ShaderType type, PipelineState pipelineState)
         {
-            if (shader != null)
-            {
-                var path = Path.Combine(dataDir_, shader.Attribute("path").Value);
+            var path = Path.Combine(dataDir_, shader.Attribute("path").Value);
 
-                if (!File.Exists(path))
-                    throw new FileNotFoundException(path);
+            if (!File.Exists(path))
+                throw new FileNotFoundException(path);
 
-                var entry = shader.Attribute("entry").Value;
+            var entry = shader.Attribute("entry").Value;
 
-                if (entry == null)
-                    throw new Exception("Entry point must be specified");
+            if (entry == null)
+                throw new Exception("Entry point must be specified");
 
-                var component = new ShaderComponent();
+            var component = new ShaderComponent();
 
-                component.path_ = path;
-                component.type_ = type;
-                component.entry_ = entry;
+            component.path_ = path;
+            component.type_ = type;
+            component.entry_ = entry;
 
-                pipelineState.components_.Add(type, component);
-            }
+            pipelineState.components_.Add(type, component);
         }
 
         #endregion Private Methods
