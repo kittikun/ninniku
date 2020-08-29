@@ -142,6 +142,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX1
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_input_layout, T, FixturesDX12All, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto& dx = ninniku::GetRenderer();
 
     ninniku::InputLayoutDesc desc;
