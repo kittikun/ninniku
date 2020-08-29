@@ -100,17 +100,6 @@ namespace ninniku
         return { srcSub, dstSub };
     }
 
-    DebugMarkerHandle DX11::CreateDebugMarker(const std::string_view& name) const
-    {
-        DX11Marker marker;
-
-        if (Globals::Instance().doCapture_) {
-            context_->QueryInterface(IID_PPV_ARGS(marker.GetAddressOf()));
-        }
-
-        return std::make_unique<DX11DebugMarker>(marker, name);
-    }
-
     BufferHandle DX11::CreateBuffer(const BufferParamHandle& params)
     {
         TRACE_SCOPED_NAMED_DX11("ninniku::DX11::CreateBuffer (BufferParamHandle)");
@@ -266,6 +255,17 @@ namespace ninniku
         memcpy_s(&internalDst->data_.front(), dstPitch, mapped->GetData(), std::min(dstPitch, dxMapped->GetRowPitch()));
 
         return dst;
+    }
+
+    DebugMarkerHandle DX11::CreateDebugMarker(const std::string_view& name) const
+    {
+        DX11Marker marker;
+
+        if (Globals::Instance().doCapture_) {
+            context_->QueryInterface(IID_PPV_ARGS(marker.GetAddressOf()));
+        }
+
+        return std::make_unique<DX11DebugMarker>(marker, name);
     }
 
     bool DX11::CreateDevice(int adapter, ID3D11Device** pDevice)
@@ -449,7 +449,7 @@ namespace ninniku
             desc.Height = params->height;
             desc.MipLevels = params->numMips;
             desc.ArraySize = params->arraySize;
-            desc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
+            desc.Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params->format));
             desc.SampleDesc.Count = 1;
             desc.Usage = usage;
             desc.BindFlags = bindFlags;
@@ -465,7 +465,7 @@ namespace ninniku
             desc.Width = params->width;
             desc.MipLevels = params->numMips;
             desc.ArraySize = params->arraySize;
-            desc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
+            desc.Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params->format));
             desc.Usage = usage;
             desc.BindFlags = bindFlags;
             desc.CPUAccessFlags = cpuFlags;
@@ -482,7 +482,7 @@ namespace ninniku
             desc.Height = params->height;
             desc.Depth = params->depth;
             desc.MipLevels = params->numMips;
-            desc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
+            desc.Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params->format));
             desc.Usage = usage;
             desc.BindFlags = bindFlags;
             desc.CPUAccessFlags = cpuFlags;
@@ -517,7 +517,7 @@ namespace ninniku
             // we have to create an UAV for each miplevel
             for (uint32_t i = 0; i < params->numMips; ++i) {
                 D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-                uavDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format));
+                uavDesc.Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params->format));
 
                 if (params->arraySize > 1) {
                     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
@@ -894,7 +894,7 @@ namespace ninniku
 
         D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-        srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params.texParams->format));
+        srvDesc.Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params.texParams->format));
 
         if (params.isCubeArray) {
             srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBEARRAY;
@@ -1087,6 +1087,11 @@ namespace ninniku
     bool DX11::Present(const SwapChainHandle&)
     {
         throw std::exception("Not yet implemented");
+    }
+
+    void DX11::RegisterInputLayout(const InputLayoutDesc&)
+    {
+        throw std::exception("not implemented yet");
     }
 
     bool DX11::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)

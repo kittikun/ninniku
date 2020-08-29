@@ -56,13 +56,14 @@ namespace ninniku
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
         [[nodiscard]] virtual bool Dispatch(const ComputeCommandHandle& cmd) = 0;
         virtual void Finalize() = 0;
-        [[nodiscard]] virtual bool Initialize() = 0;        
+        [[nodiscard]] virtual bool Initialize() = 0;
         [[nodiscard]] virtual bool LoadShader(EShaderType type, const std::filesystem::path& path) = 0;
         [[nodiscard]] virtual bool LoadShader(EShaderType type, const std::string_view& psName, const std::filesystem::path& path) = 0;
         [[nodiscard]] virtual bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
         [[nodiscard]] virtual bool Present(const SwapChainHandle& swapchain) = 0;
+        virtual void RegisterInputLayout(const InputLayoutDesc& params) = 0;
         [[nodiscard]] virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
 
         virtual const SamplerState* GetSampler(ESamplerState sampler) const = 0;

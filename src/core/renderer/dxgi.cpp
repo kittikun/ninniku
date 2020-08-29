@@ -75,7 +75,7 @@ namespace ninniku
 
             scDesc.Width = param->width;
             scDesc.Height = param->height;
-            scDesc.Format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(param->format));
+            scDesc.Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(param->format));
             scDesc.SampleDesc.Count = 1;
             scDesc.SampleDesc.Quality = 0;
             scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;

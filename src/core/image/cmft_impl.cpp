@@ -78,7 +78,7 @@ namespace ninniku
 
         res->arraySize = CUBEMAP_NUM_FACES;
         res->depth = 1;
-        res->format = TF_R32G32B32A32_FLOAT;
+        res->format = F_R32G32B32A32_FLOAT;
         res->height = res->width = imageGetCubemapFaceSize(image_);
         res->imageDatas = GetInitializationData();
         res->numMips = 1;
@@ -127,15 +127,15 @@ namespace ninniku
         auto res = cmft::TextureFormat::Enum::Null;
 
         switch (format) {
-            case TF_R16G16B16A16_FLOAT:
+            case F_R16G16B16A16_FLOAT:
                 res = cmft::TextureFormat::Enum::RGBA16F;
                 break;
 
-            case TF_R32G32B32A32_FLOAT:
+            case F_R32G32B32A32_FLOAT:
                 res = cmft::TextureFormat::Enum::RGBA32F;
                 break;
 
-            case TF_R8G8B8A8_UNORM:
+            case F_R8G8B8A8_UNORM:
                 res = cmft::TextureFormat::Enum::BGRA8;
                 break;
 

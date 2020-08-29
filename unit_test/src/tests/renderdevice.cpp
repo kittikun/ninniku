@@ -77,7 +77,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_swapchain, T, FixturesDX12All, T)
     auto param = ninniku::SwapchainParam::Create();
 
     param->bufferCount = 2;
-    param->format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
+    param->format = ninniku::EFormat::F_R8G8B8A8_UNORM;
     param->height = 768;
     param->width = 1024;
     param->hwnd = ninniku::MakeWindow(param->width, param->height, false);
@@ -104,7 +104,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX1
     auto param = ninniku::SwapchainParam::Create();
 
     param->bufferCount = 2;
-    param->format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
+    param->format = ninniku::EFormat::F_R8G8B8A8_UNORM;
     param->height = 768;
     param->width = 1024;
     param->hwnd = ninniku::MakeWindow(param->width, param->height, false);
@@ -138,6 +138,23 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX1
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
     CheckFileCRC(filename, 1491251387);
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_input_layout, T, FixturesDX12All, T)
+{
+    auto& dx = ninniku::GetRenderer();
+
+    ninniku::InputLayoutDesc desc;
+
+    desc.name_ = "simple";
+
+    desc.elements_.resize(2);
+    desc.elements_[0].name_ = "POSITION";
+    desc.elements_[0].format_ = ninniku::F_R32G32B32_FLOAT;
+    desc.elements_[1].name_ = "COLOR";
+    desc.elements_[1].format_ = ninniku::F_R32G32B32A32_FLOAT;
+
+    dx->RegisterInputLayout(desc);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

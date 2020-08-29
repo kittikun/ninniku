@@ -59,6 +59,6 @@ namespace ninniku
     NINNIKU_API constexpr uint32_t CountMips(const uint32_t faceSize) noexcept;
     NINNIKU_API constexpr int NearestPow2Floor(const int x);
     NINNIKU_API constexpr uint8_t DXGIFormatToNinnikuTF(uint32_t);
-    NINNIKU_API constexpr uint32_t NinnikuTFToDXGIFormat(uint32_t);
+    NINNIKU_API constexpr uint32_t NinnikuFormatToDXGIFormat(uint32_t);
     NINNIKU_API HWND MakeWindow(uint32_t width, uint32_t height, bool show);
 } // namespace ninniku

@@ -146,7 +146,7 @@ namespace ninniku
         meta_.depth = 1;
         meta_.arraySize = 1;
         meta_.mipLevels = 1;
-        meta_.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcDesc->format));
+        meta_.format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(srcDesc->format));
         meta_.dimension = DirectX::TEX_DIMENSION_TEXTURE2D;
 
         auto fmt = boost::format("ddsImageImpl::InitializeFromSwapChain with Width=%1%, Height=%2%") % meta_.width % meta_.height;
@@ -199,7 +199,7 @@ namespace ninniku
         meta_.depth = srcDesc->depth;
         meta_.arraySize = srcDesc->arraySize;
         meta_.mipLevels = srcDesc->numMips;
-        meta_.format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(srcDesc->format));
+        meta_.format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(srcDesc->format));
 
         if (meta_.depth > 1) {
             meta_.dimension = DirectX::TEX_DIMENSION_TEXTURE3D;

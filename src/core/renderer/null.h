@@ -54,6 +54,7 @@ namespace ninniku
         MappedResourceHandle Map(const BufferHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         MappedResourceHandle Map(const TextureHandle&, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool Present(const SwapChainHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
+        void RegisterInputLayout(const InputLayoutDesc&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool UpdateConstantBuffer(const std::string_view&, void*, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
         const SamplerState* GetSampler(ESamplerState) const override { throw std::exception("Invalid for RENDERER_NULL"); }
     };

@@ -261,41 +261,44 @@ namespace ninniku
 
     constexpr uint8_t DXGIFormatToNinnikuTF(uint32_t fmt)
     {
-        ETextureFormat res = TF_UNKNOWN;
+        EFormat res = F_UNKNOWN;
 
         switch (fmt) {
             case DXGI_FORMAT_UNKNOWN:
-                res = TF_UNKNOWN;
+                res = F_UNKNOWN;
                 break;
             case DXGI_FORMAT_R8_UNORM:
-                res = TF_R8_UNORM;
+                res = F_R8_UNORM;
                 break;
             case DXGI_FORMAT_R8G8_UNORM:
-                res = TF_R8G8_UNORM;
+                res = F_R8G8_UNORM;
                 break;
             case DXGI_FORMAT_R8G8B8A8_UNORM:
-                res = TF_R8G8B8A8_UNORM;
+                res = F_R8G8B8A8_UNORM;
                 break;
             case DXGI_FORMAT_R11G11B10_FLOAT:
-                res = TF_R11G11B10_FLOAT;
+                res = F_R11G11B10_FLOAT;
                 break;
             case DXGI_FORMAT_R16_UNORM:
-                res = TF_R16_UNORM;
+                res = F_R16_UNORM;
                 break;
             case DXGI_FORMAT_R16G16_UNORM:
-                res = TF_R16G16_UNORM;
+                res = F_R16G16_UNORM;
                 break;
             case DXGI_FORMAT_R16G16B16A16_FLOAT:
-                res = TF_R16G16B16A16_FLOAT;
+                res = F_R16G16B16A16_FLOAT;
                 break;
             case DXGI_FORMAT_R16G16B16A16_UNORM:
-                res = TF_R16G16B16A16_UNORM;
+                res = F_R16G16B16A16_UNORM;
                 break;
             case DXGI_FORMAT_R32_FLOAT:
-                res = TF_R32_FLOAT;
+                res = F_R32_FLOAT;
+                break;
+            case DXGI_FORMAT_R32G32B32_FLOAT:
+                res = F_R32G32B32_FLOAT;
                 break;
             case DXGI_FORMAT_R32G32B32A32_FLOAT:
-                res = TF_R32G32B32A32_FLOAT;
+                res = F_R32G32B32A32_FLOAT;
                 break;
 
             default:
@@ -305,42 +308,45 @@ namespace ninniku
         return res;
     }
 
-    constexpr uint32_t NinnikuTFToDXGIFormat(uint32_t fmt)
+    constexpr uint32_t NinnikuFormatToDXGIFormat(uint32_t fmt)
     {
         DXGI_FORMAT res = DXGI_FORMAT_UNKNOWN;
 
         switch (fmt) {
-            case TF_UNKNOWN:
+            case F_UNKNOWN:
                 res = DXGI_FORMAT_UNKNOWN;
                 break;
-            case TF_R8_UNORM:
+            case F_R8_UNORM:
                 res = DXGI_FORMAT_R8_UNORM;
                 break;
-            case TF_R8G8_UNORM:
+            case F_R8G8_UNORM:
                 res = DXGI_FORMAT_R8G8_UNORM;
                 break;
-            case TF_R8G8B8A8_UNORM:
+            case F_R8G8B8A8_UNORM:
                 res = DXGI_FORMAT_R8G8B8A8_UNORM;
                 break;
-            case TF_R11G11B10_FLOAT:
+            case F_R11G11B10_FLOAT:
                 res = DXGI_FORMAT_R11G11B10_FLOAT;
                 break;
-            case TF_R16_UNORM:
+            case F_R16_UNORM:
                 res = DXGI_FORMAT_R16_UNORM;
                 break;
-            case TF_R16G16_UNORM:
+            case F_R16G16_UNORM:
                 res = DXGI_FORMAT_R16G16_UNORM;
                 break;
-            case TF_R16G16B16A16_FLOAT:
+            case F_R16G16B16A16_FLOAT:
                 res = DXGI_FORMAT_R16G16B16A16_FLOAT;
                 break;
-            case TF_R16G16B16A16_UNORM:
+            case F_R16G16B16A16_UNORM:
                 res = DXGI_FORMAT_R16G16B16A16_UNORM;
                 break;
-            case TF_R32_FLOAT:
+            case F_R32_FLOAT:
                 res = DXGI_FORMAT_R32_FLOAT;
                 break;
-            case TF_R32G32B32A32_FLOAT:
+            case F_R32G32B32_FLOAT:
+                res = DXGI_FORMAT_R32G32B32_FLOAT;
+                break;
+            case F_R32G32B32A32_FLOAT:
                 res = DXGI_FORMAT_R32G32B32A32_FLOAT;
                 break;
 

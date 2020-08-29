@@ -84,7 +84,7 @@ namespace ninniku
 
         auto fmt = GetFormat();
 
-        if (fmt == TF_UNKNOWN)
+        if (fmt == F_UNKNOWN)
             return std::move(res);
 
         res->format = fmt;
@@ -99,37 +99,37 @@ namespace ninniku
         return std::move(res);
     }
 
-    ETextureFormat genericImageImpl::GetFormat() const
+    EFormat genericImageImpl::GetFormat() const
     {
-        auto res = TF_UNKNOWN;
+        auto res = F_UNKNOWN;
 
         switch (bpp_) {
             case 4:
                 if (data16_ != nullptr)
-                    res = TF_R16G16B16A16_UNORM;
+                    res = F_R16G16B16A16_UNORM;
                 else
-                    res = TF_R8G8B8A8_UNORM;
+                    res = F_R8G8B8A8_UNORM;
                 break;
 
             case 3:
                 if (data16_ != nullptr)
-                    res = TF_R16G16B16A16_UNORM;
+                    res = F_R16G16B16A16_UNORM;
                 else
-                    res = TF_R11G11B10_FLOAT;
+                    res = F_R11G11B10_FLOAT;
                 break;
 
             case 2:
                 if (data16_ != nullptr)
-                    res = TF_R16G16_UNORM;
+                    res = F_R16G16_UNORM;
                 else
-                    res = TF_R8G8_UNORM;
+                    res = F_R8G8_UNORM;
                 break;
 
             case 1:
                 if (data16_ != nullptr)
-                    res = TF_R16_UNORM;
+                    res = F_R16_UNORM;
                 else
-                    res = TF_R8_UNORM;
+                    res = F_R8_UNORM;
                 break;
 
             default:

@@ -64,6 +64,7 @@ namespace ninniku
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
         bool Present(const SwapChainHandle& swapchain) override;
+        void RegisterInputLayout(const InputLayoutDesc& params) override;
         bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
         const SamplerState* GetSampler(ESamplerState sampler) const override { return samplers_[static_cast<std::underlying_type<ESamplerState>::type>(sampler)].get(); }
@@ -105,6 +106,8 @@ namespace ninniku
         DX12Fence fence_;
         uint64_t volatile fenceValue_;
         volatile HANDLE fenceEvent_;
+
+        StringMap<std::vector<D3D12_INPUT_ELEMENT_DESC>> inputLayouts_;
 
         // shader related
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;

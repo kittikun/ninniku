@@ -57,7 +57,7 @@ namespace ninniku
 
     private:
         void ConvertToR11G11B10();
-        ETextureFormat GetFormat() const;
+        EFormat GetFormat() const;
         void Reset();
 
     private:

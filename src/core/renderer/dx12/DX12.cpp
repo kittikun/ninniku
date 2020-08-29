@@ -230,7 +230,7 @@ namespace ninniku
         uint32_t texSub = D3D12CalcSubresource(0, 0, 0, 1, 1);
         auto texLoc = CD3DX12_TEXTURE_COPY_LOCATION(rtv->texture_.Get(), texSub);
         auto scDesc = params.swapchain->GetDesc();
-        auto format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(scDesc->format));
+        auto format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(scDesc->format));
         auto rowPitch = Align(DXGIFormatToNumBytes(format) * scDesc->width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
 
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint = {};
@@ -363,7 +363,7 @@ namespace ninniku
 
         auto bufferInternal = bufferImpl->impl_.lock();
 
-        auto format = static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(texDesc->format));
+        auto format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(texDesc->format));
         auto width = texDesc->width >> params.texMip;
         auto height = texDesc->height >> params.texMip;
         auto rowPitch = Align(DXGIFormatToNumBytes(format) * width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
@@ -486,7 +486,7 @@ namespace ninniku
 
         // Special case because we cannot read back a texture from the GPU since dx12
         // intended to be used with CopyTextureSubresourceToBuffer
-        auto bytesPPx = DXGIFormatToNumBytes(NinnikuTFToDXGIFormat(params->format));
+        auto bytesPPx = DXGIFormatToNumBytes(NinnikuFormatToDXGIFormat(params->format));
         auto rowPitch = Align(bytesPPx * params->width, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
         auto bufferSize = rowPitch * params->height;
 
@@ -1022,7 +1022,7 @@ namespace ninniku
 
         if (is1d) {
             desc = CD3DX12_RESOURCE_DESC::Tex1D(
-                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params->format)),
                 params->width,
                 static_cast<uint16_t>(params->arraySize),
                 static_cast<uint16_t>(params->numMips),
@@ -1030,7 +1030,7 @@ namespace ninniku
             );
         } else if (is2d) {
             desc = CD3DX12_RESOURCE_DESC::Tex2D(
-                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params->format)),
                 params->width,
                 params->height,
                 static_cast<uint16_t>(params->arraySize),
@@ -1042,7 +1042,7 @@ namespace ninniku
         } else {
             // is3d
             desc = CD3DX12_RESOURCE_DESC::Tex3D(
-                static_cast<DXGI_FORMAT>(NinnikuTFToDXGIFormat(params->format)),
+                static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params->format)),
                 params->width,
                 params->height,
                 static_cast<uint16_t>(params->depth),
@@ -2093,6 +2093,19 @@ namespace ninniku
             return false;
 
         return true;
+    }
+
+    void DX12::RegisterInputLayout(const InputLayoutDesc& params)
+    {
+        std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs{ params.elements_.size() };
+
+        for (auto i = 0u; i < params.elements_.size(); ++i) {
+            inputElementDescs[i].SemanticName = params.elements_[i].name_.data();
+            inputElementDescs[i].SemanticIndex = i;
+            inputElementDescs[i].Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params.elements_[i].format_));
+        }
+
+        inputLayouts_.emplace(params.name_, inputElementDescs);
     }
 
     bool DX12::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)

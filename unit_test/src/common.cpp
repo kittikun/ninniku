@@ -34,7 +34,7 @@ ninniku::TextureHandle GenerateColoredMips(ninniku::RenderDeviceHandle& dx, cons
     BOOST_REQUIRE(LoadShader(dx, "colorMips", shaderRoot));
 
     auto param = ninniku::TextureParam::Create();
-    param->format = ninniku::TF_R32G32B32A32_FLOAT;
+    param->format = ninniku::F_R32G32B32A32_FLOAT;
     param->width = param->height = 512;
     param->depth = 1;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));
@@ -74,7 +74,7 @@ ninniku::TextureHandle GenerateColoredCubeArrayMips(ninniku::RenderDeviceHandle&
     BOOST_REQUIRE(LoadShader(dx, "colorMips", shaderRoot));
 
     auto param = ninniku::TextureParam::Create();
-    param->format = ninniku::TF_R8G8B8A8_UNORM;
+    param->format = ninniku::F_R8G8B8A8_UNORM;
     param->width = param->height = 512;
     param->depth = 1;
     param->numMips = ninniku::CountMips(std::min(param->width, param->height));

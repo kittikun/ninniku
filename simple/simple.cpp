@@ -34,7 +34,7 @@ int main()
     auto scDesc = ninniku::SwapchainParam::Create();
 
     scDesc->bufferCount = 2;
-    scDesc->format = ninniku::ETextureFormat::TF_R8G8B8A8_UNORM;
+    scDesc->format = ninniku::EFormat::F_R8G8B8A8_UNORM;
     scDesc->height = 768;
     scDesc->width = 1024;
     scDesc->hwnd = ninniku::MakeWindow(scDesc->width, scDesc->height, true);

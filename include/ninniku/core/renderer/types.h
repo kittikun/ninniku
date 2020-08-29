@@ -72,19 +72,20 @@ namespace ninniku
         SS_Count
     };
 
-    enum ETextureFormat : uint8_t
+    enum EFormat : uint8_t
     {
-        TF_UNKNOWN,
-        TF_R8_UNORM,
-        TF_R8G8_UNORM,
-        TF_R8G8B8A8_UNORM,
-        TF_R11G11B10_FLOAT,
-        TF_R16_UNORM,
-        TF_R16G16_UNORM,
-        TF_R16G16B16A16_FLOAT,
-        TF_R16G16B16A16_UNORM,
-        TF_R32_FLOAT,
-        TF_R32G32B32A32_FLOAT
+        F_UNKNOWN,
+        F_R8_UNORM,
+        F_R8G8_UNORM,
+        F_R8G8B8A8_UNORM,
+        F_R11G11B10_FLOAT,
+        F_R16_UNORM,
+        F_R16G16_UNORM,
+        F_R16G16B16A16_FLOAT,
+        F_R16G16B16A16_UNORM,
+        F_R32_FLOAT,
+        F_R32G32B32_FLOAT,
+        F_R32G32B32A32_FLOAT
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -191,6 +192,22 @@ namespace ninniku
     };
 
     using DebugMarkerHandle = std::unique_ptr<const DebugMarker>;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Input Layout
+    //////////////////////////////////////////////////////////////////////////
+
+    struct InputElementDesc
+    {
+        std::string_view name_;
+        uint8_t format_;
+    };
+
+    struct InputLayoutDesc : NonCopyable
+    {
+        std::string_view name_;
+        std::vector<InputElementDesc> elements_;
+    };
 
     //////////////////////////////////////////////////////////////////////////
     // MappedResource: GPU to CPU read back

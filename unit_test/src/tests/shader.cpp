@@ -70,7 +70,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
     param->numMips = numMips;
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
     param->depth = 1;
-    param->format = ninniku::TF_R8G8B8A8_UNORM;
+    param->format = ninniku::F_R8G8B8A8_UNORM;
     param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto res = dx->CreateTexture(param);
@@ -167,7 +167,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
     param->numMips = numMips;
     param->arraySize = ninniku::CUBEMAP_NUM_FACES;
     param->depth = 1;
-    param->format = ninniku::TF_R8G8B8A8_UNORM;
+    param->format = ninniku::F_R8G8B8A8_UNORM;
     param->viewflags = ninniku::RV_SRV | ninniku::RV_UAV;
 
     auto finalOut = framegraph.add_retained_resource("Final Output", param, static_cast<const ninniku::TextureObject*>(nullptr));
