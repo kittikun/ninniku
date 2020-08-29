@@ -176,7 +176,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
 
     for (auto i = 0u; i < pipelineStates.size(); ++i) {
         auto& ps = pipelineStates[i];
-        ninniku::PipelineStateParam param;
+        ninniku::GraphicPipelineStateParam param;
 
         param.name_ = ps->name_;
 

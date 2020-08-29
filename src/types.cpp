@@ -50,12 +50,30 @@ namespace ninniku
     }
 
     ComputeCommand::ComputeCommand() noexcept
-        : Command(ECommandType::CT_Compute)
+        : Command{ ECommandType::CT_Compute }
     {
     }
 
     GraphicCommand::GraphicCommand() noexcept
-        : Command(ECommandType::CT_Graphic)
+        : Command{ ECommandType::CT_Graphic }
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Pipeline State
+    //////////////////////////////////////////////////////////////////////////
+    PipelineStateParam::PipelineStateParam(ECommandType type) noexcept
+        :type_{ type }
+    {
+    }
+
+    ComputePipelineStateParam::ComputePipelineStateParam() noexcept
+        : PipelineStateParam{ ECommandType::CT_Compute }
+    {
+    }
+
+    GraphicPipelineStateParam::GraphicPipelineStateParam() noexcept
+        : PipelineStateParam{ ECommandType::CT_Graphic }
     {
     }
 

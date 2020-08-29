@@ -898,21 +898,26 @@ namespace ninniku
 
     bool DX12::CreatePipelineState(const PipelineStateParam& param)
     {
-        if (param.shaders_[ST_Root_Signature].empty()) {
-            LOGE << "PipelineStateParam's root signature must be set";
-            return false;
-        }
+        if (param.type_ == ECommandType::CT_Compute) {
+            // ComputePipelineStateParam
+            auto& ps = static_cast<const ComputePipelineStateParam&>(param);
 
-        if ((param.shaders_[ST_Compute].empty()) && ((param.shaders_[ST_Vertex].empty()) || (param.shaders_[ST_Pixel].empty()))) {
-            LOGE << "if PipelineStateParam's compute shader is empty then both VS and PS must be set";
-            return false;
-        }
+            if (ps.shaders_[ST_Root_Signature].empty()) {
+                LOGE << "PipelineStateParam's root signature must be set";
+                return false;
+            }
 
-        // Can be either compute or graphic
-        if (param.shaders_[ST_Compute].empty()) {
-            return CreateGraphicCommandContext(param.name_, param.shaders_[ST_Vertex], param.shaders_[ST_Pixel], param.shaders_[ST_Root_Signature]);
+            return CreateComputeCommandContext(ps.shaders_[ST_Compute], ps.shaders_[ST_Root_Signature]);
         } else {
-            return CreateComputeCommandContext(param.shaders_[ST_Compute], param.shaders_[ST_Root_Signature]);
+            // GraphicPipelineState
+            auto& ps = static_cast<const GraphicPipelineStateParam&>(param);
+
+            if (ps.shaders_[ST_Root_Signature].empty()) {
+                LOGE << "PipelineStateParam's root signature must be set";
+                return false;
+            }
+
+            return CreateGraphicCommandContext(ps.name_, ps.shaders_[ST_Vertex], ps.shaders_[ST_Pixel], ps.shaders_[ST_Root_Signature]);
         }
 
         return true;

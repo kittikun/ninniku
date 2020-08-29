@@ -59,8 +59,8 @@ namespace ninniku
     enum EShaderType : uint8_t
     {
         ST_Compute,
-        ST_Pixel,
         ST_Root_Signature,
+        ST_Pixel,
         ST_Vertex,
         ST_Count
     };
@@ -119,11 +119,13 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Commands
     //////////////////////////////////////////////////////////////////////////
-    struct Command : NonCopyable
+    class Command : NonCopyable
     {
+    protected:
         Command(ECommandType type) noexcept;
         virtual ~Command() = default;
 
+    public:
         ECommandType type_;
         std::string_view cbufferStr;
         std::unordered_map<std::string_view, const struct ShaderResourceView*> srvBindings;
@@ -132,8 +134,9 @@ namespace ninniku
         std::unordered_map<std::string_view, const struct SamplerState*> ssBindings;
     };
 
-    struct ComputeCommand : Command
+    class ComputeCommand : public Command
     {
+    public:
         ComputeCommand() noexcept;
 
         std::string_view shader;
@@ -142,8 +145,9 @@ namespace ninniku
 
     using ComputeCommandHandle = std::unique_ptr<ComputeCommand>;
 
-    struct GraphicCommand : Command
+    class GraphicCommand : public Command
     {
+    public:
         GraphicCommand() noexcept;
     };
 
@@ -223,9 +227,31 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Pipeline State
     //////////////////////////////////////////////////////////////////////////
-    struct PipelineStateParam : NonCopyable
+
+    class PipelineStateParam : NonCopyable
     {
+    protected:
+        PipelineStateParam(ECommandType type) noexcept;
+        virtual ~PipelineStateParam() = default;
+
+    public:
+        ECommandType type_;
         std::string_view name_;
+    };
+
+    class NINNIKU_API ComputePipelineStateParam : public PipelineStateParam
+    {
+    public:
+        ComputePipelineStateParam() noexcept;
+        std::array<std::string, 2> shaders_;
+    };
+
+    class NINNIKU_API GraphicPipelineStateParam : public PipelineStateParam
+    {
+    public:
+        GraphicPipelineStateParam() noexcept;
+
+        std::string_view inputLayout_;
         std::array<std::string, EShaderType::ST_Count> shaders_;
     };
 

@@ -83,7 +83,7 @@ bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, c
     if (!dx->LoadShader(ninniku::ST_Compute, boost::str(fmt)))
         return false;
 
-    ninniku::PipelineStateParam params;
+    ninniku::ComputePipelineStateParam params;
 
     params.shaders_[ninniku::EShaderType::ST_Root_Signature] = name;
     params.shaders_[ninniku::EShaderType::ST_Compute] = name;
