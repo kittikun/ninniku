@@ -618,9 +618,9 @@ namespace ninniku
         auto context = std::make_shared<DX12ComputeCommandInternal>(res.checksum());
 
         // find the shader bytecode
-        auto foundShader = shaders_.find(shader);
+        auto foundShader = psShaders_.find(shader);
 
-        if (foundShader == shaders_.end()) {
+        if (foundShader == psShaders_.end()) {
             LOGEF(boost::format("CreateComputeCommandContext: could not find shader \"%1%\"") % shader);
             return false;
         }
@@ -806,36 +806,29 @@ namespace ninniku
         return false;
     }
 
-    bool DX12::CreateGraphicCommandContext(const std::string_view& vs, const std::string_view& ps, [[maybe_unused]] const std::string_view& rootsignature)
+    bool DX12::CreateGraphicCommandContext(const std::string_view& psName, const std::string_view& vs, const std::string_view& ps, [[maybe_unused]] const std::string_view& rootsignature)
     {
         TRACE_SCOPED_DX12;
 
         auto foundBindingVS = resourceBindings_.find(vs);
 
         if (foundBindingVS == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % vs);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % vs);
             return false;
         }
 
-        auto foundBindingPS = resourceBindings_.find(vs);
+        auto foundBindingPS = resourceBindings_.find(ps);
 
         if (foundBindingPS == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % ps);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % ps);
             return false;
         }
 
         // find the shader bytecode
-        auto foundShaderVS = shaders_.find(vs);
+        auto foundShaders = psShaders_.find(psName);
 
-        if (foundShaderVS == shaders_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find shader \"%1%\"") % vs);
-            return false;
-        }
-
-        auto foundShaderPS = shaders_.find(ps);
-
-        if (foundShaderPS == shaders_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find shader \"%1%\"") % ps);
+        if (foundShaders == psShaders_.end()) {
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find pipeline state shaders \"%1%\"") % psName);
             return false;
         }
 
@@ -843,7 +836,7 @@ namespace ninniku
         auto foundRS = rootSignatures_.find(rootsignature);
 
         if (foundRS == rootSignatures_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find the root signature for shader \"%1%\"") % rootsignature);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find the root signature for shader \"%1%\"") % rootsignature);
             return false;
         }
 
@@ -917,7 +910,7 @@ namespace ninniku
 
         // Can be either compute or graphic
         if (param.shaders_[ST_Compute].empty()) {
-            return CreateGraphicCommandContext(param.shaders_[ST_Vertex], param.shaders_[ST_Pixel], param.shaders_[ST_Root_Signature]);
+            return CreateGraphicCommandContext(param.name_, param.shaders_[ST_Vertex], param.shaders_[ST_Pixel], param.shaders_[ST_Root_Signature]);
         } else {
             return CreateComputeCommandContext(param.shaders_[ST_Compute], param.shaders_[ST_Root_Signature]);
         }
@@ -1736,6 +1729,11 @@ namespace ninniku
 
     bool DX12::LoadShader(EShaderType type, const std::filesystem::path& path)
     {
+        return LoadShader(type, std::string_view{}, path);
+    }
+
+    bool DX12::LoadShader(EShaderType type, const std::string_view& psName, const std::filesystem::path& path)
+    {
         TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path)");
 
         if (path.extension() != ShaderExt) {
@@ -1776,7 +1774,7 @@ namespace ninniku
             return false;
         }
 
-        if (!LoadShader(type, path, pBlob.Get())) {
+        if (!LoadShader(type, psName, path, pBlob.Get())) {
             LOG_INDENT_END;
             return false;
         }
@@ -1823,7 +1821,7 @@ namespace ninniku
             return false;
         }
 
-        if (!LoadShader(type, name, pBlob.Get())) {
+        if (!LoadShader(type, std::string_view{}, name, pBlob.Get())) {
             LOG_INDENT_END;
             return false;
         }
@@ -1833,9 +1831,9 @@ namespace ninniku
         return true;
     }
 
-    bool DX12::LoadShader(EShaderType type, const std::filesystem::path& path, IDxcBlobEncoding* pBlob)
+    bool DX12::LoadShader(EShaderType type, const std::string_view& psName, const std::filesystem::path& path, IDxcBlobEncoding* pBlob)
     {
-        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (path, IDxcBlobEncoding)");
+        TRACE_SCOPED_NAMED_DX12("ninniku::DX12::LoadShader (type, path, IDxcBlobEncoding)");
 
         auto name = path.stem().string();
         Microsoft::WRL::ComPtr<IDxcContainerReflection> pContainerReflection;
@@ -1866,6 +1864,10 @@ namespace ninniku
                 return false;
 
             if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_DXIL)) {
+                // somehow this happens
+                if (type == EShaderType::ST_Root_Signature)
+                    continue;
+
                 IDxcBlob* pShaderBlob;
                 hr = pContainerReflection->GetPartContent(i, &pShaderBlob);
 
@@ -1889,19 +1891,23 @@ namespace ninniku
                     return false;
 
                 // store shader
-                LOGDF(boost::format("Adding shader: \"%1%\" to library") % name);
+                if (!psName.empty())
+                    LOGDF(boost::format("Adding shader: \"%1%\" to pipelineState \"%2%\"") % name % psName);
+                else
+                    LOGDF(boost::format("Adding shader: \"%1%\" to library") % name);
 
                 // Shaders might be created bits by bits (eg: VS then PS)
-                auto found = shaders_.find(name);
+                auto key = (psName.empty()) ? name : psName;
+                auto found = psShaders_.find(key);
 
-                if (found != shaders_.end()) {
+                if (found != psShaders_.end()) {
                     found->second.shaders_[type] = CD3DX12_SHADER_BYTECODE(pBlob->GetBufferPointer(), pBlob->GetBufferSize());
                 } else {
                     PipelineStateShaders pss;
 
                     pss.shaders_[type] = CD3DX12_SHADER_BYTECODE(pBlob->GetBufferPointer(), pBlob->GetBufferSize());
 
-                    shaders_.emplace(name, pss);
+                    psShaders_.emplace(key, pss);
                 }
             } else if (partKind == static_cast<uint32_t>(hlsl::DxilFourCC::DFCC_RootSignature)) {
                 Microsoft::WRL::ComPtr<IDxcBlob> pRSBlob;

@@ -56,6 +56,7 @@ namespace ninniku
         void Finalize() override;
         bool Initialize() override;
         bool LoadShader(EShaderType type, const std::filesystem::path& path) override;
+        bool LoadShader(EShaderType type, const std::string_view& psName, const std::filesystem::path& path) override;
         bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;

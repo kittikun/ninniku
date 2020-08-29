@@ -59,6 +59,7 @@ namespace ninniku
         void Finalize() override;
         bool Initialize() override;
         bool LoadShader(EShaderType type, const std::filesystem::path& path) override;
+        bool LoadShader(EShaderType type, const std::string_view& psName, const std::filesystem::path& path) override;
         bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
@@ -72,7 +73,7 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
         bool CreateComputeCommandContext(const std::string_view& shader, const std::string_view& rootsignature);
-        bool CreateGraphicCommandContext(const std::string_view& vs, const std::string_view& ps, const std::string_view& rootsignature);
+        bool CreateGraphicCommandContext(const std::string_view& psName, const std::string_view& vs, const std::string_view& ps, const std::string_view& rootsignature);
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
@@ -83,7 +84,7 @@ namespace ninniku
         D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
         bool ExecuteCommand(CommandList* cmdList);
         bool Flush(EFlushType type);
-        bool LoadShader(EShaderType type, const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
+        bool LoadShader(EShaderType type, const std::string_view& psName, const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
         bool ParseRootSignature(const std::string_view& name, IDxcBlobEncoding* pBlob);
         bool ParseShaderResources(const std::string_view& name, uint32_t numBoundResources, ID3D12ShaderReflection* pReflection);
 
@@ -109,7 +110,7 @@ namespace ninniku
         std::array<SSHandle, static_cast<std::underlying_type<ESamplerState>::type>(ESamplerState::SS_Count)> samplers_;
         StringMap<DX12RootSignature> rootSignatures_;
 
-        StringMap<PipelineStateShaders> shaders_;
+        StringMap<PipelineStateShaders> psShaders_;
         StringSet cBuffers_;
         StringMap<MapNameSlot> resourceBindings_;
 

@@ -337,7 +337,6 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct PipelineStateShaders
     {
-        std::string rootSignature_;
         std::array<D3D12_SHADER_BYTECODE, ST_Count> shaders_;
     };
 

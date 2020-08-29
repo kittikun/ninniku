@@ -208,6 +208,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct PipelineStateParam : NonCopyable
     {
+        std::string_view name_;
         std::array<std::string, EShaderType::ST_Count> shaders_;
     };
 

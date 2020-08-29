@@ -783,6 +783,11 @@ namespace ninniku
         return true;
     }
 
+    bool DX11::LoadShader(EShaderType, const std::string_view&, const std::filesystem::path&)
+    {
+        throw std::exception("not implemented yet");
+    }
+
     bool DX11::LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size)
     {
         if (type != ST_Compute) {

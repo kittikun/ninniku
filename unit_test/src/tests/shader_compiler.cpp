@@ -164,6 +164,10 @@ BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
 {
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
     auto pipelineStates = ParseTOC();
 
     ChangeToOutDirectory("shader_compiler");
@@ -174,12 +178,14 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
         auto& ps = pipelineStates[i];
         ninniku::PipelineStateParam param;
 
+        param.name_ = ps->name_;
+
         for (auto& component : ps->components_) {
             auto filename = GetFilename(ps->name_, component->type_, dx->GetShaderExtension());
 
             param.shaders_[component->type_] = filename.stem().string();
 
-            BOOST_REQUIRE(dx->LoadShader(component->type_, filename));
+            BOOST_REQUIRE(dx->LoadShader(component->type_, ps->name_, filename));
         }
 
         BOOST_REQUIRE(dx->CreatePipelineState(param));
