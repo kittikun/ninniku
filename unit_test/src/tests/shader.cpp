@@ -18,18 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#include <boost/test/unit_test.hpp>
+#pragma clang diagnostic pop
+
+#define DO_SHADER_TESTS 0
+
+#if DO_SHADER_TESTS
+
 #include "../shaders/cbuffers.h"
 #include "../shaders/dispatch.h"
 #include "../check.h"
 #include "../common.h"
 #include "../fixture.h"
 #include "../utils.h"
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#include <boost/test/unit_test.hpp>
-#pragma clang diagnostic pop
 
 #include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/core/renderer/rendergraph.h>
@@ -579,3 +583,4 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#endif // DO_SHADER_TESTS

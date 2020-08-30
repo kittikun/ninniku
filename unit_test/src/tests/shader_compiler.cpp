@@ -24,6 +24,10 @@
 #include <boost/test/unit_test.hpp>
 #pragma clang diagnostic pop
 
+#define DO_SHADER_COMPILER_TESTS 0
+
+#if DO_SHADER_COMPILER_TESTS
+
 #include <ninniku/ninniku.h>
 #include <ninniku/core/renderer/renderdevice.h>
 
@@ -44,16 +48,14 @@ struct Component
 {
     std::string entry_;
     std::string path_;
-    ninniku::EShaderType type_;
+    ninniku::EShaderType type;
 };
 
 struct PipelineState
 {
-    std::string name_;
+    std::string name;
     std::vector<std::unique_ptr<Component>> components_;
 };
-
-BOOST_AUTO_TEST_SUITE(ShaderCompiler)
 
 std::vector<std::unique_ptr<PipelineState>> ParseTOC()
 {
@@ -76,7 +78,7 @@ std::vector<std::unique_ptr<PipelineState>> ParseTOC()
     for (auto iter = root->first_node("PipelineState"); iter; iter = iter->next_sibling()) {
         auto ps = new PipelineState();
 
-        ps->name_ = iter->first_attribute("name")->value();
+        ps->name = iter->first_attribute("name")->value();
 
         // RootSignature
         {
@@ -85,7 +87,7 @@ std::vector<std::unique_ptr<PipelineState>> ParseTOC()
             if (rsXml != nullptr) {
                 auto component = new Component();
 
-                component->type_ = ninniku::EShaderType::ST_Root_Signature;
+                component->type = ninniku::EShaderType::ST_Root_Signature;
                 component->path_ = rsXml->first_attribute("path")->value();
 
                 ps->components_.emplace_back(component);
@@ -99,7 +101,7 @@ std::vector<std::unique_ptr<PipelineState>> ParseTOC()
             if (xml != nullptr) {
                 auto component = new Component();
 
-                component->type_ = type;
+                component->type = type;
                 component->path_ = xml->first_attribute("path")->value();
                 component->entry_ = xml->first_attribute("entry")->value();
 
@@ -147,6 +149,8 @@ std::filesystem::path GetFilename(const std::string& psName, ninniku::EShaderTyp
     return boost::str(fmt);
 }
 
+BOOST_AUTO_TEST_SUITE(ShaderCompiler)
+
 BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
 {
     auto pipelineStates = ParseTOC();
@@ -155,7 +159,7 @@ BOOST_FIXTURE_TEST_CASE(shader_compiler_check_exist, SetupFixtureNull)
 
     for (auto& ps : pipelineStates) {
         for (auto& component : ps->components_) {
-            auto filename = GetFilename(ps->name_, component->type_, ".dxco");
+            auto filename = GetFilename(ps->name, component->type, ".dxco");
 
             BOOST_REQUIRE(std::filesystem::exists(filename));
         }
@@ -174,30 +178,34 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
 
     auto& dx = ninniku::GetRenderer();
 
-    ninniku::InputLayoutDesc desc;
+    // input layout
+    {
+        ninniku::InputLayoutDesc desc;
 
-    desc.name_ = "simple";
-    desc.elements_.resize(2);
-    desc.elements_[0].name_ = "POSITION";
-    desc.elements_[0].format_ = ninniku::F_R32G32B32_FLOAT;
-    desc.elements_[1].name_ = "COLOR";
-    desc.elements_[1].format_ = ninniku::F_R32G32B32A32_FLOAT;
+        desc.name = "simple";
+        desc.elements.resize(2);
+        desc.elements[0].name = "POSITION";
+        desc.elements[0].format = ninniku::F_R32G32B32_FLOAT;
+        desc.elements[1].name = "COLOR";
+        desc.elements[1].format = ninniku::F_R32G32B32A32_FLOAT;
 
-    dx->RegisterInputLayout(desc);
+        dx->RegisterInputLayout(desc);
+    }
 
     for (auto i = 0u; i < pipelineStates.size(); ++i) {
         auto& ps = pipelineStates[i];
         ninniku::GraphicPipelineStateParam param;
 
-        param.name_ = ps->name_;
-        param.inputLayout_ = "simple";
+        param.name = ps->name;
+        param.inputLayout = "simple";
+        param.rtFormat = ninniku::EFormat::F_R8G8B8A8_UNORM;
 
         for (auto& component : ps->components_) {
-            auto filename = GetFilename(ps->name_, component->type_, dx->GetShaderExtension());
+            auto filename = GetFilename(ps->name, component->type, dx->GetShaderExtension());
 
-            param.shaders_[component->type_] = filename.stem().string();
+            param.shaders[component->type] = filename.stem().string();
 
-            BOOST_REQUIRE(dx->LoadShader(component->type_, ps->name_, filename));
+            BOOST_REQUIRE(dx->LoadShader(component->type, ps->name, filename));
         }
 
         BOOST_REQUIRE(dx->CreatePipelineState(param));
@@ -205,3 +213,4 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#endif // DO_SHADER_COMPILER_TESTS

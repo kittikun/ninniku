@@ -427,6 +427,7 @@ namespace ninniku
         auto isUAV = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_UAV)) != 0;
         auto isCPURead = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_CPU_READ)) != 0;
         auto bufferSize = params->numElements * params->elementSize;
+        auto haveData = params->initData != nullptr;
 
         LOGDF(boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize);
 
@@ -448,6 +449,9 @@ namespace ninniku
             heapFlags = D3D12_HEAP_TYPE_READBACK;
         }
 
+        if (haveData)
+            resState = D3D12_RESOURCE_STATE_COMMON;
+
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(heapFlags);
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, resFlags);
 
@@ -461,6 +465,68 @@ namespace ninniku
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource"))
             return BufferHandle();
+
+        if (haveData) {
+            DX12Resource upload;
+
+            heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+
+            hr = device_->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &desc,
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(upload.GetAddressOf()));
+
+            if (CheckAPIFailed(hr, "ID3D12Device::CreateCommittedResource (upload buffer)"))
+                return BufferHandle();
+
+            //upload->SetName(L"Texture Upload Buffer");
+
+            //std::vector<D3D12_SUBRESOURCE_DATA> initialData(numImageImpls);
+
+            //for (uint32_t i = 0; i < numImageImpls; ++i) {
+            //    auto& subParam = params->imageDatas[i];
+            //    auto& initData = initialData[i];
+
+            //    initData.pData = subParam.data;
+            //    initData.RowPitch = subParam.rowPitch;
+            //    initData.SlicePitch = subParam.depthPitch;
+            //}
+
+            //// copy
+            //auto cmdList = CreateCommandList(QT_DIRECT);
+
+            //if (cmdList == nullptr) {
+            //    return TextureHandle();
+            //}
+
+            //auto push = CD3DX12_RESOURCE_BARRIER::Transition(impl->texture_.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+
+            //cmdList->gfxCmdList_->ResourceBarrier(1, &push);
+
+            //UpdateSubresources(cmdList->gfxCmdList_.Get(), impl->texture_.Get(), upload.Get(), 0, 0, numImageImpls, initialData.data());
+
+            //ExecuteCommand(cmdList);
+
+            //// transition
+            //cmdList = CreateCommandList(QT_DIRECT);
+
+            //if (cmdList == nullptr) {
+            //    return TextureHandle();
+            //}
+
+            //auto pop = CD3DX12_RESOURCE_BARRIER::Transition(impl->texture_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+            //cmdList->gfxCmdList_->ResourceBarrier(1, &pop);
+
+            //ExecuteCommand(cmdList);
+
+            //if (!Flush(FT_DEFAULT))
+            //    return TextureHandle();
+        }
 
         if (isSRV) {
             auto srv = new DX12ShaderResourceView(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
@@ -605,33 +671,33 @@ namespace ninniku
         TRACE_SCOPED_DX12;
 
         // find the bindings to the shader
-        auto found = resourceBindings_.find(params.shaders_[ST_Compute]);
+        auto found = resourceBindings_.find(params.shaders[ST_Compute]);
 
         if (found == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders_[ST_Compute]);
+            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders[ST_Compute]);
             return false;
         }
 
         // find the shader byte code
-        auto foundShaders = psShaders_.find(params.name_);
+        auto foundShaders = psShaders_.find(params.name);
 
         if (foundShaders == psShaders_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find shaders for pipeline state \"%1%\"") % params.name_);
+            LOGEF(boost::format("CreateComputeCommandContext: could not find shaders for pipeline state \"%1%\"") % params.name);
             return false;
         }
 
         // find the root signature
-        auto foundRS = rootSignatures_.find(params.shaders_[ST_Root_Signature]);
+        auto foundRS = rootSignatures_.find(params.shaders[ST_Root_Signature]);
 
         if (foundRS == rootSignatures_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find the root signature for shader \"%1%\"") % params.shaders_[ST_Root_Signature]);
+            LOGEF(boost::format("CreateComputeCommandContext: could not find the root signature for shader \"%1%\"") % params.shaders[ST_Root_Signature]);
             return false;
         }
 
         // create internal context
         boost::crc_32_type res;
 
-        res.process_bytes(params.name_.data(), params.name_.size());
+        res.process_bytes(params.name.data(), params.name.size());
 
         auto context = std::make_shared<DX12ComputeCommandInternal>(res.checksum());
 
@@ -651,7 +717,7 @@ namespace ninniku
         if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
             return false;
 
-        context->pipelineState_->SetName(strToWStr(params.name_).c_str());
+        context->pipelineState_->SetName(strToWStr(params.name).c_str());
 
         // no need to track contexts because they will be released upon destruction anyway
         computeCommandContexts_.emplace(res.checksum(), std::move(context));
@@ -804,48 +870,48 @@ namespace ninniku
         TRACE_SCOPED_DX12;
 
         // find the shader bindings
-        auto foundBindingVS = resourceBindings_.find(params.shaders_[ST_Vertex]);
+        auto foundBindingVS = resourceBindings_.find(params.shaders[ST_Vertex]);
 
         if (foundBindingVS == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders_[ST_Vertex]);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders[ST_Vertex]);
             return false;
         }
 
-        auto foundBindingPS = resourceBindings_.find(params.shaders_[ST_Pixel]);
+        auto foundBindingPS = resourceBindings_.find(params.shaders[ST_Pixel]);
 
         if (foundBindingPS == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders_[ST_Pixel]);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders[ST_Pixel]);
             return false;
         }
 
         // find the shaders byte codes
-        auto foundShaders = psShaders_.find(params.name_);
+        auto foundShaders = psShaders_.find(params.name);
 
         if (foundShaders == psShaders_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find pipeline state shaders \"%1%\"") % params.name_);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find pipeline state shaders \"%1%\"") % params.name);
             return false;
         }
 
         // find the root signature
-        auto foundRS = rootSignatures_.find(params.shaders_[ST_Root_Signature]);
+        auto foundRS = rootSignatures_.find(params.shaders[ST_Root_Signature]);
 
         if (foundRS == rootSignatures_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find the root signature for shader \"%1%\"") % params.shaders_[ST_Root_Signature]);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find the root signature for shader \"%1%\"") % params.shaders[ST_Root_Signature]);
             return false;
         }
 
         // find the input layout
-        auto foundIL = inputLayouts_.find(params.inputLayout_);
+        auto foundIL = inputLayouts_.find(params.inputLayout);
 
         if (foundIL == inputLayouts_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find input layout \"%1%\", did you forget to register it ?") % params.inputLayout_);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find input layout \"%1%\", did you forget to register it ?") % params.inputLayout);
             return false;
         }
 
         // create internal context
         boost::crc_32_type res;
 
-        res.process_bytes(params.name_.data(), params.name_.size());
+        res.process_bytes(params.name.data(), params.name.size());
 
         auto context = std::make_shared<DX12GraphicCommandInternal>(res.checksum());
 
@@ -866,7 +932,10 @@ namespace ninniku
         desc.SampleMask = std::numeric_limits<uint32_t>::max();
         desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         desc.NumRenderTargets = 1;
-        desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+        // no MRT for now
+        desc.RTVFormats[0] = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params.rtFormat));
+
         desc.SampleDesc.Count = 1;
 
         if (type_ == ERenderer::RENDERER_WARP_DX12)
@@ -935,11 +1004,11 @@ namespace ninniku
 
     bool DX12::CreatePipelineState(const PipelineStateParam& param)
     {
-        if (param.type_ == ECommandType::CT_Compute) {
+        if (param.type == ECommandType::CT_Compute) {
             // ComputePipelineStateParam
             auto& ps = static_cast<const ComputePipelineStateParam&>(param);
 
-            if (ps.shaders_[ST_Root_Signature].empty()) {
+            if (ps.shaders[ST_Root_Signature].empty()) {
                 LOGE << "PipelineStateParam's root signature must be set";
                 return false;
             }
@@ -949,7 +1018,7 @@ namespace ninniku
             // GraphicPipelineState
             auto& ps = static_cast<const GraphicPipelineStateParam&>(param);
 
-            if (ps.shaders_[ST_Root_Signature].empty()) {
+            if (ps.shaders[ST_Root_Signature].empty()) {
                 LOGE << "PipelineStateParam's root signature must be set";
                 return false;
             }
@@ -2139,14 +2208,14 @@ namespace ninniku
 
     void DX12::RegisterInputLayout(const InputLayoutDesc& params)
     {
-        std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs{ params.elements_.size() };
+        std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs{ params.elements.size() };
 
-        for (auto i = 0u; i < params.elements_.size(); ++i) {
-            inputElementDescs[i].SemanticName = params.elements_[i].name_.data();
-            inputElementDescs[i].Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params.elements_[i].format_));
+        for (auto i = 0u; i < params.elements.size(); ++i) {
+            inputElementDescs[i].SemanticName = params.elements[i].name.data();
+            inputElementDescs[i].Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params.elements[i].format));
         }
 
-        inputLayouts_.emplace(params.name_, inputElementDescs);
+        inputLayouts_.emplace(params.name, inputElementDescs);
     }
 
     bool DX12::UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size)

@@ -24,6 +24,10 @@
 #include <boost/test/unit_test.hpp>
 #pragma clang diagnostic pop
 
+#define DO_RENDER_DEVICE_TESTS 1
+
+#if DO_RENDER_DEVICE_TESTS
+
 #include "../check.h"
 #include "../fixture.h"
 #include "../utils.h"
@@ -68,32 +72,35 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_dx12_check_feature, T, FixturesAll
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_swapchain, T, FixturesDX12All, T)
+struct Vertex
 {
-    // Disable HW GPU support when running on CI
-    if (T::isNull)
-        return;
+    DirectX::XMFLOAT3 position;
+    DirectX::XMFLOAT4 color;
+};
 
-    auto param = ninniku::SwapchainParam::Create();
-
-    param->bufferCount = 2;
-    param->format = ninniku::EFormat::F_R8G8B8A8_UNORM;
-    param->height = 768;
-    param->width = 1024;
-    param->hwnd = ninniku::MakeWindow(param->width, param->height, false);
-    param->vsync = false;
-
-    auto& dx = ninniku::GetRenderer();
-
-    auto swapChain = dx->CreateSwapChain(param);
-
-    BOOST_REQUIRE(swapChain.get() != nullptr);
-    BOOST_REQUIRE(swapChain->GetRTCount() == 2);
-
-    for (auto i = 0u; i < swapChain->GetRTCount(); ++i) {
-        BOOST_REQUIRE(swapChain->GetRT(i) != nullptr);
-    }
-}
+//BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_buffer, T, FixturesDX12All, T)
+//{
+//    // Disable HW GPU support when running on CI
+//    if (T::isNull)
+//        return;
+//
+//    auto& dx = ninniku::GetRenderer();
+//
+//    Vertex triangleVertices[] =
+//    {
+//        { { 0.0f, 0.25f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+//        { { 0.25f, -0.25f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+//        { { -0.25f, -0.25f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+//    };
+//
+//    auto params = ninniku::BufferParam::Create();
+//
+//    params->elementSize = sizeof(Vertex);
+//    params->numElements = 3;
+//    params->initData = triangleVertices;
+//
+//    BOOST_REQUIRE(dx->CreateBuffer(params));
+//}
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX12All, T)
 {
@@ -150,15 +157,43 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_input_layout, T, FixturesDX
 
     ninniku::InputLayoutDesc desc;
 
-    desc.name_ = "simple";
+    desc.name = "simple";
 
-    desc.elements_.resize(2);
-    desc.elements_[0].name_ = "POSITION";
-    desc.elements_[0].format_ = ninniku::F_R32G32B32_FLOAT;
-    desc.elements_[1].name_ = "COLOR";
-    desc.elements_[1].format_ = ninniku::F_R32G32B32A32_FLOAT;
+    desc.elements.resize(2);
+    desc.elements[0].name = "POSITION";
+    desc.elements[0].format = ninniku::F_R32G32B32_FLOAT;
+    desc.elements[1].name = "COLOR";
+    desc.elements[1].format = ninniku::F_R32G32B32A32_FLOAT;
 
     dx->RegisterInputLayout(desc);
 }
 
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_swapchain, T, FixturesDX12All, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto param = ninniku::SwapchainParam::Create();
+
+    param->bufferCount = 2;
+    param->format = ninniku::EFormat::F_R8G8B8A8_UNORM;
+    param->height = 768;
+    param->width = 1024;
+    param->hwnd = ninniku::MakeWindow(param->width, param->height, false);
+    param->vsync = false;
+
+    auto& dx = ninniku::GetRenderer();
+
+    auto swapChain = dx->CreateSwapChain(param);
+
+    BOOST_REQUIRE(swapChain.get() != nullptr);
+    BOOST_REQUIRE(swapChain->GetRTCount() == 2);
+
+    for (auto i = 0u; i < swapChain->GetRTCount(); ++i) {
+        BOOST_REQUIRE(swapChain->GetRT(i) != nullptr);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+#endif // DO_RENDER_DEVICE_TESTS

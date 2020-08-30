@@ -24,7 +24,9 @@
 #include <boost/test/unit_test.hpp>
 #pragma clang diagnostic pop
 
-#define DO_LONG_TESTS 1
+#define DO_LONG_TESTS 0
+
+#if DO_LONG_TESTS
 
 #include "../check.h"
 #include "../common.h"
@@ -37,7 +39,6 @@
 #include <ninniku/core/renderer/renderdevice.h>
 #include <ninniku/ninniku.h>
 
-#if DO_LONG_TESTS
 BOOST_AUTO_TEST_SUITE(Long)
 
 BOOST_FIXTURE_TEST_CASE(cmft_load, SetupFixtureNull)

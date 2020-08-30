@@ -99,6 +99,8 @@ namespace ninniku
         uint32_t numElements;
         uint32_t elementSize;        // If != 0, this will create a StructuredBuffer, otherwise a ByteAddressBuffer will be created
         uint8_t viewflags;
+
+        void* initData;
     };
 
     using BufferParamHandle = std::shared_ptr<const BufferParam>;
@@ -126,7 +128,7 @@ namespace ninniku
         virtual ~Command() = default;
 
     public:
-        ECommandType type_;
+        ECommandType type;
         std::string_view cbufferStr;
         std::unordered_map<std::string_view, const struct ShaderResourceView*> srvBindings;
         std::unordered_map<std::string_view, const struct UnorderedAccessView*> uavBindings;
@@ -205,14 +207,14 @@ namespace ninniku
 
     struct InputElementDesc
     {
-        std::string_view name_;
-        uint8_t format_;
+        std::string_view name;
+        uint8_t format;
     };
 
     struct InputLayoutDesc : NonCopyable
     {
-        std::string_view name_;
-        std::vector<InputElementDesc> elements_;
+        std::string_view name;
+        std::vector<InputElementDesc> elements;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -237,15 +239,15 @@ namespace ninniku
         virtual ~PipelineStateParam() = default;
 
     public:
-        ECommandType type_;
-        std::string_view name_;
+        ECommandType type;
+        std::string_view name;
     };
 
     class NINNIKU_API ComputePipelineStateParam : public PipelineStateParam
     {
     public:
         ComputePipelineStateParam() noexcept;
-        std::array<std::string, 2> shaders_;
+        std::array<std::string, 2> shaders;
     };
 
     class NINNIKU_API GraphicPipelineStateParam : public PipelineStateParam
@@ -253,8 +255,9 @@ namespace ninniku
     public:
         GraphicPipelineStateParam() noexcept;
 
-        std::string_view inputLayout_;
-        std::array<std::string, EShaderType::ST_Count> shaders_;
+        std::string_view inputLayout;
+        uint8_t rtFormat;
+        std::array<std::string, EShaderType::ST_Count> shaders;
     };
 
     //////////////////////////////////////////////////////////////////////////

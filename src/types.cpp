@@ -45,7 +45,7 @@ namespace ninniku
     // Command
     //////////////////////////////////////////////////////////////////////////
     Command::Command(ECommandType type) noexcept
-        : type_{ type }
+        : type{ type }
     {
     }
 
@@ -63,7 +63,7 @@ namespace ninniku
     // Pipeline State
     //////////////////////////////////////////////////////////////////////////
     PipelineStateParam::PipelineStateParam(ECommandType type) noexcept
-        :type_{ type }
+        :type{ type }
     {
     }
 

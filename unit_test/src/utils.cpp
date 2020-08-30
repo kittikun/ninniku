@@ -85,9 +85,9 @@ bool LoadShader(ninniku::RenderDeviceHandle& dx, const std::string_view& name, c
 
     ninniku::ComputePipelineStateParam params;
 
-    params.name_ = name;
-    params.shaders_[ninniku::EShaderType::ST_Root_Signature] = name;
-    params.shaders_[ninniku::EShaderType::ST_Compute] = name;
+    params.name = name;
+    params.shaders[ninniku::EShaderType::ST_Root_Signature] = name;
+    params.shaders[ninniku::EShaderType::ST_Compute] = name;
 
     return dx->CreatePipelineState(params);
 }
