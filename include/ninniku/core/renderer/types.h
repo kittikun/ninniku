@@ -149,6 +149,8 @@ namespace ninniku
     {
     public:
         GraphicCommand() noexcept;
+
+        std::string_view pipelineStateName;
     };
 
     using GraphicCommandHandle = std::unique_ptr<GraphicCommand>;

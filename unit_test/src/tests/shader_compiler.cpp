@@ -174,11 +174,23 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_compiler_load, T, FixturesDX12All, T)
 
     auto& dx = ninniku::GetRenderer();
 
+    ninniku::InputLayoutDesc desc;
+
+    desc.name_ = "simple";
+    desc.elements_.resize(2);
+    desc.elements_[0].name_ = "POSITION";
+    desc.elements_[0].format_ = ninniku::F_R32G32B32_FLOAT;
+    desc.elements_[1].name_ = "COLOR";
+    desc.elements_[1].format_ = ninniku::F_R32G32B32A32_FLOAT;
+
+    dx->RegisterInputLayout(desc);
+
     for (auto i = 0u; i < pipelineStates.size(); ++i) {
         auto& ps = pipelineStates[i];
         ninniku::GraphicPipelineStateParam param;
 
         param.name_ = ps->name_;
+        param.inputLayout_ = "simple";
 
         for (auto& component : ps->components_) {
             auto filename = GetFilename(ps->name_, component->type_, dx->GetShaderExtension());

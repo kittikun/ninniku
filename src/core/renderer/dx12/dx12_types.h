@@ -144,7 +144,7 @@ namespace ninniku
         DX12RootSignature rootSignature_;
         DX12PipelineState pipelineState_;
 
-        // user might change the bound shader so keep the last used one
+        // user might change the bound shader so keep hash so we don't rehash every time
         uint32_t contextShaderHash_;
 
         bool CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings);
@@ -154,6 +154,13 @@ namespace ninniku
 
     struct DX12GraphicCommandInternal
     {
+        DX12GraphicCommandInternal(uint32_t shaderHash) noexcept;
+
+        // user might change the bound shader so keep hash so we don't rehash every time
+        uint32_t contextShaderHash_;
+
+        DX12RootSignature rootSignature_;
+        DX12PipelineState pipelineState_;
     };
 
     struct DX12ComputeCommand final : public ComputeCommand
@@ -166,6 +173,8 @@ namespace ninniku
 
     struct DX12GraphicCommand final : public GraphicCommand
     {
+        uint32_t GetHashShader() const;
+
         std::weak_ptr<DX12GraphicCommandInternal> impl_;
     };
 

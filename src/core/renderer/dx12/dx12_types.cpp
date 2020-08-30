@@ -81,35 +81,6 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
-    DX12ComputeCommandInternal::DX12ComputeCommandInternal(uint32_t shaderHash) noexcept
-        : contextShaderHash_{ shaderHash }
-    {
-    }
-
-    bool DX12ComputeCommandInternal::CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings)
-    {
-        TRACE_SCOPED_DX12;
-
-        auto iter = subContexts_.emplace(hash, DX12CommandSubContext{});
-        auto& subContext = iter.first->second;
-
-        // Create descriptor heap
-        D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-        heapDesc.NumDescriptors = numBindings;
-        heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-        auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&subContext.descriptorHeap_));
-
-        if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap"))
-            return false;
-
-        auto fmt = boost::format("%1%_%2%") % name % hash;
-        subContext.descriptorHeap_->SetName(strToWStr(boost::str(fmt)).c_str());
-
-        return true;
-    }
-
     bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12ComputeCommand* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize)
     {
         TRACE_SCOPED_DX12;
@@ -357,6 +328,38 @@ namespace ninniku
         return true;
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // DX12ComputeCommand
+    //////////////////////////////////////////////////////////////////////////
+    DX12ComputeCommandInternal::DX12ComputeCommandInternal(uint32_t shaderHash) noexcept
+        : contextShaderHash_{ shaderHash }
+    {
+    }
+
+    bool DX12ComputeCommandInternal::CreateSubContext(const DX12Device& device, uint32_t hash, const std::string_view& name, uint32_t numBindings)
+    {
+        TRACE_SCOPED_DX12;
+
+        auto iter = subContexts_.emplace(hash, DX12CommandSubContext{});
+        auto& subContext = iter.first->second;
+
+        // Create descriptor heap
+        D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+        heapDesc.NumDescriptors = numBindings;
+        heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+        auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&subContext.descriptorHeap_));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateDescriptorHeap"))
+            return false;
+
+        auto fmt = boost::format("%1%_%2%") % name % hash;
+        subContext.descriptorHeap_->SetName(strToWStr(boost::str(fmt)).c_str());
+
+        return true;
+    }
+
     uint32_t DX12ComputeCommand::GetHashShader() const
     {
         TRACE_SCOPED_DX12;
@@ -398,9 +401,28 @@ namespace ninniku
     }
 
     //////////////////////////////////////////////////////////////////////////
+    // DX12GraphicCommand
+    //////////////////////////////////////////////////////////////////////////
+    DX12GraphicCommandInternal::DX12GraphicCommandInternal(uint32_t shaderHash) noexcept
+        : contextShaderHash_{ shaderHash }
+    {
+    }
+
+    uint32_t DX12GraphicCommand::GetHashShader() const
+    {
+        TRACE_SCOPED_DX12;
+
+        boost::crc_32_type res;
+
+        res.process_bytes(pipelineStateName.data(), pipelineStateName.size());
+
+        return res.checksum();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // DX12DebugMarker
     //////////////////////////////////////////////////////////////////////////
-    DX12DebugMarker::DX12DebugMarker([[maybe_unused]] const std::string_view& name)
+    DX12DebugMarker::DX12DebugMarker(const std::string_view& name)
     {
         if (Globals::Instance().doCapture_) {
             // https://devblogs.microsoft.com/pix/winpixeventruntime/

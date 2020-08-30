@@ -73,14 +73,14 @@ namespace ninniku
         std::tuple<uint32_t, uint32_t> CopySwapChainToBuffer(const CopySwapChainToBufferParam& params);
         std::tuple<uint32_t, uint32_t> CopyTextureSubresourceToBuffer(const CopyTextureSubresourceToBufferParam& params);
         BufferHandle CreateBuffer(const TextureParamHandle& params);
-        bool CreateComputeCommandContext(const std::string_view& shader, const std::string_view& rootsignature);
-        bool CreateGraphicCommandContext(const std::string_view& psName, const std::string_view& vs, const std::string_view& ps, const std::string_view& rootsignature);
         inline ID3D12Device* GetDevice() const { return device_.Get(); }
 
     private:
         CommandList* CreateCommandList(EQueueType type);
+        bool CreateComputeCommandContext(const ComputePipelineStateParam& param);
         bool CreateConstantBuffer(DX12ConstantBuffer& cbuffer, const uint32_t size);
         bool CreateDevice(int adapter);
+        bool CreateGraphicCommandContext(const GraphicPipelineStateParam& params);
         bool CreateSamplers();
         D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
         bool ExecuteCommand(CommandList* cmdList);
@@ -99,7 +99,8 @@ namespace ninniku
 
         // commands
         std::vector<CommandList*> commands_;
-        std::unordered_map<uint32_t, std::shared_ptr<DX12ComputeCommandInternal>> commandContexts_;
+        std::unordered_map<uint32_t, std::shared_ptr<DX12ComputeCommandInternal>> computeCommandContexts_;
+        std::unordered_map<uint32_t, std::shared_ptr<DX12GraphicCommandInternal>> gfxCommandContexts_;
         std::array<Queue, QT_COUNT> queues_;
 
         // fence

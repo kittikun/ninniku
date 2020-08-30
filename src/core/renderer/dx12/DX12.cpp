@@ -600,68 +600,61 @@ namespace ninniku
         return cmd;
     }
 
-    bool DX12::CreateComputeCommandContext(const std::string_view& shader, const std::string_view& rootsignature)
+    bool DX12::CreateComputeCommandContext(const ComputePipelineStateParam& params)
     {
         TRACE_SCOPED_DX12;
 
-        auto found = resourceBindings_.find(shader);
+        // find the bindings to the shader
+        auto found = resourceBindings_.find(params.shaders_[ST_Compute]);
 
         if (found == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % shader);
+            LOGEF(boost::format("CreateComputeCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders_[ST_Compute]);
             return false;
         }
 
-        boost::crc_32_type res;
+        // find the shader byte code
+        auto foundShaders = psShaders_.find(params.name_);
 
-        res.process_bytes(shader.data(), shader.size());
-
-        auto context = std::make_shared<DX12ComputeCommandInternal>(res.checksum());
-
-        // find the shader bytecode
-        auto foundShader = psShaders_.find(shader);
-
-        if (foundShader == psShaders_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find shader \"%1%\"") % shader);
+        if (foundShaders == psShaders_.end()) {
+            LOGEF(boost::format("CreateComputeCommandContext: could not find shaders for pipeline state \"%1%\"") % params.name_);
             return false;
         }
 
         // find the root signature
-        auto foundRS = rootSignatures_.find(rootsignature);
+        auto foundRS = rootSignatures_.find(params.shaders_[ST_Root_Signature]);
 
         if (foundRS == rootSignatures_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find the root signature for shader \"%1%\"") % rootsignature);
+            LOGEF(boost::format("CreateComputeCommandContext: could not find the root signature for shader \"%1%\"") % params.shaders_[ST_Root_Signature]);
             return false;
         }
+
+        // create internal context
+        boost::crc_32_type res;
+
+        res.process_bytes(params.name_.data(), params.name_.size());
+
+        auto context = std::make_shared<DX12ComputeCommandInternal>(res.checksum());
 
         // keep a reference to the root signature for access without lookup
         context->rootSignature_ = foundRS->second;
 
-        auto foundBindings = resourceBindings_.find(shader);
-
-        if (foundBindings == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateComputeCommandContext: could not find the resource bindings for shader \"%1%\"") % shader);
-            return false;
-        }
-
         // Create pipeline state
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-        desc.CS = foundShader->second.shaders_[EShaderType::ST_Compute];
+        desc.CS = foundShaders->second.shaders_[EShaderType::ST_Compute];
         desc.pRootSignature = foundRS->second.Get();
 
         if (type_ == ERenderer::RENDERER_WARP_DX12)
             desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
-
-        LOGDF(boost::format("Creating pipeling state with byte code: Pointer=%1%, Size=%2%") % desc.CS.pShaderBytecode % desc.CS.BytecodeLength);
 
         auto hr = device_->CreateComputePipelineState(&desc, IID_PPV_ARGS(&context->pipelineState_));
 
         if (CheckAPIFailed(hr, "ID3D12Device::CreateComputePipelineState"))
             return false;
 
-        context->pipelineState_->SetName(strToWStr(shader).c_str());
+        context->pipelineState_->SetName(strToWStr(params.name_).c_str());
 
         // no need to track contexts because they will be released upon destruction anyway
-        commandContexts_.emplace(res.checksum(), std::move(context));
+        computeCommandContexts_.emplace(res.checksum(), std::move(context));
 
         return true;
     }
@@ -806,39 +799,83 @@ namespace ninniku
         return false;
     }
 
-    bool DX12::CreateGraphicCommandContext(const std::string_view& psName, const std::string_view& vs, const std::string_view& ps, [[maybe_unused]] const std::string_view& rootsignature)
+    bool DX12::CreateGraphicCommandContext(const GraphicPipelineStateParam& params)
     {
         TRACE_SCOPED_DX12;
 
-        auto foundBindingVS = resourceBindings_.find(vs);
+        // find the shader bindings
+        auto foundBindingVS = resourceBindings_.find(params.shaders_[ST_Vertex]);
 
         if (foundBindingVS == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % vs);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders_[ST_Vertex]);
             return false;
         }
 
-        auto foundBindingPS = resourceBindings_.find(ps);
+        auto foundBindingPS = resourceBindings_.find(params.shaders_[ST_Pixel]);
 
         if (foundBindingPS == resourceBindings_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % ps);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find resource bindings for shader \"%1%\"") % params.shaders_[ST_Pixel]);
             return false;
         }
 
-        // find the shader bytecode
-        auto foundShaders = psShaders_.find(psName);
+        // find the shaders byte codes
+        auto foundShaders = psShaders_.find(params.name_);
 
         if (foundShaders == psShaders_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find pipeline state shaders \"%1%\"") % psName);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find pipeline state shaders \"%1%\"") % params.name_);
             return false;
         }
 
         // find the root signature
-        auto foundRS = rootSignatures_.find(rootsignature);
+        auto foundRS = rootSignatures_.find(params.shaders_[ST_Root_Signature]);
 
         if (foundRS == rootSignatures_.end()) {
-            LOGEF(boost::format("CreateGraphicCommandContext: could not find the root signature for shader \"%1%\"") % rootsignature);
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find the root signature for shader \"%1%\"") % params.shaders_[ST_Root_Signature]);
             return false;
         }
+
+        // find the input layout
+        auto foundIL = inputLayouts_.find(params.inputLayout_);
+
+        if (foundIL == inputLayouts_.end()) {
+            LOGEF(boost::format("CreateGraphicCommandContext: could not find input layout \"%1%\", did you forget to register it ?") % params.inputLayout_);
+            return false;
+        }
+
+        // create internal context
+        boost::crc_32_type res;
+
+        res.process_bytes(params.name_.data(), params.name_.size());
+
+        auto context = std::make_shared<DX12GraphicCommandInternal>(res.checksum());
+
+        // keep a reference to the root signature for access without lookup
+        context->rootSignature_ = foundRS->second;
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
+
+        desc.InputLayout = { foundIL->second.data(), static_cast<uint32_t>(foundIL->second.size()) };
+        desc.pRootSignature = foundRS->second.Get();
+        desc.PS = foundShaders->second.shaders_[EShaderType::ST_Pixel];
+        desc.VS = foundShaders->second.shaders_[EShaderType::ST_Vertex];
+        desc.pRootSignature = foundRS->second.Get();
+        desc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        desc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        desc.DepthStencilState.DepthEnable = false;
+        desc.DepthStencilState.StencilEnable = false;
+        desc.SampleMask = std::numeric_limits<uint32_t>::max();
+        desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        desc.NumRenderTargets = 1;
+        desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.SampleDesc.Count = 1;
+
+        if (type_ == ERenderer::RENDERER_WARP_DX12)
+            desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
+
+        auto hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&context->pipelineState_));
+
+        if (CheckAPIFailed(hr, "ID3D12Device::CreateGraphicsPipelineState"))
+            return false;
 
         return true;
     }
@@ -907,7 +944,7 @@ namespace ninniku
                 return false;
             }
 
-            return CreateComputeCommandContext(ps.shaders_[ST_Compute], ps.shaders_[ST_Root_Signature]);
+            return CreateComputeCommandContext(ps);
         } else {
             // GraphicPipelineState
             auto& ps = static_cast<const GraphicPipelineStateParam&>(param);
@@ -917,7 +954,7 @@ namespace ninniku
                 return false;
             }
 
-            return CreateGraphicCommandContext(ps.name_, ps.shaders_[ST_Vertex], ps.shaders_[ST_Pixel], ps.shaders_[ST_Root_Signature]);
+            return CreateGraphicCommandContext(ps);
         }
 
         return true;
@@ -1199,9 +1236,9 @@ namespace ninniku
 
         if (dxCmd->impl_.expired()) {
             // find the appropriate context
-            auto foundContext = commandContexts_.find(shaderHash);
+            auto foundContext = computeCommandContexts_.find(shaderHash);
 
-            if (foundContext == commandContexts_.end()) {
+            if (foundContext == computeCommandContexts_.end()) {
                 auto fmt = boost::format("Dispatch error: could not find command context for shader \"%1%\". Did you forget to load the shader ?") % cmd->shader;
                 LOGE << boost::str(fmt);
                 return false;
@@ -2106,7 +2143,6 @@ namespace ninniku
 
         for (auto i = 0u; i < params.elements_.size(); ++i) {
             inputElementDescs[i].SemanticName = params.elements_[i].name_.data();
-            inputElementDescs[i].SemanticIndex = i;
             inputElementDescs[i].Format = static_cast<DXGI_FORMAT>(NinnikuFormatToDXGIFormat(params.elements_[i].format_));
         }
 
