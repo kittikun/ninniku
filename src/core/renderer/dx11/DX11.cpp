@@ -352,7 +352,8 @@ namespace ninniku
 
     bool DX11::CreatePipelineState(const PipelineStateParam&)
     {
-        throw std::exception("not implemented yet");
+        // always return true until we add graphic pipeline for DX11 too
+        return true;
     }
 
     SwapChainHandle DX11::CreateSwapChain(const SwapchainParamHandle&)
