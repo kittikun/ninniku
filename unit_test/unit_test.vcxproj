@@ -102,6 +102,9 @@
     <PostBuildEvent>
       <Command>$(SolutionDir)shader_compiler\bin\$(Configuration)\netcoreapp3.1\shader_compiler.exe -c Debug -d "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\dxc.exe" -i "$(ProjectDir)data\shader_compiler\shaders.xml" -o "$(ProjectDir)out\shader_compiler"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>if not exist $(ProjectDir)bin\$(Configuration)\dx11 mkdir $(ProjectDir)bin\$(Configuration)\dx11</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -139,6 +142,9 @@
     <PostBuildEvent>
       <Command>$(SolutionDir)shader_compiler\bin\$(Configuration)\netcoreapp3.1\shader_compiler.exe -c Debug -d "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\dxc.exe" -i "$(ProjectDir)data\shader_compiler\shaders.xml" -o "$(ProjectDir)out\shader_compiler"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>if not exist $(ProjectDir)bin\$(Configuration)\dx11 mkdir $(ProjectDir)bin\$(Configuration)\dx11</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Trace|x64'">
     <ClCompile>
@@ -176,6 +182,9 @@
     <PostBuildEvent>
       <Command>$(SolutionDir)shader_compiler\bin\$(Configuration)\netcoreapp3.1\shader_compiler.exe -c Debug -d "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\dxc.exe" -i "$(ProjectDir)data\shader_compiler\shaders.xml" -o "$(ProjectDir)out\shader_compiler"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>if not exist $(ProjectDir)bin\$(Configuration)\dx11 mkdir $(ProjectDir)bin\$(Configuration)\dx11</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\check.cpp">
