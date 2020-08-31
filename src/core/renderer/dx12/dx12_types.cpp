@@ -31,14 +31,19 @@
 #pragma clang diagnostic pop
 
 #include <d3dx12/d3dx12.h>
-
 #include <boost/crc.hpp>
+#include <D3D12MemAlloc.h>
 
 namespace ninniku
 {
     //////////////////////////////////////////////////////////////////////////
     // DX12BufferImpl
     //////////////////////////////////////////////////////////////////////////
+    DX12BufferInternal::~DX12BufferInternal()
+    {
+        allocation_->Release();
+    }
+
     DX12BufferImpl::DX12BufferImpl(const std::shared_ptr<DX12BufferInternal>& impl) noexcept
         : impl_{ impl }
     {
@@ -401,6 +406,15 @@ namespace ninniku
     }
 
     //////////////////////////////////////////////////////////////////////////
+    // DX12ConstantBuffer
+    //////////////////////////////////////////////////////////////////////////
+    DX12ConstantBuffer::~DX12ConstantBuffer()
+    {
+        for (auto& iter : allocations_)
+            iter->Release();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // DX12GraphicCommand
     //////////////////////////////////////////////////////////////////////////
     DX12GraphicCommandInternal::DX12GraphicCommandInternal(uint32_t shaderHash) noexcept
@@ -506,6 +520,11 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12TextureImpl
     //////////////////////////////////////////////////////////////////////////
+    DX12TextureInternal::~DX12TextureInternal()
+    {
+        allocation_->Release();
+    }
+
     DX12TextureImpl::DX12TextureImpl(const std::shared_ptr<DX12TextureInternal>& impl) noexcept
         : impl_{ impl }
     {

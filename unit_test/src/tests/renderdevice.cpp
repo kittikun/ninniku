@@ -99,7 +99,24 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_buffer, T, FixturesDX12All,
     params->numElements = 3;
     params->initData = triangleVertices;
 
-    BOOST_REQUIRE(dx->CreateBuffer(params));
+    auto srcBuffer = dx->CreateBuffer(params);
+
+    auto dstBuffer = dx->CreateBuffer(srcBuffer);
+
+    auto& data = dstBuffer->GetData();
+
+    switch (dx->GetType()) {
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 3378637337);
+            break;
+
+        default:
+            throw std::exception("Case should not happen");
+            break;
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX12All, T)

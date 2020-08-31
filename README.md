@@ -2,7 +2,7 @@
 
 ```ninniku (にんにく) is the Japanese word for garlic```
 
-### Simple framework to run compute jobs with DX11/DX12
+### Simple framework to run compute jobs with DX11/DX12 (but in process to become a rendering framework too)
 &nbsp;
 #### Build status
 ###### Master: &nbsp;[![Build status](https://ci.appveyor.com/api/projects/status/9wne2qsbsihhxnxd/branch/master?svg=true)](https://ci.appveyor.com/project/kittikun/ninniku/branch/master)
@@ -18,6 +18,7 @@
   * Renderdoc captures will be called ninniku_frame0.rdc
 - DX12 shaders are compiled using the [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler)
 - Profiling using [Tracy](https://github.com/wolfpld/tracy)
+- Using [D3D12MemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator)
 
 #### Prerequisites:
 - You must install the [Windows 10 SDK (10.0.19041.0)](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/)

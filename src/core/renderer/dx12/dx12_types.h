@@ -34,6 +34,11 @@
 #include <string_view>
 #include <variant>
 
+namespace D3D12MA
+{
+    class Allocation;
+}
+
 namespace ninniku
 {
     using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
@@ -99,6 +104,8 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct DX12BufferInternal final : TrackedObject
     {
+        ~DX12BufferInternal();
+
         DX12Resource buffer_;
         SRVHandle srv_;
         UAVHandle uav_;
@@ -108,6 +115,9 @@ namespace ninniku
 
         // Initial desc that was used to create the resource
         std::shared_ptr<const BufferParam> desc_;
+
+        // D3D12MemoryAllocator
+        D3D12MA::Allocation* allocation_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -183,8 +193,13 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct DX12ConstantBuffer
     {
+        ~DX12ConstantBuffer();
+
         DX12Resource resource_;
         DX12Resource upload_;
+
+        // D3D12MemoryAllocator
+        std::array<D3D12MA::Allocation*, 2> allocations_;
     };
 
     struct CommandBufferPool
@@ -301,6 +316,8 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     struct DX12TextureInternal final : TrackedObject
     {
+        ~DX12TextureInternal();
+
         DX12Resource texture_;
 
         SRVHandle srvDefault_;
@@ -321,6 +338,9 @@ namespace ninniku
 
         // Initial desc that was used to create the resource
         std::shared_ptr<const TextureParam> desc_;
+
+        // D3D12MemoryAllocator
+        D3D12MA::Allocation* allocation_;
     };
 
     //////////////////////////////////////////////////////////////////////////
