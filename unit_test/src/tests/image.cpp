@@ -24,7 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #pragma clang diagnostic pop
 
-#define DO_IMAGE_TESTS 0
+#define DO_IMAGE_TESTS 1
 
 #if DO_IMAGE_TESTS
 

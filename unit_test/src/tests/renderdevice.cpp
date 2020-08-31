@@ -78,29 +78,29 @@ struct Vertex
     DirectX::XMFLOAT4 color;
 };
 
-//BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_buffer, T, FixturesDX12All, T)
-//{
-//    // Disable HW GPU support when running on CI
-//    if (T::isNull)
-//        return;
-//
-//    auto& dx = ninniku::GetRenderer();
-//
-//    Vertex triangleVertices[] =
-//    {
-//        { { 0.0f, 0.25f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-//        { { 0.25f, -0.25f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-//        { { -0.25f, -0.25f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-//    };
-//
-//    auto params = ninniku::BufferParam::Create();
-//
-//    params->elementSize = sizeof(Vertex);
-//    params->numElements = 3;
-//    params->initData = triangleVertices;
-//
-//    BOOST_REQUIRE(dx->CreateBuffer(params));
-//}
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_buffer, T, FixturesDX12All, T)
+{
+    // Disable HW GPU support when running on CI
+    if (T::isNull)
+        return;
+
+    auto& dx = ninniku::GetRenderer();
+
+    Vertex triangleVertices[] =
+    {
+        { { 0.0f, 0.25f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { { 0.25f, -0.25f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        { { -0.25f, -0.25f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+    };
+
+    auto params = ninniku::BufferParam::Create();
+
+    params->elementSize = sizeof(Vertex);
+    params->numElements = 3;
+    params->initData = triangleVertices;
+
+    BOOST_REQUIRE(dx->CreateBuffer(params));
+}
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX12All, T)
 {
