@@ -35,6 +35,9 @@
     <Filter Include="Source Files\core\renderer\dx12">
       <UniqueIdentifier>{d40cf3e3-f8cd-4641-87ca-58290091b874}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\3rdParty">
+      <UniqueIdentifier>{8b37e47d-8298-479d-bf3e-01a214b1cc98}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utils\log.cpp">
@@ -91,9 +94,6 @@
     <ClCompile Include="src\utils\object_tracker.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="external\tracy\TracyClient.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\renderer\dxgi.cpp">
       <Filter>Source Files\core\renderer</Filter>
     </ClCompile>
@@ -102,6 +102,12 @@
     </ClCompile>
     <ClCompile Include="src\utils\string_set.cpp">
       <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="external\tracy\TracyClient.cpp">
+      <Filter>Source Files\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="external\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
+      <Filter>Source Files\3rdParty</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

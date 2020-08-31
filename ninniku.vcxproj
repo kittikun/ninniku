@@ -81,7 +81,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\D3D12MemoryAllocator\src;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -135,7 +135,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\D3D12MemoryAllocator\src;$(SolutionDir)external\fg\include;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -185,7 +185,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxc.exe
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\fg\include;$(SolutionDir)external\tracy;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)external\boost_1_74\include;$(SolutionDir)external\cmft\include;$(SolutionDir)external\D3D12MemoryAllocator\src;$(SolutionDir)external\fg\include;$(SolutionDir)external\tracy;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -227,6 +227,7 @@ xcopy /d /y /s "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\$(Platform)\dxil.dl
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="external\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp" />
     <ClCompile Include="external\tracy\TracyClient.cpp" />
     <ClCompile Include="src\core\image\cmft.cpp" />
     <ClCompile Include="src\core\image\cmft_impl.cpp" />
