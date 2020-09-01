@@ -124,26 +124,26 @@ std::filesystem::path GetFilename(const std::string& psName, ninniku::EShaderTyp
     boost::format fmt;
 
     switch (type) {
-        case ninniku::EShaderType::ST_Root_Signature:
-        {
-            fmt = boost::format("%1%_rs%2%") % psName % ext;
-        }
-        break;
+    case ninniku::EShaderType::ST_Root_Signature:
+    {
+        fmt = boost::format("%1%_rs%2%") % psName % ext;
+    }
+    break;
 
-        case ninniku::EShaderType::ST_Vertex:
-        {
-            fmt = boost::format("%1%_vs%2%") % psName % ext;
-        }
-        break;
+    case ninniku::EShaderType::ST_Vertex:
+    {
+        fmt = boost::format("%1%_vs%2%") % psName % ext;
+    }
+    break;
 
-        case ninniku::EShaderType::ST_Pixel:
-        {
-            fmt = boost::format("%1%_ps%2%") % psName % ext;
-        }
-        break;
+    case ninniku::EShaderType::ST_Pixel:
+    {
+        fmt = boost::format("%1%_ps%2%") % psName % ext;
+    }
+    break;
 
-        default:
-            break;
+    default:
+        break;
     }
 
     return boost::str(fmt);

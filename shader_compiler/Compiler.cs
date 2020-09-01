@@ -1,22 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace shader_compiler
 {
     public class Compiler
     {
-        private const string psDebug = "-T ps_6_5 -D HLSL -Od -Zi -Qembed_debug -E {0} {1} -Fo {2}";
-        private const string psRelease = "-T ps_6_5 -D HLSL -E {0} {1} -Fo {2}";
-        private const string psVerify = "-T ps_6_5 -verifyrootsignature {0} {1}";
-        private const string rsDebug = "-T cs_6_5 -D HLSL -Od -Zi -Qembed_debug -rootsig-define RS -extractrootsignature {0} -Fo {1}";
-        private const string rsRelease = "-T cs_6_5 -D HLSL -rootsig-define RS {0} -Fo {1}";
-        private const string vsDebug = "-T vs_6_5 -D HLSL -Od -Zi -Qembed_debug -E {0} {1} -Fo {2}";
-        private const string vsRelease = "-T vs_6_5 -D HLSL -E {0} {1} -Fo {2}";
-        private const string vsVerify = "-T vs_6_5 -verifyrootsignature {0} {1}";
+        // WARP limits us to 6.4
+        private const string psDebug = "-T ps_6_4 -D HLSL -Od -Zi -Qembed_debug -E {0} {1} -Fo {2}";
+
+        private const string psRelease = "-T ps_6_4 -D HLSL -E {0} {1} -Fo {2}";
+        private const string psVerify = "-T ps_6_4 -verifyrootsignature {0} {1}";
+        private const string rsDebug = "-T cs_6_4 -D HLSL -Od -Zi -Qembed_debug -rootsig-define RS -extractrootsignature {0} -Fo {1}";
+        private const string rsRelease = "-T cs_6_4 -D HLSL -rootsig-define RS {0} -Fo {1}";
+        private const string vsDebug = "-T vs_6_4 -D HLSL -Od -Zi -Qembed_debug -E {0} {1} -Fo {2}";
+        private const string vsRelease = "-T vs_6_4 -D HLSL -E {0} {1} -Fo {2}";
+        private const string vsVerify = "-T vs_6_4 -verifyrootsignature {0} {1}";
         private Options options_;
 
         #region Public Methods

@@ -160,7 +160,7 @@ namespace ninniku
     struct ClearRenderTargetParam
     {
         DirectX::XMVECTORF32 color;
-        const RenderTargetView* dstRT;
+        const struct RenderTargetView* dstRT;
         uint32_t index; // change this later
     };
 

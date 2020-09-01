@@ -122,16 +122,16 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(cmft_from_texture_object_array_specific, T, Fix
         BOOST_REQUIRE(std::filesystem::exists(outFiles[i]));
 
         switch (dx->GetType()) {
-            case ninniku::ERenderer::RENDERER_DX11:
-            case ninniku::ERenderer::RENDERER_DX12:
-            case ninniku::ERenderer::RENDERER_WARP_DX11:
-            case ninniku::ERenderer::RENDERER_WARP_DX12:
-                CheckFileCRC(outFiles[i], outHash[i]);
-                break;
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            CheckFileCRC(outFiles[i], outHash[i]);
+            break;
 
-            default:
-                throw std::exception("Case should not happen");
-                break;
+        default:
+            throw std::exception("Case should not happen");
+            break;
         }
     }
 }
@@ -345,16 +345,16 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_mips, T, FixturesAll, T)
     BOOST_REQUIRE(res->SaveImage(filename));
     BOOST_REQUIRE(std::filesystem::exists(filename));
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 4173211496);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 4173211496);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -384,16 +384,16 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_mips, T, FixturesAll, T)
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 567904825);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 567904825);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -424,16 +424,16 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_raw_cube_array_mips, T, FixturesA
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 3517905);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 3517905);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -471,19 +471,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc1, T, FixturesAll, T)
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 409997713);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 409997713);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 1032956914);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 1032956914);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -519,22 +519,22 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc3, T, FixturesAll, T)
 
     // dx11 can use GPU compression while dx12 uses CPU since DirectXTex doesn't support it
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 2138065852);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 2138065852);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 2051743166);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+        CheckFileCRC(filename, 2051743166);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 821195920);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 821195920);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -572,44 +572,44 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc4, T, FixturesAll, T)
     // dx11/dx12 is because of hardware/software compression
 #ifdef _DEBUG
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-            CheckFileCRC(filename, 1002934303);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+        CheckFileCRC(filename, 1002934303);
+        break;
 
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 1002934303);
-            break;
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 1002934303);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 1228450784);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+        CheckFileCRC(filename, 1228450784);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 3324017732);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 3324017732);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 #else
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 769240813);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 769240813);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckFileCRC(filename, 2703939131);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+        CheckFileCRC(filename, 2703939131);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 2312058583);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 2312058583);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 #endif
 }
@@ -668,19 +668,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_8bit, T, FixturesAll, T)
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 923975562);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 923975562);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 3356479526);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 3356479526);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -740,35 +740,35 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(dds_saveImage_bc5_16bit, T, FixturesAll, T)
     // for some reason BC5 (16 bit) leads to different results between debug and release builds
 #ifdef _DEBUG
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 1319360950);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 1319360950);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 3254186394);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 3254186394);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 #else
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 3457244965);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 3457244965);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 2118249824);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 2118249824);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 #endif
 }

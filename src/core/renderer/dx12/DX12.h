@@ -107,6 +107,7 @@ namespace ninniku
         std::unordered_map<uint32_t, std::shared_ptr<DX12ComputeCommandInternal>> computeCommandContexts_;
         std::unordered_map<uint32_t, std::shared_ptr<DX12GraphicCommandInternal>> gfxCommandContexts_;
         std::array<Queue, QT_COUNT> queues_;
+        CommandList* prevCmd_ = nullptr; // don't new if the same type is requested in a row
 
         // fence
         DX12Fence fence_;

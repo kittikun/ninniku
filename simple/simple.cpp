@@ -48,6 +48,12 @@ struct PipelineState
     std::vector<std::unique_ptr<Component>> components;
 };
 
+struct Vertex
+{
+    DirectX::XMFLOAT3 position;
+    DirectX::XMFLOAT4 color;
+};
+
 void ChangeToDataDirectory(std::string_view dir)
 {
     if (CurrentDir.empty())
@@ -81,26 +87,26 @@ std::filesystem::path GetFilename(const std::string& psName, ninniku::EShaderTyp
     boost::format fmt;
 
     switch (type) {
-        case ninniku::EShaderType::ST_Root_Signature:
-        {
-            fmt = boost::format("%1%_rs%2%") % psName % ext;
-        }
-        break;
+    case ninniku::EShaderType::ST_Root_Signature:
+    {
+        fmt = boost::format("%1%_rs%2%") % psName % ext;
+    }
+    break;
 
-        case ninniku::EShaderType::ST_Vertex:
-        {
-            fmt = boost::format("%1%_vs%2%") % psName % ext;
-        }
-        break;
+    case ninniku::EShaderType::ST_Vertex:
+    {
+        fmt = boost::format("%1%_vs%2%") % psName % ext;
+    }
+    break;
 
-        case ninniku::EShaderType::ST_Pixel:
-        {
-            fmt = boost::format("%1%_ps%2%") % psName % ext;
-        }
-        break;
+    case ninniku::EShaderType::ST_Pixel:
+    {
+        fmt = boost::format("%1%_ps%2%") % psName % ext;
+    }
+    break;
 
-        default:
-            break;
+    default:
+        break;
     }
 
     return boost::str(fmt);
@@ -229,9 +235,21 @@ int main()
     }
 
     // vertex buffer
+    float ratio = scDesc->width / scDesc->height;
+    std::array<Vertex, 3> vertices =
     {
-        //auto params = ninniku::BufferParam::Create();
-    }
+        Vertex{ { 0.0f, 0.25f * ratio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        Vertex{ { 0.25f, -0.25f * ratio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        Vertex{ { -0.25f, -0.25f * ratio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+    };
+
+    auto vbParams = ninniku::BufferParam::Create();
+
+    vbParams->elementSize = sizeof(Vertex);
+    vbParams->numElements = vertices.size();
+    vbParams->initData = vertices.data();
+
+    auto vb = dx->CreateBuffer(vbParams);
 
     MSG msg;
     bool running = true;

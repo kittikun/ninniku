@@ -128,19 +128,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource, T, FixturesAll, T
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 1517223776);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 1517223776);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 1737166122);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 1737166122);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -187,33 +187,33 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
     auto pass0 = framegraph.add_render_task<PassData_0>(
         "Initialize Mip 0",
         [&](PassData_0& data, fg::render_task_builder& builder)
-    {
-        data.output = builder.write <ninniku::TextureResource>(finalOut);
-    },
+        {
+            data.output = builder.write <ninniku::TextureResource>(finalOut);
+        },
         [&dx, &cb](const PassData_0& data)
-    {
-        auto cmd = dx->CreateComputeCommand();
+        {
+            auto cmd = dx->CreateComputeCommand();
 
-        cmd->shader = "sameResource";
-        cmd->cbufferStr = "CBGlobal";
-        cmd->srvBindings.insert(std::make_pair("srcTex", nullptr));
+            cmd->shader = "sameResource";
+            cmd->cbufferStr = "CBGlobal";
+            cmd->srvBindings.insert(std::make_pair("srcTex", nullptr));
 
-        auto output = data.output->actual();
+            auto output = data.output->actual();
 
-        cmd->uavBindings.insert(std::make_pair("dstTex", output->GetUAV(0)));
+            cmd->uavBindings.insert(std::make_pair("dstTex", output->GetUAV(0)));
 
-        auto& param = data.output->description();
+            auto& param = data.output->description();
 
-        cmd->dispatch[0] = param->width / SAME_RESOURCE_X;
-        cmd->dispatch[1] = param->height / SAME_RESOURCE_Y;
-        cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
+            cmd->dispatch[0] = param->width / SAME_RESOURCE_X;
+            cmd->dispatch[1] = param->height / SAME_RESOURCE_Y;
+            cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
 
-        // constant buffer
-        cb.targetMip = 0;
+            // constant buffer
+            cb.targetMip = 0;
 
-        BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
-        BOOST_REQUIRE(dx->Dispatch(cmd));
-    });
+            BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+            BOOST_REQUIRE(dx->Dispatch(cmd));
+        });
 
     auto& pass0Data = pass0->data();
 
@@ -227,36 +227,36 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
     auto pass1 = framegraph.add_render_task<PassData_1>(
         "Other Mips",
         [&pass0Data, &finalOut](PassData_1& data, fg::render_task_builder& builder)
-    {
-        data.input = builder.read(pass0Data.output);
-        data.output = builder.write<ninniku::TextureResource>(finalOut);
-    },
+        {
+            data.input = builder.read(pass0Data.output);
+            data.output = builder.write<ninniku::TextureResource>(finalOut);
+        },
         [&](const PassData_1& data)
-    {
-        for (uint32_t i = 1; i < numMips; ++i) {
-            auto cmd = dx->CreateComputeCommand();
+        {
+            for (uint32_t i = 1; i < numMips; ++i) {
+                auto cmd = dx->CreateComputeCommand();
 
-            cmd->shader = "sameResource";
-            cmd->cbufferStr = "CBGlobal";
+                cmd->shader = "sameResource";
+                cmd->cbufferStr = "CBGlobal";
 
-            auto input = data.input->actual();
-            auto output = data.output->actual();
+                auto input = data.input->actual();
+                auto output = data.output->actual();
 
-            cmd->srvBindings["srcTex"] = input->GetSRVArray(i - 1);
-            cmd->uavBindings["dstTex"] = output->GetUAV(i);
+                cmd->srvBindings["srcTex"] = input->GetSRVArray(i - 1);
+                cmd->uavBindings["dstTex"] = output->GetUAV(i);
 
-            auto& param = data.input->description();
+                auto& param = data.input->description();
 
-            cmd->dispatch[0] = std::max(1u, (param->width >> i) / SAME_RESOURCE_X);
-            cmd->dispatch[1] = std::max(1u, (param->height >> i) / SAME_RESOURCE_Y);
-            cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
+                cmd->dispatch[0] = std::max(1u, (param->width >> i) / SAME_RESOURCE_X);
+                cmd->dispatch[1] = std::max(1u, (param->height >> i) / SAME_RESOURCE_Y);
+                cmd->dispatch[2] = param->arraySize / SAME_RESOURCE_Z;
 
-            cb.targetMip = i;
+                cb.targetMip = i;
 
-            BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
-            BOOST_REQUIRE(dx->Dispatch(cmd));
-        }
-    });
+                BOOST_REQUIRE(dx->UpdateConstantBuffer(cmd->cbufferStr, &cb, sizeof(CBGlobal)));
+                BOOST_REQUIRE(dx->Dispatch(cmd));
+            }
+        });
 
     auto& pass1Data = pass1->data();
 
@@ -279,19 +279,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_SRV_UAV_same_resource_rendergraph, T, Fi
     BOOST_REQUIRE(std::filesystem::exists(filename));
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-            CheckFileCRC(filename, 1517223776);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+        CheckFileCRC(filename, 1517223776);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckFileCRC(filename, 1737166122);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckFileCRC(filename, 1737166122);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -332,15 +332,15 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_colorMips, T, FixturesAll, T)
     auto& data = res->GetData();
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 3775864256);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+        CheckCRC(std::get<0>(data), std::get<1>(data), 3775864256);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -461,15 +461,15 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_genMips, T, FixturesAll, T)
     auto& data = res->GetData();
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 946385041);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+        CheckCRC(std::get<0>(data), std::get<1>(data), 946385041);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -514,19 +514,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_resize, T, FixturesAll, T)
     auto& data = res->GetData();
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_DX11:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 1396798068);
-            break;
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_DX11:
+        CheckCRC(std::get<0>(data), std::get<1>(data), 1396798068);
+        break;
 
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
-            break;
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckCRC(std::get<0>(data), std::get<1>(data), 457450649);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
@@ -569,16 +569,16 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(shader_structuredBuffer, T, FixturesAll, T)
     auto& data = dstBuffer->GetData();
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckCRC(std::get<0>(data), std::get<1>(data), 3783883977);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 

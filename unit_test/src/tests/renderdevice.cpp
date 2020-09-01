@@ -55,19 +55,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_dx12_check_feature, T, FixturesAll
         auto check = dx->CheckFeatureSupport(static_cast<ninniku::EDeviceFeature>(i), res);
 
         switch (dx->GetType()) {
-            case ninniku::ERenderer::RENDERER_DX11:
-            case ninniku::ERenderer::RENDERER_WARP_DX11:
-                BOOST_REQUIRE(!check);
-                break;
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+            BOOST_REQUIRE(!check);
+            break;
 
-            case ninniku::ERenderer::RENDERER_DX12:
-            case ninniku::ERenderer::RENDERER_WARP_DX12:
-                BOOST_REQUIRE(check);
-                break;
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            BOOST_REQUIRE(check);
+            break;
 
-            default:
-                throw std::exception("Case should not happen");
-                break;
+        default:
+            throw std::exception("Case should not happen");
+            break;
         }
     }
 }
@@ -86,18 +86,18 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_buffer, T, FixturesDX12All,
 
     auto& dx = ninniku::GetRenderer();
 
-    Vertex triangleVertices[] =
+    std::array<Vertex, 3> vertices =
     {
-        { { 0.0f, 0.25f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { { 0.25f, -0.25f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { -0.25f, -0.25f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+        Vertex{ { 0.0f, 0.25f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        Vertex{ { 0.25f, -0.25f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        Vertex{ { -0.25f, -0.25f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
 
     auto params = ninniku::BufferParam::Create();
 
     params->elementSize = sizeof(Vertex);
-    params->numElements = 3;
-    params->initData = triangleVertices;
+    params->numElements = vertices.size();
+    params->initData = vertices.data();
 
     auto srcBuffer = dx->CreateBuffer(params);
 
@@ -106,16 +106,16 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_buffer, T, FixturesDX12All,
     auto& data = dstBuffer->GetData();
 
     switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            CheckCRC(std::get<0>(data), std::get<1>(data), 3378637337);
-            break;
+    case ninniku::ERenderer::RENDERER_DX11:
+    case ninniku::ERenderer::RENDERER_DX12:
+    case ninniku::ERenderer::RENDERER_WARP_DX11:
+    case ninniku::ERenderer::RENDERER_WARP_DX12:
+        CheckCRC(std::get<0>(data), std::get<1>(data), 3378637337);
+        break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+    default:
+        throw std::exception("Case should not happen");
+        break;
     }
 }
 
