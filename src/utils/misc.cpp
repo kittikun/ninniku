@@ -357,6 +357,22 @@ namespace ninniku
         return res;
     }
 
+    constexpr uint32_t NinnikuTopologyToD3DTopology(uint32_t topology)
+    {
+        D3D_PRIMITIVE_TOPOLOGY res = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+
+        switch (topology) {
+            case PT_TRIANGLE_LIST:
+                res = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+                break;
+
+            default:
+                throw std::exception("NinnikuTopologyToD3DTopology unknown format");
+        }
+
+        return res;
+    }
+
     const std::string wstrToStr(const std::wstring& wstr)
     {
         TRACE_SCOPED_UTILS;

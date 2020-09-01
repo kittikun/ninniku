@@ -24,6 +24,7 @@
 #include "../../../utils/log.h"
 #include "../../../utils/misc.h"
 #include "../../../utils/trace.h"
+#include "DX12.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -81,6 +82,14 @@ namespace ninniku
             return nullptr;
 
         return impl_.lock()->uav_.get();
+    }
+
+    const VertexBufferView* DX12BufferImpl::GetVBV() const
+    {
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->vbv_.get();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -250,7 +259,7 @@ namespace ninniku
                     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
                     srvDesc.Buffer.FirstElement = 0;
                     srvDesc.Buffer.NumElements = locked->desc_->numElements;
-                    srvDesc.Buffer.StructureByteStride = locked->desc_->elementSize;
+                    srvDesc.Buffer.StructureByteStride = (locked->desc_->bufferFlags == BF_STRUCTURED_BUFFER) ? locked->desc_->elementSize : 0;
                     srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
                     locked->buffer_->SetName(strToWStr(found->first).c_str());
@@ -420,6 +429,79 @@ namespace ninniku
     DX12GraphicCommandInternal::DX12GraphicCommandInternal(uint32_t shaderHash) noexcept
         : contextShaderHash_{ shaderHash }
     {
+    }
+
+    DX12GraphicCommand::DX12GraphicCommand(const std::shared_ptr<DX12>& device)
+        : device_{ device }
+    {
+    }
+
+    bool DX12GraphicCommand::ClearRenderTarget(const ClearRenderTargetParam& params) const
+    {
+        if (CheckWeakExpired(device_))
+            return false;
+
+        auto dx = device_.lock();
+
+        auto cmdList = dx->CreateCommandList(QT_DIRECT);
+
+        auto rt = static_cast<const DX12RenderTargetView*>(params.dstRT);
+
+        // transition
+        auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
+
+        // clear
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(dx->rtvHeap_->GetCPUDescriptorHandleForHeapStart(), params.index, dx->rtvDescriptorSize_);
+        cmdList->gfxCmdList_->ClearRenderTargetView(rtvHandle, params.color, 0, nullptr);
+
+        // revert transition
+        barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
+
+        dx->ExecuteCommand(cmdList);
+
+        return true;
+    }
+
+    bool DX12GraphicCommand::IASetPrimitiveTopology(EPrimitiveTopology topology) const
+    {
+        if (CheckWeakExpired(device_))
+            return false;
+
+        auto dx = device_.lock();
+
+        auto cmdList = dx->CreateCommandList(QT_DIRECT);
+
+        cmdList->gfxCmdList_->IASetPrimitiveTopology(static_cast<D3D_PRIMITIVE_TOPOLOGY>(NinnikuTopologyToD3DTopology(topology)));
+
+        dx->ExecuteCommand(cmdList);
+
+        return true;
+    }
+
+    bool DX12GraphicCommand::IASetVertexBuffers(const SetVertexBuffersParam& params) const
+    {
+        if (CheckWeakExpired(device_))
+            return false;
+
+        auto dx = device_.lock();
+
+        auto cmdList = dx->CreateCommandList(QT_DIRECT);
+
+        // seems wasteful..
+        std::vector<D3D12_VERTEX_BUFFER_VIEW> views{ params.views.size() };
+
+        for (auto i = 0u; i < params.views.size(); ++i) {
+            auto dx12vbv = static_cast<const DX12VertexBufferView*>(params.views[i]);
+            views[i] = dx12vbv->view_;
+        }
+
+        cmdList->gfxCmdList_->IASetVertexBuffers(0, params.views.size(), views.data());
+
+        dx->ExecuteCommand(cmdList);
+
+        return true;
     }
 
     uint32_t DX12GraphicCommand::GetHashShader() const

@@ -87,26 +87,26 @@ std::filesystem::path GetFilename(const std::string& psName, ninniku::EShaderTyp
     boost::format fmt;
 
     switch (type) {
-    case ninniku::EShaderType::ST_Root_Signature:
-    {
-        fmt = boost::format("%1%_rs%2%") % psName % ext;
-    }
-    break;
-
-    case ninniku::EShaderType::ST_Vertex:
-    {
-        fmt = boost::format("%1%_vs%2%") % psName % ext;
-    }
-    break;
-
-    case ninniku::EShaderType::ST_Pixel:
-    {
-        fmt = boost::format("%1%_ps%2%") % psName % ext;
-    }
-    break;
-
-    default:
+        case ninniku::EShaderType::ST_Root_Signature:
+        {
+            fmt = boost::format("%1%_rs%2%") % psName % ext;
+        }
         break;
+
+        case ninniku::EShaderType::ST_Vertex:
+        {
+            fmt = boost::format("%1%_vs%2%") % psName % ext;
+        }
+        break;
+
+        case ninniku::EShaderType::ST_Pixel:
+        {
+            fmt = boost::format("%1%_ps%2%") % psName % ext;
+        }
+        break;
+
+        default:
+            break;
     }
 
     return boost::str(fmt);
@@ -248,6 +248,7 @@ int main()
     vbParams->elementSize = sizeof(Vertex);
     vbParams->numElements = vertices.size();
     vbParams->initData = vertices.data();
+    vbParams->bufferFlags = ninniku::BF_VERTEX_BUFFER;
 
     auto vb = dx->CreateBuffer(vbParams);
 
@@ -272,8 +273,20 @@ int main()
             clearParam.dstRT = frameRT;
             clearParam.index = bufferIndex;
 
-            if (!dx->ClearRenderTarget(clearParam))
+            auto cmd = dx->CreateGraphicCommand();
+
+            if (!cmd->ClearRenderTarget(clearParam))
                 throw std::exception("failed to clear");
+
+            if (!cmd->IASetPrimitiveTopology(ninniku::PT_TRIANGLE_LIST))
+                throw std::exception("failed to IASetPrimitiveTopology");
+
+            ninniku::SetVertexBuffersParam vbp = {};
+
+            vbp.views.push_back(vb->GetVBV());
+
+            if (!cmd->IASetVertexBuffers(vbp))
+                throw std::exception("failed IASetVertexBuffers");
 
             if (!dx->Present(swapChain))
                 throw std::exception("failed to present");

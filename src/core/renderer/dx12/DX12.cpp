@@ -72,69 +72,46 @@ namespace ninniku
         }
 
         switch (feature) {
-        case ninniku::DF_ALLOW_TEARING:
-        {
-            auto dxgiFactory = DXGI::GetDXGIFactory5();
+            case ninniku::DF_ALLOW_TEARING:
+            {
+                auto dxgiFactory = DXGI::GetDXGIFactory5();
 
-            if (dxgiFactory != nullptr) {
-                BOOL allowTearing = false;
+                if (dxgiFactory != nullptr) {
+                    BOOL allowTearing = false;
 
-                auto hr = dxgiFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+                    auto hr = dxgiFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+
+                    if (CheckAPIFailed(hr, "CheckFeatureSupport"))
+                        return false;
+
+                    result = allowTearing;
+                } else {
+                    LOGE << "Failed to create IDXGIFactory5";
+                    return false;
+                }
+            }
+            break;
+
+            case ninniku::DF_SM6_WAVE_INTRINSICS:
+            {
+                D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
+
+                auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
 
                 if (CheckAPIFailed(hr, "CheckFeatureSupport"))
                     return false;
 
-                result = allowTearing;
-            } else {
-                LOGE << "Failed to create IDXGIFactory5";
-                return false;
+                result = waveIntrinsicsSupport.WaveOps;
             }
-        }
-        break;
+            break;
 
-        case ninniku::DF_SM6_WAVE_INTRINSICS:
-        {
-            D3D12_FEATURE_DATA_D3D12_OPTIONS1 waveIntrinsicsSupport = {};
-
-            auto hr = device_->CheckFeatureSupport((D3D12_FEATURE)D3D12_FEATURE_D3D12_OPTIONS1, &waveIntrinsicsSupport, sizeof(waveIntrinsicsSupport));
-
-            if (CheckAPIFailed(hr, "CheckFeatureSupport"))
+            default:
+                LOGE << "Unsupported EDeviceFeature";
                 return false;
-
-            result = waveIntrinsicsSupport.WaveOps;
-        }
-        break;
-
-        default:
-            LOGE << "Unsupported EDeviceFeature";
-            return false;
         }
 
         queried[feature] = true;
         queryRes[feature] = result;
-
-        return true;
-    }
-
-    bool DX12::ClearRenderTarget(const ClearRenderTargetParam& params)
-    {
-        auto cmdList = CreateCommandList(QT_DIRECT);
-
-        auto rt = static_cast<const DX12RenderTargetView*>(params.dstRT);
-
-        // transition
-        auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
-
-        // clear
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap_->GetCPUDescriptorHandleForHeapStart(), params.index, rtvDescriptorSize_);
-        cmdList->gfxCmdList_->ClearRenderTargetView(rtvHandle, params.color, 0, nullptr);
-
-        // revert transition
-        barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
-
-        ExecuteCommand(cmdList);
 
         return true;
     }
@@ -430,6 +407,7 @@ namespace ninniku
         auto isCPURead = (params->viewflags & static_cast<uint8_t>(EResourceViews::RV_CPU_READ)) != 0;
         auto bufferSize = params->numElements * params->elementSize;
         auto haveData = params->initData != nullptr;
+        auto isVB = params->bufferFlags == BF_VERTEX_BUFFER;
 
         LOGDF(boost::format("Creating Buffer: ElementSize=%1%, NumElements=%2%, Size=%3%") % params->elementSize % params->numElements % bufferSize);
 
@@ -533,7 +511,7 @@ namespace ninniku
         }
 
         if (isSRV) {
-            auto srv = new DX12ShaderResourceView(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+            auto srv = new DX12ShaderResourceView{ D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES };
 
             srv->resource_ = impl;
 
@@ -541,10 +519,20 @@ namespace ninniku
         }
 
         if (isUAV) {
-            auto uav = new DX12UnorderedAccessView(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+            auto uav = new DX12UnorderedAccessView{ D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES };
 
             uav->resource_ = impl;
             impl->uav_.reset(uav);
+        }
+
+        if (isVB) {
+            auto vbv = new DX12VertexBufferView{};
+
+            vbv->view_.BufferLocation = impl->buffer_->GetGPUVirtualAddress();
+            vbv->view_.StrideInBytes = params->elementSize;
+            vbv->view_.SizeInBytes = bufferSize;
+
+            impl->vbv_.reset(vbv);
         }
 
         return std::make_unique<DX12BufferImpl>(impl);
@@ -638,6 +626,7 @@ namespace ninniku
                 return BufferHandle();
         }
 
+        // fill initial data
         auto mapped = Map(temp);
         uint32_t dstPitch = static_cast<uint32_t>(internalDst->data_.size() * sizeof(uint32_t));
 
@@ -880,14 +869,14 @@ namespace ninniku
                     throw new std::exception("Fatal error in DX12 constructor");
 
                 switch (allocator_->GetD3D12Options().ResourceHeapTier) {
-                case D3D12_RESOURCE_HEAP_TIER_1:
-                    LOGD << "D3D12_RESOURCE_HEAP_TIER  = D3D12_RESOURCE_HEAP_TIER_1";
-                    break;
-                case D3D12_RESOURCE_HEAP_TIER_2:
-                    LOGD << "D3D12_RESOURCE_HEAP_TIER  = D3D12_RESOURCE_HEAP_TIER_2";
-                    break;
-                default:
-                    throw std::exception("Should not happen GetD3D12Options");
+                    case D3D12_RESOURCE_HEAP_TIER_1:
+                        LOGD << "D3D12_RESOURCE_HEAP_TIER  = D3D12_RESOURCE_HEAP_TIER_1";
+                        break;
+                    case D3D12_RESOURCE_HEAP_TIER_2:
+                        LOGD << "D3D12_RESOURCE_HEAP_TIER  = D3D12_RESOURCE_HEAP_TIER_2";
+                        break;
+                    default:
+                        throw std::exception("Should not happen GetD3D12Options");
                 }
             }
 
@@ -902,6 +891,11 @@ namespace ninniku
         }
 
         return false;
+    }
+
+    GraphicCommandHandle DX12::CreateGraphicCommand() const
+    {
+        return std::make_unique<DX12GraphicCommand>(std::static_pointer_cast<DX12>(GetRenderer()));
     }
 
     bool DX12::CreateGraphicCommandContext(const GraphicPipelineStateParam& params)
@@ -1760,30 +1754,30 @@ namespace ninniku
                 cmdList[0] = iter->gfxCmdList_.Get();
 
                 switch (iter->type_) {
-                case ninniku::QT_DIRECT:
-                {
-                    if (!lmbd(queues_[QT_DIRECT], queues_[QT_COPY], queues_[QT_COMPUTE]))
-                        return false;
-                }
-                break;
-
-                case ninniku::QT_COMPUTE:
-                {
-                    if (!lmbd(queues_[QT_COMPUTE], queues_[QT_COPY], queues_[QT_DIRECT]))
-                        return false;
-                }
-                break;
-
-                case ninniku::QT_COPY:
-                {
-                    if (!lmbd(queues_[QT_COPY], queues_[QT_COMPUTE], queues_[QT_DIRECT]))
-                        return false;
-                }
-                break;
-
-                default:
-                    throw new std::exception("Invalid queue type");
+                    case ninniku::QT_DIRECT:
+                    {
+                        if (!lmbd(queues_[QT_DIRECT], queues_[QT_COPY], queues_[QT_COMPUTE]))
+                            return false;
+                    }
                     break;
+
+                    case ninniku::QT_COMPUTE:
+                    {
+                        if (!lmbd(queues_[QT_COMPUTE], queues_[QT_COPY], queues_[QT_DIRECT]))
+                            return false;
+                    }
+                    break;
+
+                    case ninniku::QT_COPY:
+                    {
+                        if (!lmbd(queues_[QT_COPY], queues_[QT_COMPUTE], queues_[QT_DIRECT]))
+                            return false;
+                    }
+                    break;
+
+                    default:
+                        throw new std::exception("Invalid queue type");
+                        break;
                 }
 
                 iter->~CommandList();
@@ -2165,34 +2159,34 @@ namespace ninniku
             std::string_view restypeStr;
 
             switch (bindDesc.Type) {
-            case D3D_SIT_CBUFFER:
-                restypeStr = "D3D_SIT_CBUFFER";
-                break;
+                case D3D_SIT_CBUFFER:
+                    restypeStr = "D3D_SIT_CBUFFER";
+                    break;
 
-            case D3D_SIT_SAMPLER:
-                restypeStr = "D3D_SIT_SAMPLER";
-                break;
+                case D3D_SIT_SAMPLER:
+                    restypeStr = "D3D_SIT_SAMPLER";
+                    break;
 
-            case D3D_SIT_STRUCTURED:
-                restypeStr = "D3D_SIT_STRUCTURED";
-                break;
+                case D3D_SIT_STRUCTURED:
+                    restypeStr = "D3D_SIT_STRUCTURED";
+                    break;
 
-            case D3D_SIT_TEXTURE:
-                restypeStr = "D3D_SIT_TEXTURE";
-                break;
+                case D3D_SIT_TEXTURE:
+                    restypeStr = "D3D_SIT_TEXTURE";
+                    break;
 
-            case D3D_SIT_UAV_RWTYPED:
-                restypeStr = "D3D_SIT_UAV_RWTYPED";
-                break;
+                case D3D_SIT_UAV_RWTYPED:
+                    restypeStr = "D3D_SIT_UAV_RWTYPED";
+                    break;
 
-            case D3D_SIT_UAV_RWSTRUCTURED:
-                restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
-                break;
+                case D3D_SIT_UAV_RWSTRUCTURED:
+                    restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
+                    break;
 
-            default:
-                LOG << "DX12::ParseShaderResources unsupported type";
-                LOGD_INDENT_END;
-                return false;
+                default:
+                    LOG << "DX12::ParseShaderResources unsupported type";
+                    LOGD_INDENT_END;
+                    return false;
             }
 
             fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;
@@ -2214,23 +2208,23 @@ namespace ninniku
         return true;
     }
 
-    D3D12_COMMAND_LIST_TYPE  DX12::QueueTypeToDX12ComandListType(EQueueType type) const
+    constexpr D3D12_COMMAND_LIST_TYPE  DX12::QueueTypeToDX12ComandListType(EQueueType type) const
     {
         switch (type) {
-        case ninniku::QT_COMPUTE:
-            return D3D12_COMMAND_LIST_TYPE_COMPUTE;
-            break;
+            case ninniku::QT_COMPUTE:
+                return D3D12_COMMAND_LIST_TYPE_COMPUTE;
+                break;
 
-        case ninniku::QT_COPY:
-            return D3D12_COMMAND_LIST_TYPE_COPY;
-            break;
+            case ninniku::QT_COPY:
+                return D3D12_COMMAND_LIST_TYPE_COPY;
+                break;
 
-        case ninniku::QT_DIRECT:
-            return D3D12_COMMAND_LIST_TYPE_DIRECT;
-            break;
+            case ninniku::QT_DIRECT:
+                return D3D12_COMMAND_LIST_TYPE_DIRECT;
+                break;
 
-        default:
-            throw std::exception("Invalid EQueueType");
+            default:
+                throw std::exception("Invalid EQueueType");
         }
     }
 

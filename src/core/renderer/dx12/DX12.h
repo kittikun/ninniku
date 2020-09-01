@@ -49,14 +49,13 @@ namespace ninniku
         const std::string_view& GetShaderExtension() const override { return ShaderExt; }
 
         bool CheckFeatureSupport(EDeviceFeature feature, bool& result) override;
-        bool ClearRenderTarget(const ClearRenderTargetParam& params) override;
         bool CopyBufferResource(const CopyBufferSubresourceParam& params) override;
         std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) override;
         BufferHandle CreateBuffer(const BufferParamHandle& params) override;
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         ComputeCommandHandle CreateComputeCommand() const override { return std::make_unique<DX12ComputeCommand>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
-        GraphicCommandHandle CreateGraphicCommand() const override { return std::make_unique<DX12GraphicCommand>(); }
+        GraphicCommandHandle CreateGraphicCommand() const override;
         bool CreatePipelineState(const PipelineStateParam& params) override;
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
@@ -87,7 +86,7 @@ namespace ninniku
         bool CreateDevice(int adapter);
         bool CreateGraphicCommandContext(const GraphicPipelineStateParam& params);
         bool CreateSamplers();
-        D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
+        constexpr D3D12_COMMAND_LIST_TYPE QueueTypeToDX12ComandListType(EQueueType type) const;
         bool ExecuteCommand(CommandList* cmdList);
         bool Flush(EFlushType type);
         bool LoadShader(EShaderType type, const std::string_view& psName, const std::filesystem::path& path, IDxcBlobEncoding* pBlob);
@@ -140,5 +139,7 @@ namespace ninniku
 
         // DX12MemoryAllocator
         D3D12MA::Allocator* allocator_;
+
+        friend struct DX12GraphicCommand;
     };
 } // namespace ninniku

@@ -67,6 +67,14 @@ namespace ninniku
         return impl_.lock()->uav_.get();
     }
 
+    const VertexBufferView* DX11BufferImpl::GetVBV() const
+    {
+        if (CheckWeakExpired(impl_))
+            return nullptr;
+
+        return impl_.lock()->vbv_.get();
+    }
+
     //////////////////////////////////////////////////////////////////////////
     // DX11DebugMarker
     //////////////////////////////////////////////////////////////////////////

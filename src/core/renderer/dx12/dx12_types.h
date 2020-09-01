@@ -41,6 +41,8 @@ namespace D3D12MA
 
 namespace ninniku
 {
+    class DX12;
+
     using DX12CommandAllocator = Microsoft::WRL::ComPtr<ID3D12CommandAllocator>;
     using DX12CommandQueue = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
     using DX12GraphicsCommandList = Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>;
@@ -109,6 +111,7 @@ namespace ninniku
         DX12Resource buffer_;
         SRVHandle srv_;
         UAVHandle uav_;
+        VBVHandle vbv_;
 
         // leave data here to support update later on
         std::vector<uint32_t> data_;
@@ -131,6 +134,7 @@ namespace ninniku
         const BufferParam* GetDesc() const override;
         const ShaderResourceView* GetSRV() const override;
         const UnorderedAccessView* GetUAV() const override;
+        const VertexBufferView* GetVBV() const override;
 
         std::weak_ptr<DX12BufferInternal> impl_;
     };
@@ -162,17 +166,6 @@ namespace ninniku
         std::unordered_map<uint32_t, DX12CommandSubContext> subContexts_;
     };
 
-    struct DX12GraphicCommandInternal
-    {
-        DX12GraphicCommandInternal(uint32_t shaderHash) noexcept;
-
-        // user might change the bound shader so keep hash so we don't rehash every time
-        uint32_t contextShaderHash_;
-
-        DX12RootSignature rootSignature_;
-        DX12PipelineState pipelineState_;
-    };
-
     struct DX12ComputeCommand final : public ComputeCommand
     {
         uint32_t GetHashShader() const;
@@ -181,11 +174,30 @@ namespace ninniku
         std::weak_ptr<DX12ComputeCommandInternal> impl_;
     };
 
+    struct DX12GraphicCommandInternal
+    {
+        DX12GraphicCommandInternal(uint32_t shaderHash) noexcept;
+
+        // user might change the bound shader so keep hash so we don't rehash every time
+        uint32_t contextShaderHash_;
+        DX12RootSignature rootSignature_;
+        DX12PipelineState pipelineState_;
+    };
+
     struct DX12GraphicCommand final : public GraphicCommand
     {
+        DX12GraphicCommand(const std::shared_ptr<DX12>& device);
+
         uint32_t GetHashShader() const;
 
+        bool ClearRenderTarget(const ClearRenderTargetParam& params) const override;
+        bool IASetPrimitiveTopology(EPrimitiveTopology topology) const override;
+        bool IASetVertexBuffers(const SetVertexBuffersParam& params) const override;
+
         std::weak_ptr<DX12GraphicCommandInternal> impl_;
+
+        // should probably own its own command list instead of locking the device each time
+        std::weak_ptr<DX12> device_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -281,6 +293,11 @@ namespace ninniku
 
         // only when array, std::numeric_limits<uint32_t>::max() otherwise
         uint32_t index_;
+    };
+
+    struct DX12VertexBufferView final : public VertexBufferView
+    {
+        D3D12_VERTEX_BUFFER_VIEW view_;
     };
 
     //////////////////////////////////////////////////////////////////////////

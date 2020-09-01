@@ -43,7 +43,6 @@ namespace ninniku
         virtual const std::string_view& GetShaderExtension() const = 0;
 
         [[nodiscard]] virtual bool CheckFeatureSupport(EDeviceFeature feature, bool& result) = 0;
-        [[nodiscard]] virtual bool ClearRenderTarget(const ClearRenderTargetParam& params) = 0;
         [[nodiscard]] virtual bool CopyBufferResource(const CopyBufferSubresourceParam& params) = 0;
         virtual std::tuple<uint32_t, uint32_t> CopyTextureSubresource(const CopyTextureSubresourceParam& params) = 0;
         virtual BufferHandle CreateBuffer(const BufferParamHandle& params) = 0;
@@ -72,7 +71,7 @@ namespace ninniku
         RenderDevice() = default;
     };
 
-    using RenderDeviceHandle = std::unique_ptr<RenderDevice>;
+    using RenderDeviceHandle = std::shared_ptr<RenderDevice>;
 
     NINNIKU_API RenderDeviceHandle& GetRenderer();
 } // namespace ninniku

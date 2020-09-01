@@ -35,6 +35,13 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // Common enumerations
     //////////////////////////////////////////////////////////////////////////
+    enum EBufferFlags : uint8_t
+    {
+        BF_NONE,
+        BF_STRUCTURED_BUFFER,
+        BF_VERTEX_BUFFER
+    };
+
     enum ECommandType : uint8_t
     {
         CT_Compute,
@@ -46,6 +53,11 @@ namespace ninniku
         DF_ALLOW_TEARING,
         DF_SM6_WAVE_INTRINSICS,
         DF_COUNT
+    };
+
+    enum EPrimitiveTopology : uint8_t
+    {
+        PT_TRIANGLE_LIST
     };
 
     enum EResourceViews : uint8_t
@@ -99,6 +111,7 @@ namespace ninniku
         uint32_t numElements;
         uint32_t elementSize;        // If != 0, this will create a StructuredBuffer, otherwise a ByteAddressBuffer will be created
         uint8_t viewflags;
+        uint8_t bufferFlags;
 
         void* initData;
     };
@@ -114,6 +127,7 @@ namespace ninniku
         virtual const BufferParam* GetDesc() const = 0;
         virtual const struct ShaderResourceView* GetSRV() const = 0;
         virtual const struct UnorderedAccessView* GetUAV() const = 0;
+        virtual const struct VertexBufferView* GetVBV() const = 0;
     };
 
     using BufferHandle = std::unique_ptr<const BufferObject>;
@@ -147,22 +161,31 @@ namespace ninniku
 
     using ComputeCommandHandle = std::unique_ptr<ComputeCommand>;
 
-    class GraphicCommand : public Command
-    {
-    public:
-        GraphicCommand() noexcept;
-
-        std::string_view pipelineStateName;
-    };
-
-    using GraphicCommandHandle = std::unique_ptr<GraphicCommand>;
-
     struct ClearRenderTargetParam
     {
         DirectX::XMVECTORF32 color;
         const struct RenderTargetView* dstRT;
         uint32_t index; // change this later
     };
+
+    struct SetVertexBuffersParam
+    {
+        std::vector<const VertexBufferView*> views;
+    };
+
+    class GraphicCommand : public Command
+    {
+    public:
+        GraphicCommand() noexcept;
+
+        virtual bool ClearRenderTarget(const ClearRenderTargetParam& params) const = 0;
+        virtual bool IASetPrimitiveTopology(EPrimitiveTopology topology) const = 0;
+        virtual bool IASetVertexBuffers(const SetVertexBuffersParam& params) const = 0;
+
+        std::string_view pipelineStateName;
+    };
+
+    using GraphicCommandHandle = std::unique_ptr<GraphicCommand>;
 
     struct CopyBufferSubresourceParam : NonCopyable
     {
@@ -286,6 +309,12 @@ namespace ninniku
     };
 
     using SSHandle = std::unique_ptr<SamplerState>;
+
+    struct VertexBufferView : NonCopyable
+    {
+    };
+
+    using VBVHandle = std::unique_ptr<VertexBufferView>;
 
     //////////////////////////////////////////////////////////////////////////
     // Swap chain

@@ -52,6 +52,7 @@ namespace ninniku
         DX11Buffer buffer_;
         SRVHandle srv_;
         UAVHandle uav_;
+        VBVHandle vbv_;
 
         // leave data here to support update later on
         std::vector<uint32_t> data_;
@@ -71,6 +72,7 @@ namespace ninniku
         const BufferParam* GetDesc() const override;
         const ShaderResourceView* GetSRV() const override;
         const UnorderedAccessView* GetUAV() const override;
+        const VertexBufferView* GetVBV() const override;
 
         std::weak_ptr<DX11BufferInternal> impl_;
     };

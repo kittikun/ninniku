@@ -46,11 +46,6 @@ namespace ninniku
         return false;
     }
 
-    bool DX11::ClearRenderTarget(const ClearRenderTargetParam&)
-    {
-        throw std::exception("Not yet implemented");
-    }
-
     bool DX11::CopyBufferResource(const CopyBufferSubresourceParam& params)
     {
         TRACE_SCOPED_DX11;
@@ -320,9 +315,9 @@ namespace ninniku
         D3D_FEATURE_LEVEL fl;
 
         auto hr = s_DynamicD3D11CreateDevice(pAdapter.Get(),
-                                             driverType,
-                                             nullptr, createDeviceFlags, featureLevels.data(), static_cast<uint32_t>(featureLevels.size()),
-                                             D3D11_SDK_VERSION, pDevice, &fl, nullptr);
+            driverType,
+            nullptr, createDeviceFlags, featureLevels.data(), static_cast<uint32_t>(featureLevels.size()),
+            D3D11_SDK_VERSION, pDevice, &fl, nullptr);
 
         if (SUCCEEDED(hr)) {
             Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
@@ -541,36 +536,36 @@ namespace ninniku
         std::string_view res;
 
         switch (dimension) {
-            case D3D11_SRV_DIMENSION_BUFFER:
-                res = "D3D11_SRV_DIMENSION_BUFFER";
-                break;
-            case D3D11_SRV_DIMENSION_TEXTURE1D:
-                res = "D3D11_SRV_DIMENSION_TEXTURE1D";
-                break;
-            case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
-                res = "D3D11_SRV_DIMENSION_TEXTURE1DARRAY";
-                break;
-            case D3D11_SRV_DIMENSION_TEXTURE2D:
-                res = "D3D11_SRV_DIMENSION_TEXTURE2D";
-                break;
-            case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
-                res = "D3D11_SRV_DIMENSION_TEXTURE2DARRAY";
-                break;
-            case D3D11_SRV_DIMENSION_TEXTURE3D:
-                res = "D3D11_SRV_DIMENSION_TEXTURE3D";
-                break;
-            case D3D11_SRV_DIMENSION_TEXTURECUBE:
-                res = "D3D11_SRV_DIMENSION_TEXTURECUBE";
-                break;
-            case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:
-                res = "D3D11_SRV_DIMENSION_TEXTURECUBEARRAY";
-                break;
-            case D3D11_SRV_DIMENSION_BUFFEREX:
-                res = "D3D11_SRV_DIMENSION_BUFFEREX";
-                break;
-            default:
-                throw new std::exception("Unsupported view dimension");
-                break;
+        case D3D11_SRV_DIMENSION_BUFFER:
+            res = "D3D11_SRV_DIMENSION_BUFFER";
+            break;
+        case D3D11_SRV_DIMENSION_TEXTURE1D:
+            res = "D3D11_SRV_DIMENSION_TEXTURE1D";
+            break;
+        case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
+            res = "D3D11_SRV_DIMENSION_TEXTURE1DARRAY";
+            break;
+        case D3D11_SRV_DIMENSION_TEXTURE2D:
+            res = "D3D11_SRV_DIMENSION_TEXTURE2D";
+            break;
+        case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
+            res = "D3D11_SRV_DIMENSION_TEXTURE2DARRAY";
+            break;
+        case D3D11_SRV_DIMENSION_TEXTURE3D:
+            res = "D3D11_SRV_DIMENSION_TEXTURE3D";
+            break;
+        case D3D11_SRV_DIMENSION_TEXTURECUBE:
+            res = "D3D11_SRV_DIMENSION_TEXTURECUBE";
+            break;
+        case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:
+            res = "D3D11_SRV_DIMENSION_TEXTURECUBEARRAY";
+            break;
+        case D3D11_SRV_DIMENSION_BUFFEREX:
+            res = "D3D11_SRV_DIMENSION_BUFFEREX";
+            break;
+        default:
+            throw new std::exception("Unsupported view dimension");
+            break;
         }
 
         return res;
@@ -1033,33 +1028,33 @@ namespace ninniku
             std::string_view restypeStr;
 
             switch (bindDesc.Type) {
-                case D3D_SIT_CBUFFER:
-                    restypeStr = "D3D_SIT_CBUFFER";
-                    break;
+            case D3D_SIT_CBUFFER:
+                restypeStr = "D3D_SIT_CBUFFER";
+                break;
 
-                case D3D_SIT_SAMPLER:
-                    restypeStr = "D3D_SIT_SAMPLER";
-                    break;
+            case D3D_SIT_SAMPLER:
+                restypeStr = "D3D_SIT_SAMPLER";
+                break;
 
-                case D3D_SIT_STRUCTURED:
-                    restypeStr = "D3D_SIT_STRUCTURED";
-                    break;
+            case D3D_SIT_STRUCTURED:
+                restypeStr = "D3D_SIT_STRUCTURED";
+                break;
 
-                case D3D_SIT_TEXTURE:
-                    restypeStr = "D3D_SIT_TEXTURE";
-                    break;
+            case D3D_SIT_TEXTURE:
+                restypeStr = "D3D_SIT_TEXTURE";
+                break;
 
-                case D3D_SIT_UAV_RWTYPED:
-                    restypeStr = "D3D_SIT_UAV_RWTYPED";
-                    break;
+            case D3D_SIT_UAV_RWTYPED:
+                restypeStr = "D3D_SIT_UAV_RWTYPED";
+                break;
 
-                case D3D_SIT_UAV_RWSTRUCTURED:
-                    restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
-                    break;
+            case D3D_SIT_UAV_RWSTRUCTURED:
+                restypeStr = "D3D_SIT_UAV_RWSTRUCTURED";
+                break;
 
-                default:
-                    LOG << "DX11::ParseShaderResources unsupported type";
-                    return res;
+            default:
+                LOG << "DX11::ParseShaderResources unsupported type";
+                return res;
             }
 
             auto fmt = boost::format("Resource: Name=\"%1%\", Type=%2%, Slot=%3%") % bindDesc.Name % restypeStr % bindDesc.BindPoint;

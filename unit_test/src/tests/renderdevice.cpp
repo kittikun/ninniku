@@ -147,7 +147,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX1
     clearParam.dstRT = frameRT;
     clearParam.index = bufferIndex;
 
-    BOOST_REQUIRE(dx->ClearRenderTarget(clearParam));
+    auto cmd = dx->CreateGraphicCommand();
+
+    BOOST_REQUIRE(cmd->ClearRenderTarget(clearParam));
+
     BOOST_REQUIRE(dx->Present(swapChain));
 
     auto image = std::make_unique<ninniku::ddsImage>();

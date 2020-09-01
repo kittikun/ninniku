@@ -34,9 +34,11 @@
 
 namespace ninniku
 {
-    NINNIKU_API constexpr uint8_t DXGIFormatToNinnikuTF(uint32_t);
+    constexpr uint8_t DXGIFormatToNinnikuTF(uint32_t);
+    NINNIKU_API constexpr uint32_t DXGIFormatToNumBytes(uint32_t);
     NINNIKU_API constexpr uint32_t NinnikuFormatToDXGIFormat(uint32_t);
-    NINNIKU_API constexpr uint32_t DXGIFormatToNumBytes(uint32_t format);
+    NINNIKU_API constexpr uint32_t NinnikuTopologyToD3DTopology(uint32_t);
+
     uint32_t Align(uint32_t uLocation, uint32_t uAlign);
 
     const std::wstring strToWStr(const std::string_view&);
