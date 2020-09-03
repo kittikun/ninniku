@@ -55,19 +55,19 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_dx12_check_feature, T, FixturesAll
         auto check = dx->CheckFeatureSupport(static_cast<ninniku::EDeviceFeature>(i), res);
 
         switch (dx->GetType()) {
-        case ninniku::ERenderer::RENDERER_DX11:
-        case ninniku::ERenderer::RENDERER_WARP_DX11:
-            BOOST_REQUIRE(!check);
-            break;
+            case ninniku::ERenderer::RENDERER_DX11:
+            case ninniku::ERenderer::RENDERER_WARP_DX11:
+                BOOST_REQUIRE(!check);
+                break;
 
-        case ninniku::ERenderer::RENDERER_DX12:
-        case ninniku::ERenderer::RENDERER_WARP_DX12:
-            BOOST_REQUIRE(check);
-            break;
+            case ninniku::ERenderer::RENDERER_DX12:
+            case ninniku::ERenderer::RENDERER_WARP_DX12:
+                BOOST_REQUIRE(check);
+                break;
 
-        default:
-            throw std::exception("Case should not happen");
-            break;
+            default:
+                throw std::exception("Case should not happen");
+                break;
         }
     }
 }
@@ -106,66 +106,66 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_buffer, T, FixturesDX12All,
     auto& data = dstBuffer->GetData();
 
     switch (dx->GetType()) {
-    case ninniku::ERenderer::RENDERER_DX11:
-    case ninniku::ERenderer::RENDERER_DX12:
-    case ninniku::ERenderer::RENDERER_WARP_DX11:
-    case ninniku::ERenderer::RENDERER_WARP_DX12:
-        CheckCRC(std::get<0>(data), std::get<1>(data), 3378637337);
-        break;
+        case ninniku::ERenderer::RENDERER_DX11:
+        case ninniku::ERenderer::RENDERER_DX12:
+        case ninniku::ERenderer::RENDERER_WARP_DX11:
+        case ninniku::ERenderer::RENDERER_WARP_DX12:
+            CheckCRC(std::get<0>(data), std::get<1>(data), 3378637337);
+            break;
 
-    default:
-        throw std::exception("Case should not happen");
-        break;
+        default:
+            throw std::exception("Case should not happen");
+            break;
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX12All, T)
-{
-    // Disable HW GPU support when running on CI
-    if (T::isNull)
-        return;
-
-    auto param = ninniku::SwapchainParam::Create();
-
-    param->bufferCount = 2;
-    param->format = ninniku::EFormat::F_R8G8B8A8_UNORM;
-    param->height = 768;
-    param->width = 1024;
-    param->hwnd = ninniku::MakeWindow(param->width, param->height, false);
-    param->vsync = false;
-
-    auto& dx = ninniku::GetRenderer();
-
-    auto swapChain = dx->CreateSwapChain(param);
-
-    auto bufferIndex = swapChain->GetCurrentBackBufferIndex();
-    auto frameRT = swapChain->GetRT(bufferIndex);
-
-    ninniku::ClearRenderTargetParam clearParam;
-
-    clearParam.color = DirectX::Colors::Cyan;
-    clearParam.dstRT = frameRT;
-    clearParam.index = bufferIndex;
-
-    auto cmd = dx->CreateGraphicCommand();
-
-    BOOST_REQUIRE(cmd->ClearRenderTarget(clearParam));
-
-    BOOST_REQUIRE(dx->Present(swapChain));
-
-    auto image = std::make_unique<ninniku::ddsImage>();
-
-    image->InitializeFromSwapChain(dx, swapChain);
-
-    std::string filename = "renderdevice_clear_rendertarget.dds";
-
-    ChangeToOutDirectory(T::platform);
-
-    BOOST_REQUIRE(image->SaveImage(filename));
-    BOOST_REQUIRE(std::filesystem::exists(filename));
-
-    CheckFileCRC(filename, 1491251387);
-}
+//BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_clear_rendertarget, T, FixturesDX12All, T)
+//{
+//    // Disable HW GPU support when running on CI
+//    if (T::isNull)
+//        return;
+//
+//    auto param = ninniku::SwapchainParam::Create();
+//
+//    param->bufferCount = 2;
+//    param->format = ninniku::EFormat::F_R8G8B8A8_UNORM;
+//    param->height = 768;
+//    param->width = 1024;
+//    param->hwnd = ninniku::MakeWindow(param->width, param->height, false);
+//    param->vsync = false;
+//
+//    auto& dx = ninniku::GetRenderer();
+//
+//    auto swapChain = dx->CreateSwapChain(param);
+//
+//    auto bufferIndex = swapChain->GetCurrentBackBufferIndex();
+//    auto frameRT = swapChain->GetRT(bufferIndex);
+//
+//    ninniku::ClearRenderTargetParam clearParam;
+//
+//    clearParam.color = DirectX::Colors::Cyan;
+//    clearParam.dstRT = frameRT;
+//    clearParam.index = bufferIndex;
+//
+//    auto cmd = dx->CreateGraphicCommand("simple");
+//
+//    BOOST_REQUIRE(cmd->ClearRenderTarget(clearParam));
+//
+//    BOOST_REQUIRE(dx->Present(bufferIndex, swapChain));
+//
+//    auto image = std::make_unique<ninniku::ddsImage>();
+//
+//    BOOST_REQUIRE(image->InitializeFromSwapChain(dx, swapChain));
+//
+//    std::string filename = "renderdevice_clear_rendertarget.dds";
+//
+//    ChangeToOutDirectory(T::platform);
+//
+//    BOOST_REQUIRE(image->SaveImage(filename));
+//    BOOST_REQUIRE(std::filesystem::exists(filename));
+//
+//    CheckFileCRC(filename, 1491251387);
+//}
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(renderdevice_create_input_layout, T, FixturesDX12All, T)
 {

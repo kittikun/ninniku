@@ -47,7 +47,7 @@ namespace ninniku
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         ComputeCommandHandle CreateComputeCommand() const override { return std::make_unique<ComputeCommand>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
-        GraphicCommandHandle CreateGraphicCommand() const override { throw std::exception("not implemented yet"); }
+        GraphicCommandHandle CreateGraphicCommand(const std::string_view&) const override { throw std::exception("not implemented yet"); }
         bool CreatePipelineState(const PipelineStateParam& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
@@ -59,7 +59,7 @@ namespace ninniku
         bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
-        bool Present(const SwapChainHandle&) override;
+        bool Present(uint32_t bufferIndex, const SwapChainHandle& swapchain) override;
         void RegisterInputLayout(const InputLayoutDesc& params) override;
         bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 

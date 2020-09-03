@@ -1072,7 +1072,7 @@ namespace ninniku
         return res;
     }
 
-    bool DX11::Present(const SwapChainHandle&)
+    bool DX11::Present(uint32_t, const SwapChainHandle&)
     {
         throw std::exception("Not yet implemented");
     }

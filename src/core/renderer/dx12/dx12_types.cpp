@@ -31,12 +31,18 @@
 #include "pix3.h"
 #pragma clang diagnostic pop
 
-#include <d3dx12/d3dx12.h>
 #include <boost/crc.hpp>
 #include <D3D12MemAlloc.h>
 
 namespace ninniku
 {
+    void QueryDescriptorHandleIncrementSizes(const DX12Device& device)
+    {
+        // increment size are vendor specific so we still need to query them once
+        for (auto i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i)
+            HeapIncrementSizes[i] = device->GetDescriptorHandleIncrementSize(static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i));
+    }
+
     //////////////////////////////////////////////////////////////////////////
     // DX12BufferImpl
     //////////////////////////////////////////////////////////////////////////
@@ -95,7 +101,7 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12Command
     //////////////////////////////////////////////////////////////////////////
-    bool DX12CommandSubContext::Initialize(const DX12Device& device, DX12ComputeCommand* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize)
+    bool DX12ComputeCommandSubContext::Initialize(const DX12Device& device, DX12ComputeCommand* cmd, const MapNameSlot& bindings, ID3D12Resource* cbuffer, uint32_t cbSize)
     {
         TRACE_SCOPED_DX12;
 
@@ -103,13 +109,6 @@ namespace ninniku
             return false;
 
         auto cmdImpl = cmd->impl_.lock();
-
-        if (heapIncrementSizes_[0] == 0) {
-            // increment size are vendor specific so we still need to query them once
-            heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-            heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_RTV] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        }
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE heapHandle{ descriptorHeap_->GetCPUDescriptorHandleForHeapStart() };
 
@@ -120,7 +119,7 @@ namespace ninniku
             cbvDesc.SizeInBytes = cbSize;
 
             device->CreateConstantBufferView(&cbvDesc, heapHandle);
-            heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+            heapHandle.Offset(HeapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
         }
 
         // create srv bindings to the resource
@@ -140,7 +139,7 @@ namespace ninniku
                 srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
                 srvDesc.ViewDimension = static_cast<D3D12_SRV_DIMENSION>(found->second.Dimension);
                 device->CreateShaderResourceView(nullptr, &srvDesc, heapHandle);
-                heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                heapHandle.Offset(HeapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             } else {
                 if (found->second.Type == D3D_SIT_TEXTURE) {
                     if (!std::holds_alternative<std::weak_ptr<DX12TextureInternal>>(dxSRV->resource_)) {
@@ -237,9 +236,9 @@ namespace ninniku
 
                     auto fmt = boost::format("%1% %2%") % found->first % dxSRV->index_;
 
-                    locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
-                    device->CreateShaderResourceView(locked->texture_.Get(), &srvDesc, heapHandle);
-                    heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                    locked->resource_->SetName(strToWStr(boost::str(fmt)).c_str());
+                    device->CreateShaderResourceView(locked->resource_.Get(), &srvDesc, heapHandle);
+                    heapHandle.Offset(HeapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
                 } else if (found->second.Type == D3D_SIT_STRUCTURED) {
                     if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxSRV->resource_)) {
                         LOGEF(boost::format("SRV binding should have been a buffer \"%1%\"") % found->first);
@@ -262,9 +261,9 @@ namespace ninniku
                     srvDesc.Buffer.StructureByteStride = (locked->desc_->bufferFlags == BF_STRUCTURED_BUFFER) ? locked->desc_->elementSize : 0;
                     srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-                    locked->buffer_->SetName(strToWStr(found->first).c_str());
-                    device->CreateShaderResourceView(locked->buffer_.Get(), &srvDesc, heapHandle);
-                    heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                    locked->resource_->SetName(strToWStr(found->first).c_str());
+                    device->CreateShaderResourceView(locked->resource_.Get(), &srvDesc, heapHandle);
+                    heapHandle.Offset(HeapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
                 }
             }
         }
@@ -308,9 +307,9 @@ namespace ninniku
 
                 auto fmt = boost::format("%1% %2%") % found->first % dxUAV->index_;
 
-                locked->texture_->SetName(strToWStr(boost::str(fmt)).c_str());
-                device->CreateUnorderedAccessView(locked->texture_.Get(), nullptr, &uavDesc, heapHandle);
-                heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                locked->resource_->SetName(strToWStr(boost::str(fmt)).c_str());
+                device->CreateUnorderedAccessView(locked->resource_.Get(), nullptr, &uavDesc, heapHandle);
+                heapHandle.Offset(HeapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             } else if (found->second.Type == D3D_SIT_UAV_RWSTRUCTURED) {
                 if (!std::holds_alternative<std::weak_ptr<DX12BufferInternal>>(dxUAV->resource_)) {
                     LOGEF(boost::format("UAV binding should have been a buffer \"%1%\"") % found->first);
@@ -333,9 +332,9 @@ namespace ninniku
                 uavDesc.Buffer.CounterOffsetInBytes = 0;
                 uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-                locked->buffer_->SetName(strToWStr(found->first).c_str());
-                device->CreateUnorderedAccessView(locked->buffer_.Get(), nullptr, &uavDesc, heapHandle);
-                heapHandle.Offset(heapIncrementSizes_[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
+                locked->resource_->SetName(strToWStr(found->first).c_str());
+                device->CreateUnorderedAccessView(locked->resource_.Get(), nullptr, &uavDesc, heapHandle);
+                heapHandle.Offset(HeapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]);
             }
         }
 
@@ -354,7 +353,7 @@ namespace ninniku
     {
         TRACE_SCOPED_DX12;
 
-        auto iter = subContexts_.emplace(hash, DX12CommandSubContext{});
+        auto iter = subContexts_.emplace(hash, DX12ComputeCommandSubContext{});
         auto& subContext = iter.first->second;
 
         // Create descriptor heap
@@ -426,68 +425,68 @@ namespace ninniku
     //////////////////////////////////////////////////////////////////////////
     // DX12GraphicCommand
     //////////////////////////////////////////////////////////////////////////
+    bool DX12GraphicCommandSubContext::Initialize(const DX12Device&, DX12ComputeCommand*, const MapNameSlot&, ID3D12Resource*, uint32_t)
+    {
+        throw std::exception("not implemented yet");
+    }
+
     DX12GraphicCommandInternal::DX12GraphicCommandInternal(uint32_t shaderHash) noexcept
         : contextShaderHash_{ shaderHash }
     {
     }
 
-    DX12GraphicCommand::DX12GraphicCommand(const std::shared_ptr<DX12>& device)
-        : device_{ device }
+    bool DX12GraphicCommandInternal::CreateSubContext(const DX12Device&, uint32_t, const std::string_view&, uint32_t)
     {
+        throw std::exception("not implemented yet");
     }
 
     bool DX12GraphicCommand::ClearRenderTarget(const ClearRenderTargetParam& params) const
     {
-        if (CheckWeakExpired(device_))
+        if (CheckWeakExpired(impl_))
             return false;
 
-        auto dx = device_.lock();
+        auto impl = impl_.lock();
 
-        auto cmdList = dx->CreateCommandList(QT_DIRECT);
+        auto rt = static_cast<const DX12RenderTarget*>(params.dstRT);
 
-        auto rt = static_cast<const DX12RenderTargetView*>(params.dstRT);
+        if (CheckWeakExpired(rt->impl_))
+            return false;
+
+        auto rtImpl = rt->impl_.lock();
 
         // transition
-        auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
+        auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtImpl->resource_.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        impl->cmdList_->ResourceBarrier(1, &barrier);
 
         // clear
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(dx->rtvHeap_->GetCPUDescriptorHandleForHeapStart(), params.index, dx->rtvDescriptorSize_);
-        cmdList->gfxCmdList_->ClearRenderTargetView(rtvHandle, params.color, 0, nullptr);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtImpl->descriptorHeap_->GetCPUDescriptorHandleForHeapStart(), params.index, HeapIncrementSizes[D3D12_DESCRIPTOR_HEAP_TYPE_RTV]);
+        impl->cmdList_->ClearRenderTargetView(rtvHandle, params.color, 0, nullptr);
 
         // revert transition
-        barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->texture_.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-        cmdList->gfxCmdList_->ResourceBarrier(1, &barrier);
-
-        dx->ExecuteCommand(cmdList);
+        barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtImpl->resource_.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        impl->cmdList_->ResourceBarrier(1, &barrier);
 
         return true;
     }
 
     bool DX12GraphicCommand::IASetPrimitiveTopology(EPrimitiveTopology topology) const
     {
-        if (CheckWeakExpired(device_))
+        if (CheckWeakExpired(impl_))
             return false;
 
-        auto dx = device_.lock();
+        auto impl = impl_.lock();
 
-        auto cmdList = dx->CreateCommandList(QT_DIRECT);
-
-        cmdList->gfxCmdList_->IASetPrimitiveTopology(static_cast<D3D_PRIMITIVE_TOPOLOGY>(NinnikuTopologyToD3DTopology(topology)));
-
-        dx->ExecuteCommand(cmdList);
+        impl->cmdList_->IASetPrimitiveTopology(static_cast<D3D_PRIMITIVE_TOPOLOGY>(NinnikuTopologyToD3DTopology(topology)));
 
         return true;
     }
 
     bool DX12GraphicCommand::IASetVertexBuffers(const SetVertexBuffersParam& params) const
     {
-        if (CheckWeakExpired(device_))
+        if (CheckWeakExpired(impl_))
             return false;
 
-        auto dx = device_.lock();
-
-        auto cmdList = dx->CreateCommandList(QT_DIRECT);
+        auto impl = impl_.lock();
 
         // seems wasteful..
         std::vector<D3D12_VERTEX_BUFFER_VIEW> views{ params.views.size() };
@@ -497,9 +496,7 @@ namespace ninniku
             views[i] = dx12vbv->view_;
         }
 
-        cmdList->gfxCmdList_->IASetVertexBuffers(0, params.views.size(), views.data());
-
-        dx->ExecuteCommand(cmdList);
+        impl->cmdList_->IASetVertexBuffers(0, params.views.size(), views.data());
 
         return true;
     }
@@ -583,7 +580,7 @@ namespace ninniku
         return impl_.lock()->desc_.get();
     }
 
-    const RenderTargetView* DX12SwapChainImpl::GetRT(uint32_t index) const
+    const RenderTargetObject* DX12SwapChainImpl::GetRT(uint32_t index) const
     {
         if (CheckWeakExpired(impl_))
             return nullptr;
@@ -666,6 +663,27 @@ namespace ninniku
             return nullptr;
 
         return impl_.lock()->uav_[index].get();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // DX12TrackedObject
+    //////////////////////////////////////////////////////////////////////////
+    CD3DX12_RESOURCE_BARRIER DX12TrackedObject::TransitionTo(D3D12_RESOURCE_STATES to, uint32_t subresource) noexcept
+    {
+        statePrevious = stateCurrent;
+        stateCurrent = to;
+
+        return CD3DX12_RESOURCE_BARRIER::Transition(resource_.Get(), statePrevious, stateCurrent, subresource);
+    }
+
+    CD3DX12_RESOURCE_BARRIER DX12TrackedObject::TransitionBack(uint32_t subresource) noexcept
+    {
+        auto temp = stateCurrent;
+
+        stateCurrent = statePrevious;
+        statePrevious = temp;
+
+        return CD3DX12_RESOURCE_BARRIER::Transition(resource_.Get(), statePrevious, stateCurrent, subresource);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -164,7 +164,7 @@ namespace ninniku
     struct ClearRenderTargetParam
     {
         DirectX::XMVECTORF32 color;
-        const struct RenderTargetView* dstRT;
+        const struct RenderTargetObject* dstRT;
         uint32_t index; // change this later
     };
 
@@ -284,6 +284,15 @@ namespace ninniku
     };
 
     //////////////////////////////////////////////////////////////////////////
+    // RenderTarget
+    //////////////////////////////////////////////////////////////////////////
+    struct RenderTargetObject : NonCopyable
+    {
+    };
+
+    using RenderTargetHandle = std::unique_ptr<RenderTargetObject>;
+
+    //////////////////////////////////////////////////////////////////////////
     // Shader Resources
     //////////////////////////////////////////////////////////////////////////
     struct ShaderResourceView : NonCopyable
@@ -297,12 +306,6 @@ namespace ninniku
     };
 
     using UAVHandle = std::unique_ptr<UnorderedAccessView>;
-
-    struct RenderTargetView : NonCopyable
-    {
-    };
-
-    using RTVHandle = std::unique_ptr<RenderTargetView>;
 
     struct SamplerState : NonCopyable
     {
@@ -337,7 +340,7 @@ namespace ninniku
     {
         virtual uint32_t GetCurrentBackBufferIndex() const = 0;
         virtual const SwapchainParam* GetDesc() const = 0;
-        virtual const RenderTargetView* GetRT(uint32_t index) const = 0;
+        virtual const RenderTargetObject* GetRT(uint32_t index) const = 0;
         virtual uint32_t GetRTCount() const = 0;
     };
 

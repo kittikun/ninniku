@@ -55,7 +55,7 @@ namespace ninniku
         BufferHandle CreateBuffer(const BufferHandle& src) override;
         ComputeCommandHandle CreateComputeCommand() const override { return std::make_unique<DX12ComputeCommand>(); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const override;
-        GraphicCommandHandle CreateGraphicCommand() const override;
+        GraphicCommandHandle CreateGraphicCommand(const std::string_view& pipelineState) const override;
         bool CreatePipelineState(const PipelineStateParam& params) override;
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) override;
         TextureHandle CreateTexture(const TextureParamHandle& params) override;
@@ -67,7 +67,7 @@ namespace ninniku
         bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) override;
         MappedResourceHandle Map(const BufferHandle& bObj) override;
         MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) override;
-        bool Present(const SwapChainHandle& swapchain) override;
+        bool Present(uint32_t bufferIndex, const SwapChainHandle& swapchain) override;
         void RegisterInputLayout(const InputLayoutDesc& params) override;
         bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) override;
 
@@ -132,10 +132,6 @@ namespace ninniku
         // Object pools
         std::unique_ptr<CommandBufferPool> poolCBSmall_;
         boost::object_pool<CommandList> poolCmd_;
-
-        // for swap chain (move that into contexts like the other views)
-        DX12DescriptorHeap rtvHeap_;
-        uint32_t rtvDescriptorSize_;
 
         // DX12MemoryAllocator
         D3D12MA::Allocator* allocator_;

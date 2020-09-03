@@ -40,7 +40,7 @@ namespace ninniku
         BufferHandle CreateBuffer(const BufferHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         ComputeCommandHandle CreateComputeCommand() const override { throw std::exception("Invalid for RENDERER_NULL"); }
         DebugMarkerHandle CreateDebugMarker(const std::string_view&) const override { throw std::exception("Invalid for RENDERER_NULL"); }
-        GraphicCommandHandle CreateGraphicCommand() const override { throw std::exception("Invalid for RENDERER_NULL"); }
+        GraphicCommandHandle CreateGraphicCommand(const std::string_view&) const override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool CreatePipelineState(const PipelineStateParam&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         SwapChainHandle CreateSwapChain(const SwapchainParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         TextureHandle CreateTexture(const TextureParamHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
@@ -52,7 +52,7 @@ namespace ninniku
         bool LoadShader(EShaderType, const std::string_view&, const void*, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
         MappedResourceHandle Map(const BufferHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         MappedResourceHandle Map(const TextureHandle&, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
-        bool Present(const SwapChainHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
+        bool Present(uint32_t, const SwapChainHandle&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         void RegisterInputLayout(const InputLayoutDesc&) override { throw std::exception("Invalid for RENDERER_NULL"); }
         bool UpdateConstantBuffer(const std::string_view&, void*, const uint32_t) override { throw std::exception("Invalid for RENDERER_NULL"); }
         const SamplerState* GetSampler(ESamplerState) const override { throw std::exception("Invalid for RENDERER_NULL"); }

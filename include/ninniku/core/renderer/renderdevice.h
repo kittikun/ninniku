@@ -49,7 +49,7 @@ namespace ninniku
         virtual BufferHandle CreateBuffer(const BufferHandle& src) = 0;
         virtual ComputeCommandHandle CreateComputeCommand() const = 0;
         virtual DebugMarkerHandle CreateDebugMarker(const std::string_view& name) const = 0;
-        virtual GraphicCommandHandle CreateGraphicCommand() const = 0;
+        virtual GraphicCommandHandle CreateGraphicCommand(const std::string_view& pipelineState) const = 0;
         [[nodiscard]] virtual bool CreatePipelineState(const PipelineStateParam& params) = 0;
         [[nodiscard]] virtual SwapChainHandle CreateSwapChain(const SwapchainParamHandle& params) = 0;
         virtual TextureHandle CreateTexture(const TextureParamHandle& params) = 0;
@@ -61,7 +61,7 @@ namespace ninniku
         [[nodiscard]] virtual bool LoadShader(EShaderType type, const std::string_view& name, const void* pData, const uint32_t size) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const BufferHandle& bObj) = 0;
         [[nodiscard]] virtual MappedResourceHandle Map(const TextureHandle& tObj, const uint32_t index) = 0;
-        [[nodiscard]] virtual bool Present(const SwapChainHandle& swapchain) = 0;
+        [[nodiscard]] virtual bool Present(uint32_t bufferIndex, const SwapChainHandle& swapchain) = 0;
         virtual void RegisterInputLayout(const InputLayoutDesc& params) = 0;
         [[nodiscard]] virtual bool UpdateConstantBuffer(const std::string_view& name, void* data, const uint32_t size) = 0;
 
