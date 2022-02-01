@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "description": "Settings that are shared among all configurations",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/_build/${presetName}/"
+    },
+    {
+      "name": "clangcl",
+      "inherits": "default",
+      "generator": "Visual Studio 17 2022",
+      "toolset": "ClangCL",
+      "architecture": "x64",
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": "Windows",
+          "intelliSenseMode": "windows-clang-x64",
+          "enableClangTidyCodeAnalysis": true
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "clangcl",
+      "configuration": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "clangcl",
+      "configuration": "release"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.20.0)
+
+set(CMAKE_SYSTEM_VERSION 10.0)
+
+project(ninniku CXX)
+
+set(CMAKE_CONFIGURATION_TYPES "debug;release")
+
+set(NINNIKU_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+
+# Each configuration outputs to its respective folder inside of bin/
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+  set(OUTPUT_BIN "${NINNIKU_BIN_DIR}/${OUTPUTCONFIG}")
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${OUTPUT_BIN})
+endforeach()
+
+# Constants
+set(NINNIKU_ROOT_DIR  ${CMAKE_CURRENT_SOURCE_DIR})
+set(NINNIKU_LIB_DIR ${NINNIKU_ROOT_DIR}/lib)
+set(NINNIKU_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+message(${NINNIKU_BUILD_DIR})
